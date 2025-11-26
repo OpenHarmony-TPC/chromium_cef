@@ -45,6 +45,7 @@
 #endif  // BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 
 #if BUILDFLAG(ARKWEB_COOKIE)
+#include "arkweb/ohos_nweb/src/nweb_impl.h"
 #include "cef/ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
 #endif // BUILDFLAG(ARKWEB_COOKIE)
 
@@ -255,7 +256,7 @@ bool CefCookieManagerImplExt::SetCookie(
     const CefString& str_cookie,
     bool includeHttpOnly) {
   GURL gurl = GURL(url.ToString());
-  if (!ValidContext()) {
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine() && !ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImplExt::SetCookieInternal), this,
         gurl, cookie, callback, is_sync, str_cookie, includeHttpOnly));
@@ -585,7 +586,7 @@ bool CefCookieManagerImplExt::IsThirdPartyCookieAllowed() {
 }
 
 void CefCookieManagerImplExt::PutAcceptThirdPartyCookieEnabled(bool accept) {
-  if (!ValidContext()) {
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine() && !ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(
             &CefCookieManagerImplExt::PutAcceptThirdPartyCookieEnabledInternal),
@@ -609,14 +610,19 @@ void CefCookieManagerImplExt::PutAcceptFileURLSchemeCookiesEnabled(bool allow) {
 
 bool CefCookieManagerImplExt::PutAcceptThirdPartyCookieEnabledInternal(
     bool accept) {
-  DCHECK(ValidContext());
-  auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context) {
-    return false;
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine()) {
+    DCHECK(ValidContext());
+    auto browser_context = GetBrowserContext(browser_context_getter_);
+    if (!browser_context) {
+        return false;
+    }
+    LOG(INFO) << __func__ << " accept: " << accept;
+    net_service::NetHelpers::third_party_cookies = accept;
+    GetCookieManager(browser_context)->BlockThirdPartyCookies(!accept);
+  } else {
+    LOG(INFO) << func << " accept: " << accept;
+    net_service::NetHelpers::third_party_cookies = accept;
   }
-  LOG(INFO) << __func__ << " accept: " << accept;
-  net_service::NetHelpers::third_party_cookies = accept;
-  GetCookieManager(browser_context)->BlockThirdPartyCookies(!accept);
   return true;
 }
 
@@ -915,11 +921,13 @@ void CefCookieManagerImplExt::FlushStoreInternalCookieTask(
 
 bool CefCookieManagerImplExt::FlushStore(
     CefRefPtr<CefCompletionCallback> callback) {
-  DCHECK(ValidContext());
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine()) {
+    DCHECK(ValidContext());
 
-  auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context) {
-    return false;
+    auto browser_context = GetBrowserContext(browser_context_getter_);
+    if (!browser_context) {
+      return false;
+    }
   }
   FlushStoreInternal(callback);
   return true;
