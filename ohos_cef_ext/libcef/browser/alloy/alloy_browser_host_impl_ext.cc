@@ -9,6 +9,9 @@
 #include <utility>
 
 #include "arkweb/build/features/features.h"
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
@@ -150,10 +153,13 @@ using content::KeyboardEventProcessingResult;
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
+#endif  // ARKWEB_NWEB_EX
+#endif  // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
 #include "ohos_nweb_ex/core/extension/nweb_extension_tabs_dispatcher.h"
 #include "ohos_nweb_ex/core/extension/nweb_extension_manager_dispatcher.h"
 #endif  // ARKWEB_NWEB_EX
-#endif  // ARKWEB_VIDEO_ASSISTANT
 
 #if BUILDFLAG(ARKWEB_MEDIA_POLICY)
 #include "content/browser/media/session/media_session_impl.h"
@@ -167,7 +173,7 @@ using content::KeyboardEventProcessingResult;
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_utils.h"
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ARKWEB_SLIDE_LTPO)
 int32_t AlloyBrowserHostImplExt::ltpo_strategy_ = -1;
 #endif
 
@@ -416,13 +422,10 @@ void AlloyBrowserHostImplExt::SetEnableLowerFrameRate(bool enabled) {
 #if BUILDFLAG(IS_ARKWEB)
 void AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager(
     void** manager) {
-  LOG(INFO) << "dsf AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager start";
   if (!platform_delegate_)
     return;
-  LOG(INFO) << "dsf AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager middle";
   *manager = static_cast<void*>(
         platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->GetRootBrowserAccessibilityManager());
-  LOG(INFO) << "wulonghui AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager end";
 }
 void AlloyBrowserHostImplExt::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
   LOG(DEBUG) << "SetWakeLockHandler enter, callback =" << static_cast<bool>(callback);
@@ -827,7 +830,6 @@ void AlloyBrowserHostImplExt::OnReportStatisticLog(const std::string& content) {
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 
-
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void AlloyBrowserHostImplExt::ShowRepostFormWarningDialog(
     content::WebContents* source) {
@@ -858,8 +860,46 @@ bool AlloyBrowserHostImplExt::TrigAdBlockEnabledForSiteFromUi(
 }
 #endif
 
-
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionSetTabId failed, called on invalid thread";
+    return;
+  }
+
+  if (tab_id != tab_id_) {
+    LOG(INFO) << "ExtensionSetTabId nweb_id_=" << nweb_id_
+              << "; tab_id_=" << tab_id_ << "; tab_id=" << tab_id;
+    tab_id_ = tab_id;
+  }
+}
+
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
+    return -1;
+  }
+
+  if (tab_id_ != -1) {
+    return tab_id_;
+  }
+
+  int nweb_id = GetNWebId();
+  if (nweb_id <= 0) {
+    LOG(ERROR) << "ExtensionGetTabId error nweb_id=" << nweb_id;
+    return -1;
+  }
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  int32_t tab_id = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id);
+  LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
+            << "; tab_id=" << tab_id;
+  tab_id_ = tab_id;
+#endif
+  return tab_id_;
+}
+
 bool AlloyBrowserHostImplExt::WebExtensionCheck(
     const std::string functionName,
     content::BrowserContext*& browser_context,
@@ -920,45 +960,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
 
   extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
       tab_id, web_contents, std::move(changeInfo), std::move(tab));
-}
-
-void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    LOG(ERROR)
-        << "AlloyBrowserHostImplExt::ExtensionSetTabId failed, called on invalid thread";
-    return;
-  }
- 
-  if (tab_id != tab_id_) {
-    LOG(INFO) << "ExtensionSetTabId nweb_id_=" << nweb_id_
-              << "; tab_id_=" << tab_id_ << "; tab_id=" << tab_id;
-    tab_id_ = tab_id;
-  }
-}
-
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    LOG(ERROR)
-        << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
-    return -1;
-  }
-
-  if (tab_id_ != -1) {
-    return tab_id_;
-  }
-
-  int nweb_id = GetNWebId();
-  if (nweb_id <= 0) {
-    LOG(ERROR) << "ExtensionGetTabId error nweb_id=" << nweb_id;
-    return -1;
-  }
-#if BUILDFLAG(ARKWEB_NWEB_EX)
-  int32_t tab_id = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id);
-  LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
-            << "; tab_id=" << tab_id;
-  tab_id_ = tab_id;
-#endif
-  return tab_id_;
 }
 
 void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
@@ -1039,13 +1040,30 @@ void AlloyBrowserHostImplExt::WebExtensionTabReplaced(int32_t addedTabId, int32_
       ->TabReplaced(web_contents, addedTabId, removedTabId);
 }
 
+content::DropData* AlloyBrowserHostImplExt::GetDropData() {
+  if (!platform_delegate()) {
+    return nullptr;
+  }
+  auto* platform_delegate_ext =
+      platform_delegate()->AsArkWebCefBrowserPlatformDelegateExt();
+  if (!platform_delegate_ext) {
+    return nullptr;
+  }
+  CefRefPtr<CefDragData> cef_drag_data = platform_delegate_ext->GetDropData();
+  CefDragDataImpl* data_impl = static_cast<CefDragDataImpl*>(cef_drag_data.get());
+  if (!data_impl) {
+    return nullptr;
+  }
+  return data_impl->drop_data();
+}
+
 content::BrowserContext* GetGlobalBrowserContext() {
   CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
   if (!request_context) {
     LOG(ERROR) << "request context is null";
     return nullptr;
   }
-
+ 
   CefRequestContextImpl* request_context_impl =
     static_cast<CefRequestContextImpl*>(request_context.get());
   CefBrowserContext* cef_browser_context = request_context_impl->GetBrowserContext();
@@ -1089,7 +1107,7 @@ void AlloyBrowserHostImplExt::UpdatePinnedExtensionIds(
     bool isPinned) {
   auto storedPinnedIds =
       extensions::ExtensionPrefs::Get(browser_context)->GetPinnedExtensions();
- 
+
   if (isPinned) {
     if (!base::Contains(storedPinnedIds, extensionId)) {
       storedPinnedIds.push_back(extensionId);
@@ -1115,7 +1133,7 @@ void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   UpdatePinnedExtensionIds(context, extensionId, isPinned);
 #endif
-    
+
   extensions::ExtensionActionDispatcher::Get(context)
       ->OnActionPinnedStateChanged(extensionId, isPinned);
 }
@@ -1168,6 +1186,7 @@ content::BrowserContext* AlloyBrowserHostImplExt::GetOriginalContext(
 
   return original_browser_context;
 }
+
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 
@@ -1586,7 +1605,9 @@ void AlloyBrowserHostImplExt::OnWindowHide() {
 #if BUILDFLAG(ARKWEB_REPORT_RENDER_STATE)
   RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(implUtils->GetRenderProcessId(), nweb_id_, true);
 #endif
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
   SetVisible(nweb_id_, false);
+#endif
 }
 
 
@@ -1639,7 +1660,11 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
     InactiveUnloadOldProcess(process_id);
+#endif
+
     ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                               nweb_id_);
     if (!is_hidden_) {
@@ -1654,7 +1679,7 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
 }
 #endif
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 void AlloyBrowserHostImplExt::SetVisible(int32_t nweb_id, bool visible)
 {
   auto strategy = -1;
@@ -1830,7 +1855,7 @@ void AlloyBrowserHostImplExt::NotifyScreenInfoChangedV2()
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->NotifyScreenInfoChangedV2();
   }
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
 #endif
 }
@@ -1950,7 +1975,7 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
     return false;
   }
- 
+
   if (!is_guest_view &&
       (params.url.SchemeIs(content::kChromeUIScheme)
       || params.url.SchemeIs(content::kArkWebUIScheme)) &&
@@ -1961,43 +1986,22 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
     LOG(WARNING) << "Navigation is blocked in Alloy-style browser.";
     return true;
   }
-  
+
   return false;
 }
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(const std::string& original_url,
-                                                                 const std::string& referrer,
-                                                                 int transition_type,
-                                                                 bool is_key_request) {
+std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(
+    const std::string& original_url,
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) {
   if (!client_ || !client_->AsArkWebClient()) {
     LOG(ERROR) << "client is null, OnRewriteUrlForNavigation failed";
     return "";
   }
-  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_WEBRTC)
-void AlloyBrowserHostImplExt::OnCameraCaptureStateChanged(int original_state, 
-                                                          int new_state) {
-  if (client_ && client_->AsArkWebClient() &&
-      client_->AsArkWebClient()->GetMediaHandler()) {
-    client_->AsArkWebClient()->GetMediaHandler()->OnCameraCaptureStateChanged(
-        original_state, new_state);
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_WEBRTC)
-void AlloyBrowserHostImplExt::OnMicrophoneCaptureStateChanged(int original_state, 
-                                                              int new_state) {
-  if (client_ && client_->AsArkWebClient() &&
-      client_->AsArkWebClient()->GetMediaHandler()) {
-    client_->AsArkWebClient()
-        ->GetMediaHandler()
-        ->OnMicrophoneCaptureStateChanged(original_state, new_state);
-  }
+  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(
+      original_url, referrer, transition_type, is_key_request);
 }
 #endif

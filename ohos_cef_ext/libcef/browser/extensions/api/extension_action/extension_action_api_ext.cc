@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ ExtensionFunction::ResponseAction ActionOpenPopupFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(args().size() == 1u);
   EXTENSION_FUNCTION_VALIDATE(extension());
   const base::Value& options = args()[0];
-
+ 
   // Support specifying the tab ID? This is
   // kind of racy (because really what the extension probably cares about is
   // the document ID; tab ID persists across pages, whereas document ID would
@@ -38,7 +38,7 @@ ExtensionFunction::ResponseAction ActionOpenPopupFunction::Run() {
       window_id = window_value->GetInt();
     }
   }
-
+ 
   NWebExtensionActionOpenPopupOptions open_popup_option;
   open_popup_option.windowId = window_id;
   OHOS::NWeb::NWebExtensionActionCefDelegate::GetInstance()->OnOpenPopup(

@@ -73,7 +73,7 @@ base::Value::List GetWindowValueList(
     bool populate) {
   base::Value::List window_list;
   size_t i = 0;
-  for (WebExtensionWindow window : windows) {
+  for (const WebExtensionWindow& window : windows) {
     if (i == scrub_tab_behaviors_combined.size()) break;
     window_list.Append(GetWindowValue(window, scrub_tab_behaviors_combined[i++], populate));
   }
@@ -89,7 +89,7 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
   if (tab_id > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
-    if (!tab || tab->nwebId  < 0) {
+    if (!tab || tab->nwebId < 0) {
       return default_window_id;
     }
     return tab->windowId;

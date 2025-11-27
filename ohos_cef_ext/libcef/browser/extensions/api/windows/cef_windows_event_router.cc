@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 #include "cef_windows_event_router.h"
-
+ 
 #include "base/containers/contains.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/common/extensions/api/windows.h"
@@ -25,9 +25,9 @@
 #include "cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h"
 
 namespace extensions {
-
+ 
 namespace {
-
+ 
 constexpr char kWindowTypesKey[] = "windowTypes";
 
 bool WillDispatchWindowEvent(
@@ -47,16 +47,17 @@ bool WillDispatchWindowEvent(
   }
   return true;
 }
-}
 
+}
+ 
 //static
 CefWindowsEventRouter* CefWindowsEventRouter::GetInstance() {
   static CefWindowsEventRouter instance;
   return &instance;
 }
-
+ 
 void CefWindowsEventRouter::DispatchWindowCreatedEvent(content::BrowserContext* browser_context,
-                                                      const WebExtensionWindow& window) {
+                                                       const WebExtensionWindow& window) {
   LOG(DEBUG) << "CefWindowsEventRouter::DispatchWindowCreatedEvent";
   if (!browser_context) {
     LOG(ERROR) << "browser_context is null";
@@ -79,9 +80,9 @@ void CefWindowsEventRouter::DispatchWindowCreatedEvent(content::BrowserContext* 
   event->will_dispatch_callback = base::BindRepeating(&WillDispatchWindowEvent, *window.type);
   EventRouter::Get(browser_context)->BroadcastEvent(std::move(event));
 }
-
+ 
 void CefWindowsEventRouter::DispatchWindowRemovedEvent(content::BrowserContext* browser_context,
-                                                      const WebExtensionWindow& window) {
+                                                       const WebExtensionWindow& window) {
   LOG(DEBUG) << "CefWindowsEventRouter::DispatchWindowRemovedEvent";
   if (!browser_context) {
     LOG(ERROR) << "browser_context is null";
@@ -120,7 +121,7 @@ void CefWindowsEventRouter::DispatchWindowBoundsChangedEvent(content::BrowserCon
                                        browser_context);
   EventRouter::Get(browser_context)->BroadcastEvent(std::move(event));
 }
-
+ 
 void CefWindowsEventRouter::DispatchWindowFocusChangedEvent(content::BrowserContext* browser_context,
                                                             const WebExtensionWindow& window) {
   LOG(DEBUG) << "CefWindowsEventRouter::DispatchWindowFocusChangedEvent";
@@ -137,5 +138,5 @@ void CefWindowsEventRouter::DispatchWindowFocusChangedEvent(content::BrowserCont
   event->will_dispatch_callback = base::BindRepeating(&WillDispatchWindowEvent, *window.type);
   EventRouter::Get(browser_context)->BroadcastEvent(std::move(event));
 }
-
-}  //  namespace extensions
+ 
+}  // namespace extensions

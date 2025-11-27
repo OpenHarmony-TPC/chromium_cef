@@ -50,7 +50,7 @@ std::string GetTypeStr(extensions::MenuItem::Type type) {
       return nullptr;
   };
 }
- 
+
 std::string GetContextStr(extensions::MenuItem::Context context) {
   switch (context) {
     case extensions::MenuItem::Context::ALL:
@@ -83,39 +83,43 @@ std::string GetContextStr(extensions::MenuItem::Context context) {
       return nullptr;
   };
 }
- 
+
 std::vector<std::string> ContextListToStrVector(
     const extensions::MenuItem::ContextList& contextList) {
   std::vector<std::string> result;
   for (int contextInt = extensions::MenuItem::Context::ALL;
-        contextInt <= extensions::MenuItem::Context::ACTION;
-        contextInt <<= 1) {
-    if (contextList.Contains(static_cast<extensions::MenuItem::Context>(contextInt))) {
-      result.push_back(GetContextStr(static_cast<extensions::MenuItem::Context>(contextInt)));
+       contextInt <= extensions::MenuItem::Context::ACTION; contextInt <<= 1) {
+    if (contextList.Contains(
+            static_cast<extensions::MenuItem::Context>(contextInt))) {
+      result.push_back(GetContextStr(
+          static_cast<extensions::MenuItem::Context>(contextInt)));
     }
   }
   return result;
 }
- 
+
 NO_SANITIZE("cfi-icall")
 content::BrowserContext* GetBrowserContext() {
-  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
+  CefRefPtr<CefRequestContext> request_context =
+      CefRequestContext::GetGlobalContext();
   if (!request_context) {
     LOG(ERROR) << "request context is null";
     return nullptr;
   }
- 
+
   CefRequestContextImpl* request_context_impl =
-    static_cast<CefRequestContextImpl*>(request_context.get());
-  CefBrowserContext* cef_browser_context = request_context_impl->GetBrowserContext();
+      static_cast<CefRequestContextImpl*>(request_context.get());
+  CefBrowserContext* cef_browser_context =
+      request_context_impl->GetBrowserContext();
   if (!cef_browser_context) {
     LOG(ERROR) << "cef browser context is null";
     return nullptr;
   }
-  content::BrowserContext* browser_context = cef_browser_context->AsBrowserContext();
+  content::BrowserContext* browser_context =
+      cef_browser_context->AsBrowserContext();
   return browser_context;
 }
- 
+
 NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   NWebContextMenusItem item;
   item.checked = menu_item->checked();
@@ -134,7 +138,6 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   return item;
 }
 
-#if BUILDFLAG(ARKWEB_NWEB_EX)
 NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item) {
   NWebContextMenusItemV2 item;
   item.item = GetNWebContextMenusItem(menu_item);
@@ -142,7 +145,6 @@ NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item
   item.intId = menu_item->id().uid;
   return item;
 }
-#endif
 
 void SetContextMenusEventProperties(base::Value::Dict& properties,
                                     ContextMenusOnClickedData& data) {
@@ -277,9 +279,10 @@ base::Value::List BuildContextMenuEventArgs(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
-                                                    ContextMenusOnClickedData& data,
-                                                    std::optional<NWebExtensionTab>& tab) {
+void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(
+    const std::string& extension_id,
+    ContextMenusOnClickedData& data,
+    std::optional<NWebExtensionTab>& tab) {
   content::BrowserContext* browser_context = GetBrowserContext();
   if (!browser_context) {
     LOG(ERROR) << "browser_context is null";
@@ -387,23 +390,27 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(
 }
 
 NO_SANITIZE("cfi-icall")
-std::vector<NWebContextMenusItem> CefWebExtensionMenuManager::GetAllExtensionContextMenus(
-  const std::vector<std::string>& extension_ids) {
+std::vector<NWebContextMenusItem>
+CefWebExtensionMenuManager::GetAllExtensionContextMenus(
+    const std::vector<std::string>& extension_ids) {
   std::vector<NWebContextMenusItem> items;
   content::BrowserContext* browser_context = GetBrowserContext();
   if (!browser_context) {
     LOG(ERROR) << "browser_context is null";
     return items;
   }
-  extensions::MenuManager* menu_manager = extensions::MenuManager::Get(browser_context);
+  extensions::MenuManager* menu_manager =
+      extensions::MenuManager::Get(browser_context);
   if (!menu_manager) {
     LOG(ERROR) << "menu_manager is null";
     return items;
   }
   for (const auto& id : menu_manager->ExtensionIds()) {
     if (extension_ids.size() == 0 ||
-      std::find(extension_ids.begin(), extension_ids.end(), id.extension_id) != extension_ids.end()) {
-      const extensions::MenuItem::OwnedList* top_items = menu_manager->MenuItems(id);
+        std::find(extension_ids.begin(), extension_ids.end(),
+                  id.extension_id) != extension_ids.end()) {
+      const extensions::MenuItem::OwnedList* top_items =
+          menu_manager->MenuItems(id);
       for (const std::unique_ptr<extensions::MenuItem>& item : *top_items) {
         GetFlattenedMenuItemSubtree(items, item);
       }
@@ -412,16 +419,18 @@ std::vector<NWebContextMenusItem> CefWebExtensionMenuManager::GetAllExtensionCon
   return items;
 }
 
-void CefWebExtensionMenuManager::GetFlattenedMenuItemSubtree(std::vector<NWebContextMenusItem>& items,
+void CefWebExtensionMenuManager::GetFlattenedMenuItemSubtree(
+    std::vector<NWebContextMenusItem>& items,
     const std::unique_ptr<extensions::MenuItem>& item) {
   items.push_back(GetNWebContextMenusItem(item.get()));
   for (const auto& child : item->children()) {
     GetFlattenedMenuItemSubtree(items, child);
   }
 }
- 
+
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extension_id,
+void CefWebExtensionMenuManager::OnContextMenusCreate(
+    const std::string& extension_id,
     extensions::MenuItem* menu_item) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
@@ -437,9 +446,10 @@ void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extensi
   }
 #endif
 }
- 
+
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extension_id,
+void CefWebExtensionMenuManager::OnContextMenusUpdate(
+    const std::string& extension_id,
     extensions::MenuItem* menu_item) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
@@ -465,7 +475,8 @@ void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extensi
 }
 
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
+void CefWebExtensionMenuManager::OnContextMenusRemove(
+    const std::string& extension_id,
     const std::string& menu_item_id) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (IsNativeApiEnable()) {
@@ -476,9 +487,10 @@ void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extensi
   }
 #endif
 }
- 
+
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnContextMenusRemoveAll(const std::string& extension_id) {
+void CefWebExtensionMenuManager::OnContextMenusRemoveAll(
+    const std::string& extension_id) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (IsNativeApiEnable()) {
     NWebExtensionContextMenusDispatcher::OnRemoveAllNative(extension_id);

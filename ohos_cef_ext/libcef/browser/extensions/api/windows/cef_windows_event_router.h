@@ -29,5 +29,5 @@ class CefWindowsEventRouter {
     void DispatchWindowBoundsChangedEvent(content::BrowserContext* browser_context, const WebExtensionWindow& window);
     void DispatchWindowFocusChangedEvent(content::BrowserContext* browser_context, const WebExtensionWindow& window);
 };
-}
-#endif // CEF_LIBCEF_BROWSER_EXTENSIONS_API_WINDOWS_H_
+} // namespace OHOS::NWeb
+#endif  // CEF_LIBCEF_BROWSER_EXTENSIONS_API_WINDOWS_H_
