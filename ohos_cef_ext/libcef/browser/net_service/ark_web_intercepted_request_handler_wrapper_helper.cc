@@ -237,7 +237,8 @@ void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                                 transition_type);
       load_handler->OnLoadStarted(frame, request->GetURL());
     }
-    load_handler->OnLoadErrorWithRequest(request, request->IsMainFrame(),
+    load_handler->OnLoadErrorWithRequest(request, frame,
+                                         request->IsMainFrame(),
                                          has_user_gesture, error_code,
                                          net::ErrorToShortString(error_code));
     // To use OuterMostMainFrame.

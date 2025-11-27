@@ -38,6 +38,7 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   /// OnLoadErrorWithRequest
   ///
   virtual void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
+                                      CefRefPtr<CefFrame> frame,
                                       bool is_main_frame,
                                       bool has_user_gesture,
                                       int error_code,
