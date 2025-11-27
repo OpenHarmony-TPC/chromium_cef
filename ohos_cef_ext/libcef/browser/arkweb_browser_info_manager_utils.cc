@@ -42,6 +42,7 @@ bool ArkwebBrowserInfoManagerUtils::CanCreateWindow(
     const GURL& target_url,
     WindowOpenDisposition disposition,
     bool user_gesture,
+    const gfx::Rect& window_features,
     CefRefPtr<CefCallback> callback) {
   CEF_REQUIRE_UIT();
   content::Referrer referrer;
@@ -66,10 +67,12 @@ bool ArkwebBrowserInfoManagerUtils::CanCreateWindow(
     if (handler.get()) {
       CefRefPtr<CefFrame> opener_frame = browser->GetFrameForHost(opener);
       DCHECK(opener_frame);
+      CefRect features(window_features.x(), window_features.y(),
+                       window_features.width(), window_features.height());
       allow = !handler->OnPreBeforePopup(
           browser.get(), opener_frame, target_url.spec(),
           static_cast<cef_window_open_disposition_t>(disposition), user_gesture,
-          callback);
+          features, callback);
     }
   }
   if (!allow) {

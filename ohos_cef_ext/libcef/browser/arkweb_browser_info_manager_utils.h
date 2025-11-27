@@ -43,6 +43,7 @@ class ArkwebBrowserInfoManagerUtils {
                        const GURL& target_url,
                        WindowOpenDisposition disposition,
                        bool user_gesture,
+                       const gfx::Rect& window_features,
                        CefRefPtr<CefCallback> callback);
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
