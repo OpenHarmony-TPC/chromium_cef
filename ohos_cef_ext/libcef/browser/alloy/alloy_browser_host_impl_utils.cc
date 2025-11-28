@@ -84,7 +84,6 @@
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #include "arkweb/ohos_nweb/src/nweb_inputmethod_handler.h"
-#include "arkweb/ohos_nweb/src/sysevent/event_reporter.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/cef_extension_keybinding_registry_views.h"
 #include "chrome/browser/extensions/extension_commands_global_registry.h"
 #include "chrome/browser/extensions/extension_keybinding_registry.h"
@@ -326,21 +325,6 @@ bool AlloyBrowserHostImplUtils::handleAndReDispatchKeyboardEvent(content::WebCon
 #endif
 
 #if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
-const std::string GetProcessName() {
-  std::ifstream input_file("/proc/self/cmdline");
-  if (!input_file.is_open()) {
-    LOG(ERROR) << "Error: Could not open /proc/self/cmdline";
-    return "";
-  }
-
-  std::string processName = "";
-  if (!std::getline(input_file, processName)) {
-    LOG(ERROR) << "Error: Failed to read process name from /proc/self/cmdline";
-  }
-  input_file.close();
-  return processName;
-}
-
 int AlloyBrowserHostImplUtils::handleRendererUnresponsive(content::WebContents* source, content::RendererIsUnresponsiveReason reason) {
   LOG(INFO) << "AlloyBrowserHostImplUtils::RendererUnresponsive";
   content::RenderProcessHost* host =
@@ -350,13 +334,7 @@ int AlloyBrowserHostImplUtils::handleRendererUnresponsive(content::WebContents* 
     alloyBrowserHostImpl->AsAlloyBrowserHostImplExt()->OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
     return -1;
   }
-  ReportRenderJsFreeze(
-    host->GetProcess().Pid(),
-    OHOS::NWeb::OhosAdapterHelper::GetInstance().GetSystemPropertiesInstance().GetBundleName(),
-    GetProcessName() + ":render",
-    "render unresponsive",
-    static_cast<int32_t>(getuid())
-  );
+  host->ReportRenderUnresponsive(static_cast<int32_t>(host->GetProcess().Pid()));
   host->InvokeRenderCrashDump();
   host->dumpCurrentJavaScriptStackInMainThread(
       base::BindOnce(&AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback, alloyBrowserHostImpl->AsAlloyBrowserHostImplExt(),
