@@ -34,8 +34,6 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
 
 void OverrideUserDataDirExt(const base::FilePath& user_data_path,
                             const base::CommandLine* command_line) {
-  base::PathService::Override(base::DIR_CACHE,
-                              user_data_path.Append("cache/web"));
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
 #if BUILDFLAG(ARKWEB_CRASHPAD)
   // log path need to get by interface
@@ -53,6 +51,25 @@ void OverrideUserDataDirExt(const base::FilePath& user_data_path,
         << "crashpad OverrideUserDataDir, get Bundle installation dir failed";
   }
 #endif  // BUILDFLAG(ARKWEB_CRASHPAD)
+}
+
+void OverrideCacheDirExt(const base::FilePath& arkweb_app_data_dir, const base::FilePath& cache_path){
+  base::FilePath arkweb_app_base_dir = arkweb_app_data_dir;
+  if (arkweb_app_data_dir.empty()) {
+    arkweb_app_base_dir = base::FilePath("/data/storage/el2/base");
+  }
+  // expect root directory
+  const base::FilePath kExpectedRoot = arkweb_app_base_dir.Append("cache");
+  // default path
+  const base::FilePath kDefaultCachePath = arkweb_app_base_dir.Append("cache/web");
+  // target
+  base::FilePath target_cache_path = arkweb_app_data_dir.Append(cache_path);
+
+  if (target_cache_path.empty() || !kExpectedRoot.IsParent(target_cache_path)) {
+    target_cache_path = kDefaultCachePath;
+  }
+  // set
+  base::PathService::Override(base::DIR_CACHE, target_cache_path);
 }
 
 }  // namespace resource_util
