@@ -911,6 +911,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnDocumentStart(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
@@ -924,6 +925,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnDocumentEnd(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
@@ -1338,6 +1340,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnHeadReady(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
