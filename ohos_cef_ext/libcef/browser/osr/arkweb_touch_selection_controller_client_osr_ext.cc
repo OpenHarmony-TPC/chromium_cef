@@ -1076,6 +1076,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
       browser->web_contents()->CollapseSelection();
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_PDF)
+      if (is_pdf_document_.load()) {
+        active_client_->ClearTextSelection();
+      }
+#endif  // BUILDFLAG(ARKWEB_PDF)
       break;
   }
 }
@@ -1120,5 +1125,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ResetResponsePendingInputEvent(
   if (controller) {
     controller->AsTouchSelectionControllerExt()->ResetResponsePendingInputEvent();
   }
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::SetIsPdfDocument(bool is_pdf_document)
+{
+  is_pdf_document_.store(is_pdf_document);
 }
 #endif  // BUILDFLAG(ARKWEB_PDF)

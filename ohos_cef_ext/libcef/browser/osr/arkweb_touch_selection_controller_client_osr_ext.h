@@ -92,6 +92,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 
 #if BUILDFLAG(ARKWEB_PDF)
   void ResetResponsePendingInputEvent() override;
+  void SetIsPdfDocument(bool is_pdf_document) override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
  private:
   // // Not owned, non-null for the lifetime of this object.
@@ -111,6 +112,9 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_AI)
   bool isSelectionNotEmptyForAI_;
 #endif
+#if BUILDFLAG(ARKWEB_PDF)
+  std::atomic<bool> is_pdf_document_{false};
+#endif  // BUILDFLAG(ARKWEB_PDF)
   base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
       weak_ptr_factory_;
 };
