@@ -24,6 +24,7 @@
 #include "base/path_service.h"
 #include "base/uuid.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/prefs/pref_service.h"
 #include "components/subresource_filter/core/browser/ruleset_version.h"
 #include "components/subresource_filter/core/browser/subresource_filter_constants.h"
@@ -49,7 +50,9 @@ const char kLogTag[] = "[AdBLock]";
 namespace {
 base::FilePath GetOhosAppDataDir() {
   base::FilePath app_data_dir;
-  base::PathService::Get(base::DIR_CACHE, &app_data_dir);
+  if (!base::PathService::Get(chrome::DIR_USER_DATA, &app_data_dir)) {
+    base::PathService::Get(base::DIR_CACHE, &app_data_dir);
+  }
 
   return app_data_dir;
 }
@@ -112,7 +115,7 @@ void UnindexedRulesetToIndexedRulesetInternal(const base::FilePath unindexed_fil
                                               long long version) {
   UnindexedRulesetInfo ruleset_info;
   ruleset_info.content_version = std::to_string(version);
-  ruleset_info.ruleset_path = GetUnindexedRulesetFile();                                              
+  ruleset_info.ruleset_path = GetUnindexedRulesetFile();
 
   if (!g_browser_process || !g_browser_process->local_state() ||
       g_browser_process->local_state()->GetInitializationStatus() == PrefService::INITIALIZATION_STATUS_WAITING) {
@@ -263,20 +266,10 @@ void OnUpdateRulesetFinished(bool success) {
   LOG(INFO) << kLogTag << "OnUpdateRulesetFinished:"
             << (success == true ? "success" : "fail");
 }
-
-void SetAdBlockEasylistVersion(int64_t version) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-}
 }  // namespace
 
 AdblockRulesetManager::AdblockRulesetManager() {}
 AdblockRulesetManager::~AdblockRulesetManager() {}
-
-base::FilePath AdblockRulesetManager::GetOhosAdblockEasylistFilePath() {
-  return GetOhosAppDataDir()
-      .Append(FILE_PATH_LITERAL(kTopLevelDirectoryName))
-      .Append(FILE_PATH_LITERAL(kAdblockEasylistFileName));
-}
 
 // implement RulesetServiceclient interface
 void AdblockRulesetManager::OnDeleteRulesetFile() {
@@ -284,27 +277,12 @@ void AdblockRulesetManager::OnDeleteRulesetFile() {
     return;
   }
 
-  base::FilePath easylist_file = GetOhosAdblockEasylistFilePath();
-
-  // Rewrite easylist version to default in SharedPreference.
-  // Rewrite sharedpreference only can be called in UI thread.
-  content::GetUIThreadTaskRunner({base::TaskPriority::HIGHEST})
-      ->PostTask(FROM_HERE, base::BindOnce(&SetAdBlockEasylistVersion, 0L));
-
-  LOG(INFO) << kLogTag << "On delete ruleset file and try to regenerate from"
-            << easylist_file.value();
-
-  if (!base::PathExists(easylist_file)) {
-    LOG(INFO) << kLogTag
-              << "Easylist file does not exist:" << easylist_file.value();
+  if (last_user_easylist_.empty()) {
     return;
   }
 
-  std::vector<base::FilePath> easylists;
-  easylists.push_back(easylist_file);
-
   sequenced_task_runner_->PostTaskAndReplyWithResult(
-      FROM_HERE, base::BindOnce(&UpdateRuleset, easylists, 0L),
+      FROM_HERE, base::BindOnce(&UpdateRuleset, last_user_easylist_, 0L),
       base::BindOnce(&OnUpdateRulesetFinished));
 }
 
@@ -324,6 +302,7 @@ void AdblockRulesetManager::EasyListFileUpdated(
     return;
   }
 
+  last_user_easylist_ = easylists;
   sequenced_task_runner_->PostTaskAndReplyWithResult(
       FROM_HERE, base::BindOnce(&UpdateRuleset, easylists, version),
       base::BindOnce(&OnUpdateRulesetFinished));
@@ -335,4 +314,3 @@ AdblockRulesetManager* AdblockRulesetManager::GetInstance() {
 }
 
 }  // namespace subresource_filter
-                                  

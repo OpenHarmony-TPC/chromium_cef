@@ -20,6 +20,7 @@
 #include "base/observer_list.h"
 #include "base/path_service.h"
 #include "base/strings/string_number_conversions.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/subresource_filter/core/browser/subresource_filter_constants.h"
 #include "components/subresource_filter/core/browser/user_subresource_filter_constants.h"
 #include "components/subresource_filter/core/common/indexed_ruleset.h"
@@ -112,29 +113,6 @@ void UpdateAdblockEasyListRules(base::FilePath path) {
 
   content::GetIOThreadTaskRunner({})->PostTask(
       FROM_HERE, base::BindOnce(&UpdateEasyListRulesInIOThread));
-}
-
-void TryRemoveAdblockSentinelFile(long adBlockEasyListVersion) {
-  base::FilePath app_data_dir;
-  base::PathService::Get(base::DIR_CACHE, &app_data_dir);
-  base::FilePath sentinel_file_path =
-      app_data_dir
-          .Append(
-              FILE_PATH_LITERAL(::subresource_filter::kTopLevelDirectoryName))
-          .Append(FILE_PATH_LITERAL(
-              ::subresource_filter::kIndexedRulesetBaseDirectoryName))
-          .AppendASCII(base::NumberToString(
-              ::subresource_filter::RulesetIndexer::kIndexedFormatVersion))
-          .AppendASCII(base::NumberToString(adBlockEasyListVersion))
-          .Append(::subresource_filter::kSentinelFileName);
-
-  if (base::PathExists(sentinel_file_path)) {
-    if (base::DeleteFile(sentinel_file_path)) {
-      LOG(INFO) << "delete sentinel file success";
-    } else {
-      LOG(INFO) << "delete sentinel file fail";
-    }
-  }
 }
 
 }  // namespace adblock
