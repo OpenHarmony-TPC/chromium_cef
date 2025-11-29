@@ -30,7 +30,8 @@ void CefDevToolsWindowRunner::ShowDevToolsWith(
     CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
     CefBrowserHostBase* inspected_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
-    const CefPoint& inspect_element_at) {
+    const CefPoint& inspect_element_at,
+    bool canDock) {
   CEF_REQUIRE_UIT();
   auto* arkweb_host_ext = static_cast<ArkWebBrowserHostExtImpl*>(frontend_browser.get());
   auto alloy_frontend_browser = arkweb_host_ext->AsAlloyBrowserHostImpl();
@@ -53,7 +54,8 @@ void CefDevToolsWindowRunner::ShowDevToolsWith(
         alloy_frontend_browser.get(), std::move(devtools_message_handler),
         web_contents, inspect_element_at,
         base::BindOnce(&CefDevToolsWindowRunner::OnFrontEndDestroyed,
-                       weak_ptr_factory_.GetWeakPtr()));
+                       weak_ptr_factory_.GetWeakPtr()),
+        canDock);
   }
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)

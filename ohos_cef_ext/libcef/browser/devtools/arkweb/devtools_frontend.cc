@@ -97,18 +97,23 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
-static std::string GetFrontendURL() {
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  return base::StringPrintf("%s://%s/devtools_app.html?can_dock=true&dockSide=undocked",
+static std::string GetFrontendURL(bool can_dock) {
+  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
+  if (can_dock) {
+    return base::StringPrintf("%s://%s/devtools_app.html?can_dock=true&dockSide=undocked",
                             content::kChromeDevToolsScheme,
                             scheme::kChromeDevToolsHost);
-#else
+  }
   return base::StringPrintf("%s://%s/devtools_app.html",
                             content::kChromeDevToolsScheme,
                             scheme::kChromeDevToolsHost);
+}
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+static std::string GetFrontendURL() {
+  return base::StringPrintf("%s://%s/devtools_app.html",
+                            content::kChromeDevToolsScheme,
+                            schemChromeDevToolsHost);
 }
 
 base::Value::Dict BuildObjectForResponse(const net::HttpResponseHeaders* rh,
@@ -333,13 +338,15 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
-      base::OnceClosure frontend_destroyed_callback) {
+      base::OnceClosure frontend_destroyed_callback,
+      bool can_dock) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})";
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
-          frontend_browser->web_contents()->GetBrowserContext()));
+          frontend_browser->web_contents()->GetBrowserContext()),
+      can_dock);
   // CefDevToolsFrontend will delete itself when the frontend WebContents is
   // destroyed.
   CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
@@ -348,7 +355,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL());
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(can_dock));
 
   return devtools_frontend;
 }
@@ -414,6 +421,7 @@ CefDevToolsFrontend::CefDevToolsFrontend(
       weak_factory_(this) {
   DCHECK(!frontend_destroyed_callback_.is_null());
   file_manager_.SetDevToolsMessageHandler(devtools_message_handler_.get());
+  devtools_message_handler_->SetDevToolsFrontend(this);
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 

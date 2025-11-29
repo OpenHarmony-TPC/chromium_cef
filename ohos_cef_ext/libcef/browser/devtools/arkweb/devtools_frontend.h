@@ -75,7 +75,8 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
-      base::OnceClosure frontend_destroyed_callback);
+      base::OnceClosure frontend_destroyed_callback,
+      bool can_dock);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   void Activate();

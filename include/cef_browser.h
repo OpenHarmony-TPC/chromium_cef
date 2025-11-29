@@ -633,7 +633,8 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   virtual void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) = 0;
+      const CefPoint& inspect_element_at,
+      bool canDock) = 0;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///
