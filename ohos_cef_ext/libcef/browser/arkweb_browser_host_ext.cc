@@ -4138,10 +4138,11 @@ void ArkWebBrowserHostExtImpl::StopFling() {
 void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
     CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    const CefPoint& inspect_element_at) {
+    const CefPoint& inspect_element_at,
+    bool canDock) {
   CEF_REQUIRE_UIT();
   GetDevToolsWindowRunner()->ShowDevToolsWith(
-      frontend_browser, this, delegate, inspect_element_at);
+      frontend_browser, this, delegate, inspect_element_at, canDock);
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
