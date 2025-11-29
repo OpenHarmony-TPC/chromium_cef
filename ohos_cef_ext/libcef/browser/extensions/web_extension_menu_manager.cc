@@ -25,8 +25,9 @@
 #include "extensions/browser/event_router.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
-#include "extensions/common/mojom/context_type.mojom.h"
+#include "extensions/common/manifest_handlers/incognito_info.h"
 #include "extensions/common/mojom/context_type.mojom-forward.h"
+#include "extensions/common/mojom/context_type.mojom.h"
 #include "libcef/browser/extensions/browser_extensions_util.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
@@ -234,21 +235,40 @@ void ExtensionContextMenusInvokeActiveTab(
 NO_SANITIZE("cfi-icall")
 content::BrowserContext* GetBrowserContextInUse(
     content::BrowserContext* browser_context,
-    const std::optional<NWebExtensionTab>& tab) {
+    const std::optional<NWebExtensionTab>& tab,
+    const std::string& extension_id) {
   if (!browser_context) {
     LOG(ERROR) << "browser_context is null";
     return nullptr;
   }
 
-  if (tab && tab->incognito) {
-    content::BrowserContext* incognito =
-        extensions::GetIncognitoContext(browser_context);
-    if (!incognito) {
-      LOG(ERROR)
-          << "OnClickedExtensionContextMenus get incognito context failed";
-      return nullptr;
-    }
-    return incognito;
+  if (!tab || !tab->incognito) {
+    return browser_context;
+  }
+
+  content::BrowserContext* incognito_context =
+      extensions::GetIncognitoContext(browser_context);
+  if (!incognito_context) {
+    LOG(ERROR) << "GetIncognitoContext failed";
+    return nullptr;
+  }
+
+  extensions::ExtensionRegistry* registry =
+      extensions::ExtensionRegistry::Get(browser_context);
+  if (!registry) {
+    return nullptr;
+  }
+
+  const extensions::Extension* extension = registry->GetExtensionById(
+      extension_id, extensions::ExtensionRegistry::EVERYTHING);
+
+  if (!extension) {
+    LOG(WARNING) << "Extension not found in registry: " << extension_id;
+    return nullptr;
+  }
+
+  if (extensions::IncognitoInfo::IsSplitMode(extension)) {
+    return incognito_context;
   }
 
   return browser_context;
@@ -340,7 +360,7 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(
     std::optional<NWebExtensionTab>& tab) {
   content::BrowserContext* browser_context = GetBrowserContext();
   content::BrowserContext* browser_context_active =
-      GetBrowserContextInUse(browser_context, tab);
+      GetBrowserContextInUse(browser_context, tab, extension_id);
   if (!browser_context_active) {
     return;
   }
