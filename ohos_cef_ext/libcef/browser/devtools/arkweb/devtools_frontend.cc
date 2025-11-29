@@ -113,7 +113,7 @@ static std::string GetFrontendURL(bool can_dock) {
 static std::string GetFrontendURL() {
   return base::StringPrintf("%s://%s/devtools_app.html",
                             content::kChromeDevToolsScheme,
-                            schemChromeDevToolsHost);
+                            scheme::kChromeDevToolsHost);
 }
 
 base::Value::Dict BuildObjectForResponse(const net::HttpResponseHeaders* rh,
