@@ -334,6 +334,7 @@ int AlloyBrowserHostImplUtils::handleRendererUnresponsive(content::WebContents* 
     alloyBrowserHostImpl->AsAlloyBrowserHostImplExt()->OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
     return -1;
   }
+  host->ReportRenderUnresponsive(static_cast<int32_t>(host->GetProcess().Pid()));
   host->InvokeRenderCrashDump();
   host->dumpCurrentJavaScriptStackInMainThread(
       base::BindOnce(&AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback, alloyBrowserHostImpl->AsAlloyBrowserHostImplExt(),
