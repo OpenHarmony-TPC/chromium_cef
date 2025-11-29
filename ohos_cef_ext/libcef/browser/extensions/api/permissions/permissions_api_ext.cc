@@ -273,6 +273,10 @@ void PermissionsRequestFunction::OnGetPromptData(
   if (0 < data->permissionCount) {
     data->permissions = (NWebExtensionPermission*)calloc(
         data->permissionCount, sizeof(NWebExtensionPermission));
+    if (!data->permissions) {
+      return;
+    }
+
     for (uint32_t i = 0; i < data->permissionCount; i++) {
       std::string permission =
           std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>()

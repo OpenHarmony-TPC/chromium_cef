@@ -29,6 +29,8 @@ namespace SendSuggestions = omnibox::SendSuggestions;
 
 namespace {
 
+int g_input_uid = 0;
+
 const char kCurrentTabDisposition[] = "currentTab";
 const char kForegroundTabDisposition[] = "newForegroundTab";
 const char kBackgroundTabDisposition[] = "newBackgroundTab";
@@ -42,6 +44,7 @@ bool ExtensionOmniboxEventRouter::OnInputChanged(
     content::BrowserContext* browser_context) {
   base::Value::List args;
   args.Append(input);
+  args.Append(++g_input_uid);
   auto event = std::make_unique<Event>(events::OMNIBOX_ON_INPUT_CHANGED,
                                        omnibox::OnInputChanged::kEventName,
                                        std::move(args), browser_context);
