@@ -86,10 +86,10 @@ class CefDevToolsMessageHandlerDelegate : public virtual CefBaseRefCounted {
   /// Called when devtools request to modify the size of the inspect page.
   ///
   /*--cef()--*/
-  virtual bool SetInspectedPageBound(int left,
-                                     int top,
-                                     int width,
-                                     int height) {
+  virtual bool SetInspectedPageBounds(int left,
+                                      int top,
+                                      int width,
+                                      int height) {
     return false;
   }
   ///
