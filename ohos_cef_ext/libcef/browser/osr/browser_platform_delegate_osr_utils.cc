@@ -230,3 +230,18 @@ void CefBrowserPlatformDelegateOsrUtils::RestoreTextHandlesAfterDrag(){
         ->SetTextHandlesTemporarilyHiddenByDrag(false, false);
   }
 }
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void CefBrowserPlatformDelegateOsrUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
+  LOG(DEBUG) << "CefBrowserPlatformDelegateOsrUtils::EvictFrameBackBuffersWhenNWebWasHidden";
+  if (cefBrowserPlatformDelegateOsr == nullptr) {
+    return;
+  }
+  // The WebContentsImpl will notify the OSR view.
+  content::WebContentsImpl* web_contents = 
+    static_cast<content::WebContentsImpl*>(cefBrowserPlatformDelegateOsr->web_contents_);
+  if (web_contents) {
+    web_contents->EvictFrameBackBuffersWhenNWebWasHidden();
+  }
+}
+#endif

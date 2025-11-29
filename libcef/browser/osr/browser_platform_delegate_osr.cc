@@ -287,6 +287,12 @@ bool CefBrowserPlatformDelegateOsr::IsHidden() const {
   return true;
 }
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void CefBrowserPlatformDelegateOsr::EvictFrameBackBuffersWhenNWebWasHidden() {
+  cef_browser_platform_delegate_osr_utils_->EvictFrameBackBuffersWhenNWebWasHidden();
+}
+#endif
+
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {

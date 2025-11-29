@@ -67,6 +67,9 @@ class CefBrowserPlatformDelegateOsr
   bool IsWindowless() const override;
   void WasHidden(bool hidden) override;
   bool IsHidden() const override;
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden() override;
+#endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;
   void SendExternalBeginFrame() override;

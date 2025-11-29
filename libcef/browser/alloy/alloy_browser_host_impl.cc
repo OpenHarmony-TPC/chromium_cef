@@ -462,6 +462,12 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
   }
 }
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden() {
+  implUtils->EvictFrameBackBuffersWhenNWebWasHidden();
+}
+#endif
+
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_for_include.cc"
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {

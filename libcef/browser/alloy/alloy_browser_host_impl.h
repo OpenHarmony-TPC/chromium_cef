@@ -110,6 +110,10 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   void WasResized() override;
   void WasHidden(bool hidden) override;
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden() override;
+#endif
+
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void SetEnableHalfFrameRate(bool enabled) override;
 #endif

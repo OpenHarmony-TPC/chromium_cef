@@ -1480,6 +1480,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void StopMicrophone() {}
 #endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  ///
+  /// Evict frame back buffers when nweb was hidden
+  ///
+  virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

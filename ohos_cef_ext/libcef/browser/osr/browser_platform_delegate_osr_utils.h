@@ -34,6 +34,10 @@ public:
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
     void UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view);
 #endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+    void EvictFrameBackBuffersWhenNWebWasHidden();
+#endif
 };
  
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_UTILS_H_
