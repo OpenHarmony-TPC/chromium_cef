@@ -313,5 +313,5 @@ AdblockRulesetManager* AdblockRulesetManager::GetInstance() {
   return base::Singleton<AdblockRulesetManager>::get();
 }
 
-}  // namespace subresource_filter
-
+}  // namespace subresource_filter	
+                                  
