@@ -514,10 +514,12 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
-  void FillAutofillData(CefRefPtr<CefValue> message) override;
+  void FillAutofillData(CefRefPtr<CefValue> message, int32_t trigger_type) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  void SetVaultPlainTextCallback(
+      std::shared_ptr<OHOS::NWeb::NWebVaultPlainTextCallback> callback) override;
   void ProcessAutofillCancel(const CefString& fillContent) override;
   void AutoFillWithIMFEvent(bool is_username,
                             bool is_other_account,

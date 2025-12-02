@@ -1174,7 +1174,7 @@ void ArkWebBrowserHostExtImpl::SetAutofillCallback(
   }
 }
 
-void ArkWebBrowserHostExtImpl::FillAutofillData(CefRefPtr<CefValue> message) {
+void ArkWebBrowserHostExtImpl::FillAutofillData(CefRefPtr<CefValue> message, int32_t trigger_type) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
@@ -1186,7 +1186,7 @@ void ArkWebBrowserHostExtImpl::FillAutofillData(CefRefPtr<CefValue> message) {
   autofill::OhAutofillClient* autofill_client =
       autofill::OhAutofillClient::FromWebContents(web_contents);
   if (autofill_client) {
-    autofill_client->FillData(message);
+    autofill_client->FillData(message, trigger_type);
   }
 }
 #endif
@@ -2717,6 +2717,19 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
 #endif
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+void ArkWebBrowserHostExtImpl::SetVaultPlainTextCallback(
+    std::shared_ptr<OHOS::NWeb::NWebVaultPlainTextCallback> callback) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+    return;
+  }
+  web_contents->SetVaultPlainTextCallback(callback);
+}
+
 void ArkWebBrowserHostExtImpl::ProcessAutofillCancel(
     const CefString& fillContent) {
   auto web_contents = GetWebContents();

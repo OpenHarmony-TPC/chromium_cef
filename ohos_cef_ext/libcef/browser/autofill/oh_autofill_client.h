@@ -89,7 +89,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback) {
     callback_ = callback;
   }
-  void FillData(CefRefPtr<CefValue> data);
+  void SetFocusFieldGlobalId(const FieldGlobalId& field_id);
+  void FillData(CefRefPtr<CefValue> data, int32_t trigger_type = 0);
   bool OnAutofillEvent(const std::string& json_str);
   bool IsOffTheRecord() const override;
   scoped_refptr<network::SharedURLLoaderFactory> GetURLLoaderFactory() override;
@@ -169,6 +170,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
 #if BUILDFLAG(ARKWEB_DATALIST)
   SelectedCallback selected_callback_;
 #endif
+  FieldGlobalId focused_field_id_;
 
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;

@@ -41,6 +41,9 @@
 using content::WebContents;
 
 namespace autofill {
+namespace {
+constexpr int32_t PASTER_REQUEST_TRIGGER_TYPE = 2;
+}
 
 void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
   DCHECK(contents);
@@ -61,7 +64,12 @@ base::WeakPtr<autofill::AutofillClient> OhAutofillClient::GetWeakPtr() {
   return weak_ptr_factory_.GetWeakPtr();
 }
 
-void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
+void OhAutofillClient::SetFocusFieldGlobalId(const FieldGlobalId& field_id) {
+  LOG(DEBUG) << "SetFocusFieldGlobalId field_id:" << field_id;
+  focused_field_id_ = field_id;
+}
+
+void OhAutofillClient::FillData(CefRefPtr<CefValue> data, int32_t trigger_type) {
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   if (!data) {
     LOG(ERROR) << "data is null";
@@ -81,7 +89,11 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
   }
   auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
   if (mgr) {
-    mgr->FillData(json_str);
+    if (trigger_type == PASTER_REQUEST_TRIGGER_TYPE) {
+      mgr->FillDataFromPaster(json_str, focused_field_id_);
+    } else {
+      mgr->FillData(json_str);
+    }
   }
 #endif
 }
