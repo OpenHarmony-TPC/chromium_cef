@@ -27,6 +27,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/prefs/pref_service_factory.h"
 #include "components/user_prefs/user_prefs.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/ssl_status.h"
@@ -87,6 +88,10 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
 }
 
 bool OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
+  if (!EnableAutoFill()) {
+    LOG(INFO) << "[AutoFill] autofill interception successful.";
+    return false;
+  }
   if (callback_) {
     CefRefPtr<CefValue> data = CefValue::Create();
     data->SetStdString(json_str);
@@ -329,6 +334,11 @@ content::WebContents& OhAutofillClient::GetWebContents() const {
   // cast is the lesser of two evils.
   return const_cast<content::WebContents&>(
       ContentAutofillClient::GetWebContents());
+}
+
+bool OhAutofillClient::EnableAutoFill() const {
+  auto web_preference = GetWebContents().GetOrCreateWebPreferences();
+  return web_preference.is_autofill_enabled;
 }
 
 }  // namespace autofill

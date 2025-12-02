@@ -755,6 +755,10 @@ typedef struct _cef_browser_settings_t {
   double border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
 
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  bool is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+
 #if BUILDFLAG(ARKWEB_MENU)
   bool touch_handle_exist;
   bool viewport_scale;

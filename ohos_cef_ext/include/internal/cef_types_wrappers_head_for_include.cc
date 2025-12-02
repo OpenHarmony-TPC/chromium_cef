@@ -103,4 +103,8 @@ static inline void setForInclude(const struct_type* src,
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
   target->clipboard_site_permission_enabled = src->clipboard_site_permission_enabled;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  target->is_autofill_enabled = src->is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 }
