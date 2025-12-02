@@ -115,7 +115,7 @@ void UnindexedRulesetToIndexedRulesetInternal(const base::FilePath unindexed_fil
                                               long long version) {
   UnindexedRulesetInfo ruleset_info;
   ruleset_info.content_version = std::to_string(version);
-  ruleset_info.ruleset_path = GetUnindexedRulesetFile();
+  ruleset_info.ruleset_path = GetUnindexedRulesetFile();                                              
 
   if (!g_browser_process || !g_browser_process->local_state() ||
       g_browser_process->local_state()->GetInitializationStatus() == PrefService::INITIALIZATION_STATUS_WAITING) {
