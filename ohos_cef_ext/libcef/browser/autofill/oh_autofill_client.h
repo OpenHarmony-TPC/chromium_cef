@@ -152,6 +152,10 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   void SuggestionSelected(int position);
 #endif
 
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+ bool EnableAutoFill() const;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+
  protected:
   // Protected for testing.
   explicit OhAutofillClient(content::WebContents* web_contents);

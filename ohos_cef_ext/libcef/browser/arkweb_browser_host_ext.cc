@@ -689,6 +689,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
   settings_.border_radius_bottom_right =
       browser_settings.border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  settings_.is_autofill_enabled = browser_settings.is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 #if BUILDFLAG(ARKWEB_MENU)
   settings_.touch_handle_exist = browser_settings.touch_handle_exist;
   settings_.viewport_scale = browser_settings.viewport_scale;
