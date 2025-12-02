@@ -361,3 +361,23 @@ void AlloyBrowserHostImplUtils::handleSingleRenderDelayShutdown(content::WebCont
   source->GetPrimaryMainFrame()->GetProcess()->FastShutdownIfPossible(1, false);
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void AlloyBrowserHostImplUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
+  if (alloyBrowserHostImpl == nullptr) {
+    LOG(INFO) << "alloyBrowserHostImpl is nullptr";
+    return;
+  }
+  if (!alloyBrowserHostImpl->IsWindowless()) {
+    return;
+  }
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden,
+                                          alloyBrowserHostImpl->AsAlloyBrowserHostImpl()));
+    return;
+  }
+  if (alloyBrowserHostImpl->platform_delegate_) {
+    alloyBrowserHostImpl->platform_delegate_->EvictFrameBackBuffersWhenNWebWasHidden();
+  }
+}
+#endif

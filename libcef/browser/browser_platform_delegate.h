@@ -320,6 +320,11 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual bool IsHidden() const;
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  // Evict frame back buffers when nweb was hidden
+  virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+#endif
+
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering.
   virtual void NotifyScreenInfoChanged();

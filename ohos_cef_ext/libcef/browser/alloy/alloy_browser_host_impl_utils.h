@@ -59,6 +59,9 @@ public:
   void handleSingleRenderDelayShutdown(content::WebContents* source);
 #endif
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden();
+#endif
 };
 
 
