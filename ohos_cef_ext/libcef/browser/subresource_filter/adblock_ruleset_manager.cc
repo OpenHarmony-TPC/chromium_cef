@@ -314,3 +314,4 @@ AdblockRulesetManager* AdblockRulesetManager::GetInstance() {
 }
 
 }  // namespace subresource_filter
+
