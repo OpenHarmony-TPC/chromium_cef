@@ -324,4 +324,4 @@ UserAdblockRulesetManager* UserAdblockRulesetManager::GetInstance() {
 }
 
 }  // namespace subresource_filter
-      
+                                  
