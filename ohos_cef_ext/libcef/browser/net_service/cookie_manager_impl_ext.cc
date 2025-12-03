@@ -323,6 +323,7 @@ void CefCookieManagerImplExt::StartSetQos() {
     network_set_times_++;
     return;
   }
+  network_set_times_++;
   content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
       base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
 }
