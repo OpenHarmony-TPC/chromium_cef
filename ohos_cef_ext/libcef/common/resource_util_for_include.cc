@@ -64,7 +64,6 @@ void OverrideCacheDirExt(const base::FilePath& arkweb_app_data_dir, const base::
   const base::FilePath kDefaultCachePath = arkweb_app_data_dir.Append("cache/web");
   // target
   base::FilePath target_cache_path = cache_path;
-
   if (!arkweb_app_data_dir.IsParent(cache_path) &&
       arkweb_app_data_dir != cache_path) {
     target_cache_path = arkweb_app_data_dir.Append(cache_path);
