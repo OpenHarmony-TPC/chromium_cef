@@ -536,6 +536,57 @@ def run(command_line, working_dir):
 def print_error(msg):
   print('Error: %s\nSee --help for usage.' % msg)
 
+# Check if the current build is ohos platform, return True if yes, and then
+# return False.
+def read_target_os_from_args_gn(src_dir):
+  """ Check the platform, listed in src_dir: src/out/musl_64/args.gn. """
+  args = os.path.join(src_dir, 'out/musl_64/args.gn')
+  target_os = None
+  if os.path.exists(args):
+    with open(args, 'r') as infile:
+      for line in infile:
+        line = line.strip()
+        if not line or line.startswith('#'):
+          continue
+        if '=' in line:
+          parts = line.split('=', 1)
+          key = parts[0].strip()
+          val = parts[1].strip() if len(parts) > 1 else ''
+          if key == 'target_os':
+            target_os = val
+            if target_os.startswith('"') and target_os.endswith('"'):
+              target_os = target_os[1:-1]
+            break
+  if target_os is None:
+    raise Exception('Failed to read target_os from %s' % args)
+  return target_os is not None and target_os.lower() in ['ohos']
+
+# transfer files for ohos platform
+def transfer_demo_files(build_dir, binaries):
+  """ transfer files listed in build_dir, and retrun binaries. """
+  # add test of cefsimple/ceftests ...
+  cefsimple_path = os.path.join(build_dir, 'cefsimple')
+  ceftests_path = os.path.join(build_dir, 'ceftests')
+  cefclient_path = os.path.join(build_dir, 'cefclient')
+  if path_exists(cefsimple_path):
+    binaries.append({'path': 'cefsimple'})
+  if path_exists(ceftests_path):
+    binaries.append({'path': 'ceftests'})
+  if path_exists(cefclient_path):
+    binaries.append({'path': 'cefclient'})
+  # add test of so if cefsimple/ceftests ... needed
+  libcefsimple_path = os.path.join(build_dir, 'libcefsimple.so')
+  libceftests_path = os.path.join(build_dir, 'libceftests.so')
+  libcefclient_path = os.path.join(build_dir, 'libcefclient.so')
+  libadapter_path = os.path.join(build_dir, 'libadapter.so')
+  if path_exists(libcefsimple_path):
+    binaries.append({'path': 'libcefsimple.so'})
+  if path_exists(libceftests_path):
+    binaries.append({'path': 'libceftests.so'})
+  if path_exists(libcefclient_path):
+    binaries.append({'path': 'libcefclient.so'})
+  if path_exists(libadapter_path):
+    binaries.append({'path': 'libadapter.so'})
 
 # cannot be loaded as a module
 if __name__ != "__main__":
@@ -709,8 +760,11 @@ cef_dir = os.path.realpath(os.path.join(script_dir, os.pardir))
 # src directory
 src_dir = os.path.realpath(os.path.join(cef_dir, os.pardir))
 
-if not git.is_checkout(cef_dir):
-  raise Exception('Not a valid checkout: %s' % (cef_dir))
+# if not git.is_checkout(cef_dir):
+#   raise Exception('Not a valid checkout: %s' % (cef_dir))
+
+# get ohos platform flag
+is_ohos = read_target_os_from_args_gn(src_dir)
 
 # retrieve information for CEF
 cef_url = git.get_url(cef_dir)
@@ -761,6 +815,10 @@ else:
   platform_arch = '32'
   binary_arch = 'x86'
 
+if is_ohos:
+  platform_arch = 'arm64'
+  binary_arch = 'arm64'
+
 # output directory
 output_dir_base = 'cef_binary_' + cef_ver
 
@@ -770,6 +828,9 @@ if options.distribsubdir == '':
     platform_name = 'macos' + ('x' if platform_arch == '64' else '')
   else:
     platform_name = platform
+
+  if is_ohos:
+    platform_name = 'ohos'
 
   output_dir_name = output_dir_base + '_' + platform_name + platform_arch
   if options.distribsubdirsuffix != '':
@@ -826,6 +887,9 @@ else:
 out_dir = os.path.join(src_dir, 'out')
 build_dir_debug = os.path.join(out_dir, 'Debug' + build_dir_suffix)
 build_dir_release = os.path.join(out_dir, 'Release' + build_dir_suffix)
+if is_ohos:
+  build_dir_debug = os.path.join(out_dir, 'musl_64')
+  build_dir_release = os.path.join(out_dir, 'musl_64')
 
 # Transfer the about_credits.html file.
 # Debug and Release build should be the same so grab whichever exists.
@@ -1328,16 +1392,27 @@ elif platform == 'mac':
 elif platform == 'linux':
   libcef_so = 'libcef.so'
   # yapf: disable
-  binaries = [
-      {'path': 'chrome_sandbox', 'out_path': 'chrome-sandbox'},
-      {'path': libcef_so},
-      {'path': 'libEGL.so'},
-      {'path': 'libGLESv2.so'},
-      {'path': 'libvk_swiftshader.so'},
-      {'path': 'libvulkan.so.1'},
-      {'path': 'v8_context_snapshot.bin'},
-      {'path': 'vk_swiftshader_icd.json'},
-  ]
+  if is_ohos:
+    binaries = [
+        {'path': libcef_so},
+        {'path': 'libEGL.so'},
+        {'path': 'libGLESv2.so'},
+        {'path': 'libvk_swiftshader.so'},
+        {'path': 'libvulkan.so'},
+        {'path': 'v8_context_snapshot.bin'},
+        {'path': 'vk_swiftshader_icd.json'},
+    ]
+  else:
+    binaries = [
+        {'path': 'chrome_sandbox', 'out_path': 'chrome-sandbox'},
+        {'path': libcef_so},
+        {'path': 'libEGL.so'},
+        {'path': 'libGLESv2.so'},
+        {'path': 'libvk_swiftshader.so'},
+        {'path': 'libvulkan.so.1'},
+        {'path': 'v8_context_snapshot.bin'},
+        {'path': 'vk_swiftshader_icd.json'},
+    ]
   # yapf: enable
   if options.ozone:
     binaries.append({'path': 'libminigbm.so', 'conditional': True})
@@ -1360,6 +1435,8 @@ elif platform == 'linux':
   if mode == 'standard':
     # transfer Debug files
     build_dir = build_dir_debug
+    if is_ohos:
+      transfer_demo_files(build_dir, binaries)
     libcef_path = os.path.join(build_dir, libcef_so)
     if not options.allowpartial or path_exists(libcef_path):
       valid_build_dir = build_dir
@@ -1370,6 +1447,8 @@ elif platform == 'linux':
 
   # transfer Release files
   build_dir = build_dir_release
+  if is_ohos:
+    transfer_demo_files(build_dir, binaries)
   libcef_path = os.path.join(build_dir, libcef_so)
   if not options.allowpartial or path_exists(libcef_path):
     valid_build_dir = build_dir
@@ -1389,10 +1468,16 @@ elif platform == 'linux':
 
   if mode == 'standard' or mode == 'minimal':
     # transfer include files
-    transfer_gypi_files(cef_dir, cef_paths2['includes_linux'], \
-                        'include/', include_dir, options.quiet)
-    transfer_gypi_files(cef_dir, cef_paths2['includes_linux_capi'], \
-                        'include/', include_dir, options.quiet)
+    if is_ohos:
+      transfer_gypi_files(cef_dir, cef_paths2['includes_ohos'], \
+                          'include/', include_dir, options.quiet)
+      transfer_gypi_files(cef_dir, cef_paths2['includes_ohos_capi'], \
+                          'include/', include_dir, options.quiet)
+    else:
+      transfer_gypi_files(cef_dir, cef_paths2['includes_linux'], \
+                          'include/', include_dir, options.quiet)
+      transfer_gypi_files(cef_dir, cef_paths2['includes_linux_capi'], \
+                          'include/', include_dir, options.quiet)
 
     # transfer additional files, if any
     transfer_files(cef_dir, script_dir, os.path.join(script_dir, 'distrib', 'linux'), \
@@ -1400,8 +1485,12 @@ elif platform == 'linux':
 
   if mode == 'standard':
     # transfer shared files
-    transfer_gypi_files(cef_dir, cef_paths2['shared_sources_linux'], \
-                        'tests/shared/', shared_dir, options.quiet)
+    if is_ohos:
+      transfer_gypi_files(cef_dir, cef_paths2['shared_sources_ohos'], \
+                          'tests/shared/', shared_dir, options.quiet)
+    else:
+      transfer_gypi_files(cef_dir, cef_paths2['shared_sources_linux'], \
+                          'tests/shared/', shared_dir, options.quiet)
 
     if not options.ozone:
       # transfer cefclient files
@@ -1409,12 +1498,20 @@ elif platform == 'linux':
                           'tests/cefclient/', cefclient_dir, options.quiet)
 
     # transfer cefsimple files
-    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_linux'], \
-                        'tests/cefsimple/', cefsimple_dir, options.quiet)
+    if is_ohos:
+      transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_ohos'], \
+                          'tests/cefsimple/', cefsimple_dir, options.quiet)
+    else:
+      transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_linux'], \
+                          'tests/cefsimple/', cefsimple_dir, options.quiet)
 
     # transfer ceftests files
-    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_linux'], \
-                        'tests/ceftests/', ceftests_dir, options.quiet)
+    if is_ohos:
+      transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_ohos'], \
+                          'tests/ceftests/', ceftests_dir, options.quiet)
+    else:
+      transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_linux'], \
+                          'tests/ceftests/', ceftests_dir, options.quiet)
 
 if mode == 'standard' or mode == 'minimal':
   variables = {

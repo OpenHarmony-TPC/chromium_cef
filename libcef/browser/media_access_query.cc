@@ -14,6 +14,10 @@
 #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "ohos/adapter/permission_manager/permission_manager_adapter.h"
+#endif
+
 namespace media_access_query {
 
 namespace {
@@ -150,7 +154,9 @@ class CefMediaAccessQuery {
                              std::move(media_stream_ui));
   }
 
+#if !BUILDFLAG(IS_OHOS)
  private:
+#endif
   bool device_audio_requested() const {
     return request_.audio_type ==
            blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE;
@@ -369,6 +375,25 @@ content::MediaResponseCallback RequestMediaAccessPermission(
   CefMediaAccessQuery query(browser, request, std::move(callback));
 
   if (CheckCommandLinePermission()) {
+#if BUILDFLAG(IS_OHOS)
+    namespace ohos_permission = ohos::adapter::permission;
+    if (query.device_audio_requested() || query.desktop_audio_requested()) {
+      if (!ohos_permission::PermissionManagerAdapter::RequestPermission(
+              ohos_permission::OHOSPermissionType::MICROPHONE)) {
+        // Access permission disallowed by user.
+        query.ExecuteCallback(CEF_MEDIA_PERMISSION_NONE);
+        return base::NullCallback();
+      }
+    }
+    if (query.device_video_requested() || query.desktop_video_requested()) {
+      if (!ohos_permission::PermissionManagerAdapter::RequestPermission(
+              ohos_permission::OHOSPermissionType::CAMERA)) {
+        // Access permission disallowed by user.
+        query.ExecuteCallback(CEF_MEDIA_PERMISSION_NONE);
+        return base::NullCallback();
+      }
+    }
+#endif
     // Allow all requested permissions.
     query.ExecuteCallback(query.requested_permissions());
     return base::NullCallback();

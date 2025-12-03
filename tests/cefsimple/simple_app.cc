@@ -13,6 +13,14 @@
 #include "include/wrapper/cef_helpers.h"
 #include "tests/cefsimple/simple_handler.h"
 
+#if defined(OS_OHOS)
+#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+#endif
+
+#if defined(OS_OHOS)
+using namespace ohos::adapter::xcomponent;
+#endif
+
 namespace {
 
 // When using the Views framework this object provides the delegate
@@ -49,7 +57,12 @@ class SimpleWindowDelegate : public CefWindowDelegate {
   }
 
   CefSize GetPreferredSize(CefRefPtr<CefView> view) override {
+#if defined(OS_OHOS)
+    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
+    return CefSize(window_rect.width, window_rect.height);
+#else
     return CefSize(800, 600);
+#endif
   }
 
   cef_show_state_t GetInitialShowState(CefRefPtr<CefWindow> window) override {

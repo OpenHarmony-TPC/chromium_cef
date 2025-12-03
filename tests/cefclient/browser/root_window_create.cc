@@ -11,6 +11,8 @@
 #include "tests/cefclient/browser/root_window_gtk.h"
 #elif defined(OS_MAC)
 #include "tests/cefclient/browser/root_window_mac.h"
+#elif defined(OS_OHOS)
+#include "tests/cefclient/browser/root_window_ohos.h"
 #endif
 
 namespace client {
@@ -28,6 +30,8 @@ scoped_refptr<RootWindow> RootWindow::Create(bool use_views,
   return new RootWindowGtk(use_alloy_style);
 #elif defined(OS_MAC)
   return new RootWindowMac(use_alloy_style);
+#elif defined(OS_OHOS)
+  return new RootWindowOhos(use_alloy_style);
 #else
 #error Unsupported platform
 #endif

@@ -109,6 +109,8 @@
 // For backwards compatibility.
 #define OS_MACOSX 1
 #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#elif defined(OSOHOS)
+#define OS_OHOS 1
 #elif defined(__linux__)
 #if !defined(OS_CHROMEOS)
 // Do not define OS_LINUX on Chrome OS build.
@@ -161,7 +163,7 @@
     defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||  \
     defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||  \
     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) || \
-    defined(OS_SOLARIS)
+    defined(OS_SOLARIS) || defined(OS_OHOS)
 #define OS_POSIX 1
 #endif
 

@@ -109,6 +109,12 @@
     'includes_linux_capi': [
       'include/internal/cef_types_linux.h',
     ],
+    'includes_ohos': [
+      'include/internal/cef_linux.h',
+    ],
+    'includes_ohos_capi': [
+      'include/internal/cef_types_linux.h',
+    ],
     'libcef_sources_common': [
       'libcef_dll/cpptoc/cpptoc_ref_counted.h',
       'libcef_dll/cpptoc/cpptoc_scoped.h',
@@ -220,6 +226,10 @@
     ],
     'shared_sources_linux': [
       'tests/shared/browser/main_message_loop_external_pump_linux.cc',
+      'tests/shared/browser/resource_util_posix.cc',
+    ],
+    'shared_sources_ohos': [
+      'tests/shared/browser/main_message_loop_external_pump_ohos.cc',
       'tests/shared/browser/resource_util_posix.cc',
     ],
     'shared_sources_mac': [
@@ -458,6 +468,21 @@
       'tests/cefclient/browser/window_test_runner_gtk.h',
       'tests/cefclient/cefclient_gtk.cc',
     ],
+    'cefclient_sources_ohos': [
+      'tests/cefclient/browser/browser_window_osr_ohos.cc',
+      'tests/cefclient/browser/browser_window_osr_ohos.h',  
+      'tests/cefclient/browser/browser_window_std_ohos.cc',
+      'tests/cefclient/browser/browser_window_std_ohos.h',        
+      'tests/cefclient/browser/root_window_ohos.cc',
+      'tests/cefclient/browser/root_window_ohos.h',
+      'tests/cefclient/browser/temp_window_ohos.cc',
+      'tests/cefclient/browser/temp_window_ohos.h',
+      'tests/cefclient/browser/main_context_impl_posix.cc',
+      'tests/cefclient/browser/resource_util_ohos.cc',
+      'tests/cefclient/browser/window_test_runner_ohos.h',
+      'tests/cefclient/browser/window_test_runner_ohos.cc',
+      'tests/cefclient/cefclient_ohos.cc',
+    ],
     'cefsimple_sources_common': [
       'tests/cefsimple/simple_app.cc',
       'tests/cefsimple/simple_app.h',
@@ -493,6 +518,10 @@
     'cefsimple_sources_linux': [
       'tests/cefsimple/cefsimple_linux.cc',
       'tests/cefsimple/simple_handler_linux.cc',
+    ],
+    'cefsimple_sources_ohos': [
+      'tests/cefsimple/cefsimple_ohos.cc',
+      'tests/cefsimple/simple_handler_ohos.cc',
     ],
     'ceftests_data_resources': [
       'tests/ceftests/resources/net/data/ssl/certificates/expired_cert.pem',
@@ -696,6 +725,9 @@
     ],
     'ceftests_sources_linux': [
       'tests/ceftests/resource_util_linux.cc',
+    ],
+    'ceftests_sources_ohos': [
+      'tests/ceftests/resource_util_ohos.cc',
     ],
   },
 }

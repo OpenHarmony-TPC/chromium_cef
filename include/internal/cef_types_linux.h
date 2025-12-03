@@ -35,7 +35,7 @@
 #include "include/base/cef_build.h"
 #endif
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_OHOS)
 
 #include "include/internal/cef_export.h"
 #include "include/internal/cef_string.h"

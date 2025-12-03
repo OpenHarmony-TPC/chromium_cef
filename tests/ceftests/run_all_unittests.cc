@@ -296,7 +296,12 @@ CEF_BOOTSTRAP_EXPORT int RunConsoleMain(int argc,
 
 // Program entry point function.
 NO_STACK_PROTECTOR
+#if defined(OSOHOS)
+extern "C" {
+int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
+#else
 int main(int argc, char* argv[]) {
+#endif
 #if defined(OS_WIN) && defined(ARCH_CPU_32_BITS)
   // Run the main thread on 32-bit Windows using a fiber with the preferred 4MiB
   // stack size. This function must be called at the top of the executable entry
@@ -322,5 +327,8 @@ int main(int argc, char* argv[]) {
 
   return ::RunMain(argc, argv, sandbox_info);
 }
+#if defined(OSOHOS)
+}
+#endif
 
 #endif  // !(defined(OS_WIN) && defined(CEF_USE_BOOTSTRAP))

@@ -1,0 +1,47 @@
+From 4a1959aa3169952d0ed76961a28acf10efe65d8e Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Wed, 3 Dec 2025 09:46:45 +0800
+Subject: [PATCH] add cef_patch_v8.patch
+
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+Change-Id: Iecf865c04920d1a97e99aa6d7566d0f9d0456156
+---
+ BUILD.gn | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/v8/BUILD.gn b/src/v8/BUILD.gn
+index 2a3365e5c..bef1663a6 100644
+--- a/src/v8/BUILD.gn
++++ b/src/v8/BUILD.gn
+@@ -15,6 +15,7 @@ import("//build/config/riscv.gni")
+ import("//build/config/rust.gni")
+ import("//build/config/sanitizers/sanitizers.gni")
+ import("//build_overrides/build.gni")
++import("//cef/libcef/features/features.gni")
+ import("//third_party/icu/config.gni")
+ 
+ import("gni/snapshot_toolchain.gni")
+@@ -504,6 +505,9 @@ declare_args() {
+   # Experimental testing mode where various limits are artificially set lower.
+   v8_lower_limits_mode = false
+ 
++  # Set to true if V8 will be used in a shared library.
++  v8_used_in_shared_library = enable_cef
++
+   # Enables the use of partition_alloc as the default allocator for standalone
+   # V8. This should be used for benchmarking and testing purposes to more
+   # closely mimic in-browser behavior.
+@@ -894,6 +898,10 @@ config("internal_config") {
+     defines += [ "BUILDING_V8_SHARED" ]
+   }
+ 
++  if (v8_used_in_shared_library) {
++    defines += [ "V8_TLS_USED_IN_LIBRARY" ]
++  }
++
+   if (v8_current_cpu == "riscv64" || v8_current_cpu == "riscv32") {
+     if (!is_clang) {
+       libs = [ "atomic" ]
+-- 
+2.34.1
+

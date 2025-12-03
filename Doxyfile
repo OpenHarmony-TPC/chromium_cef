@@ -2387,6 +2387,7 @@ PREDEFINED             = USING_CEF_SHARED \
                          __OBJC__ \
                          OS_POSIX \
                          ARCH_CPU_32_BITS \
+			 OS_OHOS \
                          CEF_API_ADDED(v)=1 \
                          CEF_API_REMOVED(v)=1 \
                          CEF_API_RANGE(a,r)=1

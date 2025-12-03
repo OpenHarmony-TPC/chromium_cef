@@ -10,6 +10,7 @@
 #include "include/base/cef_callback.h"
 #include "include/cef_app.h"
 #include "include/cef_parser.h"
+#include "include/cef_path_util.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_closure_task.h"
@@ -130,6 +131,25 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
 }
+
+bool SimpleHandler::CanDownload(CefRefPtr<CefBrowser> browser,
+                                const CefString& url,
+                                const CefString& request_method) {
+  return true;
+}
+
+bool SimpleHandler::OnBeforeDownload(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefDownloadItem> download_item,
+    const CefString& suggested_name,
+    CefRefPtr<CefBeforeDownloadCallback> callback) {
+  return false;
+}
+
+void SimpleHandler::OnDownloadUpdated(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefDownloadItem> download_item,
+    CefRefPtr<CefDownloadItemCallback> callback) {}
 
 void SimpleHandler::ShowMainWindow() {
   if (!CefCurrentlyOn(TID_UI)) {

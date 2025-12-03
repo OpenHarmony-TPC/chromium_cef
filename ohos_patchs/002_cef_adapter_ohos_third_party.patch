@@ -1,0 +1,35 @@
+From d33a4c657a7e9572dcca91b084ab0fb064043353 Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Wed, 3 Dec 2025 10:48:34 +0800
+Subject: [PATCH] add cef_adapter_ohos_third_party.patch
+
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+Change-Id: Iac36eba8ae92011d714852f761aecb2b4e94a055
+---
+ widevine/cdm/widevine.gni | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/third_party/widevine/cdm/widevine.gni b/src/third_party/widevine/cdm/widevine.gni
+index e31de0a552..0de5688bbf 100644
+--- a/src/third_party/widevine/cdm/widevine.gni
++++ b/src/third_party/widevine/cdm/widevine.gni
+@@ -5,6 +5,7 @@
+ import("//build/config/chrome_build.gni")
+ import("//build/config/chromeos/ui_mode.gni")
+ import("//build/config/chromeos/ui_mode.gni")
++import("//cef/libcef/features/features.gni")
+ import("//media/media_options.gni")
+ 
+ declare_args() {
+@@ -13,7 +14,7 @@ declare_args() {
+   # Can be optionally enabled in Chromium on non-Android platforms. Please see
+   # //src/third_party/widevine/LICENSE file for details.
+   enable_widevine = ((is_chrome_branded || is_chrome_for_testing_branded) &&
+-                     !is_fuchsia) || is_android
++                     !is_fuchsia) || is_android || enable_cef
+ }
+ 
+ # Disable Widevine when running linux-chromeos.
+-- 
+2.34.1
+

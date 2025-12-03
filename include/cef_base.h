@@ -48,6 +48,8 @@
 #include "include/internal/cef_mac.h"
 #elif defined(OS_LINUX)
 #include "include/internal/cef_linux.h"
+#elif defined(OS_OHOS)
+#include "include/internal/cef_linux.h"
 #endif
 
 ///

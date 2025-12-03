@@ -47,6 +47,14 @@
 #include "ui/aura/window.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+using namespace ohos::adapter::xcomponent;
+#endif
+
 namespace {
 
 // Specialize ClientView to handle Widget-related events.
@@ -527,7 +535,14 @@ void CefWindowView::CreateWidget(gfx::AcceleratedWidget parent_widget) {
     params.bounds = gfx::Rect(CalculatePreferredSize({}));
     if (params.bounds.IsEmpty()) {
       // Choose a reasonable default size.
+#if BUILDFLAG(IS_OHOS)
+      auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
+      int initial_width = window_rect.width;
+      int initial_height = window_rect.height;
+      params.bounds.set_size({initial_width, initial_height});
+#else
       params.bounds.set_size({800, 600});
+#endif
     }
   }
 
