@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8030134347fc8874151305fdc34dd78518773d52$
+// $hash=d075982ed273707bf193b608acabf26db8896303$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_TASK_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_TASK_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Implement this structure for asynchronous task execution. If the task is
@@ -53,6 +58,8 @@ extern "C" {
 /// fails to post then the task object may be destroyed on the source thread
 /// instead of the target thread. For this reason be cautious when performing
 /// work in the task object destructor.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_task_t {
   ///
@@ -63,8 +70,9 @@ typedef struct _cef_task_t {
   ///
   /// Method that will be executed on the target thread.
   ///
-  void(CEF_CALLBACK* execute)(struct _cef_task_t* self);
+  void (CEF_CALLBACK *execute)(struct _cef_task_t* self);
 } cef_task_t;
+
 
 ///
 /// Structure that asynchronously executes tasks on the associated thread. It is
@@ -74,6 +82,8 @@ typedef struct _cef_task_t {
 /// types of tasks in different processes. The cef_thread_id_t definitions in
 /// cef_types.h list the common CEF threads. Task runners are also available for
 /// other CEF threads as appropriate (for example, V8 WebWorker threads).
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_task_runner_t {
   ///
@@ -85,26 +95,23 @@ typedef struct _cef_task_runner_t {
   /// Returns true (1) if this object is pointing to the same task runner as
   /// |that| object.
   ///
-  int(CEF_CALLBACK* is_same)(struct _cef_task_runner_t* self,
-                             struct _cef_task_runner_t* that);
+  int (CEF_CALLBACK *is_same)(struct _cef_task_runner_t* self, struct _cef_task_runner_t* that);
 
   ///
   /// Returns true (1) if this task runner belongs to the current thread.
   ///
-  int(CEF_CALLBACK* belongs_to_current_thread)(struct _cef_task_runner_t* self);
+  int (CEF_CALLBACK *belongs_to_current_thread)(struct _cef_task_runner_t* self);
 
   ///
   /// Returns true (1) if this task runner is for the specified CEF thread.
   ///
-  int(CEF_CALLBACK* belongs_to_thread)(struct _cef_task_runner_t* self,
-                                       cef_thread_id_t threadId);
+  int (CEF_CALLBACK *belongs_to_thread)(struct _cef_task_runner_t* self, cef_thread_id_t threadId);
 
   ///
   /// Post a task for execution on the thread associated with this task runner.
   /// Execution will occur asynchronously.
   ///
-  int(CEF_CALLBACK* post_task)(struct _cef_task_runner_t* self,
-                               struct _cef_task_t* task);
+  int (CEF_CALLBACK *post_task)(struct _cef_task_runner_t* self, struct _cef_task_t* task);
 
   ///
   /// Post a task for delayed execution on the thread associated with this task
@@ -112,10 +119,9 @@ typedef struct _cef_task_runner_t {
   /// supported on V8 WebWorker threads and will be executed without the
   /// specified delay.
   ///
-  int(CEF_CALLBACK* post_delayed_task)(struct _cef_task_runner_t* self,
-                                       struct _cef_task_t* task,
-                                       int64_t delay_ms);
+  int (CEF_CALLBACK *post_delayed_task)(struct _cef_task_runner_t* self, struct _cef_task_t* task, int64_t delay_ms);
 } cef_task_runner_t;
+
 
 ///
 /// Returns the task runner for the current thread. Only CEF threads will have
@@ -127,8 +133,8 @@ CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_current_thread(void);
 ///
 /// Returns the task runner for the specified CEF thread.
 ///
-CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_thread(
-    cef_thread_id_t threadId);
+CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_thread(cef_thread_id_t threadId);
+
 
 ///
 /// Returns true (1) if called on the specified thread. Equivalent to using
@@ -147,9 +153,7 @@ CEF_EXPORT int cef_post_task(cef_thread_id_t threadId, cef_task_t* task);
 /// using cef_task_runner_t::GetForThread(threadId)->PostDelayedTask(task,
 /// delay_ms).
 ///
-CEF_EXPORT int cef_post_delayed_task(cef_thread_id_t threadId,
-                                     cef_task_t* task,
-                                     int64_t delay_ms);
+CEF_EXPORT int cef_post_delayed_task(cef_thread_id_t threadId, cef_task_t* task, int64_t delay_ms);
 
 #ifdef __cplusplus
 }

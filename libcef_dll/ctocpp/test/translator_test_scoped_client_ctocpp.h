@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cc86321bdbd8c938aae4d9301e6eef57666d96ce$
+// $hash=3e23b85014fdbda014cfa5840327eafe46a790c6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CTOCPP_H_
@@ -20,22 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_scoped.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestScopedClientCToCpp
-    : public CefCToCppScoped<CefTranslatorTestScopedClientCToCpp,
-                             CefTranslatorTestScopedClient,
-                             cef_translator_test_scoped_client_t> {
+class CefTranslatorTestScopedClient_0_CToCpp
+    : public CefCToCppScoped<CefTranslatorTestScopedClient_0_CToCpp, CefTranslatorTestScopedClient, cef_translator_test_scoped_client_0_t> {
  public:
-  CefTranslatorTestScopedClientCToCpp();
-  virtual ~CefTranslatorTestScopedClientCToCpp();
+  CefTranslatorTestScopedClient_0_CToCpp();
+  virtual ~CefTranslatorTestScopedClient_0_CToCpp();
 
   // CefTranslatorTestScopedClient methods.
   int GetValue() override;
 };
+
+constexpr auto CefTranslatorTestScopedClientCToCpp_Wrap = CefTranslatorTestScopedClient_0_CToCpp::Wrap;
+constexpr auto CefTranslatorTestScopedClientCToCpp_UnwrapOwn = CefTranslatorTestScopedClient_0_CToCpp::UnwrapOwn;
+constexpr auto CefTranslatorTestScopedClientCToCpp_UnwrapRaw = CefTranslatorTestScopedClient_0_CToCpp::UnwrapRaw;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CTOCPP_H_

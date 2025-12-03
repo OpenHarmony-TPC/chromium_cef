@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1f01a759c158578cbc918525c04cafb95c045a49$
+// $hash=98fbe5c90a7eb86068787b850ecf0b119719a0d4$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_TASK_MANAGER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_TASK_MANAGER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,9 +50,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure that facilitates managing the browser-related tasks. The functions
 /// of this structure may only be called on the UI thread.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_task_manager_t {
   ///
@@ -60,7 +67,7 @@ typedef struct _cef_task_manager_t {
   /// Returns the number of tasks currently tracked by the task manager. Returns
   /// 0 if the function was called from the incorrect thread.
   ///
-  size_t(CEF_CALLBACK* get_tasks_count)(struct _cef_task_manager_t* self);
+  size_t (CEF_CALLBACK *get_tasks_count)(struct _cef_task_manager_t* self);
 
   ///
   /// Gets the list of task IDs currently tracked by the task manager. Tasks
@@ -72,26 +79,21 @@ typedef struct _cef_task_manager_t {
   /// added or removed. The task IDs are unique within the application lifespan.
   /// Returns false (0) if the function was called from the incorrect thread.
   ///
-  int(CEF_CALLBACK* get_task_ids_list)(struct _cef_task_manager_t* self,
-                                       size_t* task_idsCount,
-                                       int64_t* task_ids);
+  int (CEF_CALLBACK *get_task_ids_list)(struct _cef_task_manager_t* self, size_t* task_idsCount, int64_t* task_ids);
 
   ///
   /// Gets information about the task with |task_id|. Returns true (1) if the
   /// information about the task was successfully retrieved and false (0) if the
   /// |task_id| is invalid or the function was called from the incorrect thread.
   ///
-  int(CEF_CALLBACK* get_task_info)(struct _cef_task_manager_t* self,
-                                   int64_t task_id,
-                                   struct _cef_task_info_t* info);
+  int (CEF_CALLBACK *get_task_info)(struct _cef_task_manager_t* self, int64_t task_id, struct _cef_task_info_t* info);
 
   ///
   /// Attempts to terminate a task with |task_id|. Returns false (0) if the
   /// |task_id| is invalid, the call is made from an incorrect thread, or if the
   /// task cannot be terminated.
   ///
-  int(CEF_CALLBACK* kill_task)(struct _cef_task_manager_t* self,
-                               int64_t task_id);
+  int (CEF_CALLBACK *kill_task)(struct _cef_task_manager_t* self, int64_t task_id);
 
   ///
   /// Returns the task ID associated with the main task for |browser_id| (value
@@ -99,16 +101,16 @@ typedef struct _cef_task_manager_t {
   /// does not currently have an associated task, or the function was called
   /// from the incorrect thread.
   ///
-  int64_t(CEF_CALLBACK* get_task_id_for_browser_id)(
-      struct _cef_task_manager_t* self,
-      int browser_id);
+  int64_t (CEF_CALLBACK *get_task_id_for_browser_id)(struct _cef_task_manager_t* self, int browser_id);
 } cef_task_manager_t;
+
 
 ///
 /// Returns the global task manager object. Returns nullptr if the function was
 /// called from the incorrect thread.
 ///
 CEF_EXPORT cef_task_manager_t* cef_task_manager_get(void);
+
 
 #ifdef __cplusplus
 }

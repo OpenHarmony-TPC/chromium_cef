@@ -9,21 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=703e123daf79787390edd020f43d11217eb2ba98$
+// $hash=5e8748c73f7d94388362756393f5487b815bb5eb$
 //
 
-#include "libcef_dll/ctocpp/test/translator_test_ref_ptr_client_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/test/translator_test_ref_ptr_client_child_ctocpp.h"
+#include "libcef_dll/ctocpp/test/translator_test_ref_ptr_client_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall") int CefTranslatorTestRefPtrClientCToCpp::GetValue() {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") int CefTranslatorTestRefPtrClient_0_CToCpp::GetValue() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_translator_test_ref_ptr_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_value)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_value) {
     return 0;
   }
 
@@ -36,34 +37,26 @@ NO_SANITIZE("cfi-icall") int CefTranslatorTestRefPtrClientCToCpp::GetValue() {
   return _retval;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTranslatorTestRefPtrClientCToCpp::CefTranslatorTestRefPtrClientCToCpp() {}
+CefTranslatorTestRefPtrClient_0_CToCpp::CefTranslatorTestRefPtrClient_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTranslatorTestRefPtrClientCToCpp::~CefTranslatorTestRefPtrClientCToCpp() {
+CefTranslatorTestRefPtrClient_0_CToCpp::~CefTranslatorTestRefPtrClient_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_translator_test_ref_ptr_client_t*
-CefCToCppRefCounted<CefTranslatorTestRefPtrClientCToCpp,
-                    CefTranslatorTestRefPtrClient,
-                    cef_translator_test_ref_ptr_client_t>::
-    UnwrapDerived(CefWrapperType type, CefTranslatorTestRefPtrClient* c) {
+template<> cef_translator_test_ref_ptr_client_0_t* CefCToCppRefCounted<CefTranslatorTestRefPtrClient_0_CToCpp, CefTranslatorTestRefPtrClient, cef_translator_test_ref_ptr_client_0_t>::UnwrapDerived(CefWrapperType type, CefTranslatorTestRefPtrClient* c) {
   if (type == WT_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD) {
-    return reinterpret_cast<cef_translator_test_ref_ptr_client_t*>(
-        CefTranslatorTestRefPtrClientChildCToCpp::Unwrap(
-            reinterpret_cast<CefTranslatorTestRefPtrClientChild*>(c)));
+    return reinterpret_cast<cef_translator_test_ref_ptr_client_0_t*>(CefTranslatorTestRefPtrClientChildCToCpp_Unwrap(reinterpret_cast<CefTranslatorTestRefPtrClientChild*>(c)));
   }
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefTranslatorTestRefPtrClientCToCpp,
-                        CefTranslatorTestRefPtrClient,
-                        cef_translator_test_ref_ptr_client_t>::kWrapperType =
-        WT_TRANSLATOR_TEST_REF_PTR_CLIENT;
+template<> CefWrapperType CefCToCppRefCounted<CefTranslatorTestRefPtrClient_0_CToCpp, CefTranslatorTestRefPtrClient, cef_translator_test_ref_ptr_client_0_t>::kWrapperType = WT_TRANSLATOR_TEST_REF_PTR_CLIENT;
+
+

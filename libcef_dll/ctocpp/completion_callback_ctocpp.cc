@@ -9,20 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2ff9633504c457d2a79e45dcd8163cb9aaea3c39$
+// $hash=1e08e957388a4aa8f61fb0be3ebbf94aff2de27f$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall") void CefCompletionCallbackCToCpp::OnComplete() {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefCompletionCallback_0_CToCpp::OnComplete() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_completion_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_complete)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_complete) {
     return;
   }
 
@@ -32,28 +33,23 @@ NO_SANITIZE("cfi-icall") void CefCompletionCallbackCToCpp::OnComplete() {
   _struct->on_complete(_struct);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCompletionCallbackCToCpp::CefCompletionCallbackCToCpp() {}
+CefCompletionCallback_0_CToCpp::CefCompletionCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCompletionCallbackCToCpp::~CefCompletionCallbackCToCpp() {
+CefCompletionCallback_0_CToCpp::~CefCompletionCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_completion_callback_t* CefCToCppRefCounted<
-    CefCompletionCallbackCToCpp,
-    CefCompletionCallback,
-    cef_completion_callback_t>::UnwrapDerived(CefWrapperType type,
-                                              CefCompletionCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_completion_callback_0_t* CefCToCppRefCounted<CefCompletionCallback_0_CToCpp, CefCompletionCallback, cef_completion_callback_0_t>::UnwrapDerived(CefWrapperType type, CefCompletionCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCompletionCallbackCToCpp,
-                                   CefCompletionCallback,
-                                   cef_completion_callback_t>::kWrapperType =
-    WT_COMPLETION_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefCompletionCallback_0_CToCpp, CefCompletionCallback, cef_completion_callback_0_t>::kWrapperType = WT_COMPLETION_CALLBACK;
+
+

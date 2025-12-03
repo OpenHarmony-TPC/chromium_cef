@@ -9,23 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6fc484fc35889743fdf704979feecd776ed50f4a$
+// $hash=9697cf414d988a63231824553296f9d558b72520$
 //
 
-#include "libcef_dll/ctocpp/accessibility_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
+#include "libcef_dll/ctocpp/accessibility_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefAccessibilityHandlerCToCpp::OnAccessibilityTreeChange(
-    CefRefPtr<CefValue> value) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefAccessibilityHandler_0_CToCpp::OnAccessibilityTreeChange(CefRefPtr<CefValue> value) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_accessibility_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_accessibility_tree_change)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_accessibility_tree_change) {
     return;
   }
 
@@ -38,16 +37,15 @@ void CefAccessibilityHandlerCToCpp::OnAccessibilityTreeChange(
   }
 
   // Execute
-  _struct->on_accessibility_tree_change(_struct, CefValueCppToC::Wrap(value));
+  _struct->on_accessibility_tree_change(_struct,
+      CefValueCppToC_Wrap(value));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefAccessibilityHandlerCToCpp::OnAccessibilityLocationChange(
-    CefRefPtr<CefValue> value) {
+NO_SANITIZE("cfi-icall") void CefAccessibilityHandler_0_CToCpp::OnAccessibilityLocationChange(CefRefPtr<CefValue> value) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_accessibility_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_accessibility_location_change)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_accessibility_location_change) {
     return;
   }
 
@@ -61,31 +59,26 @@ void CefAccessibilityHandlerCToCpp::OnAccessibilityLocationChange(
 
   // Execute
   _struct->on_accessibility_location_change(_struct,
-                                            CefValueCppToC::Wrap(value));
+      CefValueCppToC_Wrap(value));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefAccessibilityHandlerCToCpp::CefAccessibilityHandlerCToCpp() {}
+CefAccessibilityHandler_0_CToCpp::CefAccessibilityHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefAccessibilityHandlerCToCpp::~CefAccessibilityHandlerCToCpp() {
+CefAccessibilityHandler_0_CToCpp::~CefAccessibilityHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_accessibility_handler_t* CefCToCppRefCounted<
-    CefAccessibilityHandlerCToCpp,
-    CefAccessibilityHandler,
-    cef_accessibility_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                CefAccessibilityHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_accessibility_handler_0_t* CefCToCppRefCounted<CefAccessibilityHandler_0_CToCpp, CefAccessibilityHandler, cef_accessibility_handler_0_t>::UnwrapDerived(CefWrapperType type, CefAccessibilityHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefAccessibilityHandlerCToCpp,
-                                   CefAccessibilityHandler,
-                                   cef_accessibility_handler_t>::kWrapperType =
-    WT_ACCESSIBILITY_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefAccessibilityHandler_0_CToCpp, CefAccessibilityHandler, cef_accessibility_handler_0_t>::kWrapperType = WT_ACCESSIBILITY_HANDLER;
+
+

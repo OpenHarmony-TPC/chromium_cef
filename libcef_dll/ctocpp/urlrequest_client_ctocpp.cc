@@ -9,24 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=55a389c206894676ecf3c6922ffdaa8100698f93$
+// $hash=349bfa6c1511da85295a921f9a9f7dde79a6636d$
 //
 
-#include "libcef_dll/ctocpp/urlrequest_client_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/auth_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/urlrequest_cpptoc.h"
+#include "libcef_dll/ctocpp/urlrequest_client_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefURLRequestClientCToCpp::OnRequestComplete(
-    CefRefPtr<CefURLRequest> request) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefURLRequestClient_0_CToCpp::OnRequestComplete(CefRefPtr<CefURLRequest> request) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_urlrequest_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_request_complete)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_request_complete) {
     return;
   }
 
@@ -39,18 +38,15 @@ void CefURLRequestClientCToCpp::OnRequestComplete(
   }
 
   // Execute
-  _struct->on_request_complete(_struct, CefURLRequestCppToC::Wrap(request));
+  _struct->on_request_complete(_struct,
+      CefURLRequestCppToC_Wrap(request));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefURLRequestClientCToCpp::OnUploadProgress(
-    CefRefPtr<CefURLRequest> request,
-    int64_t current,
-    int64_t total) {
+NO_SANITIZE("cfi-icall") void CefURLRequestClient_0_CToCpp::OnUploadProgress(CefRefPtr<CefURLRequest> request, int64_t current, int64_t total) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_urlrequest_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_upload_progress)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_upload_progress) {
     return;
   }
 
@@ -63,19 +59,17 @@ void CefURLRequestClientCToCpp::OnUploadProgress(
   }
 
   // Execute
-  _struct->on_upload_progress(_struct, CefURLRequestCppToC::Wrap(request),
-                              current, total);
+  _struct->on_upload_progress(_struct,
+      CefURLRequestCppToC_Wrap(request),
+      current,
+      total);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefURLRequestClientCToCpp::OnDownloadProgress(
-    CefRefPtr<CefURLRequest> request,
-    int64_t current,
-    int64_t total) {
+NO_SANITIZE("cfi-icall") void CefURLRequestClient_0_CToCpp::OnDownloadProgress(CefRefPtr<CefURLRequest> request, int64_t current, int64_t total) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_urlrequest_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_download_progress)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_download_progress) {
     return;
   }
 
@@ -88,18 +82,17 @@ void CefURLRequestClientCToCpp::OnDownloadProgress(
   }
 
   // Execute
-  _struct->on_download_progress(_struct, CefURLRequestCppToC::Wrap(request),
-                                current, total);
+  _struct->on_download_progress(_struct,
+      CefURLRequestCppToC_Wrap(request),
+      current,
+      total);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefURLRequestClientCToCpp::OnDownloadData(CefRefPtr<CefURLRequest> request,
-                                               const void* data,
-                                               size_t data_length) {
+NO_SANITIZE("cfi-icall") void CefURLRequestClient_0_CToCpp::OnDownloadData(CefRefPtr<CefURLRequest> request, const void* data, size_t data_length) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_urlrequest_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_download_data)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_download_data) {
     return;
   }
 
@@ -117,22 +110,17 @@ void CefURLRequestClientCToCpp::OnDownloadData(CefRefPtr<CefURLRequest> request,
   }
 
   // Execute
-  _struct->on_download_data(_struct, CefURLRequestCppToC::Wrap(request), data,
-                            data_length);
+  _struct->on_download_data(_struct,
+      CefURLRequestCppToC_Wrap(request),
+      data,
+      data_length);
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefURLRequestClientCToCpp::GetAuthCredentials(
-    bool isProxy,
-    const CefString& host,
-    int port,
-    const CefString& realm,
-    const CefString& scheme,
-    CefRefPtr<CefAuthCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefURLRequestClient_0_CToCpp::GetAuthCredentials(bool isProxy, const CefString& host, int port, const CefString& realm, const CefString& scheme, CefRefPtr<CefAuthCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_urlrequest_client_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_auth_credentials)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_auth_credentials) {
     return false;
   }
 
@@ -156,36 +144,35 @@ bool CefURLRequestClientCToCpp::GetAuthCredentials(
   // Unverified params: realm
 
   // Execute
-  int _retval = _struct->get_auth_credentials(
-      _struct, isProxy, host.GetStruct(), port, realm.GetStruct(),
-      scheme.GetStruct(), CefAuthCallbackCppToC::Wrap(callback));
+  int _retval = _struct->get_auth_credentials(_struct,
+      isProxy,
+      host.GetStruct(),
+      port,
+      realm.GetStruct(),
+      scheme.GetStruct(),
+      CefAuthCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefURLRequestClientCToCpp::CefURLRequestClientCToCpp() {}
+CefURLRequestClient_0_CToCpp::CefURLRequestClient_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefURLRequestClientCToCpp::~CefURLRequestClientCToCpp() {
+CefURLRequestClient_0_CToCpp::~CefURLRequestClient_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_urlrequest_client_t* CefCToCppRefCounted<
-    CefURLRequestClientCToCpp,
-    CefURLRequestClient,
-    cef_urlrequest_client_t>::UnwrapDerived(CefWrapperType type,
-                                            CefURLRequestClient* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_urlrequest_client_0_t* CefCToCppRefCounted<CefURLRequestClient_0_CToCpp, CefURLRequestClient, cef_urlrequest_client_0_t>::UnwrapDerived(CefWrapperType type, CefURLRequestClient* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefURLRequestClientCToCpp,
-                                   CefURLRequestClient,
-                                   cef_urlrequest_client_t>::kWrapperType =
-    WT_URLREQUEST_CLIENT;
+template<> CefWrapperType CefCToCppRefCounted<CefURLRequestClient_0_CToCpp, CefURLRequestClient, cef_urlrequest_client_0_t>::kWrapperType = WT_URLREQUEST_CLIENT;
+
+

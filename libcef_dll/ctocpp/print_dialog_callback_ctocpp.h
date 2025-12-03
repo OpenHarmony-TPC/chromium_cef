@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2c3be0e5d8f8e74cf8e96274575f77fd057b68f0$
+// $hash=ae5b7787d54cdb8d7a454b0a2e71a0300a466299$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PRINT_DIALOG_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_print_handler_capi.h"
 #include "include/cef_print_handler.h"
+#include "include/capi/cef_print_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPrintDialogCallbackCToCpp
-    : public CefCToCppRefCounted<CefPrintDialogCallbackCToCpp,
-                                 CefPrintDialogCallback,
-                                 cef_print_dialog_callback_t> {
+    : public CefCToCppRefCounted<CefPrintDialogCallbackCToCpp, CefPrintDialogCallback, cef_print_dialog_callback_t> {
  public:
   CefPrintDialogCallbackCToCpp();
   virtual ~CefPrintDialogCallbackCToCpp();
@@ -38,5 +36,8 @@ class CefPrintDialogCallbackCToCpp
   void Continue(CefRefPtr<CefPrintSettings> settings) override;
   void Cancel() override;
 };
+
+constexpr auto CefPrintDialogCallbackCToCpp_Wrap = CefPrintDialogCallbackCToCpp::Wrap;
+constexpr auto CefPrintDialogCallbackCToCpp_Unwrap = CefPrintDialogCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_DIALOG_CALLBACK_CTOCPP_H_

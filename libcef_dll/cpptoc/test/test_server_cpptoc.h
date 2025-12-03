@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6be87a31eddf60f7bd67803062129c3497fb1907$
+// $hash=496ec2cc09d50893a9479028b1eaf643c77b9eac$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_test_server_capi.h"
 #include "include/test/cef_test_server.h"
+#include "include/capi/test/cef_test_server_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTestServerCppToC : public CefCppToCRefCounted<CefTestServerCppToC,
-                                                       CefTestServer,
-                                                       cef_test_server_t> {
+class CefTestServer_0_CppToC
+    : public CefCppToCRefCounted<CefTestServer_0_CppToC, CefTestServer, cef_test_server_0_t> {
  public:
-  CefTestServerCppToC();
-  virtual ~CefTestServerCppToC();
+  CefTestServer_0_CppToC();
+  virtual ~CefTestServer_0_CppToC();
 };
+
+constexpr auto CefTestServerCppToC_Wrap = CefTestServer_0_CppToC::Wrap;
+constexpr auto CefTestServerCppToC_Unwrap = CefTestServer_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_CPPTOC_H_

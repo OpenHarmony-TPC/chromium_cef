@@ -37,11 +37,7 @@
 #if BUILDFLAG(IS_MAC)
 #include "cef/libcef/common/util_mac.h"
 #elif BUILDFLAG(IS_POSIX)
-#if BUILDFLAG(IS_OHOS)
-#include "cef/libcef/common/util_ohos.h"
-#else
 #include "cef/libcef/common/util_linux.h"
-#endif
 #endif
 
 namespace {
@@ -393,11 +389,7 @@ void ChromeMainDelegateCef::PreSandboxStartup() {
 #if BUILDFLAG(IS_MAC)
     util_mac::PreSandboxStartup();
 #elif BUILDFLAG(IS_POSIX)
-#if BUILDFLAG(IS_OHOS)
-    util_ohos::PreSandboxStartup();
-#else
     util_linux::PreSandboxStartup();
-#endif
 #endif
   }
 
@@ -471,7 +463,7 @@ std::optional<int> ChromeMainDelegateCef::PostEarlyInitialization(
   const auto result = ChromeMainDelegate::PostEarlyInitialization(invoked_in);
   if (!result) {
     const auto* invoked_in_browser =
-        absl::get_if<InvokedInBrowserProcess>(&invoked_in);
+        std::get_if<InvokedInBrowserProcess>(&invoked_in);
     if (invoked_in_browser) {
       // At this point local_state has been created but ownership has not yet
       // been passed to BrowserProcessImpl (g_browser_process is nullptr).
@@ -487,7 +479,7 @@ std::optional<int> ChromeMainDelegateCef::PostEarlyInitialization(
   return result;
 }
 
-absl::variant<int, content::MainFunctionParams>
+std::variant<int, content::MainFunctionParams>
 ChromeMainDelegateCef::RunProcess(
     const std::string& process_type,
     content::MainFunctionParams main_function_params) {

@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2dc56871d0506a0313a8c4396f11c9cfa04150fc$
+// $hash=8b09d50c0282a4374e332394473faf7ded146d0c$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/print_job_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-print_job_callback_cont(struct _cef_print_job_callback_t* self) {
+void CEF_CALLBACK print_job_callback_cont(struct _cef_print_job_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,35 +31,30 @@ print_job_callback_cont(struct _cef_print_job_callback_t* self) {
   }
 
   // Execute
-  CefPrintJobCallbackCppToC::Get(self)->Continue();
+  CefPrintJobCallback_0_CppToC::Get(self)->Continue();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintJobCallbackCppToC::CefPrintJobCallbackCppToC() {
+CefPrintJobCallback_0_CppToC::CefPrintJobCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = print_job_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintJobCallbackCppToC::~CefPrintJobCallbackCppToC() {
+CefPrintJobCallback_0_CppToC::~CefPrintJobCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPrintJobCallback> CefCppToCRefCounted<
-    CefPrintJobCallbackCppToC,
-    CefPrintJobCallback,
-    cef_print_job_callback_t>::UnwrapDerived(CefWrapperType type,
-                                             cef_print_job_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefPrintJobCallback> CefCppToCRefCounted<CefPrintJobCallback_0_CppToC, CefPrintJobCallback, cef_print_job_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_print_job_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPrintJobCallbackCppToC,
-                                   CefPrintJobCallback,
-                                   cef_print_job_callback_t>::kWrapperType =
-    WT_PRINT_JOB_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefPrintJobCallback_0_CppToC, CefPrintJobCallback, cef_print_job_callback_0_t>::kWrapperType = WT_PRINT_JOB_CALLBACK;
+
+

@@ -190,7 +190,9 @@ void CefOverlayViewHost::Init(views::View* host_view,
   // Initialize the Widget. |widget_| will be deleted by the NativeWidget or
   // when WidgetDelegate::DeleteDelegate() deletes |this|.
   widget_ = std::make_unique<ThemeCopyingWidget>(window_view_->GetWidget());
-  views::Widget::InitParams params(views::Widget::InitParams::TYPE_CONTROL);
+  views::Widget::InitParams params(
+      views::Widget::InitParams::NATIVE_WIDGET_OWNS_WIDGET,
+      views::Widget::InitParams::TYPE_CONTROL);
   params.delegate = this;
   params.name = "CefOverlayViewHost";
   params.ownership = views::Widget::InitParams::WIDGET_OWNS_NATIVE_WIDGET;
@@ -214,8 +216,9 @@ void CefOverlayViewHost::Init(views::View* host_view,
 
   // Cause WidgetDelegate::DeleteDelegate() to delete |this| after executing the
   // registered DeleteDelegate callback.
-  SetOwnedByWidget(true);
+  SetOwnedByWidget(OwnedByWidgetPassKey());
   RegisterDeleteDelegateCallback(
+      RegisterDeleteCallbackPassKey(),
       base::BindOnce(&CefOverlayViewHost::Cleanup, base::Unretained(this)));
 
   if (window_view_->IsChromeStyle()) {

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cd8f8698f6f6aa177ab360b8c96771e23f8d972d$
+// $hash=8c92eb0f966390f1ab854e551110872fbb15ab68$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_DISPLAY_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_display_capi.h"
 #include "include/views/cef_display.h"
+#include "include/capi/views/cef_display_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -41,5 +41,8 @@ class CefDisplayCToCpp
   CefRect GetWorkArea() override;
   int GetRotation() override;
 };
+
+constexpr auto CefDisplayCToCpp_Wrap = CefDisplayCToCpp::Wrap;
+constexpr auto CefDisplayCToCpp_Unwrap = CefDisplayCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_DISPLAY_CTOCPP_H_

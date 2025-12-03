@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=dfce79f1b15c8dbd1671e4975edded6b5f4af3f4$
+// $hash=05bfcb46c5f93e280a389f4fb7108483f5324db5$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FILE_UTIL_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_FILE_UTIL_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Creates a directory and all parent directories if they don't already exist.
@@ -71,8 +76,7 @@ CEF_EXPORT int cef_get_temp_directory(cef_string_t* temp_dir);
 /// The directory is only readable by the current user. Calling this function on
 /// the browser process UI or IO threads is not allowed.
 ///
-CEF_EXPORT int cef_create_new_temp_directory(const cef_string_t* prefix,
-                                             cef_string_t* new_temp_path);
+CEF_EXPORT int cef_create_new_temp_directory(const cef_string_t* prefix, cef_string_t* new_temp_path);
 
 ///
 /// Creates a directory within another directory. Extra characters will be
@@ -82,10 +86,7 @@ CEF_EXPORT int cef_create_new_temp_directory(const cef_string_t* prefix,
 /// is only readable by the current user. Calling this function on the browser
 /// process UI or IO threads is not allowed.
 ///
-CEF_EXPORT int cef_create_temp_directory_in_directory(
-    const cef_string_t* base_dir,
-    const cef_string_t* prefix,
-    cef_string_t* new_dir);
+CEF_EXPORT int cef_create_temp_directory_in_directory(const cef_string_t* base_dir, const cef_string_t* prefix, cef_string_t* new_dir);
 
 ///
 /// Returns true (1) if the given path exists and is a directory. Calling this
@@ -110,9 +111,7 @@ CEF_EXPORT int cef_delete_file(const cef_string_t* path, int recursive);
 /// Returns true (1) on success.  Calling this function on the browser process
 /// UI or IO threads is not allowed.
 ///
-CEF_EXPORT int cef_zip_directory(const cef_string_t* src_dir,
-                                 const cef_string_t* dest_file,
-                                 int include_hidden_files);
+CEF_EXPORT int cef_zip_directory(const cef_string_t* src_dir, const cef_string_t* dest_file, int include_hidden_files);
 
 ///
 /// Loads the existing "Certificate Revocation Lists" file that is managed by

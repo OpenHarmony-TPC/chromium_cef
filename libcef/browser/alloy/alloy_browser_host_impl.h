@@ -90,7 +90,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
-  void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
@@ -115,8 +114,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DragTargetDrop(const CefMouseEvent& event) override;
   void DragSourceSystemDragEnded() override;
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
-  void SetAudioMuted(bool mute) override;
-  bool IsAudioMuted() override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
@@ -195,6 +192,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void CloseContents(content::WebContents* source) override;
+  void SetContentsBounds(content::WebContents* source,
+                         const gfx::Rect& bounds) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
@@ -272,7 +271,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ExitPictureInPicture() override;
   bool IsBackForwardCacheSupported(content::WebContents& web_contents) override;
   content::PreloadingEligibility IsPrerender2Supported(
-      content::WebContents& web_contents) override;
+      content::WebContents& web_contents,
+      content::PreloadingTriggerType trigger_type) override;
   void DraggableRegionsChanged(
       const std::vector<blink::mojom::DraggableRegionPtr>& regions,
       content::WebContents* contents) override;
@@ -299,7 +299,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       bool own_web_contents,
       scoped_refptr<CefBrowserInfo> browser_info,
       CefRefPtr<AlloyBrowserHostImpl> opener,
-      bool is_devtools_popup,
       CefRefPtr<CefRequestContextImpl> request_context,
       std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate);
 

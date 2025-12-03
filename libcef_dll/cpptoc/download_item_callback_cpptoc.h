@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2cb2da3705478a6d1c60465955619c9d72e0c379$
+// $hash=cdcf101a92e518211ff8036825c3615f91bfeadc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_ITEM_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_download_handler_capi.h"
 #include "include/cef_download_handler.h"
+#include "include/capi/cef_download_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDownloadItemCallbackCppToC
-    : public CefCppToCRefCounted<CefDownloadItemCallbackCppToC,
-                                 CefDownloadItemCallback,
-                                 cef_download_item_callback_t> {
+class CefDownloadItemCallback_0_CppToC
+    : public CefCppToCRefCounted<CefDownloadItemCallback_0_CppToC, CefDownloadItemCallback, cef_download_item_callback_0_t> {
  public:
-  CefDownloadItemCallbackCppToC();
-  virtual ~CefDownloadItemCallbackCppToC();
+  CefDownloadItemCallback_0_CppToC();
+  virtual ~CefDownloadItemCallback_0_CppToC();
 };
+
+constexpr auto CefDownloadItemCallbackCppToC_Wrap = CefDownloadItemCallback_0_CppToC::Wrap;
+constexpr auto CefDownloadItemCallbackCppToC_Unwrap = CefDownloadItemCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_ITEM_CALLBACK_CPPTOC_H_

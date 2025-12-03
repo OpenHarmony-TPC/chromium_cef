@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e41bfc4889367243b93ed435d9ccfe216aa85cec$
+// $hash=e5c1ad6ecdfef56bd555448244e2a4c9e6a3e3db$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_TEXTFIELD_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_textfield_capi.h"
 #include "include/views/cef_textfield.h"
+#include "include/capi/views/cef_textfield_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
-                                                      CefTextfield,
-                                                      cef_textfield_t> {
+class CefTextfieldCToCpp
+    : public CefCToCppRefCounted<CefTextfieldCToCpp, CefTextfield, cef_textfield_t> {
  public:
   CefTextfieldCToCpp();
   virtual ~CefTextfieldCToCpp();
@@ -57,9 +56,7 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   cef_color_t GetSelectionBackgroundColor() override;
   void SetFontList(const CefString& font_list) override;
   void ApplyTextColor(cef_color_t color, const CefRange& range) override;
-  void ApplyTextStyle(cef_text_style_t style,
-                      bool add,
-                      const CefRange& range) override;
+  void ApplyTextStyle(cef_text_style_t style, bool add, const CefRange& range) override;
   bool IsCommandEnabled(cef_text_field_commands_t command_id) override;
   void ExecuteCommand(cef_text_field_commands_t command_id) override;
   void ClearEditHistory() override;
@@ -122,5 +119,8 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefTextfieldCToCpp_Wrap = CefTextfieldCToCpp::Wrap;
+constexpr auto CefTextfieldCToCpp_Unwrap = CefTextfieldCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_TEXTFIELD_CTOCPP_H_

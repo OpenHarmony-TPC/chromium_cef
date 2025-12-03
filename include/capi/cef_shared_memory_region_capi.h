@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=44992e464691ad934ba23f02438d01dac080247d$
+// $hash=70d9aba509f824a05c705e07fd008185a41e3ad9$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SHARED_MEMORY_REGION_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_SHARED_MEMORY_REGION_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,8 +50,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure that wraps platform-dependent share memory region mapping.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_shared_memory_region_t {
   ///
@@ -58,19 +65,20 @@ typedef struct _cef_shared_memory_region_t {
   ///
   /// Returns true (1) if the mapping is valid.
   ///
-  int(CEF_CALLBACK* is_valid)(struct _cef_shared_memory_region_t* self);
+  int (CEF_CALLBACK *is_valid)(struct _cef_shared_memory_region_t* self);
 
   ///
   /// Returns the size of the mapping in bytes. Returns 0 for invalid instances.
   ///
-  size_t(CEF_CALLBACK* size)(struct _cef_shared_memory_region_t* self);
+  size_t (CEF_CALLBACK *size)(struct _cef_shared_memory_region_t* self);
 
   ///
   /// Returns the pointer to the memory. Returns nullptr for invalid instances.
   /// The returned pointer is only valid for the life span of this object.
   ///
-  void*(CEF_CALLBACK* memory)(struct _cef_shared_memory_region_t* self);
+  void* (CEF_CALLBACK *memory)(struct _cef_shared_memory_region_t* self);
 } cef_shared_memory_region_t;
+
 
 #ifdef __cplusplus
 }

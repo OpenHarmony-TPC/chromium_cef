@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8ac13d84e6ba9ac6509d501c4879d47e7cf3fc45$
+// $hash=9f8503c45044b5cd8a743bd1742f1d5c726fbf70$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_THREAD_CPPTOC_H_
@@ -20,17 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_thread_capi.h"
 #include "include/cef_thread.h"
+#include "include/capi/cef_thread_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefThreadCppToC
-    : public CefCppToCRefCounted<CefThreadCppToC, CefThread, cef_thread_t> {
+class CefThread_0_CppToC
+    : public CefCppToCRefCounted<CefThread_0_CppToC, CefThread, cef_thread_0_t> {
  public:
-  CefThreadCppToC();
-  virtual ~CefThreadCppToC();
+  CefThread_0_CppToC();
+  virtual ~CefThread_0_CppToC();
 };
+
+constexpr auto CefThreadCppToC_Wrap = CefThread_0_CppToC::Wrap;
+constexpr auto CefThreadCppToC_Unwrap = CefThread_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_THREAD_CPPTOC_H_

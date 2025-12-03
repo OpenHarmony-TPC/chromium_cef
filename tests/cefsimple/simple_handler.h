@@ -12,29 +12,18 @@
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
-                      public CefLoadHandler,
-                      public CefDownloadHandler,
-                      public CefPermissionHandler,
-                      public CefRenderHandler {
+                      public CefLoadHandler {
  public:
   explicit SimpleHandler(bool is_alloy_style);
   ~SimpleHandler() override;
 
   // Provide access to the single global instance of this object.
   static SimpleHandler* GetInstance();
-  bool RenderOnScreen(void* window, const void* osr_buffer, int w, int h);
 
   // CefClient methods:
   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
   CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
-  CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
-  CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
-    return this;
-  }
-  virtual CefRefPtr<CefRenderHandler> GetRenderHandler() override {
-    return this;
-  }
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -51,53 +40,6 @@ class SimpleHandler : public CefClient,
                    ErrorCode errorCode,
                    const CefString& errorText,
                    const CefString& failedUrl) override;
-
-  // CefDownloadHandler methods
-  bool CanDownload(CefRefPtr<CefBrowser> browser,
-                   const CefString& url,
-                   const CefString& request_method) override;
-  bool OnBeforeDownload(CefRefPtr<CefBrowser> browser,
-                        CefRefPtr<CefDownloadItem> download_item,
-                        const CefString& suggested_name,
-                        CefRefPtr<CefBeforeDownloadCallback> callback) override;
-  void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefDownloadItem> download_item,
-                         CefRefPtr<CefDownloadItemCallback> callback) override;
-
-  // CefPermissionHandler methods
-  bool OnRequestMediaAccessPermission(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      const CefString& requesting_origin,
-      uint32_t requested_permissions,
-      CefRefPtr<CefMediaAccessCallback> callback) override {
-    return true;
-  }
-
-  bool OnShowPermissionPrompt(
-      CefRefPtr<CefBrowser> browser,
-      uint64_t prompt_id,
-      const CefString& requesting_origin,
-      uint32_t requested_permissions,
-      CefRefPtr<CefPermissionPromptCallback> callback) override {
-    callback->Continue(CEF_PERMISSION_RESULT_ACCEPT);
-    return true;
-  }
-
-  void OnDismissPermissionPrompt(
-      CefRefPtr<CefBrowser> browser,
-      uint64_t prompt_id,
-      cef_permission_request_result_t result) override {}
-
-  // CefRenderHandler
-  virtual void GetViewRect(CefRefPtr<CefBrowser> browser,
-                           CefRect& rect) override;
-  virtual void OnPaint(CefRefPtr<CefBrowser> browser,
-                       PaintElementType type,
-                       const RectList& dirtyRects,
-                       const void* buffer,
-                       int width,
-                       int height) override;
 
   void ShowMainWindow();
 

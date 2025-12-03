@@ -31,6 +31,8 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_CONTENT_SETTINGS_H_
 #pragma once
 
+#include "include/cef_api_hash.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,11 +43,12 @@ extern "C" {
 /// ContentSettingsType type.
 ///
 typedef enum {
-  // This setting governs whether cookies are enabled by the user in the
+  /// This setting governs whether cookies are enabled by the user in the
   /// provided context. However, it may be overridden by other settings. This
   /// enum should NOT be read directly to determine whether cookies are enabled;
   /// the client should instead rely on the CookieSettings API.
-  CEF_CONTENT_SETTING_TYPE_COOKIES = 0,
+  CEF_CONTENT_SETTING_TYPE_COOKIES,
+
   CEF_CONTENT_SETTING_TYPE_IMAGES,
   CEF_CONTENT_SETTING_TYPE_JAVASCRIPT,
 
@@ -233,11 +236,15 @@ typedef enum {
   /// screens. See also: https://w3c.github.io/window-placement
   CEF_CONTENT_SETTING_TYPE_WINDOW_MANAGEMENT,
 
-  /// Stores whether to allow insecure websites to make private network
-  /// requests.
-  /// See also: https://wicg.github.io/cors-rfc1918
-  /// Set through enterprise policies only.
+/// Stores whether to allow insecure websites to make private network
+/// requests.
+/// See also: https://wicg.github.io/cors-rfc1918
+/// Set through enterprise policies only.
+#if CEF_API_ADDED(13800)
+  CEF_CONTENT_SETTING_TYPE_INSECURE_PRIVATE_NETWORK_DEPRECATED,
+#else
   CEF_CONTENT_SETTING_TYPE_INSECURE_PRIVATE_NETWORK,
+#endif
 
   /// Content setting which stores whether or not a site can access low-level
   /// locally installed font data using the Local Fonts Access API.
@@ -327,7 +334,7 @@ typedef enum {
   /// HTTP header.
   CEF_CONTENT_SETTING_TYPE_FEDERATED_IDENTITY_IDENTITY_PROVIDER_SIGNIN_STATUS,
 
-  /// Website setting which is used for UnusedSitePermissionsService to
+  /// Website setting which is used for RevokedPermissionsService to
   /// store revoked permissions of unused sites from unused site permissions
   /// feature.
   CEF_CONTENT_SETTING_TYPE_REVOKED_UNUSED_SITE_PERMISSIONS,
@@ -380,12 +387,16 @@ typedef enum {
   /// a requesting-origin/top-level-site combination and persistent.
   CEF_CONTENT_SETTING_TYPE_TOP_LEVEL_TPCD_TRIAL,
 
-  /// Content Setting for a first-party origin trial that allows websites to
-  /// enable third-party cookie deprecation.
-  /// ALLOW (default): no effect (e.g. third-party cookies allowed, if not
-  ///                  blocked otherwise).
-  /// BLOCK: third-party cookies blocked, but 3PCD mitigations enabled.
+/// Content Setting for a first-party origin trial that allows websites to
+/// enable third-party cookie deprecation.
+/// ALLOW (default): no effect (e.g. third-party cookies allowed, if not
+///                  blocked otherwise).
+/// BLOCK: third-party cookies blocked, but 3PCD mitigations enabled.
+#if CEF_API_ADDED(13601)
+  CEF_CONTENT_SETTING_TYPE_TOP_LEVEL_TPCD_ORIGIN_TRIAL,
+#else
   CEF_CONTENT_SETTING_TOP_LEVEL_TPCD_ORIGIN_TRIAL,
+#endif
 
   /// Content setting used to indicate whether entering picture-in-picture
   /// automatically should be enabled.
@@ -436,7 +447,7 @@ typedef enum {
   /// access to mouse inputs.
   CEF_CONTENT_SETTING_TYPE_POINTER_LOCK,
 
-  /// Website setting which is used for UnusedSitePermissionsService to store
+  /// Website setting which is used for RevokedPermissionsService to store
   /// auto-revoked notification permissions from abusive sites.
   CEF_CONTENT_SETTING_TYPE_REVOKED_ABUSIVE_NOTIFICATION_PERMISSIONS,
 
@@ -478,6 +489,49 @@ typedef enum {
   /// Content settings for private network access in the context of the
   /// Direct Sockets API.
   CEF_CONTENT_SETTING_TYPE_DIRECT_SOCKETS_PRIVATE_NETWORK_ACCESS,
+
+  /// Content settings for legacy cookie scope.
+  /// Checks whether cookies scope is handled according to origin-bound cookies
+  /// or legacy behavior.
+  CEF_CONTENT_SETTING_TYPE_LEGACY_COOKIE_SCOPE,
+
+#if CEF_API_ADDED(13400)
+  /// Website setting to indicate whether the user has allowlisted suspicious
+  /// notifications for the origin.
+  CEF_CONTENT_SETTING_TYPE_ARE_SUSPICIOUS_NOTIFICATIONS_ALLOWLISTED_BY_USER,
+
+  /// Content settings for access to the Controlled Frame API.
+  CEF_CONTENT_SETTING_TYPE_CONTROLLED_FRAME,
+#endif
+
+#if CEF_API_ADDED(13500)
+  /// Website setting which is used for RevokedPermissionsService to
+  /// store revoked notification permissions of disruptive sites.
+  CEF_CONTENT_SETTING_TYPE_REVOKED_DISRUPTIVE_NOTIFICATION_PERMISSIONS,
+#endif
+
+#if CEF_API_ADDED(13600)
+  /// Content setting for whether the site is allowed to make local network
+  /// requests.
+  CEF_CONTENT_SETTING_TYPE_LOCAL_NETWORK_ACCESS,
+#endif
+
+#if CEF_API_ADDED(13800)
+  /// Stores information on-device language packs for which a site has
+  /// installed using the Web Speech API.
+  CEF_CONTENT_SETTING_TYPE_ON_DEVICE_SPEECH_RECOGNITION_LANGUAGES_DOWNLOADED,
+
+  /// Stores which Translator API language packs the site has initialized.
+  CEF_CONTENT_SETTING_TYPE_INITIALIZED_TRANSLATIONS,
+
+  /// Stores a list of notification ids where content detection found the
+  /// notification to be suspicious and a warning has already been shown for the
+  /// site. Used for recovering notification contents from the database if the
+  /// user decides they would like to see all of these notifications.
+  CEF_CONTENT_SETTING_TYPE_SUSPICIOUS_NOTIFICATION_IDS,
+#endif
+
+  CEF_CONTENT_SETTING_TYPE_NUM_VALUES,
 } cef_content_setting_types_t;
 
 ///
@@ -485,14 +539,14 @@ typedef enum {
 /// ContentSetting type.
 ///
 typedef enum {
-  CEF_CONTENT_SETTING_VALUE_DEFAULT = 0,
+  CEF_CONTENT_SETTING_VALUE_DEFAULT,
   CEF_CONTENT_SETTING_VALUE_ALLOW,
   CEF_CONTENT_SETTING_VALUE_BLOCK,
   CEF_CONTENT_SETTING_VALUE_ASK,
   CEF_CONTENT_SETTING_VALUE_SESSION_ONLY,
   CEF_CONTENT_SETTING_VALUE_DETECT_IMPORTANT_CONTENT,
 
-  CEF_CONTENT_SETTING_VALUE_NUM_VALUES
+  CEF_CONTENT_SETTING_VALUE_NUM_VALUES,
 } cef_content_setting_values_t;
 
 #ifdef __cplusplus

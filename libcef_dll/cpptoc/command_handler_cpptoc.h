@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6a8fd9e0539442f149a01f1a701a96c07f55733b$
+// $hash=2ab6fe364e1b0f9e5cdefc6443e39e73854b5aa1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_COMMAND_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_command_handler_capi.h"
 #include "include/cef_command_handler.h"
+#include "include/capi/cef_command_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCommandHandlerCppToC
-    : public CefCppToCRefCounted<CefCommandHandlerCppToC,
-                                 CefCommandHandler,
-                                 cef_command_handler_t> {
+    : public CefCppToCRefCounted<CefCommandHandlerCppToC, CefCommandHandler, cef_command_handler_t> {
  public:
   CefCommandHandlerCppToC();
   virtual ~CefCommandHandlerCppToC();
 };
+
+constexpr auto CefCommandHandlerCppToC_Wrap = CefCommandHandlerCppToC::Wrap;
+constexpr auto CefCommandHandlerCppToC_Unwrap = CefCommandHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_COMMAND_HANDLER_CPPTOC_H_

@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=241451ae6aec5c0d2554c05e3cc2193325177bf1$
+// $hash=fed906f32effe8af167fb2a9abae0084e0e40f9a$
 //
 
-#include "libcef_dll/ctocpp/command_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/command_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandHandlerCToCpp::OnChromeCommand(
-    CefRefPtr<CefBrowser> browser,
-    int command_id,
-    cef_window_open_disposition_t disposition) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefCommandHandler_0_CToCpp::OnChromeCommand(CefRefPtr<CefBrowser> browser, int command_id, cef_window_open_disposition_t disposition) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_command_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_chrome_command)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_chrome_command) {
     return false;
   }
 
@@ -40,21 +37,20 @@ bool CefCommandHandlerCToCpp::OnChromeCommand(
   }
 
   // Execute
-  int _retval = _struct->on_chrome_command(
-      _struct, CefBrowserCppToC::Wrap(browser), command_id, disposition);
+  int _retval = _struct->on_chrome_command(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      command_id,
+      disposition);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandHandlerCToCpp::IsChromeAppMenuItemVisible(
-    CefRefPtr<CefBrowser> browser,
-    int command_id) {
+NO_SANITIZE("cfi-icall") bool CefCommandHandler_0_CToCpp::IsChromeAppMenuItemVisible(CefRefPtr<CefBrowser> browser, int command_id) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_command_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_chrome_app_menu_item_visible)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_chrome_app_menu_item_visible) {
     return false;
   }
 
@@ -67,21 +63,19 @@ bool CefCommandHandlerCToCpp::IsChromeAppMenuItemVisible(
   }
 
   // Execute
-  int _retval = _struct->is_chrome_app_menu_item_visible(
-      _struct, CefBrowserCppToC::Wrap(browser), command_id);
+  int _retval = _struct->is_chrome_app_menu_item_visible(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      command_id);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandHandlerCToCpp::IsChromeAppMenuItemEnabled(
-    CefRefPtr<CefBrowser> browser,
-    int command_id) {
+NO_SANITIZE("cfi-icall") bool CefCommandHandler_0_CToCpp::IsChromeAppMenuItemEnabled(CefRefPtr<CefBrowser> browser, int command_id) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_command_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_chrome_app_menu_item_enabled)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_chrome_app_menu_item_enabled) {
     return false;
   }
 
@@ -94,73 +88,67 @@ bool CefCommandHandlerCToCpp::IsChromeAppMenuItemEnabled(
   }
 
   // Execute
-  int _retval = _struct->is_chrome_app_menu_item_enabled(
-      _struct, CefBrowserCppToC::Wrap(browser), command_id);
+  int _retval = _struct->is_chrome_app_menu_item_enabled(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      command_id);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandHandlerCToCpp::IsChromePageActionIconVisible(
-    cef_chrome_page_action_icon_type_t icon_type) {
+NO_SANITIZE("cfi-icall") bool CefCommandHandler_0_CToCpp::IsChromePageActionIconVisible(cef_chrome_page_action_icon_type_t icon_type) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_command_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_chrome_page_action_icon_visible)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_chrome_page_action_icon_visible) {
     return false;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->is_chrome_page_action_icon_visible(_struct, icon_type);
+  int _retval = _struct->is_chrome_page_action_icon_visible(_struct,
+      icon_type);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandHandlerCToCpp::IsChromeToolbarButtonVisible(
-    cef_chrome_toolbar_button_type_t button_type) {
+NO_SANITIZE("cfi-icall") bool CefCommandHandler_0_CToCpp::IsChromeToolbarButtonVisible(cef_chrome_toolbar_button_type_t button_type) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_command_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_chrome_toolbar_button_visible)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_chrome_toolbar_button_visible) {
     return false;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->is_chrome_toolbar_button_visible(_struct, button_type);
+  int _retval = _struct->is_chrome_toolbar_button_visible(_struct,
+      button_type);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCommandHandlerCToCpp::CefCommandHandlerCToCpp() {}
+CefCommandHandler_0_CToCpp::CefCommandHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCommandHandlerCToCpp::~CefCommandHandlerCToCpp() {
+CefCommandHandler_0_CToCpp::~CefCommandHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_command_handler_t* CefCToCppRefCounted<
-    CefCommandHandlerCToCpp,
-    CefCommandHandler,
-    cef_command_handler_t>::UnwrapDerived(CefWrapperType type,
-                                          CefCommandHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_command_handler_0_t* CefCToCppRefCounted<CefCommandHandler_0_CToCpp, CefCommandHandler, cef_command_handler_0_t>::UnwrapDerived(CefWrapperType type, CefCommandHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCommandHandlerCToCpp,
-                                   CefCommandHandler,
-                                   cef_command_handler_t>::kWrapperType =
-    WT_COMMAND_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefCommandHandler_0_CToCpp, CefCommandHandler, cef_command_handler_0_t>::kWrapperType = WT_COMMAND_HANDLER;
+
+

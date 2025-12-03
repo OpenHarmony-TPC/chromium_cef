@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=62ddefa40b91a2952a88dd43a6c11f7df2c0239e$
+// $hash=34986878b6937770da89b6280809f5dc87d55d89$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_IMAGE_CALLBACK_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDownloadImageCallbackCppToC
-    : public CefCppToCRefCounted<CefDownloadImageCallbackCppToC,
-                                 CefDownloadImageCallback,
-                                 cef_download_image_callback_t> {
+    : public CefCppToCRefCounted<CefDownloadImageCallbackCppToC, CefDownloadImageCallback, cef_download_image_callback_t> {
  public:
   CefDownloadImageCallbackCppToC();
   virtual ~CefDownloadImageCallbackCppToC();
 };
+
+constexpr auto CefDownloadImageCallbackCppToC_Wrap = CefDownloadImageCallbackCppToC::Wrap;
+constexpr auto CefDownloadImageCallbackCppToC_Unwrap = CefDownloadImageCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_IMAGE_CALLBACK_CPPTOC_H_

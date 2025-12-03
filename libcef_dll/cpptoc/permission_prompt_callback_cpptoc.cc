@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0983d041ea034cd3ec2a9ba1b3e693dd355ff06b$
+// $hash=50677f865aa8db68f61c32cd47c8b6e7fd443213$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/permission_prompt_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-permission_prompt_callback_cont(struct _cef_permission_prompt_callback_t* self,
-                                cef_permission_request_result_t result) {
+void CEF_CALLBACK permission_prompt_callback_cont(struct _cef_permission_prompt_callback_0_t* self, cef_permission_request_result_t result) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,36 +31,31 @@ permission_prompt_callback_cont(struct _cef_permission_prompt_callback_t* self,
   }
 
   // Execute
-  CefPermissionPromptCallbackCppToC::Get(self)->Continue(result);
+  CefPermissionPromptCallback_0_CppToC::Get(self)->Continue(
+      result);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPermissionPromptCallbackCppToC::CefPermissionPromptCallbackCppToC() {
+CefPermissionPromptCallback_0_CppToC::CefPermissionPromptCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = permission_prompt_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPermissionPromptCallbackCppToC::~CefPermissionPromptCallbackCppToC() {
+CefPermissionPromptCallback_0_CppToC::~CefPermissionPromptCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPermissionPromptCallback>
-CefCppToCRefCounted<CefPermissionPromptCallbackCppToC,
-                    CefPermissionPromptCallback,
-                    cef_permission_prompt_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_permission_prompt_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefPermissionPromptCallback> CefCppToCRefCounted<CefPermissionPromptCallback_0_CppToC, CefPermissionPromptCallback, cef_permission_prompt_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_permission_prompt_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefPermissionPromptCallbackCppToC,
-                        CefPermissionPromptCallback,
-                        cef_permission_prompt_callback_t>::kWrapperType =
-        WT_PERMISSION_PROMPT_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefPermissionPromptCallback_0_CppToC, CefPermissionPromptCallback, cef_permission_prompt_callback_0_t>::kWrapperType = WT_PERMISSION_PROMPT_CALLBACK;
+
+

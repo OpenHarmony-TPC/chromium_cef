@@ -9,17 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=06cb96cfb2279fee6828e0569ae5f2ab2922f35d$
+// $hash=5ac8aaa365a8965012e555b9ed68dfaf3ad10a57$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/task_runner_cpptoc.h"
-
 #include "libcef_dll/ctocpp/task_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_current_thread() {
+CEF_EXPORT cef_task_runner_0_t* cef_task_runner_get_for_current_thread() {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -28,28 +28,27 @@ CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_current_thread() {
   CefRefPtr<CefTaskRunner> _retval = CefTaskRunner::GetForCurrentThread();
 
   // Return type: refptr_same
-  return CefTaskRunnerCppToC::Wrap(_retval);
+  return CefTaskRunnerCppToC_Wrap(_retval);
 }
 
-CEF_EXPORT cef_task_runner_t* cef_task_runner_get_for_thread(
-    cef_thread_id_t threadId) {
+CEF_EXPORT cef_task_runner_0_t* cef_task_runner_get_for_thread(cef_thread_id_t threadId) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  CefRefPtr<CefTaskRunner> _retval = CefTaskRunner::GetForThread(threadId);
+  CefRefPtr<CefTaskRunner> _retval = CefTaskRunner::GetForThread(
+      threadId);
 
   // Return type: refptr_same
-  return CefTaskRunnerCppToC::Wrap(_retval);
+  return CefTaskRunnerCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK task_runner_is_same(struct _cef_task_runner_t* self,
-                                     struct _cef_task_runner_t* that) {
+int CEF_CALLBACK task_runner_is_same(struct _cef_task_runner_0_t* self, cef_task_runner_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -65,15 +64,14 @@ int CEF_CALLBACK task_runner_is_same(struct _cef_task_runner_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefTaskRunnerCppToC::Get(self)->IsSame(CefTaskRunnerCppToC::Unwrap(that));
+  bool _retval = CefTaskRunner_0_CppToC::Get(self)->IsSame(
+      CefTaskRunnerCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-task_runner_belongs_to_current_thread(struct _cef_task_runner_t* self) {
+int CEF_CALLBACK task_runner_belongs_to_current_thread(struct _cef_task_runner_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -84,14 +82,13 @@ task_runner_belongs_to_current_thread(struct _cef_task_runner_t* self) {
   }
 
   // Execute
-  bool _retval = CefTaskRunnerCppToC::Get(self)->BelongsToCurrentThread();
+  bool _retval = CefTaskRunner_0_CppToC::Get(self)->BelongsToCurrentThread();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK task_runner_belongs_to_thread(struct _cef_task_runner_t* self,
-                                               cef_thread_id_t threadId) {
+int CEF_CALLBACK task_runner_belongs_to_thread(struct _cef_task_runner_0_t* self, cef_thread_id_t threadId) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -102,39 +99,14 @@ int CEF_CALLBACK task_runner_belongs_to_thread(struct _cef_task_runner_t* self,
   }
 
   // Execute
-  bool _retval = CefTaskRunnerCppToC::Get(self)->BelongsToThread(threadId);
+  bool _retval = CefTaskRunner_0_CppToC::Get(self)->BelongsToThread(
+      threadId);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK task_runner_post_task(struct _cef_task_runner_t* self,
-                                       cef_task_t* task) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: task; type: refptr_diff
-  DCHECK(task);
-  if (!task) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval =
-      CefTaskRunnerCppToC::Get(self)->PostTask(CefTaskCToCpp::Wrap(task));
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK task_runner_post_delayed_task(struct _cef_task_runner_t* self,
-                                               cef_task_t* task,
-                                               int64_t delay_ms) {
+int CEF_CALLBACK task_runner_post_task(struct _cef_task_runner_0_t* self, struct _cef_task_0_t* task) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -150,8 +122,32 @@ int CEF_CALLBACK task_runner_post_delayed_task(struct _cef_task_runner_t* self,
   }
 
   // Execute
-  bool _retval = CefTaskRunnerCppToC::Get(self)->PostDelayedTask(
-      CefTaskCToCpp::Wrap(task), delay_ms);
+  bool _retval = CefTaskRunner_0_CppToC::Get(self)->PostTask(
+      CefTaskCToCpp_Wrap(task));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK task_runner_post_delayed_task(struct _cef_task_runner_0_t* self, struct _cef_task_0_t* task, int64_t delay_ms) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: task; type: refptr_diff
+  DCHECK(task);
+  if (!task) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefTaskRunner_0_CppToC::Get(self)->PostDelayedTask(
+      CefTaskCToCpp_Wrap(task),
+      delay_ms);
 
   // Return type: bool
   return _retval;
@@ -159,33 +155,29 @@ int CEF_CALLBACK task_runner_post_delayed_task(struct _cef_task_runner_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTaskRunnerCppToC::CefTaskRunnerCppToC() {
+CefTaskRunner_0_CppToC::CefTaskRunner_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_same = task_runner_is_same;
-  GetStruct()->belongs_to_current_thread =
-      task_runner_belongs_to_current_thread;
+  GetStruct()->belongs_to_current_thread = task_runner_belongs_to_current_thread;
   GetStruct()->belongs_to_thread = task_runner_belongs_to_thread;
   GetStruct()->post_task = task_runner_post_task;
   GetStruct()->post_delayed_task = task_runner_post_delayed_task;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTaskRunnerCppToC::~CefTaskRunnerCppToC() {
+CefTaskRunner_0_CppToC::~CefTaskRunner_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTaskRunner>
-CefCppToCRefCounted<CefTaskRunnerCppToC, CefTaskRunner, cef_task_runner_t>::
-    UnwrapDerived(CefWrapperType type, cef_task_runner_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefTaskRunner> CefCppToCRefCounted<CefTaskRunner_0_CppToC, CefTaskRunner, cef_task_runner_0_t>::UnwrapDerived(CefWrapperType type, cef_task_runner_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTaskRunnerCppToC,
-                                   CefTaskRunner,
-                                   cef_task_runner_t>::kWrapperType =
-    WT_TASK_RUNNER;
+template<> CefWrapperType CefCppToCRefCounted<CefTaskRunner_0_CppToC, CefTaskRunner, cef_task_runner_0_t>::kWrapperType = WT_TASK_RUNNER;
+
+

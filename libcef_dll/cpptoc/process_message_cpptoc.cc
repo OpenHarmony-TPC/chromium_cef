@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fc1b84ec1db746ceacf64db0ceec19e42de0f6d8$
+// $hash=ef97d27fea81afdc7adb94b4f816e409027b262f$
 //
 
-#include "libcef_dll/cpptoc/process_message_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/list_value_cpptoc.h"
+#include "libcef_dll/cpptoc/process_message_cpptoc.h"
 #include "libcef_dll/cpptoc/shared_memory_region_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_process_message_t* cef_process_message_create(
-    const cef_string_t* name) {
+CEF_EXPORT cef_process_message_0_t* cef_process_message_create(const cef_string_t* name) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,18 +32,18 @@ CEF_EXPORT cef_process_message_t* cef_process_message_create(
   }
 
   // Execute
-  CefRefPtr<CefProcessMessage> _retval =
-      CefProcessMessage::Create(CefString(name));
+  CefRefPtr<CefProcessMessage> _retval = CefProcessMessage::Create(
+      CefString(name));
 
   // Return type: refptr_same
-  return CefProcessMessageCppToC::Wrap(_retval);
+  return CefProcessMessageCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK process_message_is_valid(struct _cef_process_message_t* self) {
+int CEF_CALLBACK process_message_is_valid(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -55,14 +54,13 @@ int CEF_CALLBACK process_message_is_valid(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  bool _retval = CefProcessMessageCppToC::Get(self)->IsValid();
+  bool _retval = CefProcessMessage_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-process_message_is_read_only(struct _cef_process_message_t* self) {
+int CEF_CALLBACK process_message_is_read_only(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -73,14 +71,13 @@ process_message_is_read_only(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  bool _retval = CefProcessMessageCppToC::Get(self)->IsReadOnly();
+  bool _retval = CefProcessMessage_0_CppToC::Get(self)->IsReadOnly();
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_process_message_t* CEF_CALLBACK
-process_message_copy(struct _cef_process_message_t* self) {
+cef_process_message_0_t* CEF_CALLBACK process_message_copy(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -91,15 +88,13 @@ process_message_copy(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefProcessMessage> _retval =
-      CefProcessMessageCppToC::Get(self)->Copy();
+  CefRefPtr<CefProcessMessage> _retval = CefProcessMessage_0_CppToC::Get(self)->Copy();
 
   // Return type: refptr_same
-  return CefProcessMessageCppToC::Wrap(_retval);
+  return CefProcessMessageCppToC_Wrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-process_message_get_name(struct _cef_process_message_t* self) {
+cef_string_userfree_t CEF_CALLBACK process_message_get_name(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -110,14 +105,13 @@ process_message_get_name(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  CefString _retval = CefProcessMessageCppToC::Get(self)->GetName();
+  CefString _retval = CefProcessMessage_0_CppToC::Get(self)->GetName();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-struct _cef_list_value_t* CEF_CALLBACK
-process_message_get_argument_list(struct _cef_process_message_t* self) {
+struct _cef_list_value_0_t* CEF_CALLBACK process_message_get_argument_list(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -128,15 +122,13 @@ process_message_get_argument_list(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefListValue> _retval =
-      CefProcessMessageCppToC::Get(self)->GetArgumentList();
+  CefRefPtr<CefListValue> _retval = CefProcessMessage_0_CppToC::Get(self)->GetArgumentList();
 
   // Return type: refptr_same
-  return CefListValueCppToC::Wrap(_retval);
+  return CefListValueCppToC_Wrap(_retval);
 }
 
-struct _cef_shared_memory_region_t* CEF_CALLBACK
-process_message_get_shared_memory_region(struct _cef_process_message_t* self) {
+struct _cef_shared_memory_region_0_t* CEF_CALLBACK process_message_get_shared_memory_region(struct _cef_process_message_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -147,45 +139,38 @@ process_message_get_shared_memory_region(struct _cef_process_message_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefSharedMemoryRegion> _retval =
-      CefProcessMessageCppToC::Get(self)->GetSharedMemoryRegion();
+  CefRefPtr<CefSharedMemoryRegion> _retval = CefProcessMessage_0_CppToC::Get(self)->GetSharedMemoryRegion();
 
   // Return type: refptr_same
-  return CefSharedMemoryRegionCppToC::Wrap(_retval);
+  return CefSharedMemoryRegionCppToC_Wrap(_retval);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefProcessMessageCppToC::CefProcessMessageCppToC() {
+CefProcessMessage_0_CppToC::CefProcessMessage_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = process_message_is_valid;
   GetStruct()->is_read_only = process_message_is_read_only;
   GetStruct()->copy = process_message_copy;
   GetStruct()->get_name = process_message_get_name;
   GetStruct()->get_argument_list = process_message_get_argument_list;
-  GetStruct()->get_shared_memory_region =
-      process_message_get_shared_memory_region;
+  GetStruct()->get_shared_memory_region = process_message_get_shared_memory_region;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefProcessMessageCppToC::~CefProcessMessageCppToC() {
+CefProcessMessage_0_CppToC::~CefProcessMessage_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefProcessMessage> CefCppToCRefCounted<
-    CefProcessMessageCppToC,
-    CefProcessMessage,
-    cef_process_message_t>::UnwrapDerived(CefWrapperType type,
-                                          cef_process_message_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefProcessMessage> CefCppToCRefCounted<CefProcessMessage_0_CppToC, CefProcessMessage, cef_process_message_0_t>::UnwrapDerived(CefWrapperType type, cef_process_message_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefProcessMessageCppToC,
-                                   CefProcessMessage,
-                                   cef_process_message_t>::kWrapperType =
-    WT_PROCESS_MESSAGE;
+template<> CefWrapperType CefCppToCRefCounted<CefProcessMessage_0_CppToC, CefProcessMessage, cef_process_message_0_t>::kWrapperType = WT_PROCESS_MESSAGE;
+
+

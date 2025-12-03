@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=43049c254f37e8798661d79ee9816cf396147c61$
+// $hash=1667608a6596573d82920eea72074178877a4009$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_BROWSER_CPPTOC_H_
@@ -20,19 +20,22 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi_versions.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserCppToC
-    : public CefCppToCRefCounted<CefBrowserCppToC, CefBrowser, cef_browser_t> {
+class CefBrowser_0_CppToC
+    : public CefCppToCRefCounted<CefBrowser_0_CppToC, CefBrowser, cef_browser_0_t> {
  public:
-  CefBrowserCppToC();
-  virtual ~CefBrowserCppToC();
+  CefBrowser_0_CppToC();
+  virtual ~CefBrowser_0_CppToC();
 };
+
+constexpr auto CefBrowserCppToC_Wrap = CefBrowser_0_CppToC::Wrap;
+constexpr auto CefBrowserCppToC_Unwrap = CefBrowser_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_BROWSER_CPPTOC_H_

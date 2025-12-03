@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cf8049a44834e8ced7b67824097248de76f8e923$
+// $hash=8c02e914310bae494f0a3ca811078157da229e02$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_OBSERVER_CTOCPP_H_
@@ -21,29 +21,26 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaObserverCToCpp
-    : public CefCToCppRefCounted<CefMediaObserverCToCpp,
-                                 CefMediaObserver,
-                                 cef_media_observer_t> {
+class CefMediaObserver_0_CToCpp
+    : public CefCToCppRefCounted<CefMediaObserver_0_CToCpp, CefMediaObserver, cef_media_observer_0_t> {
  public:
-  CefMediaObserverCToCpp();
-  virtual ~CefMediaObserverCToCpp();
+  CefMediaObserver_0_CToCpp();
+  virtual ~CefMediaObserver_0_CToCpp();
 
   // CefMediaObserver methods.
   void OnSinks(const std::vector<CefRefPtr<CefMediaSink>>& sinks) override;
   void OnRoutes(const std::vector<CefRefPtr<CefMediaRoute>>& routes) override;
-  void OnRouteStateChanged(CefRefPtr<CefMediaRoute> route,
-                           ConnectionState state) override;
-  void OnRouteMessageReceived(CefRefPtr<CefMediaRoute> route,
-                              const void* message,
-                              size_t message_size) override;
+  void OnRouteStateChanged(CefRefPtr<CefMediaRoute> route, ConnectionState state) override;
+  void OnRouteMessageReceived(CefRefPtr<CefMediaRoute> route, const void* message, size_t message_size) override;
 };
+
+constexpr auto CefMediaObserverCToCpp_Wrap = CefMediaObserver_0_CToCpp::Wrap;
+constexpr auto CefMediaObserverCToCpp_Unwrap = CefMediaObserver_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_OBSERVER_CTOCPP_H_

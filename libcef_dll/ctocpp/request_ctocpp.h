@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=aefee054a36bcc098dc108583a3f4d4ad252c950$
+// $hash=fb082010980729ac1030227e67abf1be149ea669$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_capi.h"
 #include "include/cef_request.h"
+#include "include/capi/cef_request_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -38,8 +38,7 @@ class CefRequestCToCpp
   void SetURL(const CefString& url) override;
   CefString GetMethod() override;
   void SetMethod(const CefString& method) override;
-  void SetReferrer(const CefString& referrer_url,
-                   ReferrerPolicy policy) override;
+  void SetReferrer(const CefString& referrer_url, ReferrerPolicy policy) override;
   CefString GetReferrerURL() override;
   ReferrerPolicy GetReferrerPolicy() override;
   CefRefPtr<CefPostData> GetPostData() override;
@@ -47,13 +46,8 @@ class CefRequestCToCpp
   void GetHeaderMap(HeaderMap& headerMap) override;
   void SetHeaderMap(const HeaderMap& headerMap) override;
   CefString GetHeaderByName(const CefString& name) override;
-  void SetHeaderByName(const CefString& name,
-                       const CefString& value,
-                       bool overwrite) override;
-  void Set(const CefString& url,
-           const CefString& method,
-           CefRefPtr<CefPostData> postData,
-           const HeaderMap& headerMap) override;
+  void SetHeaderByName(const CefString& name, const CefString& value, bool overwrite) override;
+  void Set(const CefString& url, const CefString& method, CefRefPtr<CefPostData> postData, const HeaderMap& headerMap) override;
   int GetFlags() override;
   void SetFlags(int flags) override;
   CefString GetFirstPartyForCookies() override;
@@ -62,5 +56,8 @@ class CefRequestCToCpp
   TransitionType GetTransitionType() override;
   uint64_t GetIdentifier() override;
 };
+
+constexpr auto CefRequestCToCpp_Wrap = CefRequestCToCpp::Wrap;
+constexpr auto CefRequestCToCpp_Unwrap = CefRequestCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_

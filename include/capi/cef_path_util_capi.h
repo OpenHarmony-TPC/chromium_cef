@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8083f1a60abf642961676414dc2c7c261a5a6da0$
+// $hash=996b61439db40a3a21b3395999451ab754911fbe$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PATH_UTIL_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_PATH_UTIL_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Retrieve the path associated with the specified |key|. Returns true (1) on

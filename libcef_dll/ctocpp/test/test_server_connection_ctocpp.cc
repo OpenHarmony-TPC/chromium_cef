@@ -9,25 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=909d6efe165c2d87ddbf337d0a378a89fa7dd816$
+// $hash=a5cb14778694231600edbf78beb46f3316f82a09$
 //
 
 #include "libcef_dll/ctocpp/test/test_server_connection_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
+
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefTestServerConnectionCToCpp::SendHttp200Response(
-    const CefString& content_type,
-    const void* data,
-    size_t data_size) {
+NO_SANITIZE("cfi-icall") void CefTestServerConnectionCToCpp::SendHttp200Response(const CefString& content_type, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_connection_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_http200response)) {
+  auto* _struct = GetStruct();
+  if (!_struct->send_http200_response) {
     return;
   }
 
@@ -45,32 +41,31 @@ void CefTestServerConnectionCToCpp::SendHttp200Response(
   }
 
   // Execute
-  _struct->send_http200response(_struct, content_type.GetStruct(), data,
-                                data_size);
+  _struct->send_http200_response(_struct,
+      content_type.GetStruct(),
+      data,
+      data_size);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefTestServerConnectionCToCpp::SendHttp404Response() {
+NO_SANITIZE("cfi-icall") void CefTestServerConnectionCToCpp::SendHttp404Response() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_connection_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_http404response)) {
+  auto* _struct = GetStruct();
+  if (!_struct->send_http404_response) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->send_http404response(_struct);
+  _struct->send_http404_response(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefTestServerConnectionCToCpp::SendHttp500Response(
-    const CefString& error_message) {
+NO_SANITIZE("cfi-icall") void CefTestServerConnectionCToCpp::SendHttp500Response(const CefString& error_message) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_connection_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_http500response)) {
+  auto* _struct = GetStruct();
+  if (!_struct->send_http500_response) {
     return;
   }
 
@@ -83,20 +78,15 @@ void CefTestServerConnectionCToCpp::SendHttp500Response(
   }
 
   // Execute
-  _struct->send_http500response(_struct, error_message.GetStruct());
+  _struct->send_http500_response(_struct,
+      error_message.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-void CefTestServerConnectionCToCpp::SendHttpResponse(
-    int response_code,
-    const CefString& content_type,
-    const void* data,
-    size_t data_size,
-    const HeaderMap& extra_headers) {
+NO_SANITIZE("cfi-icall") void CefTestServerConnectionCToCpp::SendHttpResponse(int response_code, const CefString& content_type, const void* data, size_t data_size, const HeaderMap& extra_headers) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_connection_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_http_response)) {
+  auto* _struct = GetStruct();
+  if (!_struct->send_http_response) {
     return;
   }
 
@@ -122,8 +112,12 @@ void CefTestServerConnectionCToCpp::SendHttpResponse(
   }
 
   // Execute
-  _struct->send_http_response(_struct, response_code, content_type.GetStruct(),
-                              data, data_size, extra_headersMultimap);
+  _struct->send_http_response(_struct,
+      response_code,
+      content_type.GetStruct(),
+      data,
+      data_size,
+      extra_headersMultimap);
 
   // Restore param:extra_headers; type: string_map_multi_byref_const
   if (extra_headersMultimap) {
@@ -133,7 +127,8 @@ void CefTestServerConnectionCToCpp::SendHttpResponse(
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefTestServerConnectionCToCpp::CefTestServerConnectionCToCpp() {}
+CefTestServerConnectionCToCpp::CefTestServerConnectionCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -141,18 +136,11 @@ CefTestServerConnectionCToCpp::~CefTestServerConnectionCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_test_server_connection_t* CefCToCppRefCounted<
-    CefTestServerConnectionCToCpp,
-    CefTestServerConnection,
-    cef_test_server_connection_t>::UnwrapDerived(CefWrapperType type,
-                                                 CefTestServerConnection* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_test_server_connection_t* CefCToCppRefCounted<CefTestServerConnectionCToCpp, CefTestServerConnection, cef_test_server_connection_t>::UnwrapDerived(CefWrapperType type, CefTestServerConnection* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefTestServerConnectionCToCpp,
-                                   CefTestServerConnection,
-                                   cef_test_server_connection_t>::kWrapperType =
-    WT_TEST_SERVER_CONNECTION;
+template<> CefWrapperType CefCToCppRefCounted<CefTestServerConnectionCToCpp, CefTestServerConnection, cef_test_server_connection_t>::kWrapperType = WT_TEST_SERVER_CONNECTION;
+
+

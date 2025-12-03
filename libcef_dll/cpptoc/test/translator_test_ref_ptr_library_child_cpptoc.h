@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=33ca2bc72504ff4feb9dd46f79bf2947eb9f0c35$
+// $hash=a585cadc702b74a828801506656c6f594dfbdc72$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CHILD_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestRefPtrLibraryChildCppToC
-    : public CefCppToCRefCounted<CefTranslatorTestRefPtrLibraryChildCppToC,
-                                 CefTranslatorTestRefPtrLibraryChild,
-                                 cef_translator_test_ref_ptr_library_child_t> {
+class CefTranslatorTestRefPtrLibraryChild_0_CppToC
+    : public CefCppToCRefCounted<CefTranslatorTestRefPtrLibraryChild_0_CppToC, CefTranslatorTestRefPtrLibraryChild, cef_translator_test_ref_ptr_library_child_0_t> {
  public:
-  CefTranslatorTestRefPtrLibraryChildCppToC();
-  virtual ~CefTranslatorTestRefPtrLibraryChildCppToC();
+  CefTranslatorTestRefPtrLibraryChild_0_CppToC();
+  virtual ~CefTranslatorTestRefPtrLibraryChild_0_CppToC();
 };
+
+constexpr auto CefTranslatorTestRefPtrLibraryChildCppToC_Wrap = CefTranslatorTestRefPtrLibraryChild_0_CppToC::Wrap;
+constexpr auto CefTranslatorTestRefPtrLibraryChildCppToC_Unwrap = CefTranslatorTestRefPtrLibraryChild_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CHILD_CPPTOC_H_

@@ -87,6 +87,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
       base::OnceCallback<void(content::NavigationHandle&)>&
           navigation_handle_callback);
 
+  // Same as SetContentsBounds but returning false if unhandled.
+  bool SetContentsBoundsEx(content::WebContents* source,
+                           const gfx::Rect& bounds);
+
   // WebContentsDelegate methods:
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
@@ -144,6 +148,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void OnWebContentsFocused(
       content::RenderWidgetHost* render_widget_host) override;
   void OnFocusChangedInPage(content::FocusedNodeDetails* details) override;
+  bool TakeFocus(content::WebContents* source, bool reverse) override;
   void WebContentsDestroyed() override;
 
   // Accessors for state information. Changes will be signaled to

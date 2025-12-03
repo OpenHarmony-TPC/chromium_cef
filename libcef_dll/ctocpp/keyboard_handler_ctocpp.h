@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=361c631c12f998c9e1882b3c6e0f0177acb3d2b1$
+// $hash=66567a22f96328796853deba1c02f295e4a911d3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_KEYBOARD_HANDLER_CTOCPP_H_
@@ -20,28 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_keyboard_handler_capi.h"
 #include "include/cef_keyboard_handler.h"
+#include "include/capi/cef_keyboard_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefKeyboardHandlerCToCpp
-    : public CefCToCppRefCounted<CefKeyboardHandlerCToCpp,
-                                 CefKeyboardHandler,
-                                 cef_keyboard_handler_t> {
+class CefKeyboardHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefKeyboardHandler_0_CToCpp, CefKeyboardHandler, cef_keyboard_handler_0_t> {
  public:
-  CefKeyboardHandlerCToCpp();
-  virtual ~CefKeyboardHandlerCToCpp();
+  CefKeyboardHandler_0_CToCpp();
+  virtual ~CefKeyboardHandler_0_CToCpp();
 
   // CefKeyboardHandler methods.
-  bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
-                     const CefKeyEvent& event,
-                     CefEventHandle os_event,
-                     bool* is_keyboard_shortcut) override;
-  bool OnKeyEvent(CefRefPtr<CefBrowser> browser,
-                  const CefKeyEvent& event,
-                  CefEventHandle os_event) override;
+  bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent& event, CefEventHandle os_event, bool* is_keyboard_shortcut) override;
+  bool OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent& event, CefEventHandle os_event) override;
 };
+
+constexpr auto CefKeyboardHandlerCToCpp_Wrap = CefKeyboardHandler_0_CToCpp::Wrap;
+constexpr auto CefKeyboardHandlerCToCpp_Unwrap = CefKeyboardHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_KEYBOARD_HANDLER_CTOCPP_H_

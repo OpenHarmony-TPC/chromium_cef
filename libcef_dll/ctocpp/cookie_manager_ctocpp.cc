@@ -9,40 +9,37 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e6686c7baca4883655e751a2b2e0539ce5f21059$
+// $hash=68b9138b3ae01d8f5e32c63ba28b709754390e58$
 //
-
-#include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
 
 #include "libcef_dll/cpptoc/completion_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/cookie_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/delete_cookies_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/set_cookie_callback_cpptoc.h"
+#include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalManager(
-    CefRefPtr<CefCompletionCallback> callback) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalManager(CefRefPtr<CefCompletionCallback> callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: callback
 
   // Execute
-  cef_cookie_manager_t* _retval = cef_cookie_manager_get_global_manager(
-      CefCompletionCallbackCppToC::Wrap(callback));
+  auto* _retval = cef_cookie_manager_get_global_manager(
+      CefCompletionCallbackCppToC_Wrap(callback));
 
   // Return type: refptr_same
-  return CefCookieManagerCToCpp::Wrap(_retval);
+  return CefCookieManagerCToCpp_Wrap(_retval);
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::VisitAllCookies(
-    CefRefPtr<CefCookieVisitor> visitor) {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit_all_cookies)) {
+NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit_all_cookies) {
     return false;
   }
 
@@ -55,20 +52,16 @@ bool CefCookieManagerCToCpp::VisitAllCookies(
   }
 
   // Execute
-  int _retval = _struct->visit_all_cookies(
-      _struct, CefCookieVisitorCppToC::Wrap(visitor));
+  int _retval = _struct->visit_all_cookies(_struct,
+      CefCookieVisitorCppToC_Wrap(visitor));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::VisitUrlCookies(
-    const CefString& url,
-    bool includeHttpOnly,
-    CefRefPtr<CefCookieVisitor> visitor) {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit_url_cookies)) {
+NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::VisitUrlCookies(const CefString& url, bool includeHttpOnly, CefRefPtr<CefCookieVisitor> visitor) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit_url_cookies) {
     return false;
   }
 
@@ -86,21 +79,18 @@ bool CefCookieManagerCToCpp::VisitUrlCookies(
   }
 
   // Execute
-  int _retval =
-      _struct->visit_url_cookies(_struct, url.GetStruct(), includeHttpOnly,
-                                 CefCookieVisitorCppToC::Wrap(visitor));
+  int _retval = _struct->visit_url_cookies(_struct,
+      url.GetStruct(),
+      includeHttpOnly,
+      CefCookieVisitorCppToC_Wrap(visitor));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::SetCookie(
-    const CefString& url,
-    const CefCookie& cookie,
-    CefRefPtr<CefSetCookieCallback> callback) {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_cookie)) {
+NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::SetCookie(const CefString& url, const CefCookie& cookie, CefRefPtr<CefSetCookieCallback> callback) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_cookie) {
     return false;
   }
 
@@ -114,20 +104,18 @@ bool CefCookieManagerCToCpp::SetCookie(
   // Unverified params: callback
 
   // Execute
-  int _retval = _struct->set_cookie(_struct, url.GetStruct(), &cookie,
-                                    CefSetCookieCallbackCppToC::Wrap(callback));
+  int _retval = _struct->set_cookie(_struct,
+      url.GetStruct(),
+      &cookie,
+      CefSetCookieCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::DeleteCookies(
-    const CefString& url,
-    const CefString& cookie_name,
-    CefRefPtr<CefDeleteCookiesCallback> callback) {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, delete_cookies)) {
+NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::DeleteCookies(const CefString& url, const CefString& cookie_name, CefRefPtr<CefDeleteCookiesCallback> callback) {
+  auto* _struct = GetStruct();
+  if (!_struct->delete_cookies) {
     return false;
   }
 
@@ -136,19 +124,18 @@ bool CefCookieManagerCToCpp::DeleteCookies(
   // Unverified params: url, cookie_name, callback
 
   // Execute
-  int _retval =
-      _struct->delete_cookies(_struct, url.GetStruct(), cookie_name.GetStruct(),
-                              CefDeleteCookiesCallbackCppToC::Wrap(callback));
+  int _retval = _struct->delete_cookies(_struct,
+      url.GetStruct(),
+      cookie_name.GetStruct(),
+      CefDeleteCookiesCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::FlushStore(
-    CefRefPtr<CefCompletionCallback> callback) {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, flush_store)) {
+NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::FlushStore(CefRefPtr<CefCompletionCallback> callback) {
+  auto* _struct = GetStruct();
+  if (!_struct->flush_store) {
     return false;
   }
 
@@ -157,33 +144,28 @@ bool CefCookieManagerCToCpp::FlushStore(
   // Unverified params: callback
 
   // Execute
-  int _retval = _struct->flush_store(
-      _struct, CefCompletionCallbackCppToC::Wrap(callback));
+  int _retval = _struct->flush_store(_struct,
+      CefCompletionCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefCookieManagerCToCpp::CefCookieManagerCToCpp() {}
+CefCookieManagerCToCpp::CefCookieManagerCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefCookieManagerCToCpp::~CefCookieManagerCToCpp() {}
+CefCookieManagerCToCpp::~CefCookieManagerCToCpp() {
+}
 
-template <>
-cef_cookie_manager_t*
-CefCToCppRefCounted<CefCookieManagerCToCpp,
-                    CefCookieManager,
-                    cef_cookie_manager_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefCookieManager* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_cookie_manager_t* CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager, cef_cookie_manager_t>::UnwrapDerived(CefWrapperType type, CefCookieManager* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCookieManagerCToCpp,
-                                   CefCookieManager,
-                                   cef_cookie_manager_t>::kWrapperType =
-    WT_COOKIE_MANAGER;
+template<> CefWrapperType CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager, cef_cookie_manager_t>::kWrapperType = WT_COOKIE_MANAGER;
+
+

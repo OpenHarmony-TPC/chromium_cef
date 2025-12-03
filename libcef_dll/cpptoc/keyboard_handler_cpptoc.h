@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e2a9a0eb8ea47cbc1516d0c994c19650b8c4b851$
+// $hash=ded5badfbefd22ab7dfd3fdd05cce9a499ba216d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_KEYBOARD_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_keyboard_handler_capi.h"
 #include "include/cef_keyboard_handler.h"
+#include "include/capi/cef_keyboard_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefKeyboardHandlerCppToC
-    : public CefCppToCRefCounted<CefKeyboardHandlerCppToC,
-                                 CefKeyboardHandler,
-                                 cef_keyboard_handler_t> {
+    : public CefCppToCRefCounted<CefKeyboardHandlerCppToC, CefKeyboardHandler, cef_keyboard_handler_t> {
  public:
   CefKeyboardHandlerCppToC();
   virtual ~CefKeyboardHandlerCppToC();
 };
+
+constexpr auto CefKeyboardHandlerCppToC_Wrap = CefKeyboardHandlerCppToC::Wrap;
+constexpr auto CefKeyboardHandlerCppToC_Unwrap = CefKeyboardHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_KEYBOARD_HANDLER_CPPTOC_H_

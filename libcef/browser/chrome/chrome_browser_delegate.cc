@@ -260,8 +260,8 @@ void ChromeBrowserDelegate::SetAsDelegate(content::WebContents* web_contents,
   CHECK(platform_delegate->IsChromeStyle());
 
   auto browser_info = CefBrowserInfoManager::GetInstance()->CreateBrowserInfo(
-      is_devtools_popup, /*is_windowless=*/false,
-      platform_delegate->IsPrintPreviewSupported(), create_params_.extra_info);
+      is_devtools_popup, platform_delegate->GetBrowserConfig(),
+      create_params_.extra_info);
 
   auto request_context_impl =
       CefRequestContextImpl::GetOrCreateForRequestContext(
@@ -292,9 +292,10 @@ bool ChromeBrowserDelegate::ShowStatusBubble(bool show_by_default) {
 bool ChromeBrowserDelegate::HandleCommand(int command_id,
                                           WindowOpenDisposition disposition) {
   // Verify that our enum matches Chromium's values.
-  static_assert(static_cast<int>(CEF_WOD_MAX_VALUE) ==
+  static_assert(static_cast<int>(CEF_WOD_NUM_VALUES) - 1 ==
                     static_cast<int>(WindowOpenDisposition::MAX_VALUE),
-                "enum mismatch");
+                "Enum values in cef_window_open_disposition_t must match "
+                "WindowOpenDisposition");
 
   if (auto browser = ChromeBrowserHostImpl::GetBrowserForBrowser(browser_)) {
     if (auto client = browser->GetClient()) {
@@ -333,9 +334,10 @@ bool ChromeBrowserDelegate::IsAppMenuItemEnabled(int command_id) {
 bool ChromeBrowserDelegate::IsPageActionIconVisible(
     PageActionIconType icon_type) {
   // Verify that our enum matches Chromium's values.
-  static_assert(static_cast<int>(CEF_CPAIT_MAX_VALUE) ==
+  static_assert(static_cast<int>(CEF_CPAIT_NUM_VALUES) - 1 ==
                     static_cast<int>(PageActionIconType::kMaxValue),
-                "enum mismatch");
+                "Enum values in cef_chrome_page_action_icon_type_t must match "
+                "PageActionIconType");
 
   if (auto client = create_params_.client) {
     if (auto handler = client->GetCommandHandler()) {
@@ -349,9 +351,10 @@ bool ChromeBrowserDelegate::IsPageActionIconVisible(
 bool ChromeBrowserDelegate::IsToolbarButtonVisible(
     ToolbarButtonType button_type) {
   // Verify that our enum matches BrowserDelegate's values.
-  static_assert(static_cast<int>(CEF_CTBT_MAX_VALUE) ==
+  static_assert(static_cast<int>(CEF_CTBT_NUM_VALUES) - 1 ==
                     static_cast<int>(ToolbarButtonType::kMaxValue),
-                "enum mismatch");
+                "Enum values in cef_chrome_toolbar_button_type_t must match "
+                "ToolbarButtonType");
 
   if (auto client = create_params_.client) {
     if (auto handler = client->GetCommandHandler()) {
@@ -473,6 +476,14 @@ void ChromeBrowserDelegate::DraggableRegionsChanged(
   }
 }
 
+bool ChromeBrowserDelegate::TakeFocus(content::WebContents* source,
+                                      bool reverse) {
+  if (auto delegate = GetDelegateForWebContents(source)) {
+    return delegate->TakeFocus(source, reverse);
+  }
+  return false;
+}
+
 void ChromeBrowserDelegate::WindowFullscreenStateChanged() {
   // Use a synchronous callback for notification on Windows/Linux. MacOS gets
   // notified asynchronously via CefNativeWidgetMac callbacks.
@@ -560,6 +571,14 @@ bool ChromeBrowserDelegate::OpenURLFromTabEx(
 
   // Proceed with default chrome handling.
   return true;
+}
+
+bool ChromeBrowserDelegate::SetContentsBoundsEx(content::WebContents* source,
+                                                const gfx::Rect& bounds) {
+  if (auto delegate = GetDelegateForWebContents(source)) {
+    return delegate->SetContentsBoundsEx(source, bounds);
+  }
+  return false;
 }
 
 void ChromeBrowserDelegate::LoadingStateChanged(content::WebContents* source,
@@ -748,8 +767,7 @@ ChromeBrowserDelegate::CreateBrowserHostForPopup(
 
   auto browser_info =
       CefBrowserInfoManager::GetInstance()->CreatePopupBrowserInfo(
-          web_contents, /*is_windowless=*/false,
-          platform_delegate->IsPrintPreviewSupported(), extra_info);
+          web_contents, platform_delegate->GetBrowserConfig(), extra_info);
   CHECK(browser_info->is_popup());
 
   // Popups must share the same RequestContext as the parent.

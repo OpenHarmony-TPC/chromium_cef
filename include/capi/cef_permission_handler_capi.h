@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=011eac5c4ff31c52d14551ad8f6b9eb6dc6ca1ed$
+// $hash=c68d422a83fa1de8bd4e53e8b95223303cff206e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_PERMISSION_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,9 +51,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure used for asynchronous continuation of media access
 /// permission requests.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_media_access_callback_t {
   ///
@@ -65,17 +72,19 @@ typedef struct _cef_media_access_callback_t {
   /// |allowed_permissions| must match |required_permissions| passed to
   /// OnRequestMediaAccessPermission.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_media_access_callback_t* self,
-                           uint32_t allowed_permissions);
+  void (CEF_CALLBACK *cont)(struct _cef_media_access_callback_t* self, uint32_t allowed_permissions);
 
   ///
   /// Cancel the media access request.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_media_access_callback_t* self);
+  void (CEF_CALLBACK *cancel)(struct _cef_media_access_callback_t* self);
 } cef_media_access_callback_t;
+
 
 ///
 /// Callback structure used for asynchronous continuation of permission prompts.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_permission_prompt_callback_t {
   ///
@@ -86,14 +95,16 @@ typedef struct _cef_permission_prompt_callback_t {
   ///
   /// Complete the permissions request with the specified |result|.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_permission_prompt_callback_t* self,
-                           cef_permission_request_result_t result);
+  void (CEF_CALLBACK *cont)(struct _cef_permission_prompt_callback_t* self, cef_permission_request_result_t result);
 } cef_permission_prompt_callback_t;
+
 
 ///
 /// Implement this structure to handle events related to permission requests.
 /// The functions of this structure will be called on the browser process UI
 /// thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_permission_handler_t {
   ///
@@ -114,13 +125,7 @@ typedef struct _cef_permission_handler_t {
   /// will not be called if the "--enable-media-stream" command-line switch is
   /// used to grant all permissions.
   ///
-  int(CEF_CALLBACK* on_request_media_access_permission)(
-      struct _cef_permission_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_string_t* requesting_origin,
-      uint32_t requested_permissions,
-      struct _cef_media_access_callback_t* callback);
+  int (CEF_CALLBACK *on_request_media_access_permission)(struct _cef_permission_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, const cef_string_t* requesting_origin, uint32_t requested_permissions, struct _cef_media_access_callback_t* callback);
 
   ///
   /// Called when a page should show a permission prompt. |prompt_id| uniquely
@@ -133,13 +138,7 @@ typedef struct _cef_permission_handler_t {
   /// default handling will display the permission prompt UI. With Alloy style,
   /// default handling is CEF_PERMISSION_RESULT_IGNORE.
   ///
-  int(CEF_CALLBACK* on_show_permission_prompt)(
-      struct _cef_permission_handler_t* self,
-      struct _cef_browser_t* browser,
-      uint64_t prompt_id,
-      const cef_string_t* requesting_origin,
-      uint32_t requested_permissions,
-      struct _cef_permission_prompt_callback_t* callback);
+  int (CEF_CALLBACK *on_show_permission_prompt)(struct _cef_permission_handler_t* self, struct _cef_browser_t* browser, uint64_t prompt_id, const cef_string_t* requesting_origin, uint32_t requested_permissions, struct _cef_permission_prompt_callback_t* callback);
 
   ///
   /// Called when a permission prompt handled via OnShowPermissionPrompt is
@@ -150,12 +149,9 @@ typedef struct _cef_permission_handler_t {
   /// closure, etc. This function will not be called if OnShowPermissionPrompt
   /// returned false (0) for |prompt_id|.
   ///
-  void(CEF_CALLBACK* on_dismiss_permission_prompt)(
-      struct _cef_permission_handler_t* self,
-      struct _cef_browser_t* browser,
-      uint64_t prompt_id,
-      cef_permission_request_result_t result);
+  void (CEF_CALLBACK *on_dismiss_permission_prompt)(struct _cef_permission_handler_t* self, struct _cef_browser_t* browser, uint64_t prompt_id, cef_permission_request_result_t result);
 } cef_permission_handler_t;
+
 
 #ifdef __cplusplus
 }

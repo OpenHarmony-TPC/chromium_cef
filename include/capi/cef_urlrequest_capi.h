@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c69ae778b903a525070a3223a0319e6bed078bf9$
+// $hash=142a3f70bf67cc526ac7d6d88e878e8954d9e5fe$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_URLREQUEST_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_URLREQUEST_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_auth_callback_capi.h"
 #include "include/capi/cef_base_capi.h"
@@ -59,6 +63,8 @@ struct _cef_urlrequest_client_t;
 /// process. Once created the functions of the URL request object must be
 /// accessed on the same thread that created it.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_urlrequest_t {
   ///
   /// Base structure.
@@ -69,47 +75,43 @@ typedef struct _cef_urlrequest_t {
   /// Returns the request object used to create this URL request. The returned
   /// object is read-only and should not be modified.
   ///
-  struct _cef_request_t*(CEF_CALLBACK* get_request)(
-      struct _cef_urlrequest_t* self);
+  struct _cef_request_t* (CEF_CALLBACK *get_request)(struct _cef_urlrequest_t* self);
 
   ///
   /// Returns the client.
   ///
-  struct _cef_urlrequest_client_t*(CEF_CALLBACK* get_client)(
-      struct _cef_urlrequest_t* self);
+  struct _cef_urlrequest_client_t* (CEF_CALLBACK *get_client)(struct _cef_urlrequest_t* self);
 
   ///
   /// Returns the request status.
   ///
-  cef_urlrequest_status_t(CEF_CALLBACK* get_request_status)(
-      struct _cef_urlrequest_t* self);
+  cef_urlrequest_status_t (CEF_CALLBACK *get_request_status)(struct _cef_urlrequest_t* self);
 
   ///
   /// Returns the request error if status is UR_CANCELED or UR_FAILED, or 0
   /// otherwise.
   ///
-  cef_errorcode_t(CEF_CALLBACK* get_request_error)(
-      struct _cef_urlrequest_t* self);
+  cef_errorcode_t (CEF_CALLBACK *get_request_error)(struct _cef_urlrequest_t* self);
 
   ///
   /// Returns the response, or NULL if no response information is available.
   /// Response information will only be available after the upload has
   /// completed. The returned object is read-only and should not be modified.
   ///
-  struct _cef_response_t*(CEF_CALLBACK* get_response)(
-      struct _cef_urlrequest_t* self);
+  struct _cef_response_t* (CEF_CALLBACK *get_response)(struct _cef_urlrequest_t* self);
 
   ///
   /// Returns true (1) if the response body was served from the cache. This
   /// includes responses for which revalidation was required.
   ///
-  int(CEF_CALLBACK* response_was_cached)(struct _cef_urlrequest_t* self);
+  int (CEF_CALLBACK *response_was_cached)(struct _cef_urlrequest_t* self);
 
   ///
   /// Cancel the request.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_urlrequest_t* self);
+  void (CEF_CALLBACK *cancel)(struct _cef_urlrequest_t* self);
 } cef_urlrequest_t;
+
 
 ///
 /// Create a new URL request that is not associated with a specific browser or
@@ -126,15 +128,15 @@ typedef struct _cef_urlrequest_t {
 /// The |request| object will be marked as read-only after calling this
 /// function.
 ///
-CEF_EXPORT cef_urlrequest_t* cef_urlrequest_create(
-    struct _cef_request_t* request,
-    struct _cef_urlrequest_client_t* client,
-    struct _cef_request_context_t* request_context);
+CEF_EXPORT cef_urlrequest_t* cef_urlrequest_create(struct _cef_request_t* request, struct _cef_urlrequest_client_t* client, struct _cef_request_context_t* request_context);
+
 
 ///
 /// Structure that should be implemented by the cef_urlrequest_t client. The
 /// functions of this structure will be called on the same thread that created
 /// the request unless otherwise documented.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_urlrequest_client_t {
   ///
@@ -147,8 +149,7 @@ typedef struct _cef_urlrequest_client_t {
   /// cef_urlrequest_t::GetRequestStatus function to determine if the request
   /// was successful or not.
   ///
-  void(CEF_CALLBACK* on_request_complete)(struct _cef_urlrequest_client_t* self,
-                                          struct _cef_urlrequest_t* request);
+  void (CEF_CALLBACK *on_request_complete)(struct _cef_urlrequest_client_t* self, struct _cef_urlrequest_t* request);
 
   ///
   /// Notifies the client of upload progress. |current| denotes the number of
@@ -156,31 +157,21 @@ typedef struct _cef_urlrequest_client_t {
   /// if chunked upload is enabled). This function will only be called if the
   /// UR_FLAG_REPORT_UPLOAD_PROGRESS flag is set on the request.
   ///
-  void(CEF_CALLBACK* on_upload_progress)(struct _cef_urlrequest_client_t* self,
-                                         struct _cef_urlrequest_t* request,
-                                         int64_t current,
-                                         int64_t total);
+  void (CEF_CALLBACK *on_upload_progress)(struct _cef_urlrequest_client_t* self, struct _cef_urlrequest_t* request, int64_t current, int64_t total);
 
   ///
   /// Notifies the client of download progress. |current| denotes the number of
   /// bytes received up to the call and |total| is the expected total size of
   /// the response (or -1 if not determined).
   ///
-  void(CEF_CALLBACK* on_download_progress)(
-      struct _cef_urlrequest_client_t* self,
-      struct _cef_urlrequest_t* request,
-      int64_t current,
-      int64_t total);
+  void (CEF_CALLBACK *on_download_progress)(struct _cef_urlrequest_client_t* self, struct _cef_urlrequest_t* request, int64_t current, int64_t total);
 
   ///
   /// Called when some part of the response is read. |data| contains the current
   /// bytes received since the last call. This function will not be called if
   /// the UR_FLAG_NO_DOWNLOAD_DATA flag is set on the request.
   ///
-  void(CEF_CALLBACK* on_download_data)(struct _cef_urlrequest_client_t* self,
-                                       struct _cef_urlrequest_t* request,
-                                       const void* data,
-                                       size_t data_length);
+  void (CEF_CALLBACK *on_download_data)(struct _cef_urlrequest_client_t* self, struct _cef_urlrequest_t* request, const void* data, size_t data_length);
 
   ///
   /// Called on the IO thread when the browser needs credentials from the user.
@@ -194,15 +185,9 @@ typedef struct _cef_urlrequest_client_t {
   /// immediately. This function will only be called for requests initiated from
   /// the browser process.
   ///
-  int(CEF_CALLBACK* get_auth_credentials)(
-      struct _cef_urlrequest_client_t* self,
-      int isProxy,
-      const cef_string_t* host,
-      int port,
-      const cef_string_t* realm,
-      const cef_string_t* scheme,
-      struct _cef_auth_callback_t* callback);
+  int (CEF_CALLBACK *get_auth_credentials)(struct _cef_urlrequest_client_t* self, int isProxy, const cef_string_t* host, int port, const cef_string_t* realm, const cef_string_t* scheme, struct _cef_auth_callback_t* callback);
 } cef_urlrequest_client_t;
+
 
 #ifdef __cplusplus
 }

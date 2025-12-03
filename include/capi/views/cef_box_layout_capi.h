@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a99d4f7074885ea83a3f0a2685c3d40355d4b290$
+// $hash=36c0050d011416c37bd50986ec28b60d1722ffb4$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_BOX_LAYOUT_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_BOX_LAYOUT_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_layout_capi.h"
 
@@ -56,6 +60,8 @@ struct _cef_view_t;
 /// Excess space will not be distributed. Methods must be called on the browser
 /// process UI thread unless otherwise indicated.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_box_layout_t {
   ///
   /// Base structure.
@@ -69,17 +75,15 @@ typedef struct _cef_box_layout_t {
   /// space is subtracted in these ratios. A flex of 0 means this view is not
   /// resized. Flex values must not be negative.
   ///
-  void(CEF_CALLBACK* set_flex_for_view)(struct _cef_box_layout_t* self,
-                                        struct _cef_view_t* view,
-                                        int flex);
+  void (CEF_CALLBACK *set_flex_for_view)(struct _cef_box_layout_t* self, struct _cef_view_t* view, int flex);
 
   ///
   /// Clears the flex for the given |view|, causing it to use the default flex
   /// specified via cef_box_layout_tSettings.default_flex.
   ///
-  void(CEF_CALLBACK* clear_flex_for_view)(struct _cef_box_layout_t* self,
-                                          struct _cef_view_t* view);
+  void (CEF_CALLBACK *clear_flex_for_view)(struct _cef_box_layout_t* self, struct _cef_view_t* view);
 } cef_box_layout_t;
+
 
 #ifdef __cplusplus
 }

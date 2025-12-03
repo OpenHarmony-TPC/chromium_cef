@@ -37,8 +37,13 @@ bool GetCookieDomain(const GURL& url,
     domain_string = pc.Domain();
   }
   net::CookieInclusionStatus status;
-  return net::cookie_util::GetCookieDomainWithString(url, domain_string, status,
-                                                     result);
+  const auto& retval =
+      net::cookie_util::GetCookieDomainWithString(url, domain_string, status);
+  if (retval.has_value()) {
+    *result = *retval;
+    return true;
+  }
+  return false;
 }
 
 cef_cookie_same_site_t MakeCefCookieSameSite(net::CookieSameSite value) {
@@ -208,7 +213,12 @@ net::CookieSameSite MakeCookieSameSite(cef_cookie_same_site_t value) {
       return net::CookieSameSite::LAX_MODE;
     case CEF_COOKIE_SAME_SITE_STRICT_MODE:
       return net::CookieSameSite::STRICT_MODE;
+    case CEF_COOKIE_SAME_SITE_NUM_VALUES:
+      break;
   }
+
+  DCHECK(false);
+  return net::CookieSameSite::UNSPECIFIED;
 }
 
 net::CookiePriority MakeCookiePriority(cef_cookie_priority_t value) {

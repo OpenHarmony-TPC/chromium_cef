@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a862d4e04d943372a76e0b46bd6f99834a90c149$
+// $hash=6ee45d7ffdb5670f98e8a042ed0c4db5cabc6d12$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PRINT_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_PRINT_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -48,8 +52,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure for asynchronous continuation of print dialog requests.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_print_dialog_callback_t {
   ///
@@ -60,17 +67,19 @@ typedef struct _cef_print_dialog_callback_t {
   ///
   /// Continue printing with the specified |settings|.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_print_dialog_callback_t* self,
-                           struct _cef_print_settings_t* settings);
+  void (CEF_CALLBACK *cont)(struct _cef_print_dialog_callback_t* self, struct _cef_print_settings_t* settings);
 
   ///
   /// Cancel the printing.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_print_dialog_callback_t* self);
+  void (CEF_CALLBACK *cancel)(struct _cef_print_dialog_callback_t* self);
 } cef_print_dialog_callback_t;
+
 
 ///
 /// Callback structure for asynchronous continuation of print job requests.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_print_job_callback_t {
   ///
@@ -81,13 +90,16 @@ typedef struct _cef_print_job_callback_t {
   ///
   /// Indicate completion of the print job.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_print_job_callback_t* self);
+  void (CEF_CALLBACK *cont)(struct _cef_print_job_callback_t* self);
 } cef_print_job_callback_t;
+
 
 ///
 /// Implement this structure to handle printing on Linux. Each browser will have
 /// only one print job in progress at a time. The functions of this structure
 /// will be called on the browser process UI thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_print_handler_t {
   ///
@@ -102,56 +114,41 @@ typedef struct _cef_print_handler_t {
   /// cef_browser_host_t::print(), JavaScript window.print() or PDF extension
   /// print button).
   ///
-  void(CEF_CALLBACK* on_print_start)(struct _cef_print_handler_t* self,
-                                     struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_print_start)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Synchronize |settings| with client state. If |get_defaults| is true (1)
   /// then populate |settings| with the default print settings. Do not keep a
   /// reference to |settings| outside of this callback.
   ///
-  void(CEF_CALLBACK* on_print_settings)(struct _cef_print_handler_t* self,
-                                        struct _cef_browser_t* browser,
-                                        struct _cef_print_settings_t* settings,
-                                        int get_defaults);
+  void (CEF_CALLBACK *on_print_settings)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser, struct _cef_print_settings_t* settings, int get_defaults);
 
   ///
   /// Show the print dialog. Execute |callback| once the dialog is dismissed.
   /// Return true (1) if the dialog will be displayed or false (0) to cancel the
   /// printing immediately.
   ///
-  int(CEF_CALLBACK* on_print_dialog)(
-      struct _cef_print_handler_t* self,
-      struct _cef_browser_t* browser,
-      int has_selection,
-      struct _cef_print_dialog_callback_t* callback);
+  int (CEF_CALLBACK *on_print_dialog)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser, int has_selection, struct _cef_print_dialog_callback_t* callback);
 
   ///
   /// Send the print job to the printer. Execute |callback| once the job is
   /// completed. Return true (1) if the job will proceed or false (0) to cancel
   /// the job immediately.
   ///
-  int(CEF_CALLBACK* on_print_job)(struct _cef_print_handler_t* self,
-                                  struct _cef_browser_t* browser,
-                                  const cef_string_t* document_name,
-                                  const cef_string_t* pdf_file_path,
-                                  struct _cef_print_job_callback_t* callback);
+  int (CEF_CALLBACK *on_print_job)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* document_name, const cef_string_t* pdf_file_path, struct _cef_print_job_callback_t* callback);
 
   ///
   /// Reset client state related to printing.
   ///
-  void(CEF_CALLBACK* on_print_reset)(struct _cef_print_handler_t* self,
-                                     struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_print_reset)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Return the PDF paper size in device units. Used in combination with
   /// cef_browser_host_t::print_to_pdf().
   ///
-  cef_size_t(CEF_CALLBACK* get_pdf_paper_size)(
-      struct _cef_print_handler_t* self,
-      struct _cef_browser_t* browser,
-      int device_units_per_inch);
+  cef_size_t (CEF_CALLBACK *get_pdf_paper_size)(struct _cef_print_handler_t* self, struct _cef_browser_t* browser, int device_units_per_inch);
 } cef_print_handler_t;
+
 
 #ifdef __cplusplus
 }

@@ -9,22 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a2c227c1df84ee7dd0c225fad46b962ed14a022a$
+// $hash=244084557f457ce060680ded095cdd844bbc4fdc$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/end_tracing_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefEndTracingCallbackCToCpp::OnEndTracingComplete(
-    const CefString& tracing_file) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefEndTracingCallback_0_CToCpp::OnEndTracingComplete(const CefString& tracing_file) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_end_tracing_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_end_tracing_complete)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_end_tracing_complete) {
     return;
   }
 
@@ -37,31 +36,27 @@ void CefEndTracingCallbackCToCpp::OnEndTracingComplete(
   }
 
   // Execute
-  _struct->on_end_tracing_complete(_struct, tracing_file.GetStruct());
+  _struct->on_end_tracing_complete(_struct,
+      tracing_file.GetStruct());
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefEndTracingCallbackCToCpp::CefEndTracingCallbackCToCpp() {}
+CefEndTracingCallback_0_CToCpp::CefEndTracingCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefEndTracingCallbackCToCpp::~CefEndTracingCallbackCToCpp() {
+CefEndTracingCallback_0_CToCpp::~CefEndTracingCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_end_tracing_callback_t* CefCToCppRefCounted<
-    CefEndTracingCallbackCToCpp,
-    CefEndTracingCallback,
-    cef_end_tracing_callback_t>::UnwrapDerived(CefWrapperType type,
-                                               CefEndTracingCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_end_tracing_callback_0_t* CefCToCppRefCounted<CefEndTracingCallback_0_CToCpp, CefEndTracingCallback, cef_end_tracing_callback_0_t>::UnwrapDerived(CefWrapperType type, CefEndTracingCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefEndTracingCallbackCToCpp,
-                                   CefEndTracingCallback,
-                                   cef_end_tracing_callback_t>::kWrapperType =
-    WT_END_TRACING_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefEndTracingCallback_0_CToCpp, CefEndTracingCallback, cef_end_tracing_callback_0_t>::kWrapperType = WT_END_TRACING_CALLBACK;
+
+

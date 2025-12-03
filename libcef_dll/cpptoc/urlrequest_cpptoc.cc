@@ -9,23 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ed963d0df1f1182e2a68e6e0e28c204e5b42b5b6$
+// $hash=6e5b0844c7408c116f71471fc7aa60558e95da97$
 //
 
-#include "libcef_dll/cpptoc/urlrequest_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
+#include "libcef_dll/cpptoc/urlrequest_cpptoc.h"
 #include "libcef_dll/ctocpp/urlrequest_client_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_urlrequest_t* cef_urlrequest_create(
-    cef_request_t* request,
-    struct _cef_urlrequest_client_t* client,
-    cef_request_context_t* request_context) {
+CEF_EXPORT cef_urlrequest_0_t* cef_urlrequest_create(struct _cef_request_0_t* request, struct _cef_urlrequest_client_0_t* client, struct _cef_request_context_0_t* request_context) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -43,21 +40,20 @@ CEF_EXPORT cef_urlrequest_t* cef_urlrequest_create(
   // Unverified params: request_context
 
   // Execute
-  CefRefPtr<CefURLRequest> _retval =
-      CefURLRequest::Create(CefRequestCppToC::Unwrap(request),
-                            CefURLRequestClientCToCpp::Wrap(client),
-                            CefRequestContextCppToC::Unwrap(request_context));
+  CefRefPtr<CefURLRequest> _retval = CefURLRequest::Create(
+      CefRequestCppToC_Unwrap(request),
+      CefURLRequestClientCToCpp_Wrap(client),
+      CefRequestContextCppToC_Unwrap(request_context));
 
   // Return type: refptr_same
-  return CefURLRequestCppToC::Wrap(_retval);
+  return CefURLRequestCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-cef_request_t* CEF_CALLBACK
-urlrequest_get_request(struct _cef_urlrequest_t* self) {
+struct _cef_request_0_t* CEF_CALLBACK urlrequest_get_request(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -68,14 +64,13 @@ urlrequest_get_request(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefRequest> _retval = CefURLRequestCppToC::Get(self)->GetRequest();
+  CefRefPtr<CefRequest> _retval = CefURLRequest_0_CppToC::Get(self)->GetRequest();
 
   // Return type: refptr_same
-  return CefRequestCppToC::Wrap(_retval);
+  return CefRequestCppToC_Wrap(_retval);
 }
 
-struct _cef_urlrequest_client_t* CEF_CALLBACK
-urlrequest_get_client(struct _cef_urlrequest_t* self) {
+struct _cef_urlrequest_client_0_t* CEF_CALLBACK urlrequest_get_client(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -86,15 +81,13 @@ urlrequest_get_client(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefURLRequestClient> _retval =
-      CefURLRequestCppToC::Get(self)->GetClient();
+  CefRefPtr<CefURLRequestClient> _retval = CefURLRequest_0_CppToC::Get(self)->GetClient();
 
   // Return type: refptr_diff
-  return CefURLRequestClientCToCpp::Unwrap(_retval);
+  return CefURLRequestClientCToCpp_Unwrap(_retval);
 }
 
-cef_urlrequest_status_t CEF_CALLBACK
-urlrequest_get_request_status(struct _cef_urlrequest_t* self) {
+cef_urlrequest_status_t CEF_CALLBACK urlrequest_get_request_status(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -105,15 +98,13 @@ urlrequest_get_request_status(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  cef_urlrequest_status_t _retval =
-      CefURLRequestCppToC::Get(self)->GetRequestStatus();
+  cef_urlrequest_status_t _retval = CefURLRequest_0_CppToC::Get(self)->GetRequestStatus();
 
   // Return type: simple
   return _retval;
 }
 
-cef_errorcode_t CEF_CALLBACK
-urlrequest_get_request_error(struct _cef_urlrequest_t* self) {
+cef_errorcode_t CEF_CALLBACK urlrequest_get_request_error(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -124,14 +115,13 @@ urlrequest_get_request_error(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  cef_errorcode_t _retval = CefURLRequestCppToC::Get(self)->GetRequestError();
+  cef_errorcode_t _retval = CefURLRequest_0_CppToC::Get(self)->GetRequestError();
 
   // Return type: simple
   return _retval;
 }
 
-cef_response_t* CEF_CALLBACK
-urlrequest_get_response(struct _cef_urlrequest_t* self) {
+struct _cef_response_0_t* CEF_CALLBACK urlrequest_get_response(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -142,15 +132,13 @@ urlrequest_get_response(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefResponse> _retval =
-      CefURLRequestCppToC::Get(self)->GetResponse();
+  CefRefPtr<CefResponse> _retval = CefURLRequest_0_CppToC::Get(self)->GetResponse();
 
   // Return type: refptr_same
-  return CefResponseCppToC::Wrap(_retval);
+  return CefResponseCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK
-urlrequest_response_was_cached(struct _cef_urlrequest_t* self) {
+int CEF_CALLBACK urlrequest_response_was_cached(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -161,13 +149,13 @@ urlrequest_response_was_cached(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  bool _retval = CefURLRequestCppToC::Get(self)->ResponseWasCached();
+  bool _retval = CefURLRequest_0_CppToC::Get(self)->ResponseWasCached();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK urlrequest_cancel(struct _cef_urlrequest_t* self) {
+void CEF_CALLBACK urlrequest_cancel(struct _cef_urlrequest_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -178,14 +166,17 @@ void CEF_CALLBACK urlrequest_cancel(struct _cef_urlrequest_t* self) {
   }
 
   // Execute
-  CefURLRequestCppToC::Get(self)->Cancel();
+  CefURLRequest_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefURLRequestCppToC::CefURLRequestCppToC() {
+CefURLRequest_0_CppToC::CefURLRequest_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_request = urlrequest_get_request;
   GetStruct()->get_client = urlrequest_get_client;
   GetStruct()->get_request_status = urlrequest_get_request_status;
@@ -195,22 +186,16 @@ CefURLRequestCppToC::CefURLRequestCppToC() {
   GetStruct()->cancel = urlrequest_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefURLRequestCppToC::~CefURLRequestCppToC() {
+CefURLRequest_0_CppToC::~CefURLRequest_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefURLRequest>
-CefCppToCRefCounted<CefURLRequestCppToC, CefURLRequest, cef_urlrequest_t>::
-    UnwrapDerived(CefWrapperType type, cef_urlrequest_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefURLRequest> CefCppToCRefCounted<CefURLRequest_0_CppToC, CefURLRequest, cef_urlrequest_0_t>::UnwrapDerived(CefWrapperType type, cef_urlrequest_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefURLRequestCppToC,
-                                   CefURLRequest,
-                                   cef_urlrequest_t>::kWrapperType =
-    WT_URLREQUEST;
+template<> CefWrapperType CefCppToCRefCounted<CefURLRequest_0_CppToC, CefURLRequest, cef_urlrequest_0_t>::kWrapperType = WT_URLREQUEST;
+
+

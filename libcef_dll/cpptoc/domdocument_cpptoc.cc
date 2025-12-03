@@ -9,20 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=184a94a45779ba8fab5e128ab7605c56fe1abf0e$
+// $hash=f0feed716609fa5a2ae7c572f0ee28de41b07e2c$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/domdocument_cpptoc.h"
-
 #include "libcef_dll/cpptoc/domnode_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-cef_dom_document_type_t CEF_CALLBACK
-domdocument_get_type(struct _cef_domdocument_t* self) {
+cef_dom_document_type_t CEF_CALLBACK domdocument_get_type(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,14 +32,13 @@ domdocument_get_type(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  cef_dom_document_type_t _retval = CefDOMDocumentCppToC::Get(self)->GetType();
+  cef_dom_document_type_t _retval = CefDOMDocument_0_CppToC::Get(self)->GetType();
 
   // Return type: simple
   return _retval;
 }
 
-struct _cef_domnode_t* CEF_CALLBACK
-domdocument_get_document(struct _cef_domdocument_t* self) {
+struct _cef_domnode_0_t* CEF_CALLBACK domdocument_get_document(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -51,15 +49,13 @@ domdocument_get_document(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDOMNode> _retval =
-      CefDOMDocumentCppToC::Get(self)->GetDocument();
+  CefRefPtr<CefDOMNode> _retval = CefDOMDocument_0_CppToC::Get(self)->GetDocument();
 
   // Return type: refptr_same
-  return CefDOMNodeCppToC::Wrap(_retval);
+  return CefDOMNodeCppToC_Wrap(_retval);
 }
 
-struct _cef_domnode_t* CEF_CALLBACK
-domdocument_get_body(struct _cef_domdocument_t* self) {
+struct _cef_domnode_0_t* CEF_CALLBACK domdocument_get_body(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -70,14 +66,13 @@ domdocument_get_body(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDOMNode> _retval = CefDOMDocumentCppToC::Get(self)->GetBody();
+  CefRefPtr<CefDOMNode> _retval = CefDOMDocument_0_CppToC::Get(self)->GetBody();
 
   // Return type: refptr_same
-  return CefDOMNodeCppToC::Wrap(_retval);
+  return CefDOMNodeCppToC_Wrap(_retval);
 }
 
-struct _cef_domnode_t* CEF_CALLBACK
-domdocument_get_head(struct _cef_domdocument_t* self) {
+struct _cef_domnode_0_t* CEF_CALLBACK domdocument_get_head(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -88,14 +83,13 @@ domdocument_get_head(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDOMNode> _retval = CefDOMDocumentCppToC::Get(self)->GetHead();
+  CefRefPtr<CefDOMNode> _retval = CefDOMDocument_0_CppToC::Get(self)->GetHead();
 
   // Return type: refptr_same
-  return CefDOMNodeCppToC::Wrap(_retval);
+  return CefDOMNodeCppToC_Wrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-domdocument_get_title(struct _cef_domdocument_t* self) {
+cef_string_userfree_t CEF_CALLBACK domdocument_get_title(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -106,15 +100,13 @@ domdocument_get_title(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDOMDocumentCppToC::Get(self)->GetTitle();
+  CefString _retval = CefDOMDocument_0_CppToC::Get(self)->GetTitle();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-struct _cef_domnode_t* CEF_CALLBACK
-domdocument_get_element_by_id(struct _cef_domdocument_t* self,
-                              const cef_string_t* id) {
+struct _cef_domnode_0_t* CEF_CALLBACK domdocument_get_element_by_id(struct _cef_domdocument_0_t* self, const cef_string_t* id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -130,15 +122,14 @@ domdocument_get_element_by_id(struct _cef_domdocument_t* self,
   }
 
   // Execute
-  CefRefPtr<CefDOMNode> _retval =
-      CefDOMDocumentCppToC::Get(self)->GetElementById(CefString(id));
+  CefRefPtr<CefDOMNode> _retval = CefDOMDocument_0_CppToC::Get(self)->GetElementById(
+      CefString(id));
 
   // Return type: refptr_same
-  return CefDOMNodeCppToC::Wrap(_retval);
+  return CefDOMNodeCppToC_Wrap(_retval);
 }
 
-struct _cef_domnode_t* CEF_CALLBACK
-domdocument_get_focused_node(struct _cef_domdocument_t* self) {
+struct _cef_domnode_0_t* CEF_CALLBACK domdocument_get_focused_node(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -149,14 +140,13 @@ domdocument_get_focused_node(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDOMNode> _retval =
-      CefDOMDocumentCppToC::Get(self)->GetFocusedNode();
+  CefRefPtr<CefDOMNode> _retval = CefDOMDocument_0_CppToC::Get(self)->GetFocusedNode();
 
   // Return type: refptr_same
-  return CefDOMNodeCppToC::Wrap(_retval);
+  return CefDOMNodeCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK domdocument_has_selection(struct _cef_domdocument_t* self) {
+int CEF_CALLBACK domdocument_has_selection(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -167,14 +157,13 @@ int CEF_CALLBACK domdocument_has_selection(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  bool _retval = CefDOMDocumentCppToC::Get(self)->HasSelection();
+  bool _retval = CefDOMDocument_0_CppToC::Get(self)->HasSelection();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-domdocument_get_selection_start_offset(struct _cef_domdocument_t* self) {
+int CEF_CALLBACK domdocument_get_selection_start_offset(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -185,14 +174,13 @@ domdocument_get_selection_start_offset(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  int _retval = CefDOMDocumentCppToC::Get(self)->GetSelectionStartOffset();
+  int _retval = CefDOMDocument_0_CppToC::Get(self)->GetSelectionStartOffset();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK
-domdocument_get_selection_end_offset(struct _cef_domdocument_t* self) {
+int CEF_CALLBACK domdocument_get_selection_end_offset(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -203,14 +191,13 @@ domdocument_get_selection_end_offset(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  int _retval = CefDOMDocumentCppToC::Get(self)->GetSelectionEndOffset();
+  int _retval = CefDOMDocument_0_CppToC::Get(self)->GetSelectionEndOffset();
 
   // Return type: simple
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-domdocument_get_selection_as_markup(struct _cef_domdocument_t* self) {
+cef_string_userfree_t CEF_CALLBACK domdocument_get_selection_as_markup(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -221,14 +208,13 @@ domdocument_get_selection_as_markup(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDOMDocumentCppToC::Get(self)->GetSelectionAsMarkup();
+  CefString _retval = CefDOMDocument_0_CppToC::Get(self)->GetSelectionAsMarkup();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-domdocument_get_selection_as_text(struct _cef_domdocument_t* self) {
+cef_string_userfree_t CEF_CALLBACK domdocument_get_selection_as_text(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -239,14 +225,13 @@ domdocument_get_selection_as_text(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDOMDocumentCppToC::Get(self)->GetSelectionAsText();
+  CefString _retval = CefDOMDocument_0_CppToC::Get(self)->GetSelectionAsText();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-domdocument_get_base_url(struct _cef_domdocument_t* self) {
+cef_string_userfree_t CEF_CALLBACK domdocument_get_base_url(struct _cef_domdocument_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -257,15 +242,13 @@ domdocument_get_base_url(struct _cef_domdocument_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDOMDocumentCppToC::Get(self)->GetBaseURL();
+  CefString _retval = CefDOMDocument_0_CppToC::Get(self)->GetBaseURL();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-domdocument_get_complete_url(struct _cef_domdocument_t* self,
-                             const cef_string_t* partialURL) {
+cef_string_userfree_t CEF_CALLBACK domdocument_get_complete_url(struct _cef_domdocument_0_t* self, const cef_string_t* partialURL) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -281,8 +264,8 @@ domdocument_get_complete_url(struct _cef_domdocument_t* self,
   }
 
   // Execute
-  CefString _retval =
-      CefDOMDocumentCppToC::Get(self)->GetCompleteURL(CefString(partialURL));
+  CefString _retval = CefDOMDocument_0_CppToC::Get(self)->GetCompleteURL(
+      CefString(partialURL));
 
   // Return type: string
   return _retval.DetachToUserFree();
@@ -290,9 +273,12 @@ domdocument_get_complete_url(struct _cef_domdocument_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDOMDocumentCppToC::CefDOMDocumentCppToC() {
+CefDOMDocument_0_CppToC::CefDOMDocument_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_type = domdocument_get_type;
   GetStruct()->get_document = domdocument_get_document;
   GetStruct()->get_body = domdocument_get_body;
@@ -301,8 +287,7 @@ CefDOMDocumentCppToC::CefDOMDocumentCppToC() {
   GetStruct()->get_element_by_id = domdocument_get_element_by_id;
   GetStruct()->get_focused_node = domdocument_get_focused_node;
   GetStruct()->has_selection = domdocument_has_selection;
-  GetStruct()->get_selection_start_offset =
-      domdocument_get_selection_start_offset;
+  GetStruct()->get_selection_start_offset = domdocument_get_selection_start_offset;
   GetStruct()->get_selection_end_offset = domdocument_get_selection_end_offset;
   GetStruct()->get_selection_as_markup = domdocument_get_selection_as_markup;
   GetStruct()->get_selection_as_text = domdocument_get_selection_as_text;
@@ -310,22 +295,16 @@ CefDOMDocumentCppToC::CefDOMDocumentCppToC() {
   GetStruct()->get_complete_url = domdocument_get_complete_url;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDOMDocumentCppToC::~CefDOMDocumentCppToC() {
+CefDOMDocument_0_CppToC::~CefDOMDocument_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefDOMDocument>
-CefCppToCRefCounted<CefDOMDocumentCppToC, CefDOMDocument, cef_domdocument_t>::
-    UnwrapDerived(CefWrapperType type, cef_domdocument_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefDOMDocument> CefCppToCRefCounted<CefDOMDocument_0_CppToC, CefDOMDocument, cef_domdocument_0_t>::UnwrapDerived(CefWrapperType type, cef_domdocument_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefDOMDocumentCppToC,
-                                   CefDOMDocument,
-                                   cef_domdocument_t>::kWrapperType =
-    WT_DOMDOCUMENT;
+template<> CefWrapperType CefCppToCRefCounted<CefDOMDocument_0_CppToC, CefDOMDocument, cef_domdocument_0_t>::kWrapperType = WT_DOMDOCUMENT;
+
+

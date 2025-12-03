@@ -9,12 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=704532f504094ef2344764dd8f8f94fa571cbdd6$
+// $hash=b668ff63651820050f591305bb7e3cad6ad5e600$
 //
 
-#include "libcef_dll/cpptoc/life_span_handler_cpptoc.h"
-
 #include "libcef_dll/cpptoc/client_cpptoc.h"
+#include "libcef_dll/cpptoc/life_span_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -25,21 +24,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK life_span_handler_on_before_popup(
-    struct _cef_life_span_handler_t* self,
-    cef_browser_t* browser,
-    cef_frame_t* frame,
-    int popup_id,
-    const cef_string_t* target_url,
-    const cef_string_t* target_frame_name,
-    cef_window_open_disposition_t target_disposition,
-    int user_gesture,
-    const cef_popup_features_t* popupFeatures,
-    cef_window_info_t* windowInfo,
-    cef_client_t** client,
-    struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t** extra_info,
-    int* no_javascript_access) {
+int CEF_CALLBACK life_span_handler_on_before_popup(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int popup_id, const cef_string_t* target_url, const cef_string_t* target_frame_name, cef_window_open_disposition_t target_disposition, int user_gesture, const cef_popup_features_t* popupFeatures, cef_window_info_t* windowInfo, struct _cef_client_t** client, struct _cef_browser_settings_t* settings, struct _cef_dictionary_value_t** extra_info, int* no_javascript_access) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -99,8 +84,7 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   // Unverified params: target_url, target_frame_name
 
   // Translate param: popupFeatures; type: simple_byref_const
-  CefPopupFeatures popupFeaturesVal =
-      popupFeatures ? *popupFeatures : CefPopupFeatures();
+  CefPopupFeatures popupFeaturesVal = popupFeatures?*popupFeatures:CefPopupFeatures();
   // Translate param: windowInfo; type: struct_byref
   CefWindowInfo windowInfoObj;
   if (windowInfo) {
@@ -109,7 +93,7 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   // Translate param: client; type: refptr_same_byref
   CefRefPtr<CefClient> clientPtr;
   if (client && *client) {
-    clientPtr = CefClientCppToC::Unwrap(*client);
+    clientPtr = CefClientCppToC_Unwrap(*client);
   }
   CefClient* clientOrig = clientPtr.get();
   // Translate param: settings; type: struct_byref
@@ -120,19 +104,27 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   // Translate param: extra_info; type: refptr_diff_byref
   CefRefPtr<CefDictionaryValue> extra_infoPtr;
   if (extra_info && *extra_info) {
-    extra_infoPtr = CefDictionaryValueCToCpp::Wrap(*extra_info);
+    extra_infoPtr = CefDictionaryValueCToCpp_Wrap(*extra_info);
   }
   CefDictionaryValue* extra_infoOrig = extra_infoPtr.get();
   // Translate param: no_javascript_access; type: bool_byaddr
-  bool no_javascript_accessBool =
-      (no_javascript_access && *no_javascript_access) ? true : false;
+  bool no_javascript_accessBool = (no_javascript_access && *no_javascript_access)?true:false;
 
   // Execute
   bool _retval = CefLifeSpanHandlerCppToC::Get(self)->OnBeforePopup(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), popup_id,
-      CefString(target_url), CefString(target_frame_name), target_disposition,
-      user_gesture ? true : false, popupFeaturesVal, windowInfoObj, clientPtr,
-      settingsObj, extra_infoPtr, &no_javascript_accessBool);
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      popup_id,
+      CefString(target_url),
+      CefString(target_frame_name),
+      target_disposition,
+      user_gesture?true:false,
+      popupFeaturesVal,
+      windowInfoObj,
+      clientPtr,
+      settingsObj,
+      extra_infoPtr,
+      &no_javascript_accessBool);
 
   // Restore param: windowInfo; type: struct_byref
   if (windowInfo) {
@@ -142,7 +134,7 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   if (client) {
     if (clientPtr.get()) {
       if (clientPtr.get() != clientOrig) {
-        *client = CefClientCppToC::Wrap(clientPtr);
+        *client = CefClientCppToC_Wrap(clientPtr);
       }
     } else {
       *client = nullptr;
@@ -156,7 +148,7 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   if (extra_info) {
     if (extra_infoPtr.get()) {
       if (extra_infoPtr.get() != extra_infoOrig) {
-        *extra_info = CefDictionaryValueCToCpp::Unwrap(extra_infoPtr);
+        *extra_info = CefDictionaryValueCToCpp_Unwrap(extra_infoPtr);
       }
     } else {
       *extra_info = nullptr;
@@ -164,17 +156,14 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   }
   // Restore param: no_javascript_access; type: bool_byaddr
   if (no_javascript_access) {
-    *no_javascript_access = no_javascript_accessBool ? true : false;
+    *no_javascript_access = no_javascript_accessBool?true:false;
   }
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK
-life_span_handler_on_before_popup_aborted(struct _cef_life_span_handler_t* self,
-                                          cef_browser_t* browser,
-                                          int popup_id) {
+void CEF_CALLBACK life_span_handler_on_before_popup_aborted(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, int popup_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -191,17 +180,11 @@ life_span_handler_on_before_popup_aborted(struct _cef_life_span_handler_t* self,
 
   // Execute
   CefLifeSpanHandlerCppToC::Get(self)->OnBeforePopupAborted(
-      CefBrowserCToCpp::Wrap(browser), popup_id);
+      CefBrowserCToCpp_Wrap(browser),
+      popup_id);
 }
 
-void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
-    struct _cef_life_span_handler_t* self,
-    cef_browser_t* browser,
-    cef_window_info_t* windowInfo,
-    cef_client_t** client,
-    struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t** extra_info,
-    int* use_default_window) {
+void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, cef_window_info_t* windowInfo, struct _cef_client_t** client, struct _cef_browser_settings_t* settings, struct _cef_dictionary_value_t** extra_info, int* use_default_window) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -257,7 +240,7 @@ void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
   // Translate param: client; type: refptr_same_byref
   CefRefPtr<CefClient> clientPtr;
   if (client && *client) {
-    clientPtr = CefClientCppToC::Unwrap(*client);
+    clientPtr = CefClientCppToC_Unwrap(*client);
   }
   CefClient* clientOrig = clientPtr.get();
   // Translate param: settings; type: struct_byref
@@ -268,17 +251,20 @@ void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
   // Translate param: extra_info; type: refptr_diff_byref
   CefRefPtr<CefDictionaryValue> extra_infoPtr;
   if (extra_info && *extra_info) {
-    extra_infoPtr = CefDictionaryValueCToCpp::Wrap(*extra_info);
+    extra_infoPtr = CefDictionaryValueCToCpp_Wrap(*extra_info);
   }
   CefDictionaryValue* extra_infoOrig = extra_infoPtr.get();
   // Translate param: use_default_window; type: bool_byaddr
-  bool use_default_windowBool =
-      (use_default_window && *use_default_window) ? true : false;
+  bool use_default_windowBool = (use_default_window && *use_default_window)?true:false;
 
   // Execute
   CefLifeSpanHandlerCppToC::Get(self)->OnBeforeDevToolsPopup(
-      CefBrowserCToCpp::Wrap(browser), windowInfoObj, clientPtr, settingsObj,
-      extra_infoPtr, &use_default_windowBool);
+      CefBrowserCToCpp_Wrap(browser),
+      windowInfoObj,
+      clientPtr,
+      settingsObj,
+      extra_infoPtr,
+      &use_default_windowBool);
 
   // Restore param: windowInfo; type: struct_byref
   if (windowInfo) {
@@ -288,7 +274,7 @@ void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
   if (client) {
     if (clientPtr.get()) {
       if (clientPtr.get() != clientOrig) {
-        *client = CefClientCppToC::Wrap(clientPtr);
+        *client = CefClientCppToC_Wrap(clientPtr);
       }
     } else {
       *client = nullptr;
@@ -302,7 +288,7 @@ void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
   if (extra_info) {
     if (extra_infoPtr.get()) {
       if (extra_infoPtr.get() != extra_infoOrig) {
-        *extra_info = CefDictionaryValueCToCpp::Unwrap(extra_infoPtr);
+        *extra_info = CefDictionaryValueCToCpp_Unwrap(extra_infoPtr);
       }
     } else {
       *extra_info = nullptr;
@@ -310,13 +296,11 @@ void CEF_CALLBACK life_span_handler_on_before_dev_tools_popup(
   }
   // Restore param: use_default_window; type: bool_byaddr
   if (use_default_window) {
-    *use_default_window = use_default_windowBool ? true : false;
+    *use_default_window = use_default_windowBool?true:false;
   }
 }
 
-void CEF_CALLBACK
-life_span_handler_on_after_created(struct _cef_life_span_handler_t* self,
-                                   cef_browser_t* browser) {
+void CEF_CALLBACK life_span_handler_on_after_created(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -333,12 +317,10 @@ life_span_handler_on_after_created(struct _cef_life_span_handler_t* self,
 
   // Execute
   CefLifeSpanHandlerCppToC::Get(self)->OnAfterCreated(
-      CefBrowserCToCpp::Wrap(browser));
+      CefBrowserCToCpp_Wrap(browser));
 }
 
-int CEF_CALLBACK
-life_span_handler_do_close(struct _cef_life_span_handler_t* self,
-                           cef_browser_t* browser) {
+int CEF_CALLBACK life_span_handler_do_close(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -355,15 +337,13 @@ life_span_handler_do_close(struct _cef_life_span_handler_t* self,
 
   // Execute
   bool _retval = CefLifeSpanHandlerCppToC::Get(self)->DoClose(
-      CefBrowserCToCpp::Wrap(browser));
+      CefBrowserCToCpp_Wrap(browser));
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK
-life_span_handler_on_before_close(struct _cef_life_span_handler_t* self,
-                                  cef_browser_t* browser) {
+void CEF_CALLBACK life_span_handler_on_before_close(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -380,7 +360,7 @@ life_span_handler_on_before_close(struct _cef_life_span_handler_t* self,
 
   // Execute
   CefLifeSpanHandlerCppToC::Get(self)->OnBeforeClose(
-      CefBrowserCToCpp::Wrap(browser));
+      CefBrowserCToCpp_Wrap(browser));
 }
 
 }  // namespace
@@ -389,10 +369,8 @@ life_span_handler_on_before_close(struct _cef_life_span_handler_t* self,
 
 CefLifeSpanHandlerCppToC::CefLifeSpanHandlerCppToC() {
   GetStruct()->on_before_popup = life_span_handler_on_before_popup;
-  GetStruct()->on_before_popup_aborted =
-      life_span_handler_on_before_popup_aborted;
-  GetStruct()->on_before_dev_tools_popup =
-      life_span_handler_on_before_dev_tools_popup;
+  GetStruct()->on_before_popup_aborted = life_span_handler_on_before_popup_aborted;
+  GetStruct()->on_before_dev_tools_popup = life_span_handler_on_before_dev_tools_popup;
   GetStruct()->on_after_created = life_span_handler_on_after_created;
   GetStruct()->do_close = life_span_handler_do_close;
   GetStruct()->on_before_close = life_span_handler_on_before_close;
@@ -404,18 +382,11 @@ CefLifeSpanHandlerCppToC::~CefLifeSpanHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefLifeSpanHandler> CefCppToCRefCounted<
-    CefLifeSpanHandlerCppToC,
-    CefLifeSpanHandler,
-    cef_life_span_handler_t>::UnwrapDerived(CefWrapperType type,
-                                            cef_life_span_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefLifeSpanHandler> CefCppToCRefCounted<CefLifeSpanHandlerCppToC, CefLifeSpanHandler, cef_life_span_handler_t>::UnwrapDerived(CefWrapperType type, cef_life_span_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefLifeSpanHandlerCppToC,
-                                   CefLifeSpanHandler,
-                                   cef_life_span_handler_t>::kWrapperType =
-    WT_LIFE_SPAN_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefLifeSpanHandlerCppToC, CefLifeSpanHandler, cef_life_span_handler_t>::kWrapperType = WT_LIFE_SPAN_HANDLER;
+
+

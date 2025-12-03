@@ -9,22 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5915e07a02f3de2f1a6f3afed46008b2adfdc973$
+// $hash=f5dbb433011b5ff2853255e6a7e3b95c260d99e8$
 //
 
-#include "libcef_dll/ctocpp/test/test_server_ctocpp.h"
-
 #include "libcef_dll/cpptoc/test/test_server_handler_cpptoc.h"
+#include "libcef_dll/ctocpp/test/test_server_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefTestServer> CefTestServer::CreateAndStart(
-    uint16_t port,
-    bool https_server,
-    cef_test_cert_type_t https_cert_type,
-    CefRefPtr<CefTestServerHandler> handler) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefTestServer> CefTestServer::CreateAndStart(uint16_t port, bool https_server, cef_test_cert_type_t https_cert_type, CefRefPtr<CefTestServerHandler> handler) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -36,21 +31,24 @@ CefRefPtr<CefTestServer> CefTestServer::CreateAndStart(
   }
 
   // Execute
-  cef_test_server_t* _retval = cef_test_server_create_and_start(
-      port, https_server, https_cert_type,
-      CefTestServerHandlerCppToC::Wrap(handler));
+  auto* _retval = cef_test_server_create_and_start(
+      port,
+      https_server,
+      https_cert_type,
+      CefTestServerHandlerCppToC_Wrap(handler));
 
   // Return type: refptr_same
-  return CefTestServerCToCpp::Wrap(_retval);
+  return CefTestServerCToCpp_Wrap(_retval);
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") void CefTestServerCToCpp::Stop() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, stop)) {
+  auto* _struct = GetStruct();
+  if (!_struct->stop) {
     return;
   }
 
@@ -63,8 +61,8 @@ NO_SANITIZE("cfi-icall") void CefTestServerCToCpp::Stop() {
 NO_SANITIZE("cfi-icall") CefString CefTestServerCToCpp::GetOrigin() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_origin)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_origin) {
     return CefString();
   }
 
@@ -81,7 +79,8 @@ NO_SANITIZE("cfi-icall") CefString CefTestServerCToCpp::GetOrigin() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefTestServerCToCpp::CefTestServerCToCpp() {}
+CefTestServerCToCpp::CefTestServerCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -89,16 +88,11 @@ CefTestServerCToCpp::~CefTestServerCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_test_server_t*
-CefCToCppRefCounted<CefTestServerCToCpp, CefTestServer, cef_test_server_t>::
-    UnwrapDerived(CefWrapperType type, CefTestServer* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_test_server_t* CefCToCppRefCounted<CefTestServerCToCpp, CefTestServer, cef_test_server_t>::UnwrapDerived(CefWrapperType type, CefTestServer* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefTestServerCToCpp,
-                                   CefTestServer,
-                                   cef_test_server_t>::kWrapperType =
-    WT_TEST_SERVER;
+template<> CefWrapperType CefCToCppRefCounted<CefTestServerCToCpp, CefTestServer, cef_test_server_t>::kWrapperType = WT_TEST_SERVER;
+
+

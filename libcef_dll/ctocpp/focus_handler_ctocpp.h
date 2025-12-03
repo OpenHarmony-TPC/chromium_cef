@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1466a5242c545faba4b0dc80ad7ab886fb9308ce$
+// $hash=15b8698ddf4daab17a2613f79fbc5efef9e767f8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FOCUS_HANDLER_CTOCPP_H_
@@ -20,23 +20,25 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_focus_handler_capi.h"
 #include "include/cef_focus_handler.h"
+#include "include/capi/cef_focus_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefFocusHandlerCToCpp : public CefCToCppRefCounted<CefFocusHandlerCToCpp,
-                                                         CefFocusHandler,
-                                                         cef_focus_handler_t> {
+class CefFocusHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefFocusHandler_0_CToCpp, CefFocusHandler, cef_focus_handler_0_t> {
  public:
-  CefFocusHandlerCToCpp();
-  virtual ~CefFocusHandlerCToCpp();
+  CefFocusHandler_0_CToCpp();
+  virtual ~CefFocusHandler_0_CToCpp();
 
   // CefFocusHandler methods.
   void OnTakeFocus(CefRefPtr<CefBrowser> browser, bool next) override;
   bool OnSetFocus(CefRefPtr<CefBrowser> browser, FocusSource source) override;
   void OnGotFocus(CefRefPtr<CefBrowser> browser) override;
 };
+
+constexpr auto CefFocusHandlerCToCpp_Wrap = CefFocusHandler_0_CToCpp::Wrap;
+constexpr auto CefFocusHandlerCToCpp_Unwrap = CefFocusHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FOCUS_HANDLER_CTOCPP_H_

@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3e0b0c2d69f4cef1b939463fc959e3045a326f98$
+// $hash=4329895429dde928a0e305b974b10b063fc320d5$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/media_source_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-cef_string_userfree_t CEF_CALLBACK
-media_source_get_id(struct _cef_media_source_t* self) {
+cef_string_userfree_t CEF_CALLBACK media_source_get_id(struct _cef_media_source_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,13 +31,13 @@ media_source_get_id(struct _cef_media_source_t* self) {
   }
 
   // Execute
-  CefString _retval = CefMediaSourceCppToC::Get(self)->GetId();
+  CefString _retval = CefMediaSource_0_CppToC::Get(self)->GetId();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK media_source_is_cast_source(struct _cef_media_source_t* self) {
+int CEF_CALLBACK media_source_is_cast_source(struct _cef_media_source_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -49,13 +48,13 @@ int CEF_CALLBACK media_source_is_cast_source(struct _cef_media_source_t* self) {
   }
 
   // Execute
-  bool _retval = CefMediaSourceCppToC::Get(self)->IsCastSource();
+  bool _retval = CefMediaSource_0_CppToC::Get(self)->IsCastSource();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK media_source_is_dial_source(struct _cef_media_source_t* self) {
+int CEF_CALLBACK media_source_is_dial_source(struct _cef_media_source_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -66,7 +65,7 @@ int CEF_CALLBACK media_source_is_dial_source(struct _cef_media_source_t* self) {
   }
 
   // Execute
-  bool _retval = CefMediaSourceCppToC::Get(self)->IsDialSource();
+  bool _retval = CefMediaSource_0_CppToC::Get(self)->IsDialSource();
 
   // Return type: bool
   return _retval;
@@ -74,30 +73,27 @@ int CEF_CALLBACK media_source_is_dial_source(struct _cef_media_source_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSourceCppToC::CefMediaSourceCppToC() {
+CefMediaSource_0_CppToC::CefMediaSource_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_id = media_source_get_id;
   GetStruct()->is_cast_source = media_source_is_cast_source;
   GetStruct()->is_dial_source = media_source_is_dial_source;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSourceCppToC::~CefMediaSourceCppToC() {
+CefMediaSource_0_CppToC::~CefMediaSource_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMediaSource>
-CefCppToCRefCounted<CefMediaSourceCppToC, CefMediaSource, cef_media_source_t>::
-    UnwrapDerived(CefWrapperType type, cef_media_source_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefMediaSource> CefCppToCRefCounted<CefMediaSource_0_CppToC, CefMediaSource, cef_media_source_0_t>::UnwrapDerived(CefWrapperType type, cef_media_source_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefMediaSourceCppToC,
-                                   CefMediaSource,
-                                   cef_media_source_t>::kWrapperType =
-    WT_MEDIA_SOURCE;
+template<> CefWrapperType CefCppToCRefCounted<CefMediaSource_0_CppToC, CefMediaSource, cef_media_source_0_t>::kWrapperType = WT_MEDIA_SOURCE;
+
+

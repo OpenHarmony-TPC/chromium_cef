@@ -9,35 +9,31 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6b0d0bd54c0dca0bf8167e24800bf519e51997b2$
+// $hash=a6bf2f5e047d8263fc84711ce80a92c85ed8c718$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/registration_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRegistrationCppToC::CefRegistrationCppToC() {}
+CefRegistration_0_CppToC::CefRegistration_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 
-// DESTRUCTOR - Do not edit by hand.
+}
 
-CefRegistrationCppToC::~CefRegistrationCppToC() {
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefRegistration_0_CppToC::~CefRegistration_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefRegistration>
-CefCppToCRefCounted<CefRegistrationCppToC,
-                    CefRegistration,
-                    cef_registration_t>::UnwrapDerived(CefWrapperType type,
-                                                       cef_registration_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefRegistration> CefCppToCRefCounted<CefRegistration_0_CppToC, CefRegistration, cef_registration_0_t>::UnwrapDerived(CefWrapperType type, cef_registration_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefRegistrationCppToC,
-                                   CefRegistration,
-                                   cef_registration_t>::kWrapperType =
-    WT_REGISTRATION;
+template<> CefWrapperType CefCppToCRefCounted<CefRegistration_0_CppToC, CefRegistration, cef_registration_0_t>::kWrapperType = WT_REGISTRATION;
+
+

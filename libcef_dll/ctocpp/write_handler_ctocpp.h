@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e026ebee588dae6f6b501a45b0035a917bc2107f$
+// $hash=44254757b9e4e96dc13e577718e7fe49bb71c304$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_WRITE_HANDLER_CTOCPP_H_
@@ -20,18 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_stream_capi.h"
 #include "include/cef_stream.h"
+#include "include/capi/cef_stream_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefWriteHandlerCToCpp : public CefCToCppRefCounted<CefWriteHandlerCToCpp,
-                                                         CefWriteHandler,
-                                                         cef_write_handler_t> {
+class CefWriteHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefWriteHandler_0_CToCpp, CefWriteHandler, cef_write_handler_0_t> {
  public:
-  CefWriteHandlerCToCpp();
-  virtual ~CefWriteHandlerCToCpp();
+  CefWriteHandler_0_CToCpp();
+  virtual ~CefWriteHandler_0_CToCpp();
 
   // CefWriteHandler methods.
   size_t Write(const void* ptr, size_t size, size_t n) override;
@@ -40,5 +39,8 @@ class CefWriteHandlerCToCpp : public CefCToCppRefCounted<CefWriteHandlerCToCpp,
   int Flush() override;
   bool MayBlock() override;
 };
+
+constexpr auto CefWriteHandlerCToCpp_Wrap = CefWriteHandler_0_CToCpp::Wrap;
+constexpr auto CefWriteHandlerCToCpp_Unwrap = CefWriteHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WRITE_HANDLER_CTOCPP_H_

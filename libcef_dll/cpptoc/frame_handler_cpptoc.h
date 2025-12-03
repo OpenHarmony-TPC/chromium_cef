@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0f8c668e54f436c8e2c7eb4632e88155072df5be$
+// $hash=062c6f8c5cf4e9dd8c839e244b53f97b65442788$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_FRAME_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_frame_handler_capi.h"
 #include "include/cef_frame_handler.h"
+#include "include/capi/cef_frame_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefFrameHandlerCppToC : public CefCppToCRefCounted<CefFrameHandlerCppToC,
-                                                         CefFrameHandler,
-                                                         cef_frame_handler_t> {
+class CefFrameHandlerCppToC
+    : public CefCppToCRefCounted<CefFrameHandlerCppToC, CefFrameHandler, cef_frame_handler_t> {
  public:
   CefFrameHandlerCppToC();
   virtual ~CefFrameHandlerCppToC();
 };
+
+constexpr auto CefFrameHandlerCppToC_Wrap = CefFrameHandlerCppToC::Wrap;
+constexpr auto CefFrameHandlerCppToC_Unwrap = CefFrameHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_FRAME_HANDLER_CPPTOC_H_

@@ -9,27 +9,24 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=331d95e39a1bc8ddcde6cb147a0b03196d6c4a31$
+// $hash=a35d344977836e96549821878158980349a8074e$
 //
 
-#include "libcef_dll/ctocpp/test/test_server_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/test/test_server_connection_cpptoc.h"
 #include "libcef_dll/cpptoc/test/test_server_cpptoc.h"
+#include "libcef_dll/ctocpp/test/test_server_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefTestServerHandlerCToCpp::OnTestServerRequest(
-    CefRefPtr<CefTestServer> server,
-    CefRefPtr<CefRequest> request,
-    CefRefPtr<CefTestServerConnection> connection) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefTestServerHandler_0_CToCpp::OnTestServerRequest(CefRefPtr<CefTestServer> server, CefRefPtr<CefRequest> request, CefRefPtr<CefTestServerConnection> connection) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_test_server_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_test_server_request)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_test_server_request) {
     return false;
   }
 
@@ -52,37 +49,32 @@ bool CefTestServerHandlerCToCpp::OnTestServerRequest(
   }
 
   // Execute
-  int _retval = _struct->on_test_server_request(
-      _struct, CefTestServerCppToC::Wrap(server),
-      CefRequestCppToC::Wrap(request),
-      CefTestServerConnectionCppToC::Wrap(connection));
+  int _retval = _struct->on_test_server_request(_struct,
+      CefTestServerCppToC_Wrap(server),
+      CefRequestCppToC_Wrap(request),
+      CefTestServerConnectionCppToC_Wrap(connection));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerHandlerCToCpp::CefTestServerHandlerCToCpp() {}
+CefTestServerHandler_0_CToCpp::CefTestServerHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerHandlerCToCpp::~CefTestServerHandlerCToCpp() {
+CefTestServerHandler_0_CToCpp::~CefTestServerHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_test_server_handler_t* CefCToCppRefCounted<
-    CefTestServerHandlerCToCpp,
-    CefTestServerHandler,
-    cef_test_server_handler_t>::UnwrapDerived(CefWrapperType type,
-                                              CefTestServerHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_test_server_handler_0_t* CefCToCppRefCounted<CefTestServerHandler_0_CToCpp, CefTestServerHandler, cef_test_server_handler_0_t>::UnwrapDerived(CefWrapperType type, CefTestServerHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefTestServerHandlerCToCpp,
-                                   CefTestServerHandler,
-                                   cef_test_server_handler_t>::kWrapperType =
-    WT_TEST_SERVER_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefTestServerHandler_0_CToCpp, CefTestServerHandler, cef_test_server_handler_0_t>::kWrapperType = WT_TEST_SERVER_HANDLER;
+
+

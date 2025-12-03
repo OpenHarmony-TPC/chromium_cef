@@ -17,10 +17,8 @@
 #include "tests/cefclient/browser/main_context.h"
 #include "tests/cefclient/browser/resource.h"
 #include "tests/cefclient/browser/views_style.h"
+#include "tests/shared/browser/geometry_util.h"
 #include "tests/shared/common/client_switches.h"
-#if defined(OS_OHOS)
-#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
-#endif
 
 #if !defined(OS_WIN)
 #define VK_ESCAPE 0x1B
@@ -28,22 +26,13 @@
 #define VK_MENU 0x12  // ALT key.
 #endif
 
-#if defined(OS_OHOS)
-using namespace ohos::adapter::xcomponent;
-#endif
-
 namespace client {
 
 namespace {
 
 // Default window size.
-#ifdef OS_OHOS
-constexpr int kDefaultWidth = 1700;
-constexpr int kDefaultHeight = 1007;
-#else
 constexpr int kDefaultWidth = 800;
 constexpr int kDefaultHeight = 600;
-#endif
 
 #if defined(OS_MAC)
 constexpr int kTitleBarHeight = 35;
@@ -241,7 +230,9 @@ void ViewsWindow::Maximize() {
 void ViewsWindow::SetBounds(const CefRect& bounds) {
   CEF_REQUIRE_UI_THREAD();
   if (window_) {
-    window_->SetBounds(bounds);
+    auto window_bounds = bounds;
+    ConstrainWindowBounds(window_->GetDisplay()->GetWorkArea(), window_bounds);
+    window_->SetBounds(window_bounds);
   }
 }
 
@@ -541,6 +532,13 @@ bool ViewsWindow::UseFramelessWindowForPictureInPicture(
     CefRefPtr<CefBrowserView> browser_view) {
   return hide_pip_frame_;
 }
+
+#if CEF_API_ADDED(13601)
+bool ViewsWindow::AllowMoveForPictureInPicture(
+    CefRefPtr<CefBrowserView> browser_view) {
+  return move_pip_enabled_;
+}
+#endif
 
 cef_runtime_style_t ViewsWindow::GetBrowserRuntimeStyle() {
   if (use_alloy_style_) {
@@ -881,12 +879,7 @@ CefRect ViewsWindow::GetInitialBounds(CefRefPtr<CefWindow> window) {
   const CefRect bounds = delegate_->GetInitialBounds();
   if (frameless_ && bounds.IsEmpty()) {
     // Need to provide a size for frameless windows that will be centered.
-#if defined(OS_OHOS)
-    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
-    return CefRect(0, 0, window_rect.width, window_rect.height);
-#else
     return CefRect(0, 0, kDefaultWidth, kDefaultHeight);
-#endif
   }
   return bounds;
 }
@@ -1071,12 +1064,9 @@ void ViewsWindow::OnWindowChanged(CefRefPtr<CefView> view, bool added) {
       overlay_controls_->Destroy();
       overlay_controls_ = nullptr;
       location_bar_ = nullptr;
-    } else if (use_bottom_controls_) {
-      if (toolbar_) {
-        window_->RemoveChildView(toolbar_);
-        toolbar_ = nullptr;
-        location_bar_ = nullptr;
-      }
+    } else if (toolbar_) {
+      toolbar_ = nullptr;
+      location_bar_ = nullptr;
     }
     if (overlay_browser_) {
       overlay_browser_->Destroy();
@@ -1180,6 +1170,7 @@ ViewsWindow::ViewsWindow(WindowType type,
   use_window_modal_dialog_ =
       command_line->HasSwitch(switches::kUseWindowModalDialog);
   hide_pip_frame_ = command_line->HasSwitch(switches::kHidePipFrame);
+  move_pip_enabled_ = command_line->HasSwitch(switches::kMovePipEnabled);
 }
 
 void ViewsWindow::SetBrowserView(CefRefPtr<CefBrowserView> browser_view) {

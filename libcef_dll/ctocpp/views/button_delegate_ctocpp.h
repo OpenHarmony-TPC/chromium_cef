@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=04d2dcbe225571a4727521f6a65e01a03714b368$
+// $hash=8ae3ab874ddfb42d865a0317b52e83582969b9af$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_DELEGATE_CTOCPP_H_
@@ -20,21 +20,19 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_button_capi.h"
-#include "include/capi/views/cef_button_delegate_capi.h"
-#include "include/views/cef_button.h"
 #include "include/views/cef_button_delegate.h"
+#include "include/capi/views/cef_button_delegate_capi_versions.h"
+#include "include/views/cef_button.h"
+#include "include/capi/views/cef_button_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefButtonDelegateCToCpp
-    : public CefCToCppRefCounted<CefButtonDelegateCToCpp,
-                                 CefButtonDelegate,
-                                 cef_button_delegate_t> {
+class CefButtonDelegate_0_CToCpp
+    : public CefCToCppRefCounted<CefButtonDelegate_0_CToCpp, CefButtonDelegate, cef_button_delegate_0_t> {
  public:
-  CefButtonDelegateCToCpp();
-  virtual ~CefButtonDelegateCToCpp();
+  CefButtonDelegate_0_CToCpp();
+  virtual ~CefButtonDelegate_0_CToCpp();
 
   // CefButtonDelegate methods.
   void OnButtonPressed(CefRefPtr<CefButton> button) override;
@@ -45,18 +43,16 @@ class CefButtonDelegateCToCpp
   CefSize GetMinimumSize(CefRefPtr<CefView> view) override;
   CefSize GetMaximumSize(CefRefPtr<CefView> view) override;
   int GetHeightForWidth(CefRefPtr<CefView> view, int width) override;
-  void OnParentViewChanged(CefRefPtr<CefView> view,
-                           bool added,
-                           CefRefPtr<CefView> parent) override;
-  void OnChildViewChanged(CefRefPtr<CefView> view,
-                          bool added,
-                          CefRefPtr<CefView> child) override;
+  void OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) override;
+  void OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) override;
   void OnWindowChanged(CefRefPtr<CefView> view, bool added) override;
-  void OnLayoutChanged(CefRefPtr<CefView> view,
-                       const CefRect& new_bounds) override;
+  void OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) override;
   void OnFocus(CefRefPtr<CefView> view) override;
   void OnBlur(CefRefPtr<CefView> view) override;
   void OnThemeChanged(CefRefPtr<CefView> view) override;
 };
+
+constexpr auto CefButtonDelegateCToCpp_Wrap = CefButtonDelegate_0_CToCpp::Wrap;
+constexpr auto CefButtonDelegateCToCpp_Unwrap = CefButtonDelegate_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_DELEGATE_CTOCPP_H_

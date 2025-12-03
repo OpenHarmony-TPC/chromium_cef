@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=88418992d7ebc16e856b1db8f14d2afeba37358d$
+// $hash=0c44af0c15b6bfc85cad6106090d9c4cac4f5250$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_browser_view_capi.h"
 #include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserViewCppToC : public CefCppToCRefCounted<CefBrowserViewCppToC,
-                                                        CefBrowserView,
-                                                        cef_browser_view_t> {
+class CefBrowserView_0_CppToC
+    : public CefCppToCRefCounted<CefBrowserView_0_CppToC, CefBrowserView, cef_browser_view_0_t> {
  public:
-  CefBrowserViewCppToC();
-  virtual ~CefBrowserViewCppToC();
+  CefBrowserView_0_CppToC();
+  virtual ~CefBrowserView_0_CppToC();
 };
+
+constexpr auto CefBrowserViewCppToC_Wrap = CefBrowserView_0_CppToC::Wrap;
+constexpr auto CefBrowserViewCppToC_Unwrap = CefBrowserView_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_CPPTOC_H_

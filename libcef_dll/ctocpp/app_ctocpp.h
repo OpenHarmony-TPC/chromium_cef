@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2ec3d11a54fde66f522e5c350d2eb733a8468844$
+// $hash=cc1a04a17c89af8b59f4cdc3aebca651e09f2a31$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_APP_CTOCPP_H_
@@ -20,27 +20,27 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_app_capi.h"
 #include "include/cef_app.h"
+#include "include/capi/cef_app_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefAppCToCpp
-    : public CefCToCppRefCounted<CefAppCToCpp, CefApp, cef_app_t> {
+class CefApp_0_CToCpp
+    : public CefCToCppRefCounted<CefApp_0_CToCpp, CefApp, cef_app_0_t> {
  public:
-  CefAppCToCpp();
-  virtual ~CefAppCToCpp();
+  CefApp_0_CToCpp();
+  virtual ~CefApp_0_CToCpp();
 
   // CefApp methods.
-  void OnBeforeCommandLineProcessing(
-      const CefString& process_type,
-      CefRefPtr<CefCommandLine> command_line) override;
-  void OnRegisterCustomSchemes(
-      CefRawPtr<CefSchemeRegistrar> registrar) override;
+  void OnBeforeCommandLineProcessing(const CefString& process_type, CefRefPtr<CefCommandLine> command_line) override;
+  void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) override;
   CefRefPtr<CefResourceBundleHandler> GetResourceBundleHandler() override;
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override;
   CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override;
 };
+
+constexpr auto CefAppCToCpp_Wrap = CefApp_0_CToCpp::Wrap;
+constexpr auto CefAppCToCpp_Unwrap = CefApp_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_APP_CTOCPP_H_

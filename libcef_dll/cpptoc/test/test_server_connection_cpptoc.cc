@@ -9,23 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=655d807beb5a69d15ab2d33e7f5f3c066ee15eaa$
+// $hash=6f7c776b6fabfa621ae0435f7168d0de000a16a0$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/test/test_server_connection_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK test_server_connection_send_http200response(
-    struct _cef_test_server_connection_t* self,
-    const cef_string_t* content_type,
-    const void* data,
-    size_t data_size) {
+void CEF_CALLBACK test_server_connection_send_http200_response(struct _cef_test_server_connection_0_t* self, const cef_string_t* content_type, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -46,12 +42,13 @@ void CEF_CALLBACK test_server_connection_send_http200response(
   }
 
   // Execute
-  CefTestServerConnectionCppToC::Get(self)->SendHttp200Response(
-      CefString(content_type), data, data_size);
+  CefTestServerConnection_0_CppToC::Get(self)->SendHttp200Response(
+      CefString(content_type),
+      data,
+      data_size);
 }
 
-void CEF_CALLBACK test_server_connection_send_http404response(
-    struct _cef_test_server_connection_t* self) {
+void CEF_CALLBACK test_server_connection_send_http404_response(struct _cef_test_server_connection_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -62,12 +59,10 @@ void CEF_CALLBACK test_server_connection_send_http404response(
   }
 
   // Execute
-  CefTestServerConnectionCppToC::Get(self)->SendHttp404Response();
+  CefTestServerConnection_0_CppToC::Get(self)->SendHttp404Response();
 }
 
-void CEF_CALLBACK test_server_connection_send_http500response(
-    struct _cef_test_server_connection_t* self,
-    const cef_string_t* error_message) {
+void CEF_CALLBACK test_server_connection_send_http500_response(struct _cef_test_server_connection_0_t* self, const cef_string_t* error_message) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -83,17 +78,11 @@ void CEF_CALLBACK test_server_connection_send_http500response(
   }
 
   // Execute
-  CefTestServerConnectionCppToC::Get(self)->SendHttp500Response(
+  CefTestServerConnection_0_CppToC::Get(self)->SendHttp500Response(
       CefString(error_message));
 }
 
-void CEF_CALLBACK test_server_connection_send_http_response(
-    struct _cef_test_server_connection_t* self,
-    int response_code,
-    const cef_string_t* content_type,
-    const void* data,
-    size_t data_size,
-    cef_string_multimap_t extra_headers) {
+void CEF_CALLBACK test_server_connection_send_http_response(struct _cef_test_server_connection_0_t* self, int response_code, const cef_string_t* content_type, const void* data, size_t data_size, cef_string_multimap_t extra_headers) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -119,44 +108,38 @@ void CEF_CALLBACK test_server_connection_send_http_response(
   transfer_string_multimap_contents(extra_headers, extra_headersMultimap);
 
   // Execute
-  CefTestServerConnectionCppToC::Get(self)->SendHttpResponse(
-      response_code, CefString(content_type), data, data_size,
+  CefTestServerConnection_0_CppToC::Get(self)->SendHttpResponse(
+      response_code,
+      CefString(content_type),
+      data,
+      data_size,
       extra_headersMultimap);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerConnectionCppToC::CefTestServerConnectionCppToC() {
-  GetStruct()->send_http200response =
-      test_server_connection_send_http200response;
-  GetStruct()->send_http404response =
-      test_server_connection_send_http404response;
-  GetStruct()->send_http500response =
-      test_server_connection_send_http500response;
+CefTestServerConnection_0_CppToC::CefTestServerConnection_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
+  GetStruct()->send_http200_response = test_server_connection_send_http200_response;
+  GetStruct()->send_http404_response = test_server_connection_send_http404_response;
+  GetStruct()->send_http500_response = test_server_connection_send_http500_response;
   GetStruct()->send_http_response = test_server_connection_send_http_response;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerConnectionCppToC::~CefTestServerConnectionCppToC() {
+CefTestServerConnection_0_CppToC::~CefTestServerConnection_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTestServerConnection> CefCppToCRefCounted<
-    CefTestServerConnectionCppToC,
-    CefTestServerConnection,
-    cef_test_server_connection_t>::UnwrapDerived(CefWrapperType type,
-                                                 cef_test_server_connection_t*
-                                                     s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefTestServerConnection> CefCppToCRefCounted<CefTestServerConnection_0_CppToC, CefTestServerConnection, cef_test_server_connection_0_t>::UnwrapDerived(CefWrapperType type, cef_test_server_connection_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTestServerConnectionCppToC,
-                                   CefTestServerConnection,
-                                   cef_test_server_connection_t>::kWrapperType =
-    WT_TEST_SERVER_CONNECTION;
+template<> CefWrapperType CefCppToCRefCounted<CefTestServerConnection_0_CppToC, CefTestServerConnection, cef_test_server_connection_0_t>::kWrapperType = WT_TEST_SERVER_CONNECTION;
+
+

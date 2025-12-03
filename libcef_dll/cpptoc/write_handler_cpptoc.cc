@@ -9,21 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0b0b62a0c2ea01e9ca9208d82e3340399ec54443$
+// $hash=8838ab440f473c5f16b8c5853c1257e834ba54fa$
 //
 
 #include "libcef_dll/cpptoc/write_handler_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-size_t CEF_CALLBACK write_handler_write(struct _cef_write_handler_t* self,
-                                        const void* ptr,
-                                        size_t size,
-                                        size_t n) {
+size_t CEF_CALLBACK write_handler_write(struct _cef_write_handler_t* self, const void* ptr, size_t size, size_t n) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -39,15 +35,16 @@ size_t CEF_CALLBACK write_handler_write(struct _cef_write_handler_t* self,
   }
 
   // Execute
-  size_t _retval = CefWriteHandlerCppToC::Get(self)->Write(ptr, size, n);
+  size_t _retval = CefWriteHandlerCppToC::Get(self)->Write(
+      ptr,
+      size,
+      n);
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK write_handler_seek(struct _cef_write_handler_t* self,
-                                    int64_t offset,
-                                    int whence) {
+int CEF_CALLBACK write_handler_seek(struct _cef_write_handler_t* self, int64_t offset, int whence) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -58,7 +55,9 @@ int CEF_CALLBACK write_handler_seek(struct _cef_write_handler_t* self,
   }
 
   // Execute
-  int _retval = CefWriteHandlerCppToC::Get(self)->Seek(offset, whence);
+  int _retval = CefWriteHandlerCppToC::Get(self)->Seek(
+      offset,
+      whence);
 
   // Return type: simple
   return _retval;
@@ -133,18 +132,11 @@ CefWriteHandlerCppToC::~CefWriteHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefWriteHandler> CefCppToCRefCounted<
-    CefWriteHandlerCppToC,
-    CefWriteHandler,
-    cef_write_handler_t>::UnwrapDerived(CefWrapperType type,
-                                        cef_write_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefWriteHandler> CefCppToCRefCounted<CefWriteHandlerCppToC, CefWriteHandler, cef_write_handler_t>::UnwrapDerived(CefWrapperType type, cef_write_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefWriteHandlerCppToC,
-                                   CefWriteHandler,
-                                   cef_write_handler_t>::kWrapperType =
-    WT_WRITE_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefWriteHandlerCppToC, CefWriteHandler, cef_write_handler_t>::kWrapperType = WT_WRITE_HANDLER;
+
+

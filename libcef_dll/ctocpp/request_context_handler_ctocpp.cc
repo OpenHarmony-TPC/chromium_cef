@@ -9,24 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0d0f9c7062175802e0e7a6252ccddebaf4c6ed3b$
+// $hash=da373b648c690a339c454b80c8690808cc1d84a4$
 //
 
-#include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
+#include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/resource_request_handler_ctocpp.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefRequestContextHandlerCToCpp::OnRequestContextInitialized(
-    CefRefPtr<CefRequestContext> request_context) {
-  cef_request_context_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_request_context_initialized)) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefRequestContextHandler_0_CToCpp::OnRequestContextInitialized(CefRefPtr<CefRequestContext> request_context) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_request_context_initialized) {
     return;
   }
 
@@ -39,22 +38,13 @@ void CefRequestContextHandlerCToCpp::OnRequestContextInitialized(
   }
 
   // Execute
-  _struct->on_request_context_initialized(
-      _struct, CefRequestContextCppToC::Wrap(request_context));
+  _struct->on_request_context_initialized(_struct,
+      CefRequestContextCppToC_Wrap(request_context));
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefResourceRequestHandler>
-CefRequestContextHandlerCToCpp::GetResourceRequestHandler(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    bool is_navigation,
-    bool is_download,
-    const CefString& request_initiator,
-    bool& disable_default_handling) {
-  cef_request_context_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_resource_request_handler)) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefResourceRequestHandler> CefRequestContextHandler_0_CToCpp::GetResourceRequestHandler(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool is_navigation, bool is_download, const CefString& request_initiator, bool& disable_default_handling) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_resource_request_handler) {
     return nullptr;
   }
 
@@ -71,40 +61,38 @@ CefRequestContextHandlerCToCpp::GetResourceRequestHandler(
   int disable_default_handlingInt = disable_default_handling;
 
   // Execute
-  cef_resource_request_handler_t* _retval =
-      _struct->get_resource_request_handler(
-          _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-          CefRequestCppToC::Wrap(request), is_navigation, is_download,
-          request_initiator.GetStruct(), &disable_default_handlingInt);
+  auto* _retval = _struct->get_resource_request_handler(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      CefRequestCppToC_Wrap(request),
+      is_navigation,
+      is_download,
+      request_initiator.GetStruct(),
+      &disable_default_handlingInt);
 
   // Restore param:disable_default_handling; type: bool_byref
-  disable_default_handling = disable_default_handlingInt ? true : false;
+  disable_default_handling = disable_default_handlingInt?true:false;
 
   // Return type: refptr_same
-  return CefResourceRequestHandlerCToCpp::Wrap(_retval);
+  return CefResourceRequestHandlerCToCpp_Wrap(_retval);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRequestContextHandlerCToCpp::CefRequestContextHandlerCToCpp() {}
-
-// DESTRUCTOR - Do not edit by hand.
-
-CefRequestContextHandlerCToCpp::~CefRequestContextHandlerCToCpp() {}
-
-template <>
-cef_request_context_handler_t* CefCToCppRefCounted<
-    CefRequestContextHandlerCToCpp,
-    CefRequestContextHandler,
-    cef_request_context_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                  CefRequestContextHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefRequestContextHandler_0_CToCpp::CefRequestContextHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefRequestContextHandlerCToCpp,
-                        CefRequestContextHandler,
-                        cef_request_context_handler_t>::kWrapperType =
-        WT_REQUEST_CONTEXT_HANDLER;
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefRequestContextHandler_0_CToCpp::~CefRequestContextHandler_0_CToCpp() {
+}
+
+template<> cef_request_context_handler_0_t* CefCToCppRefCounted<CefRequestContextHandler_0_CToCpp, CefRequestContextHandler, cef_request_context_handler_0_t>::UnwrapDerived(CefWrapperType type, CefRequestContextHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCToCppRefCounted<CefRequestContextHandler_0_CToCpp, CefRequestContextHandler, cef_request_context_handler_0_t>::kWrapperType = WT_REQUEST_CONTEXT_HANDLER;
+
+

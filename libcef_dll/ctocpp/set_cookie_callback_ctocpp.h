@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0d8167f8dc6ac7c7c47a69befb5b3106581aacac$
+// $hash=d2a4a2de3b7bd004e999637ccb196e3f3f58f9ee$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SET_COOKIE_CALLBACK_CTOCPP_H_
@@ -20,22 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSetCookieCallbackCToCpp
-    : public CefCToCppRefCounted<CefSetCookieCallbackCToCpp,
-                                 CefSetCookieCallback,
-                                 cef_set_cookie_callback_t> {
+class CefSetCookieCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefSetCookieCallback_0_CToCpp, CefSetCookieCallback, cef_set_cookie_callback_0_t> {
  public:
-  CefSetCookieCallbackCToCpp();
-  virtual ~CefSetCookieCallbackCToCpp();
+  CefSetCookieCallback_0_CToCpp();
+  virtual ~CefSetCookieCallback_0_CToCpp();
 
   // CefSetCookieCallback methods.
   void OnComplete(bool success) override;
 };
+
+constexpr auto CefSetCookieCallbackCToCpp_Wrap = CefSetCookieCallback_0_CToCpp::Wrap;
+constexpr auto CefSetCookieCallbackCToCpp_Unwrap = CefSetCookieCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SET_COOKIE_CALLBACK_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d7d96f5d3739d698a404bfb0632ebd0430e2b71f$
+// $hash=6b18c8991f74679950eb46cffbce9b8c8bada01f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_COOKIE_MANAGER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCookieManagerCppToC
-    : public CefCppToCRefCounted<CefCookieManagerCppToC,
-                                 CefCookieManager,
-                                 cef_cookie_manager_t> {
+class CefCookieManager_0_CppToC
+    : public CefCppToCRefCounted<CefCookieManager_0_CppToC, CefCookieManager, cef_cookie_manager_0_t> {
  public:
-  CefCookieManagerCppToC();
-  virtual ~CefCookieManagerCppToC();
+  CefCookieManager_0_CppToC();
+  virtual ~CefCookieManager_0_CppToC();
 };
+
+constexpr auto CefCookieManagerCppToC_Wrap = CefCookieManager_0_CppToC::Wrap;
+constexpr auto CefCookieManagerCppToC_Unwrap = CefCookieManager_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_COOKIE_MANAGER_CPPTOC_H_

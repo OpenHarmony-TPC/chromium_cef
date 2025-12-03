@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9a6327e03e5edae5fcb6e3e88dc9ff2e0e096818$
+// $hash=41aaaca41de8ddfb7c821ee1e9c48a117021a6e1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TASK_CPPTOC_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_task_capi.h"
 #include "include/cef_task.h"
+#include "include/capi/cef_task_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
@@ -32,5 +32,8 @@ class CefTaskCppToC
   CefTaskCppToC();
   virtual ~CefTaskCppToC();
 };
+
+constexpr auto CefTaskCppToC_Wrap = CefTaskCppToC::Wrap;
+constexpr auto CefTaskCppToC_Unwrap = CefTaskCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TASK_CPPTOC_H_

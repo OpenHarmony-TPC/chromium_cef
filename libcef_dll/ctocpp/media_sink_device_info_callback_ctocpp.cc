@@ -9,54 +9,48 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=231ce3f7629332d552e7324a413028a8b9d23c8a$
+// $hash=ac91603d241c5a2cabbec46862f9de5c53ca2bda$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/media_sink_device_info_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefMediaSinkDeviceInfoCallbackCToCpp::OnMediaSinkDeviceInfo(
-    const CefMediaSinkDeviceInfo& device_info) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefMediaSinkDeviceInfoCallback_0_CToCpp::OnMediaSinkDeviceInfo(const CefMediaSinkDeviceInfo& device_info) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_sink_device_info_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_media_sink_device_info)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_media_sink_device_info) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_media_sink_device_info(_struct, &device_info);
+  _struct->on_media_sink_device_info(_struct,
+      &device_info);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSinkDeviceInfoCallbackCToCpp::CefMediaSinkDeviceInfoCallbackCToCpp() {}
+CefMediaSinkDeviceInfoCallback_0_CToCpp::CefMediaSinkDeviceInfoCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSinkDeviceInfoCallbackCToCpp::~CefMediaSinkDeviceInfoCallbackCToCpp() {
+CefMediaSinkDeviceInfoCallback_0_CToCpp::~CefMediaSinkDeviceInfoCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_media_sink_device_info_callback_t*
-CefCToCppRefCounted<CefMediaSinkDeviceInfoCallbackCToCpp,
-                    CefMediaSinkDeviceInfoCallback,
-                    cef_media_sink_device_info_callback_t>::
-    UnwrapDerived(CefWrapperType type, CefMediaSinkDeviceInfoCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_media_sink_device_info_callback_0_t* CefCToCppRefCounted<CefMediaSinkDeviceInfoCallback_0_CToCpp, CefMediaSinkDeviceInfoCallback, cef_media_sink_device_info_callback_0_t>::UnwrapDerived(CefWrapperType type, CefMediaSinkDeviceInfoCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefMediaSinkDeviceInfoCallbackCToCpp,
-                        CefMediaSinkDeviceInfoCallback,
-                        cef_media_sink_device_info_callback_t>::kWrapperType =
-        WT_MEDIA_SINK_DEVICE_INFO_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefMediaSinkDeviceInfoCallback_0_CToCpp, CefMediaSinkDeviceInfoCallback, cef_media_sink_device_info_callback_0_t>::kWrapperType = WT_MEDIA_SINK_DEVICE_INFO_CALLBACK;
+
+

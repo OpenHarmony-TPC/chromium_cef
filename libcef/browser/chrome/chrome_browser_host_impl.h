@@ -84,7 +84,6 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   bool IsWindowRenderingDisabled() override { return false; }
   void WasResized() override;
   void WasHidden(bool hidden) override;
-  void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
@@ -109,8 +108,6 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   void DragTargetDrop(const CefMouseEvent& event) override;
   void DragSourceSystemDragEnded() override;
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
-  void SetAudioMuted(bool mute) override;
-  bool IsAudioMuted() override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;

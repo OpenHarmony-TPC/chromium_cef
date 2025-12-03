@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=111f0ccc05e5852d0bd867f9431c487bed2b3354$
+// $hash=a3ff1e1b4977518660f97eb646dae0e9499ebf74$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SCHEME_HANDLER_FACTORY_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSchemeHandlerFactoryCppToC
-    : public CefCppToCRefCounted<CefSchemeHandlerFactoryCppToC,
-                                 CefSchemeHandlerFactory,
-                                 cef_scheme_handler_factory_t> {
+    : public CefCppToCRefCounted<CefSchemeHandlerFactoryCppToC, CefSchemeHandlerFactory, cef_scheme_handler_factory_t> {
  public:
   CefSchemeHandlerFactoryCppToC();
   virtual ~CefSchemeHandlerFactoryCppToC();
 };
+
+constexpr auto CefSchemeHandlerFactoryCppToC_Wrap = CefSchemeHandlerFactoryCppToC::Wrap;
+constexpr auto CefSchemeHandlerFactoryCppToC_Unwrap = CefSchemeHandlerFactoryCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SCHEME_HANDLER_FACTORY_CPPTOC_H_

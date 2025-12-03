@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a2deeda24cb730b4e212514fde833414b450559d$
+// $hash=2adcd54540e4dd2e4488e5325e1c93c9fcab7084$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_process_handler_capi.h"
@@ -56,6 +60,8 @@ struct _cef_app_t;
 ///
 /// Implement this structure to provide handler implementations. Methods will be
 /// called by the process and/or thread indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_app_t {
   ///
@@ -75,10 +81,7 @@ typedef struct _cef_app_t {
   /// arguments for non-browser processes as this may result in undefined
   /// behavior including crashes.
   ///
-  void(CEF_CALLBACK* on_before_command_line_processing)(
-      struct _cef_app_t* self,
-      const cef_string_t* process_type,
-      struct _cef_command_line_t* command_line);
+  void (CEF_CALLBACK *on_before_command_line_processing)(struct _cef_app_t* self, const cef_string_t* process_type, struct _cef_command_line_t* command_line);
 
   ///
   /// Provides an opportunity to register custom schemes. Do not keep a
@@ -86,32 +89,28 @@ typedef struct _cef_app_t {
   /// thread for each process and the registered schemes should be the same
   /// across all processes.
   ///
-  void(CEF_CALLBACK* on_register_custom_schemes)(
-      struct _cef_app_t* self,
-      struct _cef_scheme_registrar_t* registrar);
+  void (CEF_CALLBACK *on_register_custom_schemes)(struct _cef_app_t* self, struct _cef_scheme_registrar_t* registrar);
 
   ///
   /// Return the handler for resource bundle events. If no handler is returned
   /// resources will be loaded from pack files. This function is called by the
   /// browser and render processes on multiple threads.
   ///
-  struct _cef_resource_bundle_handler_t*(
-      CEF_CALLBACK* get_resource_bundle_handler)(struct _cef_app_t* self);
+  struct _cef_resource_bundle_handler_t* (CEF_CALLBACK *get_resource_bundle_handler)(struct _cef_app_t* self);
 
   ///
   /// Return the handler for functionality specific to the browser process. This
   /// function is called on multiple threads in the browser process.
   ///
-  struct _cef_browser_process_handler_t*(
-      CEF_CALLBACK* get_browser_process_handler)(struct _cef_app_t* self);
+  struct _cef_browser_process_handler_t* (CEF_CALLBACK *get_browser_process_handler)(struct _cef_app_t* self);
 
   ///
   /// Return the handler for functionality specific to the render process. This
   /// function is called on the render process main thread.
   ///
-  struct _cef_render_process_handler_t*(
-      CEF_CALLBACK* get_render_process_handler)(struct _cef_app_t* self);
+  struct _cef_render_process_handler_t* (CEF_CALLBACK *get_render_process_handler)(struct _cef_app_t* self);
 } cef_app_t;
+
 
 ///
 /// This function should be called from the application entry point function to
@@ -125,9 +124,7 @@ typedef struct _cef_app_t {
 /// |windows_sandbox_info| parameter is only used on Windows and may be NULL
 /// (see cef_sandbox_win.h for details).
 ///
-CEF_EXPORT int cef_execute_process(const cef_main_args_t* args,
-                                   cef_app_t* application,
-                                   void* windows_sandbox_info);
+CEF_EXPORT int cef_execute_process(const cef_main_args_t* args, cef_app_t* application, void* windows_sandbox_info);
 
 ///
 /// This function should be called on the main application thread to initialize
@@ -136,13 +133,10 @@ CEF_EXPORT int cef_execute_process(const cef_main_args_t* args,
 /// fails or if early exit is desired (for example, due to process singleton
 /// relaunch behavior). If this function returns false (0) then the application
 /// should exit immediately without calling any other CEF functions except,
-/// optionally, CefGetErrorCode. The |windows_sandbox_info| parameter is only
+/// optionally, CefGetExitCode. The |windows_sandbox_info| parameter is only
 /// used on Windows and may be NULL (see cef_sandbox_win.h for details).
 ///
-CEF_EXPORT int cef_initialize(const cef_main_args_t* args,
-                              const struct _cef_settings_t* settings,
-                              cef_app_t* application,
-                              void* windows_sandbox_info);
+CEF_EXPORT int cef_initialize(const cef_main_args_t* args, const struct _cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info);
 
 ///
 /// This function can optionally be called on the main application thread after

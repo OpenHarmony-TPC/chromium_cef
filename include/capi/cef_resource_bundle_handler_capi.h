@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=d6418a35c5ef7e10c95079d959e46f41208e4ee9$
+// $hash=7943ef07f085554227d0f3c42eaa0af46865d06e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,10 +50,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure used to implement a custom resource bundle structure. See
 /// CefSettings for additional options related to resource bundle loading. The
 /// functions of this structure may be called on multiple threads.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_resource_bundle_handler_t {
   ///
@@ -60,43 +67,37 @@ typedef struct _cef_resource_bundle_handler_t {
   ///
   /// Called to retrieve a localized translation for the specified |string_id|.
   /// To provide the translation set |string| to the translation string and
-  /// return true (1). To use the default translation return false (0). Include
-  /// cef_pack_strings.h for a listing of valid string ID values.
+  /// return true (1). To use the default translation return false (0). Use the
+  /// cef_id_for_pack_string_name() function for version-safe mapping of string
+  /// IDS names from cef_pack_strings.h to version-specific numerical
+  /// |string_id| values.
   ///
-  int(CEF_CALLBACK* get_localized_string)(
-      struct _cef_resource_bundle_handler_t* self,
-      int string_id,
-      cef_string_t* string);
+  int (CEF_CALLBACK *get_localized_string)(struct _cef_resource_bundle_handler_t* self, int string_id, cef_string_t* string);
 
   ///
   /// Called to retrieve data for the specified scale independent |resource_id|.
   /// To provide the resource data set |data| and |data_size| to the data
   /// pointer and size respectively and return true (1). To use the default
   /// resource data return false (0). The resource data will not be copied and
-  /// must remain resident in memory. Include cef_pack_resources.h for a listing
-  /// of valid resource ID values.
+  /// must remain resident in memory. Use the cef_id_for_pack_resource_name()
+  /// function for version-safe mapping of resource IDR names from
+  /// cef_pack_resources.h to version-specific numerical |resource_id| values.
   ///
-  int(CEF_CALLBACK* get_data_resource)(
-      struct _cef_resource_bundle_handler_t* self,
-      int resource_id,
-      void** data,
-      size_t* data_size);
+  int (CEF_CALLBACK *get_data_resource)(struct _cef_resource_bundle_handler_t* self, int resource_id, void** data, size_t* data_size);
 
   ///
   /// Called to retrieve data for the specified |resource_id| nearest the scale
   /// factor |scale_factor|. To provide the resource data set |data| and
   /// |data_size| to the data pointer and size respectively and return true (1).
   /// To use the default resource data return false (0). The resource data will
-  /// not be copied and must remain resident in memory. Include
-  /// cef_pack_resources.h for a listing of valid resource ID values.
+  /// not be copied and must remain resident in memory. Use the
+  /// cef_id_for_pack_resource_name() function for version-safe mapping of
+  /// resource IDR names from cef_pack_resources.h to version-specific numerical
+  /// |resource_id| values.
   ///
-  int(CEF_CALLBACK* get_data_resource_for_scale)(
-      struct _cef_resource_bundle_handler_t* self,
-      int resource_id,
-      cef_scale_factor_t scale_factor,
-      void** data,
-      size_t* data_size);
+  int (CEF_CALLBACK *get_data_resource_for_scale)(struct _cef_resource_bundle_handler_t* self, int resource_id, cef_scale_factor_t scale_factor, void** data, size_t* data_size);
 } cef_resource_bundle_handler_t;
+
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0214639a7550305c02b945f4a2a9e4de96012510$
+// $hash=f5a521a542d41ade2f5a2ea89afb33585d6a1da9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTER_CTOCPP_H_
@@ -20,28 +20,27 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaRouterCToCpp : public CefCToCppRefCounted<CefMediaRouterCToCpp,
-                                                        CefMediaRouter,
-                                                        cef_media_router_t> {
+class CefMediaRouterCToCpp
+    : public CefCToCppRefCounted<CefMediaRouterCToCpp, CefMediaRouter, cef_media_router_t> {
  public:
   CefMediaRouterCToCpp();
   virtual ~CefMediaRouterCToCpp();
 
   // CefMediaRouter methods.
-  CefRefPtr<CefRegistration> AddObserver(
-      CefRefPtr<CefMediaObserver> observer) override;
+  CefRefPtr<CefRegistration> AddObserver(CefRefPtr<CefMediaObserver> observer) override;
   CefRefPtr<CefMediaSource> GetSource(const CefString& urn) override;
   void NotifyCurrentSinks() override;
-  void CreateRoute(CefRefPtr<CefMediaSource> source,
-                   CefRefPtr<CefMediaSink> sink,
-                   CefRefPtr<CefMediaRouteCreateCallback> callback) override;
+  void CreateRoute(CefRefPtr<CefMediaSource> source, CefRefPtr<CefMediaSink> sink, CefRefPtr<CefMediaRouteCreateCallback> callback) override;
   void NotifyCurrentRoutes() override;
 };
+
+constexpr auto CefMediaRouterCToCpp_Wrap = CefMediaRouterCToCpp::Wrap;
+constexpr auto CefMediaRouterCToCpp_Unwrap = CefMediaRouterCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTER_CTOCPP_H_

@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e7ba5eb129ff5a8a7f8e8bf14d370f6adfbd8e88$
+// $hash=4ac54fd43fe6893c8bde36bdaea6832464790afc$
 //
 
 #include "libcef_dll/cpptoc/string_visitor_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK string_visitor_visit(struct _cef_string_visitor_t* self,
-                                       const cef_string_t* string) {
+void CEF_CALLBACK string_visitor_visit(struct _cef_string_visitor_t* self, const cef_string_t* string) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,7 +31,8 @@ void CEF_CALLBACK string_visitor_visit(struct _cef_string_visitor_t* self,
   // Unverified params: string
 
   // Execute
-  CefStringVisitorCppToC::Get(self)->Visit(CefString(string));
+  CefStringVisitorCppToC::Get(self)->Visit(
+      CefString(string));
 }
 
 }  // namespace
@@ -50,18 +49,11 @@ CefStringVisitorCppToC::~CefStringVisitorCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefStringVisitor> CefCppToCRefCounted<
-    CefStringVisitorCppToC,
-    CefStringVisitor,
-    cef_string_visitor_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_string_visitor_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefStringVisitor> CefCppToCRefCounted<CefStringVisitorCppToC, CefStringVisitor, cef_string_visitor_t>::UnwrapDerived(CefWrapperType type, cef_string_visitor_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefStringVisitorCppToC,
-                                   CefStringVisitor,
-                                   cef_string_visitor_t>::kWrapperType =
-    WT_STRING_VISITOR;
+template<> CefWrapperType CefCppToCRefCounted<CefStringVisitorCppToC, CefStringVisitor, cef_string_visitor_t>::kWrapperType = WT_STRING_VISITOR;
+
+

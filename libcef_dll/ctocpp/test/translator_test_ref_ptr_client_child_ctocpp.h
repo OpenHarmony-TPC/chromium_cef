@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d3af4436a940e903a517521a3ce80353197d6f0b$
+// $hash=363722fb601468f634428f91e75f71838c21e5aa$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD_CTOCPP_H_
@@ -20,19 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestRefPtrClientChildCToCpp
-    : public CefCToCppRefCounted<CefTranslatorTestRefPtrClientChildCToCpp,
-                                 CefTranslatorTestRefPtrClientChild,
-                                 cef_translator_test_ref_ptr_client_child_t> {
+class CefTranslatorTestRefPtrClientChild_0_CToCpp
+    : public CefCToCppRefCounted<CefTranslatorTestRefPtrClientChild_0_CToCpp, CefTranslatorTestRefPtrClientChild, cef_translator_test_ref_ptr_client_child_0_t> {
  public:
-  CefTranslatorTestRefPtrClientChildCToCpp();
-  virtual ~CefTranslatorTestRefPtrClientChildCToCpp();
+  CefTranslatorTestRefPtrClientChild_0_CToCpp();
+  virtual ~CefTranslatorTestRefPtrClientChild_0_CToCpp();
 
   // CefTranslatorTestRefPtrClientChild methods.
   int GetOtherValue() override;
@@ -40,5 +38,8 @@ class CefTranslatorTestRefPtrClientChildCToCpp
   // CefTranslatorTestRefPtrClient methods.
   int GetValue() override;
 };
+
+constexpr auto CefTranslatorTestRefPtrClientChildCToCpp_Wrap = CefTranslatorTestRefPtrClientChild_0_CToCpp::Wrap;
+constexpr auto CefTranslatorTestRefPtrClientChildCToCpp_Unwrap = CefTranslatorTestRefPtrClientChild_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD_CTOCPP_H_

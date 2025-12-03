@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=53c3bf985f5260ba45b45a46c4076c27a17e6e49$
+// $hash=8da0d82efcc234e26d7eeb9e2dcdf8b490a580dc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefTranslatorTestRefPtrLibraryCToCpp
-    : public CefCToCppRefCounted<CefTranslatorTestRefPtrLibraryCToCpp,
-                                 CefTranslatorTestRefPtrLibrary,
-                                 cef_translator_test_ref_ptr_library_t> {
+    : public CefCToCppRefCounted<CefTranslatorTestRefPtrLibraryCToCpp, CefTranslatorTestRefPtrLibrary, cef_translator_test_ref_ptr_library_t> {
  public:
   CefTranslatorTestRefPtrLibraryCToCpp();
   virtual ~CefTranslatorTestRefPtrLibraryCToCpp();
@@ -38,5 +36,8 @@ class CefTranslatorTestRefPtrLibraryCToCpp
   int GetValue() override;
   void SetValue(int value) override;
 };
+
+constexpr auto CefTranslatorTestRefPtrLibraryCToCpp_Wrap = CefTranslatorTestRefPtrLibraryCToCpp::Wrap;
+constexpr auto CefTranslatorTestRefPtrLibraryCToCpp_Unwrap = CefTranslatorTestRefPtrLibraryCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CTOCPP_H_

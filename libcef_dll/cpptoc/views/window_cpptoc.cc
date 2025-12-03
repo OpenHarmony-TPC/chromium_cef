@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7cbbf3296ac9e956adb6fef8b4c8313f152a1623$
+// $hash=0ef1f226357e709d85f4bfbc0db8fd9df8ad2550$
 //
 
-#include "libcef_dll/cpptoc/views/window_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/cpptoc/menu_model_cpptoc.h"
 #include "libcef_dll/cpptoc/views/box_layout_cpptoc.h"
@@ -27,14 +26,14 @@
 #include "libcef_dll/cpptoc/views/scroll_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/textfield_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
+#include "libcef_dll/cpptoc/views/window_cpptoc.h"
 #include "libcef_dll/ctocpp/views/view_delegate_ctocpp.h"
 #include "libcef_dll/ctocpp/views/window_delegate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_window_t* cef_window_create_top_level(
-    struct _cef_window_delegate_t* delegate) {
+CEF_EXPORT cef_window_0_t* cef_window_create_top_level(struct _cef_window_delegate_0_t* delegate) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -42,18 +41,18 @@ CEF_EXPORT cef_window_t* cef_window_create_top_level(
   // Unverified params: delegate
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefWindow::CreateTopLevelWindow(CefWindowDelegateCToCpp::Wrap(delegate));
+  CefRefPtr<CefWindow> _retval = CefWindow::CreateTopLevelWindow(
+      CefWindowDelegateCToCpp_Wrap(delegate));
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK window_show(struct _cef_window_t* self) {
+void CEF_CALLBACK window_show(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -64,12 +63,10 @@ void CEF_CALLBACK window_show(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Show();
+  CefWindow_0_CppToC::Get(self)->Show();
 }
 
-void CEF_CALLBACK
-window_show_as_browser_modal_dialog(struct _cef_window_t* self,
-                                    cef_browser_view_t* browser_view) {
+void CEF_CALLBACK window_show_as_browser_modal_dialog(struct _cef_window_0_t* self, struct _cef_browser_view_0_t* browser_view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -85,11 +82,11 @@ window_show_as_browser_modal_dialog(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->ShowAsBrowserModalDialog(
-      CefBrowserViewCppToC::Unwrap(browser_view));
+  CefWindow_0_CppToC::Get(self)->ShowAsBrowserModalDialog(
+      CefBrowserViewCppToC_Unwrap(browser_view));
 }
 
-void CEF_CALLBACK window_hide(struct _cef_window_t* self) {
+void CEF_CALLBACK window_hide(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -100,11 +97,10 @@ void CEF_CALLBACK window_hide(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Hide();
+  CefWindow_0_CppToC::Get(self)->Hide();
 }
 
-void CEF_CALLBACK window_center_window(struct _cef_window_t* self,
-                                       const cef_size_t* size) {
+void CEF_CALLBACK window_center_window(struct _cef_window_0_t* self, const cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -120,13 +116,14 @@ void CEF_CALLBACK window_center_window(struct _cef_window_t* self,
   }
 
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
-  CefWindowCppToC::Get(self)->CenterWindow(sizeVal);
+  CefWindow_0_CppToC::Get(self)->CenterWindow(
+      sizeVal);
 }
 
-void CEF_CALLBACK window_close(struct _cef_window_t* self) {
+void CEF_CALLBACK window_close(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -137,10 +134,10 @@ void CEF_CALLBACK window_close(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Close();
+  CefWindow_0_CppToC::Get(self)->Close();
 }
 
-int CEF_CALLBACK window_is_closed(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_closed(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -151,13 +148,13 @@ int CEF_CALLBACK window_is_closed(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsClosed();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsClosed();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_activate(struct _cef_window_t* self) {
+void CEF_CALLBACK window_activate(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -168,10 +165,10 @@ void CEF_CALLBACK window_activate(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Activate();
+  CefWindow_0_CppToC::Get(self)->Activate();
 }
 
-void CEF_CALLBACK window_deactivate(struct _cef_window_t* self) {
+void CEF_CALLBACK window_deactivate(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -182,10 +179,10 @@ void CEF_CALLBACK window_deactivate(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Deactivate();
+  CefWindow_0_CppToC::Get(self)->Deactivate();
 }
 
-int CEF_CALLBACK window_is_active(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_active(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -196,13 +193,13 @@ int CEF_CALLBACK window_is_active(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsActive();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsActive();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_bring_to_top(struct _cef_window_t* self) {
+void CEF_CALLBACK window_bring_to_top(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -213,11 +210,10 @@ void CEF_CALLBACK window_bring_to_top(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->BringToTop();
+  CefWindow_0_CppToC::Get(self)->BringToTop();
 }
 
-void CEF_CALLBACK window_set_always_on_top(struct _cef_window_t* self,
-                                           int on_top) {
+void CEF_CALLBACK window_set_always_on_top(struct _cef_window_0_t* self, int on_top) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -228,10 +224,11 @@ void CEF_CALLBACK window_set_always_on_top(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetAlwaysOnTop(on_top ? true : false);
+  CefWindow_0_CppToC::Get(self)->SetAlwaysOnTop(
+      on_top?true:false);
 }
 
-int CEF_CALLBACK window_is_always_on_top(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_always_on_top(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -242,13 +239,13 @@ int CEF_CALLBACK window_is_always_on_top(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsAlwaysOnTop();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsAlwaysOnTop();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_maximize(struct _cef_window_t* self) {
+void CEF_CALLBACK window_maximize(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -259,10 +256,10 @@ void CEF_CALLBACK window_maximize(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Maximize();
+  CefWindow_0_CppToC::Get(self)->Maximize();
 }
 
-void CEF_CALLBACK window_minimize(struct _cef_window_t* self) {
+void CEF_CALLBACK window_minimize(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -273,10 +270,10 @@ void CEF_CALLBACK window_minimize(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Minimize();
+  CefWindow_0_CppToC::Get(self)->Minimize();
 }
 
-void CEF_CALLBACK window_restore(struct _cef_window_t* self) {
+void CEF_CALLBACK window_restore(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -287,11 +284,10 @@ void CEF_CALLBACK window_restore(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->Restore();
+  CefWindow_0_CppToC::Get(self)->Restore();
 }
 
-void CEF_CALLBACK window_set_fullscreen(struct _cef_window_t* self,
-                                        int fullscreen) {
+void CEF_CALLBACK window_set_fullscreen(struct _cef_window_0_t* self, int fullscreen) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -302,10 +298,11 @@ void CEF_CALLBACK window_set_fullscreen(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetFullscreen(fullscreen ? true : false);
+  CefWindow_0_CppToC::Get(self)->SetFullscreen(
+      fullscreen?true:false);
 }
 
-int CEF_CALLBACK window_is_maximized(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_maximized(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -316,13 +313,13 @@ int CEF_CALLBACK window_is_maximized(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsMaximized();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsMaximized();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_minimized(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_minimized(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -333,13 +330,13 @@ int CEF_CALLBACK window_is_minimized(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsMinimized();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsMinimized();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_fullscreen(struct _cef_window_t* self) {
+int CEF_CALLBACK window_is_fullscreen(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -350,13 +347,13 @@ int CEF_CALLBACK window_is_fullscreen(struct _cef_window_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(self)->IsFullscreen();
+  bool _retval = CefWindow_0_CppToC::Get(self)->IsFullscreen();
 
   // Return type: bool
   return _retval;
 }
 
-cef_view_t* CEF_CALLBACK window_get_focused_view(struct _cef_window_t* self) {
+cef_view_0_t* CEF_CALLBACK window_get_focused_view(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -367,14 +364,13 @@ cef_view_t* CEF_CALLBACK window_get_focused_view(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval = CefWindowCppToC::Get(self)->GetFocusedView();
+  CefRefPtr<CefView> _retval = CefWindow_0_CppToC::Get(self)->GetFocusedView();
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK window_set_title(struct _cef_window_t* self,
-                                   const cef_string_t* title) {
+void CEF_CALLBACK window_set_title(struct _cef_window_0_t* self, const cef_string_t* title) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -386,11 +382,11 @@ void CEF_CALLBACK window_set_title(struct _cef_window_t* self,
   // Unverified params: title
 
   // Execute
-  CefWindowCppToC::Get(self)->SetTitle(CefString(title));
+  CefWindow_0_CppToC::Get(self)->SetTitle(
+      CefString(title));
 }
 
-cef_string_userfree_t CEF_CALLBACK
-window_get_title(struct _cef_window_t* self) {
+cef_string_userfree_t CEF_CALLBACK window_get_title(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -401,14 +397,13 @@ window_get_title(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefString _retval = CefWindowCppToC::Get(self)->GetTitle();
+  CefString _retval = CefWindow_0_CppToC::Get(self)->GetTitle();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-void CEF_CALLBACK window_set_window_icon(struct _cef_window_t* self,
-                                         cef_image_t* image) {
+void CEF_CALLBACK window_set_window_icon(struct _cef_window_0_t* self, struct _cef_image_0_t* image) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -424,10 +419,11 @@ void CEF_CALLBACK window_set_window_icon(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetWindowIcon(CefImageCppToC::Unwrap(image));
+  CefWindow_0_CppToC::Get(self)->SetWindowIcon(
+      CefImageCppToC_Unwrap(image));
 }
 
-cef_image_t* CEF_CALLBACK window_get_window_icon(struct _cef_window_t* self) {
+struct _cef_image_0_t* CEF_CALLBACK window_get_window_icon(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -438,14 +434,13 @@ cef_image_t* CEF_CALLBACK window_get_window_icon(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefImage> _retval = CefWindowCppToC::Get(self)->GetWindowIcon();
+  CefRefPtr<CefImage> _retval = CefWindow_0_CppToC::Get(self)->GetWindowIcon();
 
   // Return type: refptr_same
-  return CefImageCppToC::Wrap(_retval);
+  return CefImageCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK window_set_window_app_icon(struct _cef_window_t* self,
-                                             cef_image_t* image) {
+void CEF_CALLBACK window_set_window_app_icon(struct _cef_window_0_t* self, struct _cef_image_0_t* image) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -461,11 +456,11 @@ void CEF_CALLBACK window_set_window_app_icon(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetWindowAppIcon(CefImageCppToC::Unwrap(image));
+  CefWindow_0_CppToC::Get(self)->SetWindowAppIcon(
+      CefImageCppToC_Unwrap(image));
 }
 
-cef_image_t* CEF_CALLBACK
-window_get_window_app_icon(struct _cef_window_t* self) {
+struct _cef_image_0_t* CEF_CALLBACK window_get_window_app_icon(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -476,17 +471,13 @@ window_get_window_app_icon(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefImage> _retval = CefWindowCppToC::Get(self)->GetWindowAppIcon();
+  CefRefPtr<CefImage> _retval = CefWindow_0_CppToC::Get(self)->GetWindowAppIcon();
 
   // Return type: refptr_same
-  return CefImageCppToC::Wrap(_retval);
+  return CefImageCppToC_Wrap(_retval);
 }
 
-cef_overlay_controller_t* CEF_CALLBACK
-window_add_overlay_view(struct _cef_window_t* self,
-                        cef_view_t* view,
-                        cef_docking_mode_t docking_mode,
-                        int can_activate) {
+struct _cef_overlay_controller_0_t* CEF_CALLBACK window_add_overlay_view(struct _cef_window_0_t* self, cef_view_0_t* view, cef_docking_mode_t docking_mode, int can_activate) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -502,19 +493,16 @@ window_add_overlay_view(struct _cef_window_t* self,
   }
 
   // Execute
-  CefRefPtr<CefOverlayController> _retval =
-      CefWindowCppToC::Get(self)->AddOverlayView(CefViewCppToC::Unwrap(view),
-                                                 docking_mode,
-                                                 can_activate ? true : false);
+  CefRefPtr<CefOverlayController> _retval = CefWindow_0_CppToC::Get(self)->AddOverlayView(
+      CefViewCppToC_Unwrap(view),
+      docking_mode,
+      can_activate?true:false);
 
   // Return type: refptr_same
-  return CefOverlayControllerCppToC::Wrap(_retval);
+  return CefOverlayControllerCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK window_show_menu(struct _cef_window_t* self,
-                                   cef_menu_model_t* menu_model,
-                                   const cef_point_t* screen_point,
-                                   cef_menu_anchor_position_t anchor_position) {
+void CEF_CALLBACK window_show_menu(struct _cef_window_0_t* self, struct _cef_menu_model_0_t* menu_model, const cef_point_t* screen_point, cef_menu_anchor_position_t anchor_position) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -535,14 +523,16 @@ void CEF_CALLBACK window_show_menu(struct _cef_window_t* self,
   }
 
   // Translate param: screen_point; type: simple_byref_const
-  CefPoint screen_pointVal = screen_point ? *screen_point : CefPoint();
+  CefPoint screen_pointVal = screen_point?*screen_point:CefPoint();
 
   // Execute
-  CefWindowCppToC::Get(self)->ShowMenu(CefMenuModelCppToC::Unwrap(menu_model),
-                                       screen_pointVal, anchor_position);
+  CefWindow_0_CppToC::Get(self)->ShowMenu(
+      CefMenuModelCppToC_Unwrap(menu_model),
+      screen_pointVal,
+      anchor_position);
 }
 
-void CEF_CALLBACK window_cancel_menu(struct _cef_window_t* self) {
+void CEF_CALLBACK window_cancel_menu(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -553,10 +543,10 @@ void CEF_CALLBACK window_cancel_menu(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->CancelMenu();
+  CefWindow_0_CppToC::Get(self)->CancelMenu();
 }
 
-cef_display_t* CEF_CALLBACK window_get_display(struct _cef_window_t* self) {
+struct _cef_display_0_t* CEF_CALLBACK window_get_display(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -567,14 +557,13 @@ cef_display_t* CEF_CALLBACK window_get_display(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDisplay> _retval = CefWindowCppToC::Get(self)->GetDisplay();
+  CefRefPtr<CefDisplay> _retval = CefWindow_0_CppToC::Get(self)->GetDisplay();
 
   // Return type: refptr_same
-  return CefDisplayCppToC::Wrap(_retval);
+  return CefDisplayCppToC_Wrap(_retval);
 }
 
-cef_rect_t CEF_CALLBACK
-window_get_client_area_bounds_in_screen(struct _cef_window_t* self) {
+cef_rect_t CEF_CALLBACK window_get_client_area_bounds_in_screen(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -585,17 +574,13 @@ window_get_client_area_bounds_in_screen(struct _cef_window_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefWindowCppToC::Get(self)->GetClientAreaBoundsInScreen();
+  cef_rect_t _retval = CefWindow_0_CppToC::Get(self)->GetClientAreaBoundsInScreen();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-window_set_draggable_regions(struct _cef_window_t* self,
-                             size_t regionsCount,
-                             cef_draggable_region_t const* regions) {
+void CEF_CALLBACK window_set_draggable_regions(struct _cef_window_0_t* self, size_t regionsCount, cef_draggable_region_t const* regions) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -607,7 +592,7 @@ window_set_draggable_regions(struct _cef_window_t* self,
   // Unverified params: regions
 
   // Translate param: regions; type: simple_vec_byref_const
-  std::vector<CefDraggableRegion> regionsList;
+  std::vector<CefDraggableRegion > regionsList;
   if (regionsCount > 0) {
     for (size_t i = 0; i < regionsCount; ++i) {
       CefDraggableRegion regionsVal = regions[i];
@@ -616,11 +601,11 @@ window_set_draggable_regions(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetDraggableRegions(regionsList);
+  CefWindow_0_CppToC::Get(self)->SetDraggableRegions(
+      regionsList);
 }
 
-cef_window_handle_t CEF_CALLBACK
-window_get_window_handle(struct _cef_window_t* self) {
+cef_window_handle_t CEF_CALLBACK window_get_window_handle(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -631,15 +616,13 @@ window_get_window_handle(struct _cef_window_t* self) {
   }
 
   // Execute
-  cef_window_handle_t _retval = CefWindowCppToC::Get(self)->GetWindowHandle();
+  cef_window_handle_t _retval = CefWindow_0_CppToC::Get(self)->GetWindowHandle();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_send_key_press(struct _cef_window_t* self,
-                                        int key_code,
-                                        uint32_t event_flags) {
+void CEF_CALLBACK window_send_key_press(struct _cef_window_0_t* self, int key_code, uint32_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -650,12 +633,12 @@ void CEF_CALLBACK window_send_key_press(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SendKeyPress(key_code, event_flags);
+  CefWindow_0_CppToC::Get(self)->SendKeyPress(
+      key_code,
+      event_flags);
 }
 
-void CEF_CALLBACK window_send_mouse_move(struct _cef_window_t* self,
-                                         int screen_x,
-                                         int screen_y) {
+void CEF_CALLBACK window_send_mouse_move(struct _cef_window_0_t* self, int screen_x, int screen_y) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -666,13 +649,12 @@ void CEF_CALLBACK window_send_mouse_move(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SendMouseMove(screen_x, screen_y);
+  CefWindow_0_CppToC::Get(self)->SendMouseMove(
+      screen_x,
+      screen_y);
 }
 
-void CEF_CALLBACK window_send_mouse_events(struct _cef_window_t* self,
-                                           cef_mouse_button_type_t button,
-                                           int mouse_down,
-                                           int mouse_up) {
+void CEF_CALLBACK window_send_mouse_events(struct _cef_window_0_t* self, cef_mouse_button_type_t button, int mouse_down, int mouse_up) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -683,17 +665,13 @@ void CEF_CALLBACK window_send_mouse_events(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SendMouseEvents(button, mouse_down ? true : false,
-                                              mouse_up ? true : false);
+  CefWindow_0_CppToC::Get(self)->SendMouseEvents(
+      button,
+      mouse_down?true:false,
+      mouse_up?true:false);
 }
 
-void CEF_CALLBACK window_set_accelerator(struct _cef_window_t* self,
-                                         int command_id,
-                                         int key_code,
-                                         int shift_pressed,
-                                         int ctrl_pressed,
-                                         int alt_pressed,
-                                         int high_priority) {
+void CEF_CALLBACK window_set_accelerator(struct _cef_window_0_t* self, int command_id, int key_code, int shift_pressed, int ctrl_pressed, int alt_pressed, int high_priority) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -704,14 +682,16 @@ void CEF_CALLBACK window_set_accelerator(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetAccelerator(
-      command_id, key_code, shift_pressed ? true : false,
-      ctrl_pressed ? true : false, alt_pressed ? true : false,
-      high_priority ? true : false);
+  CefWindow_0_CppToC::Get(self)->SetAccelerator(
+      command_id,
+      key_code,
+      shift_pressed?true:false,
+      ctrl_pressed?true:false,
+      alt_pressed?true:false,
+      high_priority?true:false);
 }
 
-void CEF_CALLBACK window_remove_accelerator(struct _cef_window_t* self,
-                                            int command_id) {
+void CEF_CALLBACK window_remove_accelerator(struct _cef_window_0_t* self, int command_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -722,10 +702,11 @@ void CEF_CALLBACK window_remove_accelerator(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->RemoveAccelerator(command_id);
+  CefWindow_0_CppToC::Get(self)->RemoveAccelerator(
+      command_id);
 }
 
-void CEF_CALLBACK window_remove_all_accelerators(struct _cef_window_t* self) {
+void CEF_CALLBACK window_remove_all_accelerators(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -736,12 +717,10 @@ void CEF_CALLBACK window_remove_all_accelerators(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->RemoveAllAccelerators();
+  CefWindow_0_CppToC::Get(self)->RemoveAllAccelerators();
 }
 
-void CEF_CALLBACK window_set_theme_color(struct _cef_window_t* self,
-                                         int color_id,
-                                         cef_color_t color) {
+void CEF_CALLBACK window_set_theme_color(struct _cef_window_0_t* self, int color_id, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -752,10 +731,12 @@ void CEF_CALLBACK window_set_theme_color(struct _cef_window_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->SetThemeColor(color_id, color);
+  CefWindow_0_CppToC::Get(self)->SetThemeColor(
+      color_id,
+      color);
 }
 
-void CEF_CALLBACK window_theme_changed(struct _cef_window_t* self) {
+void CEF_CALLBACK window_theme_changed(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -766,11 +747,10 @@ void CEF_CALLBACK window_theme_changed(struct _cef_window_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(self)->ThemeChanged();
+  CefWindow_0_CppToC::Get(self)->ThemeChanged();
 }
 
-cef_runtime_style_t CEF_CALLBACK
-window_get_runtime_style(struct _cef_window_t* self) {
+cef_runtime_style_t CEF_CALLBACK window_get_runtime_style(struct _cef_window_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -781,13 +761,13 @@ window_get_runtime_style(struct _cef_window_t* self) {
   }
 
   // Execute
-  cef_runtime_style_t _retval = CefWindowCppToC::Get(self)->GetRuntimeStyle();
+  cef_runtime_style_t _retval = CefWindow_0_CppToC::Get(self)->GetRuntimeStyle();
 
   // Return type: simple
   return _retval;
 }
 
-struct _cef_window_t* CEF_CALLBACK window_as_window(struct _cef_panel_t* self) {
+cef_window_0_t* CEF_CALLBACK window_as_window(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -798,15 +778,13 @@ struct _cef_window_t* CEF_CALLBACK window_as_window(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->AsWindow();
+  CefRefPtr<CefWindow> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-cef_fill_layout_t* CEF_CALLBACK
-window_set_to_fill_layout(struct _cef_panel_t* self) {
+struct _cef_fill_layout_0_t* CEF_CALLBACK window_set_to_fill_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -817,17 +795,13 @@ window_set_to_fill_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefFillLayout> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->SetToFillLayout();
+  CefRefPtr<CefFillLayout> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetToFillLayout();
 
   // Return type: refptr_same
-  return CefFillLayoutCppToC::Wrap(_retval);
+  return CefFillLayoutCppToC_Wrap(_retval);
 }
 
-cef_box_layout_t* CEF_CALLBACK
-window_set_to_box_layout(struct _cef_panel_t* self,
-                         const cef_box_layout_settings_t* settings) {
+struct _cef_box_layout_0_t* CEF_CALLBACK window_set_to_box_layout(struct _cef_panel_0_t* self, const cef_box_layout_settings_t* settings) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -843,19 +817,17 @@ window_set_to_box_layout(struct _cef_panel_t* self,
   }
 
   // Translate param: settings; type: simple_byref_const
-  CefBoxLayoutSettings settingsVal =
-      settings ? *settings : CefBoxLayoutSettings();
+  CefBoxLayoutSettings settingsVal = settings?*settings:CefBoxLayoutSettings();
 
   // Execute
-  CefRefPtr<CefBoxLayout> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->SetToBoxLayout(settingsVal);
+  CefRefPtr<CefBoxLayout> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetToBoxLayout(
+      settingsVal);
 
   // Return type: refptr_same
-  return CefBoxLayoutCppToC::Wrap(_retval);
+  return CefBoxLayoutCppToC_Wrap(_retval);
 }
 
-cef_layout_t* CEF_CALLBACK window_get_layout(struct _cef_panel_t* self) {
+struct _cef_layout_0_t* CEF_CALLBACK window_get_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -866,14 +838,13 @@ cef_layout_t* CEF_CALLBACK window_get_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefLayout> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetLayout();
+  CefRefPtr<CefLayout> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetLayout();
 
   // Return type: refptr_same
-  return CefLayoutCppToC::Wrap(_retval);
+  return CefLayoutCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK window_layout(struct _cef_panel_t* self) {
+void CEF_CALLBACK window_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -884,11 +855,10 @@ void CEF_CALLBACK window_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->Layout();
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->Layout();
 }
 
-void CEF_CALLBACK window_add_child_view(struct _cef_panel_t* self,
-                                        cef_view_t* view) {
+void CEF_CALLBACK window_add_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -904,13 +874,11 @@ void CEF_CALLBACK window_add_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->AddChildView(CefViewCppToC::Unwrap(view));
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AddChildView(
+      CefViewCppToC_Unwrap(view));
 }
 
-void CEF_CALLBACK window_add_child_view_at(struct _cef_panel_t* self,
-                                           cef_view_t* view,
-                                           int index) {
+void CEF_CALLBACK window_add_child_view_at(struct _cef_panel_0_t* self, cef_view_0_t* view, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -931,13 +899,12 @@ void CEF_CALLBACK window_add_child_view_at(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->AddChildViewAt(CefViewCppToC::Unwrap(view), index);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AddChildViewAt(
+      CefViewCppToC_Unwrap(view),
+      index);
 }
 
-void CEF_CALLBACK window_reorder_child_view(struct _cef_panel_t* self,
-                                            cef_view_t* view,
-                                            int index) {
+void CEF_CALLBACK window_reorder_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -953,12 +920,12 @@ void CEF_CALLBACK window_reorder_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->ReorderChildView(CefViewCppToC::Unwrap(view), index);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ReorderChildView(
+      CefViewCppToC_Unwrap(view),
+      index);
 }
 
-void CEF_CALLBACK window_remove_child_view(struct _cef_panel_t* self,
-                                           cef_view_t* view) {
+void CEF_CALLBACK window_remove_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -974,11 +941,11 @@ void CEF_CALLBACK window_remove_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->RemoveChildView(CefViewCppToC::Unwrap(view));
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->RemoveChildView(
+      CefViewCppToC_Unwrap(view));
 }
 
-void CEF_CALLBACK window_remove_all_child_views(struct _cef_panel_t* self) {
+void CEF_CALLBACK window_remove_all_child_views(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -989,11 +956,10 @@ void CEF_CALLBACK window_remove_all_child_views(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->RemoveAllChildViews();
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->RemoveAllChildViews();
 }
 
-size_t CEF_CALLBACK window_get_child_view_count(struct _cef_panel_t* self) {
+size_t CEF_CALLBACK window_get_child_view_count(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1004,15 +970,13 @@ size_t CEF_CALLBACK window_get_child_view_count(struct _cef_panel_t* self) {
   }
 
   // Execute
-  size_t _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                       ->GetChildViewCount();
+  size_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetChildViewCount();
 
   // Return type: simple
   return _retval;
 }
 
-cef_view_t* CEF_CALLBACK window_get_child_view_at(struct _cef_panel_t* self,
-                                                  int index) {
+cef_view_0_t* CEF_CALLBACK window_get_child_view_at(struct _cef_panel_0_t* self, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1028,16 +992,14 @@ cef_view_t* CEF_CALLBACK window_get_child_view_at(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetChildViewAt(index);
+  CefRefPtr<CefView> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetChildViewAt(
+      index);
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-cef_browser_view_t* CEF_CALLBACK
-window_as_browser_view(struct _cef_view_t* self) {
+struct _cef_browser_view_0_t* CEF_CALLBACK window_as_browser_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1048,15 +1010,13 @@ window_as_browser_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBrowserView> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->AsBrowserView();
+  CefRefPtr<CefBrowserView> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsBrowserView();
 
   // Return type: refptr_same
-  return CefBrowserViewCppToC::Wrap(_retval);
+  return CefBrowserViewCppToC_Wrap(_retval);
 }
 
-cef_button_t* CEF_CALLBACK window_as_button(struct _cef_view_t* self) {
+struct _cef_button_0_t* CEF_CALLBACK window_as_button(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1067,14 +1027,13 @@ cef_button_t* CEF_CALLBACK window_as_button(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefButton> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->AsButton();
+  CefRefPtr<CefButton> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsButton();
 
   // Return type: refptr_same
-  return CefButtonCppToC::Wrap(_retval);
+  return CefButtonCppToC_Wrap(_retval);
 }
 
-cef_panel_t* CEF_CALLBACK window_as_panel(struct _cef_view_t* self) {
+cef_panel_0_t* CEF_CALLBACK window_as_panel(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1085,15 +1044,13 @@ cef_panel_t* CEF_CALLBACK window_as_panel(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefPanel> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->AsPanel();
+  CefRefPtr<CefPanel> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsPanel();
 
   // Return type: refptr_same
-  return CefPanelCppToC::Wrap(_retval);
+  return CefPanelCppToC_Wrap(_retval);
 }
 
-cef_scroll_view_t* CEF_CALLBACK
-window_as_scroll_view(struct _cef_view_t* self) {
+struct _cef_scroll_view_0_t* CEF_CALLBACK window_as_scroll_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1104,15 +1061,13 @@ window_as_scroll_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefScrollView> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->AsScrollView();
+  CefRefPtr<CefScrollView> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsScrollView();
 
   // Return type: refptr_same
-  return CefScrollViewCppToC::Wrap(_retval);
+  return CefScrollViewCppToC_Wrap(_retval);
 }
 
-cef_textfield_t* CEF_CALLBACK window_as_textfield(struct _cef_view_t* self) {
+struct _cef_textfield_0_t* CEF_CALLBACK window_as_textfield(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1123,16 +1078,13 @@ cef_textfield_t* CEF_CALLBACK window_as_textfield(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefTextfield> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->AsTextfield();
+  CefRefPtr<CefTextfield> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->AsTextfield();
 
   // Return type: refptr_same
-  return CefTextfieldCppToC::Wrap(_retval);
+  return CefTextfieldCppToC_Wrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-window_get_type_string(struct _cef_view_t* self) {
+cef_string_userfree_t CEF_CALLBACK window_get_type_string(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1143,16 +1095,13 @@ window_get_type_string(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefString _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetTypeString();
+  CefString _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetTypeString();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK window_to_string(struct _cef_view_t* self,
-                                                    int include_children) {
+cef_string_userfree_t CEF_CALLBACK window_to_string(struct _cef_view_0_t* self, int include_children) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1163,15 +1112,14 @@ cef_string_userfree_t CEF_CALLBACK window_to_string(struct _cef_view_t* self,
   }
 
   // Execute
-  CefString _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->ToString(include_children ? true : false);
+  CefString _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ToString(
+      include_children?true:false);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK window_is_valid(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_valid(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1182,14 +1130,13 @@ int CEF_CALLBACK window_is_valid(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->IsValid();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_attached(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_attached(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1200,14 +1147,13 @@ int CEF_CALLBACK window_is_attached(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->IsAttached();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsAttached();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_same(struct _cef_view_t* self, cef_view_t* that) {
+int CEF_CALLBACK window_is_same(struct _cef_view_0_t* self, cef_view_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1223,15 +1169,14 @@ int CEF_CALLBACK window_is_same(struct _cef_view_t* self, cef_view_t* that) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->IsSame(CefViewCppToC::Unwrap(that));
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsSame(
+      CefViewCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-cef_view_delegate_t* CEF_CALLBACK
-window_get_delegate(struct _cef_view_t* self) {
+struct _cef_view_delegate_0_t* CEF_CALLBACK window_get_delegate(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1242,15 +1187,13 @@ window_get_delegate(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefViewDelegate> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetDelegate();
+  CefRefPtr<CefViewDelegate> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetDelegate();
 
   // Return type: refptr_diff
-  return CefViewDelegateCToCpp::Unwrap(_retval);
+  return CefViewDelegateCToCpp_Unwrap(_retval);
 }
 
-struct _cef_window_t* CEF_CALLBACK window_get_window(struct _cef_view_t* self) {
+cef_window_0_t* CEF_CALLBACK window_get_window(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1261,14 +1204,13 @@ struct _cef_window_t* CEF_CALLBACK window_get_window(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetWindow();
+  CefRefPtr<CefWindow> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK window_get_id(struct _cef_view_t* self) {
+int CEF_CALLBACK window_get_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1279,14 +1221,13 @@ int CEF_CALLBACK window_get_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetID();
+  int _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_set_id(struct _cef_view_t* self, int id) {
+void CEF_CALLBACK window_set_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1297,10 +1238,11 @@ void CEF_CALLBACK window_set_id(struct _cef_view_t* self, int id) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->SetID(id);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetID(
+      id);
 }
 
-int CEF_CALLBACK window_get_group_id(struct _cef_view_t* self) {
+int CEF_CALLBACK window_get_group_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1311,14 +1253,13 @@ int CEF_CALLBACK window_get_group_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetGroupID();
+  int _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetGroupID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_set_group_id(struct _cef_view_t* self, int group_id) {
+void CEF_CALLBACK window_set_group_id(struct _cef_view_0_t* self, int group_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1329,11 +1270,11 @@ void CEF_CALLBACK window_set_group_id(struct _cef_view_t* self, int group_id) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetGroupID(group_id);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetGroupID(
+      group_id);
 }
 
-cef_view_t* CEF_CALLBACK window_get_parent_view(struct _cef_view_t* self) {
+cef_view_0_t* CEF_CALLBACK window_get_parent_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1344,16 +1285,13 @@ cef_view_t* CEF_CALLBACK window_get_parent_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetParentView();
+  CefRefPtr<CefView> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetParentView();
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-cef_view_t* CEF_CALLBACK window_get_view_for_id(struct _cef_view_t* self,
-                                                int id) {
+cef_view_0_t* CEF_CALLBACK window_get_view_for_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1364,16 +1302,14 @@ cef_view_t* CEF_CALLBACK window_get_view_for_id(struct _cef_view_t* self,
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetViewForID(id);
+  CefRefPtr<CefView> _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetViewForID(
+      id);
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK window_set_bounds(struct _cef_view_t* self,
-                                    const cef_rect_t* bounds) {
+void CEF_CALLBACK window_set_bounds(struct _cef_view_0_t* self, const cef_rect_t* bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1389,14 +1325,14 @@ void CEF_CALLBACK window_set_bounds(struct _cef_view_t* self,
   }
 
   // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
+  CefRect boundsVal = bounds?*bounds:CefRect();
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetBounds(boundsVal);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetBounds(
+      boundsVal);
 }
 
-cef_rect_t CEF_CALLBACK window_get_bounds(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK window_get_bounds(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1407,14 +1343,13 @@ cef_rect_t CEF_CALLBACK window_get_bounds(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetBounds();
+  cef_rect_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetBounds();
 
   // Return type: simple
   return _retval;
 }
 
-cef_rect_t CEF_CALLBACK window_get_bounds_in_screen(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK window_get_bounds_in_screen(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1425,16 +1360,13 @@ cef_rect_t CEF_CALLBACK window_get_bounds_in_screen(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetBoundsInScreen();
+  cef_rect_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetBoundsInScreen();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_set_size(struct _cef_view_t* self,
-                                  const cef_size_t* size) {
+void CEF_CALLBACK window_set_size(struct _cef_view_0_t* self, const cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1450,13 +1382,14 @@ void CEF_CALLBACK window_set_size(struct _cef_view_t* self,
   }
 
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->SetSize(sizeVal);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetSize(
+      sizeVal);
 }
 
-cef_size_t CEF_CALLBACK window_get_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK window_get_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1467,15 +1400,13 @@ cef_size_t CEF_CALLBACK window_get_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetSize();
+  cef_size_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_set_position(struct _cef_view_t* self,
-                                      const cef_point_t* position) {
+void CEF_CALLBACK window_set_position(struct _cef_view_0_t* self, const cef_point_t* position) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1491,14 +1422,14 @@ void CEF_CALLBACK window_set_position(struct _cef_view_t* self,
   }
 
   // Translate param: position; type: simple_byref_const
-  CefPoint positionVal = position ? *position : CefPoint();
+  CefPoint positionVal = position?*position:CefPoint();
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetPosition(positionVal);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetPosition(
+      positionVal);
 }
 
-cef_point_t CEF_CALLBACK window_get_position(struct _cef_view_t* self) {
+cef_point_t CEF_CALLBACK window_get_position(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1509,16 +1440,13 @@ cef_point_t CEF_CALLBACK window_get_position(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_point_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetPosition();
+  cef_point_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetPosition();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_set_insets(struct _cef_view_t* self,
-                                    const cef_insets_t* insets) {
+void CEF_CALLBACK window_set_insets(struct _cef_view_0_t* self, const cef_insets_t* insets) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1534,14 +1462,14 @@ void CEF_CALLBACK window_set_insets(struct _cef_view_t* self,
   }
 
   // Translate param: insets; type: simple_byref_const
-  CefInsets insetsVal = insets ? *insets : CefInsets();
+  CefInsets insetsVal = insets?*insets:CefInsets();
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetInsets(insetsVal);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetInsets(
+      insetsVal);
 }
 
-cef_insets_t CEF_CALLBACK window_get_insets(struct _cef_view_t* self) {
+cef_insets_t CEF_CALLBACK window_get_insets(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1552,14 +1480,13 @@ cef_insets_t CEF_CALLBACK window_get_insets(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_insets_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->GetInsets();
+  cef_insets_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetInsets();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK window_get_preferred_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK window_get_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1570,15 +1497,13 @@ cef_size_t CEF_CALLBACK window_get_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetPreferredSize();
+  cef_size_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetPreferredSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_size_to_preferred_size(struct _cef_view_t* self) {
+void CEF_CALLBACK window_size_to_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1589,11 +1514,10 @@ void CEF_CALLBACK window_size_to_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SizeToPreferredSize();
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SizeToPreferredSize();
 }
 
-cef_size_t CEF_CALLBACK window_get_minimum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK window_get_minimum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1604,15 +1528,13 @@ cef_size_t CEF_CALLBACK window_get_minimum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetMinimumSize();
+  cef_size_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetMinimumSize();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK window_get_maximum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK window_get_maximum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1623,16 +1545,13 @@ cef_size_t CEF_CALLBACK window_get_maximum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetMaximumSize();
+  cef_size_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetMaximumSize();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK window_get_height_for_width(struct _cef_view_t* self,
-                                             int width) {
+int CEF_CALLBACK window_get_height_for_width(struct _cef_view_0_t* self, int width) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1643,14 +1562,14 @@ int CEF_CALLBACK window_get_height_for_width(struct _cef_view_t* self,
   }
 
   // Execute
-  int _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                    ->GetHeightForWidth(width);
+  int _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetHeightForWidth(
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK window_invalidate_layout(struct _cef_view_t* self) {
+void CEF_CALLBACK window_invalidate_layout(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1661,11 +1580,10 @@ void CEF_CALLBACK window_invalidate_layout(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->InvalidateLayout();
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->InvalidateLayout();
 }
 
-void CEF_CALLBACK window_set_visible(struct _cef_view_t* self, int visible) {
+void CEF_CALLBACK window_set_visible(struct _cef_view_0_t* self, int visible) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1676,11 +1594,11 @@ void CEF_CALLBACK window_set_visible(struct _cef_view_t* self, int visible) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetVisible(visible ? true : false);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetVisible(
+      visible?true:false);
 }
 
-int CEF_CALLBACK window_is_visible(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_visible(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1691,14 +1609,13 @@ int CEF_CALLBACK window_is_visible(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->IsVisible();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsVisible();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_drawn(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_drawn(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1709,14 +1626,13 @@ int CEF_CALLBACK window_is_drawn(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->IsDrawn();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsDrawn();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_set_enabled(struct _cef_view_t* self, int enabled) {
+void CEF_CALLBACK window_set_enabled(struct _cef_view_0_t* self, int enabled) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1727,11 +1643,11 @@ void CEF_CALLBACK window_set_enabled(struct _cef_view_t* self, int enabled) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetEnabled(enabled ? true : false);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetEnabled(
+      enabled?true:false);
 }
 
-int CEF_CALLBACK window_is_enabled(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_enabled(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1742,15 +1658,13 @@ int CEF_CALLBACK window_is_enabled(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->IsEnabled();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsEnabled();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_set_focusable(struct _cef_view_t* self,
-                                       int focusable) {
+void CEF_CALLBACK window_set_focusable(struct _cef_view_0_t* self, int focusable) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1761,11 +1675,11 @@ void CEF_CALLBACK window_set_focusable(struct _cef_view_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetFocusable(focusable ? true : false);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetFocusable(
+      focusable?true:false);
 }
 
-int CEF_CALLBACK window_is_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1776,14 +1690,13 @@ int CEF_CALLBACK window_is_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->IsFocusable();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_is_accessibility_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK window_is_accessibility_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1794,14 +1707,13 @@ int CEF_CALLBACK window_is_accessibility_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->IsAccessibilityFocusable();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->IsAccessibilityFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK window_has_focus(struct _cef_view_t* self) {
+int CEF_CALLBACK window_has_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1812,14 +1724,13 @@ int CEF_CALLBACK window_has_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->HasFocus();
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->HasFocus();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK window_request_focus(struct _cef_view_t* self) {
+void CEF_CALLBACK window_request_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1830,11 +1741,10 @@ void CEF_CALLBACK window_request_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->RequestFocus();
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->RequestFocus();
 }
 
-void CEF_CALLBACK window_set_background_color(struct _cef_view_t* self,
-                                              cef_color_t color) {
+void CEF_CALLBACK window_set_background_color(struct _cef_view_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1845,11 +1755,11 @@ void CEF_CALLBACK window_set_background_color(struct _cef_view_t* self,
   }
 
   // Execute
-  CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-      ->SetBackgroundColor(color);
+  CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->SetBackgroundColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK window_get_background_color(struct _cef_view_t* self) {
+cef_color_t CEF_CALLBACK window_get_background_color(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1860,16 +1770,13 @@ cef_color_t CEF_CALLBACK window_get_background_color(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_color_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetBackgroundColor();
+  cef_color_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetBackgroundColor();
 
   // Return type: simple
   return _retval;
 }
 
-cef_color_t CEF_CALLBACK window_get_theme_color(struct _cef_view_t* self,
-                                                int color_id) {
+cef_color_t CEF_CALLBACK window_get_theme_color(struct _cef_view_0_t* self, int color_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1880,16 +1787,14 @@ cef_color_t CEF_CALLBACK window_get_theme_color(struct _cef_view_t* self,
   }
 
   // Execute
-  cef_color_t _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->GetThemeColor(color_id);
+  cef_color_t _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->GetThemeColor(
+      color_id);
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_to_screen(struct _cef_view_t* self,
-                                                cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_to_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1905,11 +1810,11 @@ int CEF_CALLBACK window_convert_point_to_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->ConvertPointToScreen(pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointToScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1920,8 +1825,7 @@ int CEF_CALLBACK window_convert_point_to_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_from_screen(struct _cef_view_t* self,
-                                                  cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_from_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1937,11 +1841,11 @@ int CEF_CALLBACK window_convert_point_from_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->ConvertPointFromScreen(pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointFromScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1952,8 +1856,7 @@ int CEF_CALLBACK window_convert_point_from_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_to_window(struct _cef_view_t* self,
-                                                cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_to_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1969,11 +1872,11 @@ int CEF_CALLBACK window_convert_point_to_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->ConvertPointToWindow(pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointToWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1984,8 +1887,7 @@ int CEF_CALLBACK window_convert_point_to_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_from_window(struct _cef_view_t* self,
-                                                  cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_from_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2001,11 +1903,11 @@ int CEF_CALLBACK window_convert_point_from_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-                     ->ConvertPointFromWindow(pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointFromWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -2016,9 +1918,7 @@ int CEF_CALLBACK window_convert_point_from_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_to_view(struct _cef_view_t* self,
-                                              cef_view_t* view,
-                                              cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_to_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2039,12 +1939,12 @@ int CEF_CALLBACK window_convert_point_to_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->ConvertPointToView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointToView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -2055,9 +1955,7 @@ int CEF_CALLBACK window_convert_point_to_view(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK window_convert_point_from_view(struct _cef_view_t* self,
-                                                cef_view_t* view,
-                                                cef_point_t* point) {
+int CEF_CALLBACK window_convert_point_from_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2078,12 +1976,12 @@ int CEF_CALLBACK window_convert_point_from_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
-          ->ConvertPointFromView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefWindow_0_CppToC::Get(reinterpret_cast<cef_window_0_t*>(self))->ConvertPointFromView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -2096,12 +1994,14 @@ int CEF_CALLBACK window_convert_point_from_view(struct _cef_view_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWindowCppToC::CefWindowCppToC() {
+CefWindow_0_CppToC::CefWindow_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->show = window_show;
-  GetStruct()->show_as_browser_modal_dialog =
-      window_show_as_browser_modal_dialog;
+  GetStruct()->show_as_browser_modal_dialog = window_show_as_browser_modal_dialog;
   GetStruct()->hide = window_hide;
   GetStruct()->center_window = window_center_window;
   GetStruct()->close = window_close;
@@ -2130,8 +2030,7 @@ CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->show_menu = window_show_menu;
   GetStruct()->cancel_menu = window_cancel_menu;
   GetStruct()->get_display = window_get_display;
-  GetStruct()->get_client_area_bounds_in_screen =
-      window_get_client_area_bounds_in_screen;
+  GetStruct()->get_client_area_bounds_in_screen = window_get_client_area_bounds_in_screen;
   GetStruct()->set_draggable_regions = window_set_draggable_regions;
   GetStruct()->get_window_handle = window_get_window_handle;
   GetStruct()->send_key_press = window_send_key_press;
@@ -2195,41 +2094,30 @@ CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->base.base.is_enabled = window_is_enabled;
   GetStruct()->base.base.set_focusable = window_set_focusable;
   GetStruct()->base.base.is_focusable = window_is_focusable;
-  GetStruct()->base.base.is_accessibility_focusable =
-      window_is_accessibility_focusable;
+  GetStruct()->base.base.is_accessibility_focusable = window_is_accessibility_focusable;
   GetStruct()->base.base.has_focus = window_has_focus;
   GetStruct()->base.base.request_focus = window_request_focus;
   GetStruct()->base.base.set_background_color = window_set_background_color;
   GetStruct()->base.base.get_background_color = window_get_background_color;
   GetStruct()->base.base.get_theme_color = window_get_theme_color;
-  GetStruct()->base.base.convert_point_to_screen =
-      window_convert_point_to_screen;
-  GetStruct()->base.base.convert_point_from_screen =
-      window_convert_point_from_screen;
-  GetStruct()->base.base.convert_point_to_window =
-      window_convert_point_to_window;
-  GetStruct()->base.base.convert_point_from_window =
-      window_convert_point_from_window;
+  GetStruct()->base.base.convert_point_to_screen = window_convert_point_to_screen;
+  GetStruct()->base.base.convert_point_from_screen = window_convert_point_from_screen;
+  GetStruct()->base.base.convert_point_to_window = window_convert_point_to_window;
+  GetStruct()->base.base.convert_point_from_window = window_convert_point_from_window;
   GetStruct()->base.base.convert_point_to_view = window_convert_point_to_view;
-  GetStruct()->base.base.convert_point_from_view =
-      window_convert_point_from_view;
+  GetStruct()->base.base.convert_point_from_view = window_convert_point_from_view;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWindowCppToC::~CefWindowCppToC() {
+CefWindow_0_CppToC::~CefWindow_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefWindow>
-CefCppToCRefCounted<CefWindowCppToC, CefWindow, cef_window_t>::UnwrapDerived(
-    CefWrapperType type,
-    cef_window_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefWindow> CefCppToCRefCounted<CefWindow_0_CppToC, CefWindow, cef_window_0_t>::UnwrapDerived(CefWrapperType type, cef_window_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefWindowCppToC, CefWindow, cef_window_t>::
-    kWrapperType = WT_WINDOW;
+template<> CefWrapperType CefCppToCRefCounted<CefWindow_0_CppToC, CefWindow, cef_window_0_t>::kWrapperType = WT_WINDOW;
+
+

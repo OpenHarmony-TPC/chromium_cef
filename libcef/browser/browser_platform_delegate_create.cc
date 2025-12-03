@@ -24,9 +24,6 @@
 #elif BUILDFLAG(IS_LINUX)
 #include "cef/libcef/browser/native/browser_platform_delegate_native_linux.h"
 #include "cef/libcef/browser/osr/browser_platform_delegate_osr_linux.h"
-#elif BUILDFLAG(IS_OHOS)
-#include "cef/libcef/browser/native/browser_platform_delegate_native_ohos.h"
-#include "cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h"
 #else
 #error A delegate implementation is not available for your platform.
 #endif
@@ -45,9 +42,6 @@ std::unique_ptr<CefBrowserPlatformDelegateNative> CreateNativeDelegate(
 #elif BUILDFLAG(IS_LINUX)
   return std::make_unique<CefBrowserPlatformDelegateNativeLinux>(
       window_info, background_color);
-#elif BUILDFLAG(IS_OHOS)
-  return std::make_unique<CefBrowserPlatformDelegateNativeOhos>(
-      window_info, background_color);
 #endif
 }
 
@@ -63,9 +57,6 @@ std::unique_ptr<CefBrowserPlatformDelegateOsr> CreateOSRDelegate(
       std::move(native_delegate), use_shared_texture, use_external_begin_frame);
 #elif BUILDFLAG(IS_LINUX)
   return std::make_unique<CefBrowserPlatformDelegateOsrLinux>(
-      std::move(native_delegate), use_shared_texture, use_external_begin_frame);
-#elif BUILDFLAG(IS_OHOS)
-  return std::make_unique<CefBrowserPlatformDelegateOsrOhos>(
       std::move(native_delegate), use_shared_texture, use_external_begin_frame);
 #endif
 }

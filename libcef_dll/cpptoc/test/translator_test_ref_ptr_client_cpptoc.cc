@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac125e340fa02eba269891edfd96fcc93a6296b1$
+// $hash=ff10fdb8ba70d713ff65360e7deaeb2f1efe0e0e$
 //
 
-#include "libcef_dll/cpptoc/test/translator_test_ref_ptr_client_cpptoc.h"
-
 #include "libcef_dll/cpptoc/test/translator_test_ref_ptr_client_child_cpptoc.h"
+#include "libcef_dll/cpptoc/test/translator_test_ref_ptr_client_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK translator_test_ref_ptr_client_get_value(
-    struct _cef_translator_test_ref_ptr_client_t* self) {
+int CEF_CALLBACK translator_test_ref_ptr_client_get_value(struct _cef_translator_test_ref_ptr_client_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -53,24 +51,14 @@ CefTranslatorTestRefPtrClientCppToC::~CefTranslatorTestRefPtrClientCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTranslatorTestRefPtrClient>
-CefCppToCRefCounted<CefTranslatorTestRefPtrClientCppToC,
-                    CefTranslatorTestRefPtrClient,
-                    cef_translator_test_ref_ptr_client_t>::
-    UnwrapDerived(CefWrapperType type,
-                  cef_translator_test_ref_ptr_client_t* s) {
+template<> CefRefPtr<CefTranslatorTestRefPtrClient> CefCppToCRefCounted<CefTranslatorTestRefPtrClientCppToC, CefTranslatorTestRefPtrClient, cef_translator_test_ref_ptr_client_t>::UnwrapDerived(CefWrapperType type, cef_translator_test_ref_ptr_client_t* s) {
   if (type == WT_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD) {
-    return CefTranslatorTestRefPtrClientChildCppToC::Unwrap(
-        reinterpret_cast<cef_translator_test_ref_ptr_client_child_t*>(s));
+    return CefTranslatorTestRefPtrClientChildCppToC_Unwrap(reinterpret_cast<cef_translator_test_ref_ptr_client_child_t*>(s));
   }
-  DCHECK(false) << "Unexpected class type: " << type;
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefTranslatorTestRefPtrClientCppToC,
-                        CefTranslatorTestRefPtrClient,
-                        cef_translator_test_ref_ptr_client_t>::kWrapperType =
-        WT_TRANSLATOR_TEST_REF_PTR_CLIENT;
+template<> CefWrapperType CefCppToCRefCounted<CefTranslatorTestRefPtrClientCppToC, CefTranslatorTestRefPtrClient, cef_translator_test_ref_ptr_client_t>::kWrapperType = WT_TRANSLATOR_TEST_REF_PTR_CLIENT;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da8d14d9b034b1dfe8486f8434472896d93e34b4$
+// $hash=dfff79b5318c505feff7d8aeb4254b74056d80f9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SSLSTATUS_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_ssl_status_capi.h"
 #include "include/cef_ssl_status.h"
+#include "include/capi/cef_ssl_status_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSSLStatusCppToC : public CefCppToCRefCounted<CefSSLStatusCppToC,
-                                                      CefSSLStatus,
-                                                      cef_sslstatus_t> {
+class CefSSLStatus_0_CppToC
+    : public CefCppToCRefCounted<CefSSLStatus_0_CppToC, CefSSLStatus, cef_sslstatus_0_t> {
  public:
-  CefSSLStatusCppToC();
-  virtual ~CefSSLStatusCppToC();
+  CefSSLStatus_0_CppToC();
+  virtual ~CefSSLStatus_0_CppToC();
 };
+
+constexpr auto CefSSLStatusCppToC_Wrap = CefSSLStatus_0_CppToC::Wrap;
+constexpr auto CefSSLStatusCppToC_Unwrap = CefSSLStatus_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SSLSTATUS_CPPTOC_H_

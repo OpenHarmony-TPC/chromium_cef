@@ -9,35 +9,103 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8dbc76359d6a44480203083aea0e758b88c0d6b8$
+// $hash=87d6787fb1726e8961883d90779b7b79c96bff83$
 //
 
-#include "libcef_dll/cpptoc/preference_manager_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
+#include "libcef_dll/cpptoc/preference_manager_cpptoc.h"
+#include "libcef_dll/cpptoc/registration_cpptoc.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
+#include "libcef_dll/ctocpp/preference_observer_ctocpp.h"
+#include "libcef_dll/transfer_util.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_preference_manager_t* cef_preference_manager_get_global() {
+CEF_EXPORT void cef_preference_manager_get_chrome_variations_as_switches(cef_string_list_t switches) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: switches; type: string_vec_byref
+  DCHECK(switches);
+  if (!switches) {
+    return;
+  }
+
+  // Translate param: switches; type: string_vec_byref
+  std::vector<CefString> switchesList;
+  transfer_string_list_contents(switches, switchesList);
+
+  // Execute
+  CefPreferenceManager::GetChromeVariationsAsSwitches(
+      switchesList);
+
+  // Restore param: switches; type: string_vec_byref
+  cef_string_list_clear(switches);
+  transfer_string_list_contents(switchesList, switches);
+}
+
+CEF_EXPORT void cef_preference_manager_get_chrome_variations_as_strings(cef_string_list_t strings) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: strings; type: string_vec_byref
+  DCHECK(strings);
+  if (!strings) {
+    return;
+  }
+
+  // Translate param: strings; type: string_vec_byref
+  std::vector<CefString> stringsList;
+  transfer_string_list_contents(strings, stringsList);
+
+  // Execute
+  CefPreferenceManager::GetChromeVariationsAsStrings(
+      stringsList);
+
+  // Restore param: strings; type: string_vec_byref
+  cef_string_list_clear(strings);
+  transfer_string_list_contents(stringsList, strings);
+}
+
+CEF_EXPORT cef_preference_manager_0_t* cef_preference_manager_get_global() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  CefRefPtr<CefPreferenceManager> _retval =
-      CefPreferenceManager::GetGlobalPreferenceManager();
+  CefRefPtr<CefPreferenceManager> _retval = CefPreferenceManager::GetGlobalPreferenceManager();
 
   // Return type: refptr_same
-  return CefPreferenceManagerCppToC::Wrap(_retval);
+  return CefPreferenceManagerCppToC_Wrap(_retval);
+}
+
+// HELPER FUNCTIONS - Do not edit by hand.
+
+cef_preference_manager_0_t* CefPreferenceManagerCppToC_Wrap(CefRefPtr<CefPreferenceManager> c) {
+  const int version = cef_api_version();
+  if (version >= 13401) {
+    return reinterpret_cast<cef_preference_manager_0_t*>(CefPreferenceManager_13401_CppToC::Wrap(c));
+  }
+  if (version >= 0) {
+    return CefPreferenceManager_0_CppToC::Wrap(c);
+  }
+  NOTREACHED() << __func__ << " called with invalid version " << version;
+}
+
+CefRefPtr<CefPreferenceManager> CefPreferenceManagerCppToC_Unwrap(cef_preference_manager_0_t* s) {
+  const int version = cef_api_version();
+  if (version >= 13401) {
+    return CefPreferenceManager_13401_CppToC::Unwrap(reinterpret_cast<cef_preference_manager_13401_t*>(s));
+  }
+  if (version >= 0) {
+    return CefPreferenceManager_0_CppToC::Unwrap(s);
+  }
+  NOTREACHED() << __func__ << " called with invalid version " << version;
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK
-preference_manager_has_preference(struct _cef_preference_manager_t* self,
-                                  const cef_string_t* name) {
+int CEF_CALLBACK preference_manager_has_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -51,16 +119,14 @@ preference_manager_has_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefPreferenceManagerCppToC::Get(self)->HasPreference(CefString(name));
+  bool _retval = CefPreferenceManager_0_CppToC::Get(self)->HasPreference(
+      CefString(name));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_value_t* CEF_CALLBACK
-preference_manager_get_preference(struct _cef_preference_manager_t* self,
-                                  const cef_string_t* name) {
+struct _cef_value_0_t* CEF_CALLBACK preference_manager_get_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -74,16 +140,14 @@ preference_manager_get_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  CefRefPtr<CefValue> _retval =
-      CefPreferenceManagerCppToC::Get(self)->GetPreference(CefString(name));
+  CefRefPtr<CefValue> _retval = CefPreferenceManager_0_CppToC::Get(self)->GetPreference(
+      CefString(name));
 
   // Return type: refptr_same
-  return CefValueCppToC::Wrap(_retval);
+  return CefValueCppToC_Wrap(_retval);
 }
 
-struct _cef_dictionary_value_t* CEF_CALLBACK
-preference_manager_get_all_preferences(struct _cef_preference_manager_t* self,
-                                       int include_defaults) {
+struct _cef_dictionary_value_0_t* CEF_CALLBACK preference_manager_get_all_preferences(struct _cef_preference_manager_0_t* self, int include_defaults) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -92,17 +156,14 @@ preference_manager_get_all_preferences(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  CefRefPtr<CefDictionaryValue> _retval =
-      CefPreferenceManagerCppToC::Get(self)->GetAllPreferences(
-          include_defaults ? true : false);
+  CefRefPtr<CefDictionaryValue> _retval = CefPreferenceManager_0_CppToC::Get(self)->GetAllPreferences(
+      include_defaults?true:false);
 
   // Return type: refptr_same
-  return CefDictionaryValueCppToC::Wrap(_retval);
+  return CefDictionaryValueCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK
-preference_manager_can_set_preference(struct _cef_preference_manager_t* self,
-                                      const cef_string_t* name) {
+int CEF_CALLBACK preference_manager_can_set_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -116,18 +177,14 @@ preference_manager_can_set_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefPreferenceManagerCppToC::Get(self)->CanSetPreference(CefString(name));
+  bool _retval = CefPreferenceManager_0_CppToC::Get(self)->CanSetPreference(
+      CefString(name));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-preference_manager_set_preference(struct _cef_preference_manager_t* self,
-                                  const cef_string_t* name,
-                                  struct _cef_value_t* value,
-                                  cef_string_t* error) {
+int CEF_CALLBACK preference_manager_set_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name, struct _cef_value_0_t* value, cef_string_t* error) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -150,8 +207,10 @@ preference_manager_set_preference(struct _cef_preference_manager_t* self,
   CefString errorStr(error);
 
   // Execute
-  bool _retval = CefPreferenceManagerCppToC::Get(self)->SetPreference(
-      CefString(name), CefValueCppToC::Unwrap(value), errorStr);
+  bool _retval = CefPreferenceManager_0_CppToC::Get(self)->SetPreference(
+      CefString(name),
+      CefValueCppToC_Unwrap(value),
+      errorStr);
 
   // Return type: bool
   return _retval;
@@ -159,9 +218,12 @@ preference_manager_set_preference(struct _cef_preference_manager_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPreferenceManagerCppToC::CefPreferenceManagerCppToC() {
+CefPreferenceManager_0_CppToC::CefPreferenceManager_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0 || version >= 13401) << __func__ << " called with invalid version " << version;
+
   GetStruct()->has_preference = preference_manager_has_preference;
   GetStruct()->get_preference = preference_manager_get_preference;
   GetStruct()->get_all_preferences = preference_manager_get_all_preferences;
@@ -169,26 +231,186 @@ CefPreferenceManagerCppToC::CefPreferenceManagerCppToC() {
   GetStruct()->set_preference = preference_manager_set_preference;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPreferenceManagerCppToC::~CefPreferenceManagerCppToC() {}
-
-template <>
-CefRefPtr<CefPreferenceManager> CefCppToCRefCounted<
-    CefPreferenceManagerCppToC,
-    CefPreferenceManager,
-    cef_preference_manager_t>::UnwrapDerived(CefWrapperType type,
-                                             cef_preference_manager_t* s) {
-  if (type == WT_REQUEST_CONTEXT) {
-    return CefRequestContextCppToC::Unwrap(
-        reinterpret_cast<cef_request_context_t*>(s));
-  }
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefPreferenceManager_0_CppToC::~CefPreferenceManager_0_CppToC() {
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPreferenceManagerCppToC,
-                                   CefPreferenceManager,
-                                   cef_preference_manager_t>::kWrapperType =
-    WT_PREFERENCE_MANAGER;
+template<> CefRefPtr<CefPreferenceManager> CefCppToCRefCounted<CefPreferenceManager_0_CppToC, CefPreferenceManager, cef_preference_manager_0_t>::UnwrapDerived(CefWrapperType type, cef_preference_manager_0_t* s) {
+  if (type == WT_REQUEST_CONTEXT) {
+    return CefRequestContextCppToC_Unwrap(reinterpret_cast<cef_request_context_0_t*>(s));
+  }
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefPreferenceManager_0_CppToC, CefPreferenceManager, cef_preference_manager_0_t>::kWrapperType = WT_PREFERENCE_MANAGER;
+
+namespace {
+
+// MEMBER FUNCTIONS FOR VERSION 13401 - Body may be edited by hand.
+
+int CEF_CALLBACK preference_manager_has_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefPreferenceManager_13401_CppToC::Get(self)->HasPreference(
+      CefString(name));
+
+  // Return type: bool
+  return _retval;
+}
+
+struct _cef_value_0_t* CEF_CALLBACK preference_manager_get_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefValue> _retval = CefPreferenceManager_13401_CppToC::Get(self)->GetPreference(
+      CefString(name));
+
+  // Return type: refptr_same
+  return CefValueCppToC_Wrap(_retval);
+}
+
+struct _cef_dictionary_value_0_t* CEF_CALLBACK preference_manager_get_all_preferences_13401(struct _cef_preference_manager_13401_t* self, int include_defaults) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefDictionaryValue> _retval = CefPreferenceManager_13401_CppToC::Get(self)->GetAllPreferences(
+      include_defaults?true:false);
+
+  // Return type: refptr_same
+  return CefDictionaryValueCppToC_Wrap(_retval);
+}
+
+int CEF_CALLBACK preference_manager_can_set_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefPreferenceManager_13401_CppToC::Get(self)->CanSetPreference(
+      CefString(name));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK preference_manager_set_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name, struct _cef_value_0_t* value, cef_string_t* error) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+  // Verify param: error; type: string_byref
+  DCHECK(error);
+  if (!error) {
+    return 0;
+  }
+  // Unverified params: value
+
+  // Translate param: error; type: string_byref
+  CefString errorStr(error);
+
+  // Execute
+  bool _retval = CefPreferenceManager_13401_CppToC::Get(self)->SetPreference(
+      CefString(name),
+      CefValueCppToC_Unwrap(value),
+      errorStr);
+
+  // Return type: bool
+  return _retval;
+}
+
+struct _cef_registration_0_t* CEF_CALLBACK preference_manager_add_preference_observer_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name, struct _cef_preference_observer_13401_t* observer) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Verify param: observer; type: refptr_diff
+  DCHECK(observer);
+  if (!observer) {
+    return NULL;
+  }
+  // Unverified params: name
+
+  // Execute
+  CefRefPtr<CefRegistration> _retval = CefPreferenceManager_13401_CppToC::Get(self)->AddPreferenceObserver(
+      CefString(name),
+      CefPreferenceObserverCToCpp_Wrap(observer));
+
+  // Return type: refptr_same
+  return CefRegistrationCppToC_Wrap(_retval);
+}
+
+}  // namespace
+
+// CONSTRUCTOR FOR VERSION 13401 - Do not edit by hand.
+
+CefPreferenceManager_13401_CppToC::CefPreferenceManager_13401_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 13401) << __func__ << " called with invalid version " << version;
+
+  GetStruct()->has_preference = preference_manager_has_preference_13401;
+  GetStruct()->get_preference = preference_manager_get_preference_13401;
+  GetStruct()->get_all_preferences = preference_manager_get_all_preferences_13401;
+  GetStruct()->can_set_preference = preference_manager_can_set_preference_13401;
+  GetStruct()->set_preference = preference_manager_set_preference_13401;
+  GetStruct()->add_preference_observer = preference_manager_add_preference_observer_13401;
+}
+
+// DESTRUCTOR FOR VERSION 13401 - Do not edit by hand.
+
+CefPreferenceManager_13401_CppToC::~CefPreferenceManager_13401_CppToC() {
+}
+
+template<> CefRefPtr<CefPreferenceManager> CefCppToCRefCounted<CefPreferenceManager_13401_CppToC, CefPreferenceManager, cef_preference_manager_13401_t>::UnwrapDerived(CefWrapperType type, cef_preference_manager_13401_t* s) {
+  if (type == WT_REQUEST_CONTEXT) {
+    return CefRequestContextCppToC_Unwrap(reinterpret_cast<cef_request_context_0_t*>(s));
+  }
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefPreferenceManager_13401_CppToC, CefPreferenceManager, cef_preference_manager_13401_t>::kWrapperType = WT_PREFERENCE_MANAGER;
+
+

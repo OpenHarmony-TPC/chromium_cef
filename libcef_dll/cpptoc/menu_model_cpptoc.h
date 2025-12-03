@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dab9c88dda79b975afc760f3ff2901b2c1ebce16$
+// $hash=5ea25ef62a38b7f1165178ec99ab81774bf0b3e4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MENU_MODEL_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_menu_model_capi.h"
 #include "include/cef_menu_model.h"
+#include "include/capi/cef_menu_model_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMenuModelCppToC : public CefCppToCRefCounted<CefMenuModelCppToC,
-                                                      CefMenuModel,
-                                                      cef_menu_model_t> {
+class CefMenuModel_0_CppToC
+    : public CefCppToCRefCounted<CefMenuModel_0_CppToC, CefMenuModel, cef_menu_model_0_t> {
  public:
-  CefMenuModelCppToC();
-  virtual ~CefMenuModelCppToC();
+  CefMenuModel_0_CppToC();
+  virtual ~CefMenuModel_0_CppToC();
 };
+
+constexpr auto CefMenuModelCppToC_Wrap = CefMenuModel_0_CppToC::Wrap;
+constexpr auto CefMenuModelCppToC_Unwrap = CefMenuModel_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MENU_MODEL_CPPTOC_H_

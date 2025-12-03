@@ -9,20 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c671967bba8ae867aedb37591583fb9f93dd4134$
+// $hash=f0b72117c62147dff4cf50f43a0b77e3a67a96be$
 //
 
-#include "libcef_dll/cpptoc/xml_reader_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/stream_reader_cpptoc.h"
+#include "libcef_dll/cpptoc/xml_reader_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_xml_reader_t* cef_xml_reader_create(
-    cef_stream_reader_t* stream,
-    cef_xml_encoding_type_t encodingType,
-    const cef_string_t* URI) {
+CEF_EXPORT cef_xml_reader_0_t* cef_xml_reader_create(struct _cef_stream_reader_0_t* stream, cef_xml_encoding_type_t encodingType, const cef_string_t* URI) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -40,17 +37,19 @@ CEF_EXPORT cef_xml_reader_t* cef_xml_reader_create(
 
   // Execute
   CefRefPtr<CefXmlReader> _retval = CefXmlReader::Create(
-      CefStreamReaderCppToC::Unwrap(stream), encodingType, CefString(URI));
+      CefStreamReaderCppToC_Unwrap(stream),
+      encodingType,
+      CefString(URI));
 
   // Return type: refptr_same
-  return CefXmlReaderCppToC::Wrap(_retval);
+  return CefXmlReaderCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK xml_reader_move_to_next_node(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_move_to_next_node(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -61,13 +60,13 @@ int CEF_CALLBACK xml_reader_move_to_next_node(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToNextNode();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToNextNode();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK xml_reader_close(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_close(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -78,13 +77,13 @@ int CEF_CALLBACK xml_reader_close(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->Close();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->Close();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK xml_reader_has_error(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_has_error(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -95,14 +94,13 @@ int CEF_CALLBACK xml_reader_has_error(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->HasError();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->HasError();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_error(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_error(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -113,14 +111,13 @@ xml_reader_get_error(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetError();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetError();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_xml_node_type_t CEF_CALLBACK
-xml_reader_get_type(struct _cef_xml_reader_t* self) {
+cef_xml_node_type_t CEF_CALLBACK xml_reader_get_type(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -131,13 +128,13 @@ xml_reader_get_type(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  cef_xml_node_type_t _retval = CefXmlReaderCppToC::Get(self)->GetType();
+  cef_xml_node_type_t _retval = CefXmlReader_0_CppToC::Get(self)->GetType();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK xml_reader_get_depth(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_get_depth(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -148,14 +145,13 @@ int CEF_CALLBACK xml_reader_get_depth(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  int _retval = CefXmlReaderCppToC::Get(self)->GetDepth();
+  int _retval = CefXmlReader_0_CppToC::Get(self)->GetDepth();
 
   // Return type: simple
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_local_name(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_local_name(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -166,14 +162,13 @@ xml_reader_get_local_name(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetLocalName();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetLocalName();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_prefix(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_prefix(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -184,14 +179,13 @@ xml_reader_get_prefix(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetPrefix();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetPrefix();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_qualified_name(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_qualified_name(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -202,14 +196,13 @@ xml_reader_get_qualified_name(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetQualifiedName();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetQualifiedName();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_namespace_uri(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_namespace_uri(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -220,14 +213,13 @@ xml_reader_get_namespace_uri(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetNamespaceURI();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetNamespaceURI();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_base_uri(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_base_uri(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -238,14 +230,13 @@ xml_reader_get_base_uri(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetBaseURI();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetBaseURI();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_xml_lang(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_xml_lang(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -256,13 +247,13 @@ xml_reader_get_xml_lang(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetXmlLang();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetXmlLang();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK xml_reader_is_empty_element(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_is_empty_element(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -273,13 +264,13 @@ int CEF_CALLBACK xml_reader_is_empty_element(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->IsEmptyElement();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->IsEmptyElement();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK xml_reader_has_value(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_has_value(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -290,14 +281,13 @@ int CEF_CALLBACK xml_reader_has_value(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->HasValue();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->HasValue();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_value(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_value(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -308,13 +298,13 @@ xml_reader_get_value(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetValue();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetValue();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK xml_reader_has_attributes(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_has_attributes(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -325,14 +315,13 @@ int CEF_CALLBACK xml_reader_has_attributes(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->HasAttributes();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->HasAttributes();
 
   // Return type: bool
   return _retval;
 }
 
-size_t CEF_CALLBACK
-xml_reader_get_attribute_count(struct _cef_xml_reader_t* self) {
+size_t CEF_CALLBACK xml_reader_get_attribute_count(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -343,14 +332,13 @@ xml_reader_get_attribute_count(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  size_t _retval = CefXmlReaderCppToC::Get(self)->GetAttributeCount();
+  size_t _retval = CefXmlReader_0_CppToC::Get(self)->GetAttributeCount();
 
   // Return type: simple
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_attribute_byindex(struct _cef_xml_reader_t* self, int index) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_attribute_byindex(struct _cef_xml_reader_0_t* self, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -366,15 +354,14 @@ xml_reader_get_attribute_byindex(struct _cef_xml_reader_t* self, int index) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetAttribute(index);
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetAttribute(
+      index);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_attribute_byqname(struct _cef_xml_reader_t* self,
-                                 const cef_string_t* qualifiedName) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_attribute_byqname(struct _cef_xml_reader_0_t* self, const cef_string_t* qualifiedName) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -390,17 +377,14 @@ xml_reader_get_attribute_byqname(struct _cef_xml_reader_t* self,
   }
 
   // Execute
-  CefString _retval =
-      CefXmlReaderCppToC::Get(self)->GetAttribute(CefString(qualifiedName));
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetAttribute(
+      CefString(qualifiedName));
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_attribute_bylname(struct _cef_xml_reader_t* self,
-                                 const cef_string_t* localName,
-                                 const cef_string_t* namespaceURI) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_attribute_bylname(struct _cef_xml_reader_0_t* self, const cef_string_t* localName, const cef_string_t* namespaceURI) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -421,15 +405,15 @@ xml_reader_get_attribute_bylname(struct _cef_xml_reader_t* self,
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetAttribute(
-      CefString(localName), CefString(namespaceURI));
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetAttribute(
+      CefString(localName),
+      CefString(namespaceURI));
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_inner_xml(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_inner_xml(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -440,14 +424,13 @@ xml_reader_get_inner_xml(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetInnerXml();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetInnerXml();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-xml_reader_get_outer_xml(struct _cef_xml_reader_t* self) {
+cef_string_userfree_t CEF_CALLBACK xml_reader_get_outer_xml(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -458,13 +441,13 @@ xml_reader_get_outer_xml(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  CefString _retval = CefXmlReaderCppToC::Get(self)->GetOuterXml();
+  CefString _retval = CefXmlReader_0_CppToC::Get(self)->GetOuterXml();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK xml_reader_get_line_number(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_get_line_number(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -475,15 +458,13 @@ int CEF_CALLBACK xml_reader_get_line_number(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  int _retval = CefXmlReaderCppToC::Get(self)->GetLineNumber();
+  int _retval = CefXmlReader_0_CppToC::Get(self)->GetLineNumber();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_attribute_byindex(struct _cef_xml_reader_t* self,
-                                     int index) {
+int CEF_CALLBACK xml_reader_move_to_attribute_byindex(struct _cef_xml_reader_0_t* self, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -499,15 +480,14 @@ xml_reader_move_to_attribute_byindex(struct _cef_xml_reader_t* self,
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToAttribute(index);
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToAttribute(
+      index);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_attribute_byqname(struct _cef_xml_reader_t* self,
-                                     const cef_string_t* qualifiedName) {
+int CEF_CALLBACK xml_reader_move_to_attribute_byqname(struct _cef_xml_reader_0_t* self, const cef_string_t* qualifiedName) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -523,17 +503,14 @@ xml_reader_move_to_attribute_byqname(struct _cef_xml_reader_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefXmlReaderCppToC::Get(self)->MoveToAttribute(CefString(qualifiedName));
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToAttribute(
+      CefString(qualifiedName));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_attribute_bylname(struct _cef_xml_reader_t* self,
-                                     const cef_string_t* localName,
-                                     const cef_string_t* namespaceURI) {
+int CEF_CALLBACK xml_reader_move_to_attribute_bylname(struct _cef_xml_reader_0_t* self, const cef_string_t* localName, const cef_string_t* namespaceURI) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -554,15 +531,15 @@ xml_reader_move_to_attribute_bylname(struct _cef_xml_reader_t* self,
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToAttribute(
-      CefString(localName), CefString(namespaceURI));
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToAttribute(
+      CefString(localName),
+      CefString(namespaceURI));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_first_attribute(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_move_to_first_attribute(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -573,14 +550,13 @@ xml_reader_move_to_first_attribute(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToFirstAttribute();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToFirstAttribute();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_next_attribute(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_move_to_next_attribute(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -591,14 +567,13 @@ xml_reader_move_to_next_attribute(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToNextAttribute();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToNextAttribute();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-xml_reader_move_to_carrying_element(struct _cef_xml_reader_t* self) {
+int CEF_CALLBACK xml_reader_move_to_carrying_element(struct _cef_xml_reader_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -609,7 +584,7 @@ xml_reader_move_to_carrying_element(struct _cef_xml_reader_t* self) {
   }
 
   // Execute
-  bool _retval = CefXmlReaderCppToC::Get(self)->MoveToCarryingElement();
+  bool _retval = CefXmlReader_0_CppToC::Get(self)->MoveToCarryingElement();
 
   // Return type: bool
   return _retval;
@@ -617,9 +592,12 @@ xml_reader_move_to_carrying_element(struct _cef_xml_reader_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefXmlReaderCppToC::CefXmlReaderCppToC() {
+CefXmlReader_0_CppToC::CefXmlReader_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->move_to_next_node = xml_reader_move_to_next_node;
   GetStruct()->close = xml_reader_close;
   GetStruct()->has_error = xml_reader_has_error;
@@ -651,22 +629,16 @@ CefXmlReaderCppToC::CefXmlReaderCppToC() {
   GetStruct()->move_to_carrying_element = xml_reader_move_to_carrying_element;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefXmlReaderCppToC::~CefXmlReaderCppToC() {
+CefXmlReader_0_CppToC::~CefXmlReader_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefXmlReader>
-CefCppToCRefCounted<CefXmlReaderCppToC, CefXmlReader, cef_xml_reader_t>::
-    UnwrapDerived(CefWrapperType type, cef_xml_reader_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefXmlReader> CefCppToCRefCounted<CefXmlReader_0_CppToC, CefXmlReader, cef_xml_reader_0_t>::UnwrapDerived(CefWrapperType type, cef_xml_reader_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefXmlReaderCppToC,
-                                   CefXmlReader,
-                                   cef_xml_reader_t>::kWrapperType =
-    WT_XML_READER;
+template<> CefWrapperType CefCppToCRefCounted<CefXmlReader_0_CppToC, CefXmlReader, cef_xml_reader_0_t>::kWrapperType = WT_XML_READER;
+
+

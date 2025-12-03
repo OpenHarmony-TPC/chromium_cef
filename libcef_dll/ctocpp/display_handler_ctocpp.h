@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=eafe7266c4e4fc393079b25951f7b2f148437086$
+// $hash=72c884f29b7336eac58eee10866d0eeb3fe5b767$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_
@@ -21,50 +21,60 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_display_handler_capi.h"
 #include "include/cef_display_handler.h"
+#include "include/capi/cef_display_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDisplayHandlerCToCpp
-    : public CefCToCppRefCounted<CefDisplayHandlerCToCpp,
-                                 CefDisplayHandler,
-                                 cef_display_handler_t> {
+class CefDisplayHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefDisplayHandler_0_CToCpp, CefDisplayHandler, cef_display_handler_0_t> {
  public:
-  CefDisplayHandlerCToCpp();
-  virtual ~CefDisplayHandlerCToCpp();
+  CefDisplayHandler_0_CToCpp();
+  virtual ~CefDisplayHandler_0_CToCpp();
 
   // CefDisplayHandler methods.
-  void OnAddressChange(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefFrame> frame,
-                       const CefString& url) override;
-  void OnTitleChange(CefRefPtr<CefBrowser> browser,
-                     const CefString& title) override;
-  void OnFaviconURLChange(CefRefPtr<CefBrowser> browser,
-                          const std::vector<CefString>& icon_urls) override;
-  void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
-                              bool fullscreen) override;
+  void OnAddressChange(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url) override;
+  void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
+  void OnFaviconURLChange(CefRefPtr<CefBrowser> browser, const std::vector<CefString>& icon_urls) override;
+  void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser, bool fullscreen) override;
   bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) override;
-  void OnStatusMessage(CefRefPtr<CefBrowser> browser,
-                       const CefString& value) override;
-  bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                        cef_log_severity_t level,
-                        const CefString& message,
-                        const CefString& source,
-                        int line) override;
-  bool OnAutoResize(CefRefPtr<CefBrowser> browser,
-                    const CefSize& new_size) override;
-  void OnLoadingProgressChange(CefRefPtr<CefBrowser> browser,
-                               double progress) override;
-  bool OnCursorChange(CefRefPtr<CefBrowser> browser,
-                      CefCursorHandle cursor,
-                      cef_cursor_type_t type,
-                      const CefCursorInfo& custom_cursor_info) override;
-  void OnMediaAccessChange(CefRefPtr<CefBrowser> browser,
-                           bool has_video_access,
-                           bool has_audio_access) override;
+  void OnStatusMessage(CefRefPtr<CefBrowser> browser, const CefString& value) override;
+  bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line) override;
+  bool OnAutoResize(CefRefPtr<CefBrowser> browser, const CefSize& new_size) override;
+  void OnLoadingProgressChange(CefRefPtr<CefBrowser> browser, double progress) override;
+  bool OnCursorChange(CefRefPtr<CefBrowser> browser, CefCursorHandle cursor, cef_cursor_type_t type, const CefCursorInfo& custom_cursor_info) override;
+  void OnMediaAccessChange(CefRefPtr<CefBrowser> browser, bool has_video_access, bool has_audio_access) override;
+  bool OnContentsBoundsChange(CefRefPtr<CefBrowser> browser, const CefRect& new_bounds) override;
+  bool GetRootWindowScreenRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 };
+
+// Wrap a C structure with a C++ class at API version 13700.
+// This class may be instantiated and accessed DLL-side only.
+class CefDisplayHandler_13700_CToCpp
+    : public CefCToCppRefCounted<CefDisplayHandler_13700_CToCpp, CefDisplayHandler, cef_display_handler_13700_t> {
+ public:
+  CefDisplayHandler_13700_CToCpp();
+  virtual ~CefDisplayHandler_13700_CToCpp();
+
+  // CefDisplayHandler methods.
+  void OnAddressChange(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url) override;
+  void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
+  void OnFaviconURLChange(CefRefPtr<CefBrowser> browser, const std::vector<CefString>& icon_urls) override;
+  void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser, bool fullscreen) override;
+  bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) override;
+  void OnStatusMessage(CefRefPtr<CefBrowser> browser, const CefString& value) override;
+  bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, cef_log_severity_t level, const CefString& message, const CefString& source, int line) override;
+  bool OnAutoResize(CefRefPtr<CefBrowser> browser, const CefSize& new_size) override;
+  void OnLoadingProgressChange(CefRefPtr<CefBrowser> browser, double progress) override;
+  bool OnCursorChange(CefRefPtr<CefBrowser> browser, CefCursorHandle cursor, cef_cursor_type_t type, const CefCursorInfo& custom_cursor_info) override;
+  void OnMediaAccessChange(CefRefPtr<CefBrowser> browser, bool has_video_access, bool has_audio_access) override;
+  bool OnContentsBoundsChange(CefRefPtr<CefBrowser> browser, const CefRect& new_bounds) override;
+  bool GetRootWindowScreenRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
+};
+
+// Helpers to return objects at the globally configured API version.
+CefRefPtr<CefDisplayHandler> CefDisplayHandlerCToCpp_Wrap(cef_display_handler_0_t* s);
+cef_display_handler_0_t* CefDisplayHandlerCToCpp_Unwrap(CefRefPtr<CefDisplayHandler> c);
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_

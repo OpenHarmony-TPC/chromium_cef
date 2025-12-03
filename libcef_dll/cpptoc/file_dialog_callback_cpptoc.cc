@@ -9,21 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=74d67bc708a7974981833523430a23025823b05e$
+// $hash=7b5deb4c39428dc158effcb7c37bae41dcae28e5$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/file_dialog_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-file_dialog_callback_cont(struct _cef_file_dialog_callback_t* self,
-                          cef_string_list_t file_paths) {
+void CEF_CALLBACK file_dialog_callback_cont(struct _cef_file_dialog_callback_0_t* self, cef_string_list_t file_paths) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -39,11 +37,11 @@ file_dialog_callback_cont(struct _cef_file_dialog_callback_t* self,
   transfer_string_list_contents(file_paths, file_pathsList);
 
   // Execute
-  CefFileDialogCallbackCppToC::Get(self)->Continue(file_pathsList);
+  CefFileDialogCallback_0_CppToC::Get(self)->Continue(
+      file_pathsList);
 }
 
-void CEF_CALLBACK
-file_dialog_callback_cancel(struct _cef_file_dialog_callback_t* self) {
+void CEF_CALLBACK file_dialog_callback_cancel(struct _cef_file_dialog_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -54,36 +52,31 @@ file_dialog_callback_cancel(struct _cef_file_dialog_callback_t* self) {
   }
 
   // Execute
-  CefFileDialogCallbackCppToC::Get(self)->Cancel();
+  CefFileDialogCallback_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFileDialogCallbackCppToC::CefFileDialogCallbackCppToC() {
+CefFileDialogCallback_0_CppToC::CefFileDialogCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = file_dialog_callback_cont;
   GetStruct()->cancel = file_dialog_callback_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFileDialogCallbackCppToC::~CefFileDialogCallbackCppToC() {
+CefFileDialogCallback_0_CppToC::~CefFileDialogCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefFileDialogCallback> CefCppToCRefCounted<
-    CefFileDialogCallbackCppToC,
-    CefFileDialogCallback,
-    cef_file_dialog_callback_t>::UnwrapDerived(CefWrapperType type,
-                                               cef_file_dialog_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefFileDialogCallback> CefCppToCRefCounted<CefFileDialogCallback_0_CppToC, CefFileDialogCallback, cef_file_dialog_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_file_dialog_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefFileDialogCallbackCppToC,
-                                   CefFileDialogCallback,
-                                   cef_file_dialog_callback_t>::kWrapperType =
-    WT_FILE_DIALOG_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefFileDialogCallback_0_CppToC, CefFileDialogCallback, cef_file_dialog_callback_0_t>::kWrapperType = WT_FILE_DIALOG_CALLBACK;
+
+

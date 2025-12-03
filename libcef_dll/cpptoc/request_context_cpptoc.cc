@@ -9,36 +9,37 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6d67707cdf1ae75757b288242de25f6cbe763fa6$
+// $hash=894deb16ba2284f8c636b60ea8d694ffe1cbbcd4$
 //
 
-#include "libcef_dll/cpptoc/request_context_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/media_router_cpptoc.h"
+#include "libcef_dll/cpptoc/registration_cpptoc.h"
+#include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/preference_observer_ctocpp.h"
 #include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/resolve_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/scheme_handler_factory_ctocpp.h"
+#include "libcef_dll/ctocpp/setting_observer_ctocpp.h"
 #include "libcef_dll/template_util.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_request_context_t* cef_request_context_get_global_context() {
+CEF_EXPORT cef_request_context_0_t* cef_request_context_get_global_context() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
   CefRefPtr<CefRequestContext> _retval = CefRequestContext::GetGlobalContext();
 
   // Return type: refptr_same
-  return CefRequestContextCppToC::Wrap(_retval);
+  return CefRequestContextCppToC_Wrap(_retval);
 }
 
-CEF_EXPORT cef_request_context_t* cef_request_context_create_context(
-    const struct _cef_request_context_settings_t* settings,
-    struct _cef_request_context_handler_t* handler) {
+CEF_EXPORT cef_request_context_0_t* cef_request_context_create_context(const struct _cef_request_context_settings_t* settings, struct _cef_request_context_handler_0_t* handler) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: settings; type: struct_byref_const
@@ -60,15 +61,14 @@ CEF_EXPORT cef_request_context_t* cef_request_context_create_context(
 
   // Execute
   CefRefPtr<CefRequestContext> _retval = CefRequestContext::CreateContext(
-      settingsObj, CefRequestContextHandlerCToCpp::Wrap(handler));
+      settingsObj,
+      CefRequestContextHandlerCToCpp_Wrap(handler));
 
   // Return type: refptr_same
-  return CefRequestContextCppToC::Wrap(_retval);
+  return CefRequestContextCppToC_Wrap(_retval);
 }
 
-CEF_EXPORT cef_request_context_t* cef_create_context_shared(
-    cef_request_context_t* other,
-    struct _cef_request_context_handler_t* handler) {
+CEF_EXPORT cef_request_context_0_t* cef_request_context_cef_create_context_shared(cef_request_context_0_t* other, struct _cef_request_context_handler_0_t* handler) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: other; type: refptr_same
@@ -80,19 +80,42 @@ CEF_EXPORT cef_request_context_t* cef_create_context_shared(
 
   // Execute
   CefRefPtr<CefRequestContext> _retval = CefRequestContext::CreateContext(
-      CefRequestContextCppToC::Unwrap(other),
-      CefRequestContextHandlerCToCpp::Wrap(handler));
+      CefRequestContextCppToC_Unwrap(other),
+      CefRequestContextHandlerCToCpp_Wrap(handler));
 
   // Return type: refptr_same
-  return CefRequestContextCppToC::Wrap(_retval);
+  return CefRequestContextCppToC_Wrap(_retval);
+}
+
+// HELPER FUNCTIONS - Do not edit by hand.
+
+cef_request_context_0_t* CefRequestContextCppToC_Wrap(CefRefPtr<CefRequestContext> c) {
+  const int version = cef_api_version();
+  if (version >= 13401) {
+    return reinterpret_cast<cef_request_context_0_t*>(CefRequestContext_13401_CppToC::Wrap(c));
+  }
+  if (version >= 0) {
+    return CefRequestContext_0_CppToC::Wrap(c);
+  }
+  NOTREACHED() << __func__ << " called with invalid version " << version;
+}
+
+CefRefPtr<CefRequestContext> CefRequestContextCppToC_Unwrap(cef_request_context_0_t* s) {
+  const int version = cef_api_version();
+  if (version >= 13401) {
+    return CefRequestContext_13401_CppToC::Unwrap(reinterpret_cast<cef_request_context_13401_t*>(s));
+  }
+  if (version >= 0) {
+    return CefRequestContext_0_CppToC::Unwrap(s);
+  }
+  NOTREACHED() << __func__ << " called with invalid version " << version;
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK request_context_is_same(struct _cef_request_context_t* self,
-                                         struct _cef_request_context_t* other) {
+int CEF_CALLBACK request_context_is_same(struct _cef_request_context_0_t* self, cef_request_context_0_t* other) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -106,16 +129,14 @@ int CEF_CALLBACK request_context_is_same(struct _cef_request_context_t* self,
   }
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(self)->IsSame(
-      CefRequestContextCppToC::Unwrap(other));
+  bool _retval = CefRequestContext_0_CppToC::Get(self)->IsSame(
+      CefRequestContextCppToC_Unwrap(other));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-request_context_is_sharing_with(struct _cef_request_context_t* self,
-                                struct _cef_request_context_t* other) {
+int CEF_CALLBACK request_context_is_sharing_with(struct _cef_request_context_0_t* self, cef_request_context_0_t* other) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -129,15 +150,14 @@ request_context_is_sharing_with(struct _cef_request_context_t* self,
   }
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(self)->IsSharingWith(
-      CefRequestContextCppToC::Unwrap(other));
+  bool _retval = CefRequestContext_0_CppToC::Get(self)->IsSharingWith(
+      CefRequestContextCppToC_Unwrap(other));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-request_context_is_global(struct _cef_request_context_t* self) {
+int CEF_CALLBACK request_context_is_global(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -146,14 +166,13 @@ request_context_is_global(struct _cef_request_context_t* self) {
   }
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(self)->IsGlobal();
+  bool _retval = CefRequestContext_0_CppToC::Get(self)->IsGlobal();
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_request_context_handler_t* CEF_CALLBACK
-request_context_get_handler(struct _cef_request_context_t* self) {
+struct _cef_request_context_handler_0_t* CEF_CALLBACK request_context_get_handler(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -162,15 +181,13 @@ request_context_get_handler(struct _cef_request_context_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefRequestContextHandler> _retval =
-      CefRequestContextCppToC::Get(self)->GetHandler();
+  CefRefPtr<CefRequestContextHandler> _retval = CefRequestContext_0_CppToC::Get(self)->GetHandler();
 
   // Return type: refptr_diff
-  return CefRequestContextHandlerCToCpp::Unwrap(_retval);
+  return CefRequestContextHandlerCToCpp_Unwrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-request_context_get_cache_path(struct _cef_request_context_t* self) {
+cef_string_userfree_t CEF_CALLBACK request_context_get_cache_path(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -179,15 +196,13 @@ request_context_get_cache_path(struct _cef_request_context_t* self) {
   }
 
   // Execute
-  CefString _retval = CefRequestContextCppToC::Get(self)->GetCachePath();
+  CefString _retval = CefRequestContext_0_CppToC::Get(self)->GetCachePath();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_cookie_manager_t* CEF_CALLBACK
-request_context_get_cookie_manager(struct _cef_request_context_t* self,
-                                   cef_completion_callback_t* callback) {
+struct _cef_cookie_manager_0_t* CEF_CALLBACK request_context_get_cookie_manager(struct _cef_request_context_0_t* self, struct _cef_completion_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -197,19 +212,14 @@ request_context_get_cookie_manager(struct _cef_request_context_t* self,
   // Unverified params: callback
 
   // Execute
-  CefRefPtr<CefCookieManager> _retval =
-      CefRequestContextCppToC::Get(self)->GetCookieManager(
-          CefCompletionCallbackCToCpp::Wrap(callback));
+  CefRefPtr<CefCookieManager> _retval = CefRequestContext_0_CppToC::Get(self)->GetCookieManager(
+      CefCompletionCallbackCToCpp_Wrap(callback));
 
   // Return type: refptr_same
-  return CefCookieManagerCppToC::Wrap(_retval);
+  return CefCookieManagerCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK request_context_register_scheme_handler_factory(
-    struct _cef_request_context_t* self,
-    const cef_string_t* scheme_name,
-    const cef_string_t* domain_name,
-    struct _cef_scheme_handler_factory_t* factory) {
+int CEF_CALLBACK request_context_register_scheme_handler_factory(struct _cef_request_context_0_t* self, const cef_string_t* scheme_name, const cef_string_t* domain_name, struct _cef_scheme_handler_factory_0_t* factory) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -224,17 +234,16 @@ int CEF_CALLBACK request_context_register_scheme_handler_factory(
   // Unverified params: domain_name, factory
 
   // Execute
-  bool _retval =
-      CefRequestContextCppToC::Get(self)->RegisterSchemeHandlerFactory(
-          CefString(scheme_name), CefString(domain_name),
-          CefSchemeHandlerFactoryCToCpp::Wrap(factory));
+  bool _retval = CefRequestContext_0_CppToC::Get(self)->RegisterSchemeHandlerFactory(
+      CefString(scheme_name),
+      CefString(domain_name),
+      CefSchemeHandlerFactoryCToCpp_Wrap(factory));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK request_context_clear_scheme_handler_factories(
-    struct _cef_request_context_t* self) {
+int CEF_CALLBACK request_context_clear_scheme_handler_factories(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -243,16 +252,13 @@ int CEF_CALLBACK request_context_clear_scheme_handler_factories(
   }
 
   // Execute
-  bool _retval =
-      CefRequestContextCppToC::Get(self)->ClearSchemeHandlerFactories();
+  bool _retval = CefRequestContext_0_CppToC::Get(self)->ClearSchemeHandlerFactories();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK request_context_clear_certificate_exceptions(
-    struct _cef_request_context_t* self,
-    cef_completion_callback_t* callback) {
+void CEF_CALLBACK request_context_clear_certificate_exceptions(struct _cef_request_context_0_t* self, struct _cef_completion_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -262,13 +268,11 @@ void CEF_CALLBACK request_context_clear_certificate_exceptions(
   // Unverified params: callback
 
   // Execute
-  CefRequestContextCppToC::Get(self)->ClearCertificateExceptions(
-      CefCompletionCallbackCToCpp::Wrap(callback));
+  CefRequestContext_0_CppToC::Get(self)->ClearCertificateExceptions(
+      CefCompletionCallbackCToCpp_Wrap(callback));
 }
 
-void CEF_CALLBACK request_context_clear_http_auth_credentials(
-    struct _cef_request_context_t* self,
-    cef_completion_callback_t* callback) {
+void CEF_CALLBACK request_context_clear_http_auth_credentials(struct _cef_request_context_0_t* self, struct _cef_completion_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -278,13 +282,11 @@ void CEF_CALLBACK request_context_clear_http_auth_credentials(
   // Unverified params: callback
 
   // Execute
-  CefRequestContextCppToC::Get(self)->ClearHttpAuthCredentials(
-      CefCompletionCallbackCToCpp::Wrap(callback));
+  CefRequestContext_0_CppToC::Get(self)->ClearHttpAuthCredentials(
+      CefCompletionCallbackCToCpp_Wrap(callback));
 }
 
-void CEF_CALLBACK
-request_context_close_all_connections(struct _cef_request_context_t* self,
-                                      cef_completion_callback_t* callback) {
+void CEF_CALLBACK request_context_close_all_connections(struct _cef_request_context_0_t* self, struct _cef_completion_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -294,14 +296,11 @@ request_context_close_all_connections(struct _cef_request_context_t* self,
   // Unverified params: callback
 
   // Execute
-  CefRequestContextCppToC::Get(self)->CloseAllConnections(
-      CefCompletionCallbackCToCpp::Wrap(callback));
+  CefRequestContext_0_CppToC::Get(self)->CloseAllConnections(
+      CefCompletionCallbackCToCpp_Wrap(callback));
 }
 
-void CEF_CALLBACK
-request_context_resolve_host(struct _cef_request_context_t* self,
-                             const cef_string_t* origin,
-                             cef_resolve_callback_t* callback) {
+void CEF_CALLBACK request_context_resolve_host(struct _cef_request_context_0_t* self, const cef_string_t* origin, struct _cef_resolve_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -320,13 +319,12 @@ request_context_resolve_host(struct _cef_request_context_t* self,
   }
 
   // Execute
-  CefRequestContextCppToC::Get(self)->ResolveHost(
-      CefString(origin), CefResolveCallbackCToCpp::Wrap(callback));
+  CefRequestContext_0_CppToC::Get(self)->ResolveHost(
+      CefString(origin),
+      CefResolveCallbackCToCpp_Wrap(callback));
 }
 
-cef_media_router_t* CEF_CALLBACK
-request_context_get_media_router(struct _cef_request_context_t* self,
-                                 cef_completion_callback_t* callback) {
+struct _cef_media_router_0_t* CEF_CALLBACK request_context_get_media_router(struct _cef_request_context_0_t* self, struct _cef_completion_callback_0_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -336,19 +334,14 @@ request_context_get_media_router(struct _cef_request_context_t* self,
   // Unverified params: callback
 
   // Execute
-  CefRefPtr<CefMediaRouter> _retval =
-      CefRequestContextCppToC::Get(self)->GetMediaRouter(
-          CefCompletionCallbackCToCpp::Wrap(callback));
+  CefRefPtr<CefMediaRouter> _retval = CefRequestContext_0_CppToC::Get(self)->GetMediaRouter(
+      CefCompletionCallbackCToCpp_Wrap(callback));
 
   // Return type: refptr_same
-  return CefMediaRouterCppToC::Wrap(_retval);
+  return CefMediaRouterCppToC_Wrap(_retval);
 }
 
-struct _cef_value_t* CEF_CALLBACK
-request_context_get_website_setting(struct _cef_request_context_t* self,
-                                    const cef_string_t* requesting_url,
-                                    const cef_string_t* top_level_url,
-                                    cef_content_setting_types_t content_type) {
+struct _cef_value_0_t* CEF_CALLBACK request_context_get_website_setting(struct _cef_request_context_0_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -358,20 +351,16 @@ request_context_get_website_setting(struct _cef_request_context_t* self,
   // Unverified params: requesting_url, top_level_url
 
   // Execute
-  CefRefPtr<CefValue> _retval =
-      CefRequestContextCppToC::Get(self)->GetWebsiteSetting(
-          CefString(requesting_url), CefString(top_level_url), content_type);
+  CefRefPtr<CefValue> _retval = CefRequestContext_0_CppToC::Get(self)->GetWebsiteSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type);
 
   // Return type: refptr_same
-  return CefValueCppToC::Wrap(_retval);
+  return CefValueCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK
-request_context_set_website_setting(struct _cef_request_context_t* self,
-                                    const cef_string_t* requesting_url,
-                                    const cef_string_t* top_level_url,
-                                    cef_content_setting_types_t content_type,
-                                    struct _cef_value_t* value) {
+void CEF_CALLBACK request_context_set_website_setting(struct _cef_request_context_0_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type, struct _cef_value_0_t* value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -381,16 +370,14 @@ request_context_set_website_setting(struct _cef_request_context_t* self,
   // Unverified params: requesting_url, top_level_url, value
 
   // Execute
-  CefRequestContextCppToC::Get(self)->SetWebsiteSetting(
-      CefString(requesting_url), CefString(top_level_url), content_type,
-      CefValueCppToC::Unwrap(value));
+  CefRequestContext_0_CppToC::Get(self)->SetWebsiteSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type,
+      CefValueCppToC_Unwrap(value));
 }
 
-cef_content_setting_values_t CEF_CALLBACK
-request_context_get_content_setting(struct _cef_request_context_t* self,
-                                    const cef_string_t* requesting_url,
-                                    const cef_string_t* top_level_url,
-                                    cef_content_setting_types_t content_type) {
+cef_content_setting_values_t CEF_CALLBACK request_context_get_content_setting(struct _cef_request_context_0_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -400,20 +387,16 @@ request_context_get_content_setting(struct _cef_request_context_t* self,
   // Unverified params: requesting_url, top_level_url
 
   // Execute
-  cef_content_setting_values_t _retval =
-      CefRequestContextCppToC::Get(self)->GetContentSetting(
-          CefString(requesting_url), CefString(top_level_url), content_type);
+  cef_content_setting_values_t _retval = CefRequestContext_0_CppToC::Get(self)->GetContentSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type);
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-request_context_set_content_setting(struct _cef_request_context_t* self,
-                                    const cef_string_t* requesting_url,
-                                    const cef_string_t* top_level_url,
-                                    cef_content_setting_types_t content_type,
-                                    cef_content_setting_values_t value) {
+void CEF_CALLBACK request_context_set_content_setting(struct _cef_request_context_0_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type, cef_content_setting_values_t value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -423,14 +406,14 @@ request_context_set_content_setting(struct _cef_request_context_t* self,
   // Unverified params: requesting_url, top_level_url
 
   // Execute
-  CefRequestContextCppToC::Get(self)->SetContentSetting(
-      CefString(requesting_url), CefString(top_level_url), content_type, value);
+  CefRequestContext_0_CppToC::Get(self)->SetContentSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type,
+      value);
 }
 
-void CEF_CALLBACK
-request_context_set_chrome_color_scheme(struct _cef_request_context_t* self,
-                                        cef_color_variant_t variant,
-                                        cef_color_t user_color) {
+void CEF_CALLBACK request_context_set_chrome_color_scheme(struct _cef_request_context_0_t* self, cef_color_variant_t variant, cef_color_t user_color) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -439,11 +422,12 @@ request_context_set_chrome_color_scheme(struct _cef_request_context_t* self,
   }
 
   // Execute
-  CefRequestContextCppToC::Get(self)->SetChromeColorScheme(variant, user_color);
+  CefRequestContext_0_CppToC::Get(self)->SetChromeColorScheme(
+      variant,
+      user_color);
 }
 
-cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_mode(
-    struct _cef_request_context_t* self) {
+cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_mode(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -452,15 +436,13 @@ cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_mode(
   }
 
   // Execute
-  cef_color_variant_t _retval =
-      CefRequestContextCppToC::Get(self)->GetChromeColorSchemeMode();
+  cef_color_variant_t _retval = CefRequestContext_0_CppToC::Get(self)->GetChromeColorSchemeMode();
 
   // Return type: simple
   return _retval;
 }
 
-cef_color_t CEF_CALLBACK request_context_get_chrome_color_scheme_color(
-    struct _cef_request_context_t* self) {
+cef_color_t CEF_CALLBACK request_context_get_chrome_color_scheme_color(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -469,16 +451,13 @@ cef_color_t CEF_CALLBACK request_context_get_chrome_color_scheme_color(
   }
 
   // Execute
-  cef_color_t _retval =
-      CefRequestContextCppToC::Get(self)->GetChromeColorSchemeColor();
+  cef_color_t _retval = CefRequestContext_0_CppToC::Get(self)->GetChromeColorSchemeColor();
 
   // Return type: simple
   return _retval;
 }
 
-cef_color_variant_t CEF_CALLBACK
-request_context_get_chrome_color_scheme_variant(
-    struct _cef_request_context_t* self) {
+cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_variant(struct _cef_request_context_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -487,16 +466,13 @@ request_context_get_chrome_color_scheme_variant(
   }
 
   // Execute
-  cef_color_variant_t _retval =
-      CefRequestContextCppToC::Get(self)->GetChromeColorSchemeVariant();
+  cef_color_variant_t _retval = CefRequestContext_0_CppToC::Get(self)->GetChromeColorSchemeVariant();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK
-request_context_has_preference(struct _cef_preference_manager_t* self,
-                               const cef_string_t* name) {
+int CEF_CALLBACK request_context_has_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -510,17 +486,14 @@ request_context_has_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(
-                     reinterpret_cast<cef_request_context_t*>(self))
-                     ->HasPreference(CefString(name));
+  bool _retval = CefRequestContext_0_CppToC::Get(reinterpret_cast<cef_request_context_0_t*>(self))->HasPreference(
+      CefString(name));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_value_t* CEF_CALLBACK
-request_context_get_preference(struct _cef_preference_manager_t* self,
-                               const cef_string_t* name) {
+struct _cef_value_0_t* CEF_CALLBACK request_context_get_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -534,18 +507,14 @@ request_context_get_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  CefRefPtr<CefValue> _retval =
-      CefRequestContextCppToC::Get(
-          reinterpret_cast<cef_request_context_t*>(self))
-          ->GetPreference(CefString(name));
+  CefRefPtr<CefValue> _retval = CefRequestContext_0_CppToC::Get(reinterpret_cast<cef_request_context_0_t*>(self))->GetPreference(
+      CefString(name));
 
   // Return type: refptr_same
-  return CefValueCppToC::Wrap(_retval);
+  return CefValueCppToC_Wrap(_retval);
 }
 
-struct _cef_dictionary_value_t* CEF_CALLBACK
-request_context_get_all_preferences(struct _cef_preference_manager_t* self,
-                                    int include_defaults) {
+struct _cef_dictionary_value_0_t* CEF_CALLBACK request_context_get_all_preferences(struct _cef_preference_manager_0_t* self, int include_defaults) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -554,18 +523,14 @@ request_context_get_all_preferences(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  CefRefPtr<CefDictionaryValue> _retval =
-      CefRequestContextCppToC::Get(
-          reinterpret_cast<cef_request_context_t*>(self))
-          ->GetAllPreferences(include_defaults ? true : false);
+  CefRefPtr<CefDictionaryValue> _retval = CefRequestContext_0_CppToC::Get(reinterpret_cast<cef_request_context_0_t*>(self))->GetAllPreferences(
+      include_defaults?true:false);
 
   // Return type: refptr_same
-  return CefDictionaryValueCppToC::Wrap(_retval);
+  return CefDictionaryValueCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK
-request_context_can_set_preference(struct _cef_preference_manager_t* self,
-                                   const cef_string_t* name) {
+int CEF_CALLBACK request_context_can_set_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -579,19 +544,14 @@ request_context_can_set_preference(struct _cef_preference_manager_t* self,
   }
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(
-                     reinterpret_cast<cef_request_context_t*>(self))
-                     ->CanSetPreference(CefString(name));
+  bool _retval = CefRequestContext_0_CppToC::Get(reinterpret_cast<cef_request_context_0_t*>(self))->CanSetPreference(
+      CefString(name));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-request_context_set_preference(struct _cef_preference_manager_t* self,
-                               const cef_string_t* name,
-                               struct _cef_value_t* value,
-                               cef_string_t* error) {
+int CEF_CALLBACK request_context_set_preference(struct _cef_preference_manager_0_t* self, const cef_string_t* name, struct _cef_value_0_t* value, cef_string_t* error) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -614,10 +574,10 @@ request_context_set_preference(struct _cef_preference_manager_t* self,
   CefString errorStr(error);
 
   // Execute
-  bool _retval = CefRequestContextCppToC::Get(
-                     reinterpret_cast<cef_request_context_t*>(self))
-                     ->SetPreference(CefString(name),
-                                     CefValueCppToC::Unwrap(value), errorStr);
+  bool _retval = CefRequestContext_0_CppToC::Get(reinterpret_cast<cef_request_context_0_t*>(self))->SetPreference(
+      CefString(name),
+      CefValueCppToC_Unwrap(value),
+      errorStr);
 
   // Return type: bool
   return _retval;
@@ -625,23 +585,22 @@ request_context_set_preference(struct _cef_preference_manager_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRequestContextCppToC::CefRequestContextCppToC() {
+CefRequestContext_0_CppToC::CefRequestContext_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0 || version >= 13401) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_same = request_context_is_same;
   GetStruct()->is_sharing_with = request_context_is_sharing_with;
   GetStruct()->is_global = request_context_is_global;
   GetStruct()->get_handler = request_context_get_handler;
   GetStruct()->get_cache_path = request_context_get_cache_path;
   GetStruct()->get_cookie_manager = request_context_get_cookie_manager;
-  GetStruct()->register_scheme_handler_factory =
-      request_context_register_scheme_handler_factory;
-  GetStruct()->clear_scheme_handler_factories =
-      request_context_clear_scheme_handler_factories;
-  GetStruct()->clear_certificate_exceptions =
-      request_context_clear_certificate_exceptions;
-  GetStruct()->clear_http_auth_credentials =
-      request_context_clear_http_auth_credentials;
+  GetStruct()->register_scheme_handler_factory = request_context_register_scheme_handler_factory;
+  GetStruct()->clear_scheme_handler_factories = request_context_clear_scheme_handler_factories;
+  GetStruct()->clear_certificate_exceptions = request_context_clear_certificate_exceptions;
+  GetStruct()->clear_http_auth_credentials = request_context_clear_http_auth_credentials;
   GetStruct()->close_all_connections = request_context_close_all_connections;
   GetStruct()->resolve_host = request_context_resolve_host;
   GetStruct()->get_media_router = request_context_get_media_router;
@@ -649,14 +608,10 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
   GetStruct()->set_website_setting = request_context_set_website_setting;
   GetStruct()->get_content_setting = request_context_get_content_setting;
   GetStruct()->set_content_setting = request_context_set_content_setting;
-  GetStruct()->set_chrome_color_scheme =
-      request_context_set_chrome_color_scheme;
-  GetStruct()->get_chrome_color_scheme_mode =
-      request_context_get_chrome_color_scheme_mode;
-  GetStruct()->get_chrome_color_scheme_color =
-      request_context_get_chrome_color_scheme_color;
-  GetStruct()->get_chrome_color_scheme_variant =
-      request_context_get_chrome_color_scheme_variant;
+  GetStruct()->set_chrome_color_scheme = request_context_set_chrome_color_scheme;
+  GetStruct()->get_chrome_color_scheme_mode = request_context_get_chrome_color_scheme_mode;
+  GetStruct()->get_chrome_color_scheme_color = request_context_get_chrome_color_scheme_color;
+  GetStruct()->get_chrome_color_scheme_variant = request_context_get_chrome_color_scheme_variant;
   GetStruct()->base.has_preference = request_context_has_preference;
   GetStruct()->base.get_preference = request_context_get_preference;
   GetStruct()->base.get_all_preferences = request_context_get_all_preferences;
@@ -664,22 +619,580 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
   GetStruct()->base.set_preference = request_context_set_preference;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRequestContextCppToC::~CefRequestContextCppToC() {}
-
-template <>
-CefRefPtr<CefRequestContext> CefCppToCRefCounted<
-    CefRequestContextCppToC,
-    CefRequestContext,
-    cef_request_context_t>::UnwrapDerived(CefWrapperType type,
-                                          cef_request_context_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefRequestContext_0_CppToC::~CefRequestContext_0_CppToC() {
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefRequestContextCppToC,
-                                   CefRequestContext,
-                                   cef_request_context_t>::kWrapperType =
-    WT_REQUEST_CONTEXT;
+template<> CefRefPtr<CefRequestContext> CefCppToCRefCounted<CefRequestContext_0_CppToC, CefRequestContext, cef_request_context_0_t>::UnwrapDerived(CefWrapperType type, cef_request_context_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefRequestContext_0_CppToC, CefRequestContext, cef_request_context_0_t>::kWrapperType = WT_REQUEST_CONTEXT;
+
+namespace {
+
+// MEMBER FUNCTIONS FOR VERSION 13401 - Body may be edited by hand.
+
+int CEF_CALLBACK request_context_is_same_13401(struct _cef_request_context_13401_t* self, cef_request_context_0_t* other) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: other; type: refptr_same
+  DCHECK(other);
+  if (!other) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(self)->IsSame(
+      CefRequestContextCppToC_Unwrap(other));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK request_context_is_sharing_with_13401(struct _cef_request_context_13401_t* self, cef_request_context_0_t* other) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: other; type: refptr_same
+  DCHECK(other);
+  if (!other) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(self)->IsSharingWith(
+      CefRequestContextCppToC_Unwrap(other));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK request_context_is_global_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(self)->IsGlobal();
+
+  // Return type: bool
+  return _retval;
+}
+
+struct _cef_request_context_handler_0_t* CEF_CALLBACK request_context_get_handler_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefRequestContextHandler> _retval = CefRequestContext_13401_CppToC::Get(self)->GetHandler();
+
+  // Return type: refptr_diff
+  return CefRequestContextHandlerCToCpp_Unwrap(_retval);
+}
+
+cef_string_userfree_t CEF_CALLBACK request_context_get_cache_path_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefString _retval = CefRequestContext_13401_CppToC::Get(self)->GetCachePath();
+
+  // Return type: string
+  return _retval.DetachToUserFree();
+}
+
+struct _cef_cookie_manager_0_t* CEF_CALLBACK request_context_get_cookie_manager_13401(struct _cef_request_context_13401_t* self, struct _cef_completion_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRefPtr<CefCookieManager> _retval = CefRequestContext_13401_CppToC::Get(self)->GetCookieManager(
+      CefCompletionCallbackCToCpp_Wrap(callback));
+
+  // Return type: refptr_same
+  return CefCookieManagerCppToC_Wrap(_retval);
+}
+
+int CEF_CALLBACK request_context_register_scheme_handler_factory_13401(struct _cef_request_context_13401_t* self, const cef_string_t* scheme_name, const cef_string_t* domain_name, struct _cef_scheme_handler_factory_0_t* factory) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: scheme_name; type: string_byref_const
+  DCHECK(scheme_name);
+  if (!scheme_name) {
+    return 0;
+  }
+  // Unverified params: domain_name, factory
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(self)->RegisterSchemeHandlerFactory(
+      CefString(scheme_name),
+      CefString(domain_name),
+      CefSchemeHandlerFactoryCToCpp_Wrap(factory));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK request_context_clear_scheme_handler_factories_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(self)->ClearSchemeHandlerFactories();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK request_context_clear_certificate_exceptions_13401(struct _cef_request_context_13401_t* self, struct _cef_completion_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->ClearCertificateExceptions(
+      CefCompletionCallbackCToCpp_Wrap(callback));
+}
+
+void CEF_CALLBACK request_context_clear_http_auth_credentials_13401(struct _cef_request_context_13401_t* self, struct _cef_completion_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->ClearHttpAuthCredentials(
+      CefCompletionCallbackCToCpp_Wrap(callback));
+}
+
+void CEF_CALLBACK request_context_close_all_connections_13401(struct _cef_request_context_13401_t* self, struct _cef_completion_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->CloseAllConnections(
+      CefCompletionCallbackCToCpp_Wrap(callback));
+}
+
+void CEF_CALLBACK request_context_resolve_host_13401(struct _cef_request_context_13401_t* self, const cef_string_t* origin, struct _cef_resolve_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->ResolveHost(
+      CefString(origin),
+      CefResolveCallbackCToCpp_Wrap(callback));
+}
+
+struct _cef_media_router_0_t* CEF_CALLBACK request_context_get_media_router_13401(struct _cef_request_context_13401_t* self, struct _cef_completion_callback_0_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRefPtr<CefMediaRouter> _retval = CefRequestContext_13401_CppToC::Get(self)->GetMediaRouter(
+      CefCompletionCallbackCToCpp_Wrap(callback));
+
+  // Return type: refptr_same
+  return CefMediaRouterCppToC_Wrap(_retval);
+}
+
+struct _cef_value_0_t* CEF_CALLBACK request_context_get_website_setting_13401(struct _cef_request_context_13401_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Unverified params: requesting_url, top_level_url
+
+  // Execute
+  CefRefPtr<CefValue> _retval = CefRequestContext_13401_CppToC::Get(self)->GetWebsiteSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type);
+
+  // Return type: refptr_same
+  return CefValueCppToC_Wrap(_retval);
+}
+
+void CEF_CALLBACK request_context_set_website_setting_13401(struct _cef_request_context_13401_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type, struct _cef_value_0_t* value) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: requesting_url, top_level_url, value
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->SetWebsiteSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type,
+      CefValueCppToC_Unwrap(value));
+}
+
+cef_content_setting_values_t CEF_CALLBACK request_context_get_content_setting_13401(struct _cef_request_context_13401_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_CONTENT_SETTING_VALUE_DEFAULT;
+  }
+  // Unverified params: requesting_url, top_level_url
+
+  // Execute
+  cef_content_setting_values_t _retval = CefRequestContext_13401_CppToC::Get(self)->GetContentSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type);
+
+  // Return type: simple
+  return _retval;
+}
+
+void CEF_CALLBACK request_context_set_content_setting_13401(struct _cef_request_context_13401_t* self, const cef_string_t* requesting_url, const cef_string_t* top_level_url, cef_content_setting_types_t content_type, cef_content_setting_values_t value) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: requesting_url, top_level_url
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->SetContentSetting(
+      CefString(requesting_url),
+      CefString(top_level_url),
+      content_type,
+      value);
+}
+
+struct _cef_registration_0_t* CEF_CALLBACK request_context_add_setting_observer_13401(struct _cef_request_context_13401_t* self, struct _cef_setting_observer_13401_t* observer) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Verify param: observer; type: refptr_diff
+  DCHECK(observer);
+  if (!observer) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefRegistration> _retval = CefRequestContext_13401_CppToC::Get(self)->AddSettingObserver(
+      CefSettingObserverCToCpp_Wrap(observer));
+
+  // Return type: refptr_same
+  return CefRegistrationCppToC_Wrap(_retval);
+}
+
+void CEF_CALLBACK request_context_set_chrome_color_scheme_13401(struct _cef_request_context_13401_t* self, cef_color_variant_t variant, cef_color_t user_color) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRequestContext_13401_CppToC::Get(self)->SetChromeColorScheme(
+      variant,
+      user_color);
+}
+
+cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_mode_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_COLOR_VARIANT_SYSTEM;
+  }
+
+  // Execute
+  cef_color_variant_t _retval = CefRequestContext_13401_CppToC::Get(self)->GetChromeColorSchemeMode();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK request_context_get_chrome_color_scheme_color_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval = CefRequestContext_13401_CppToC::Get(self)->GetChromeColorSchemeColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_variant_t CEF_CALLBACK request_context_get_chrome_color_scheme_variant_13401(struct _cef_request_context_13401_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_COLOR_VARIANT_SYSTEM;
+  }
+
+  // Execute
+  cef_color_variant_t _retval = CefRequestContext_13401_CppToC::Get(self)->GetChromeColorSchemeVariant();
+
+  // Return type: simple
+  return _retval;
+}
+
+int CEF_CALLBACK request_context_has_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->HasPreference(
+      CefString(name));
+
+  // Return type: bool
+  return _retval;
+}
+
+struct _cef_value_0_t* CEF_CALLBACK request_context_get_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefValue> _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->GetPreference(
+      CefString(name));
+
+  // Return type: refptr_same
+  return CefValueCppToC_Wrap(_retval);
+}
+
+struct _cef_dictionary_value_0_t* CEF_CALLBACK request_context_get_all_preferences_13401(struct _cef_preference_manager_13401_t* self, int include_defaults) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefDictionaryValue> _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->GetAllPreferences(
+      include_defaults?true:false);
+
+  // Return type: refptr_same
+  return CefDictionaryValueCppToC_Wrap(_retval);
+}
+
+int CEF_CALLBACK request_context_can_set_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->CanSetPreference(
+      CefString(name));
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK request_context_set_preference_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name, struct _cef_value_0_t* value, cef_string_t* error) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: name; type: string_byref_const
+  DCHECK(name);
+  if (!name) {
+    return 0;
+  }
+  // Verify param: error; type: string_byref
+  DCHECK(error);
+  if (!error) {
+    return 0;
+  }
+  // Unverified params: value
+
+  // Translate param: error; type: string_byref
+  CefString errorStr(error);
+
+  // Execute
+  bool _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->SetPreference(
+      CefString(name),
+      CefValueCppToC_Unwrap(value),
+      errorStr);
+
+  // Return type: bool
+  return _retval;
+}
+
+struct _cef_registration_0_t* CEF_CALLBACK request_context_add_preference_observer_13401(struct _cef_preference_manager_13401_t* self, const cef_string_t* name, struct _cef_preference_observer_13401_t* observer) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Verify param: observer; type: refptr_diff
+  DCHECK(observer);
+  if (!observer) {
+    return NULL;
+  }
+  // Unverified params: name
+
+  // Execute
+  CefRefPtr<CefRegistration> _retval = CefRequestContext_13401_CppToC::Get(reinterpret_cast<cef_request_context_13401_t*>(self))->AddPreferenceObserver(
+      CefString(name),
+      CefPreferenceObserverCToCpp_Wrap(observer));
+
+  // Return type: refptr_same
+  return CefRegistrationCppToC_Wrap(_retval);
+}
+
+}  // namespace
+
+// CONSTRUCTOR FOR VERSION 13401 - Do not edit by hand.
+
+CefRequestContext_13401_CppToC::CefRequestContext_13401_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 13401) << __func__ << " called with invalid version " << version;
+
+  GetStruct()->is_same = request_context_is_same_13401;
+  GetStruct()->is_sharing_with = request_context_is_sharing_with_13401;
+  GetStruct()->is_global = request_context_is_global_13401;
+  GetStruct()->get_handler = request_context_get_handler_13401;
+  GetStruct()->get_cache_path = request_context_get_cache_path_13401;
+  GetStruct()->get_cookie_manager = request_context_get_cookie_manager_13401;
+  GetStruct()->register_scheme_handler_factory = request_context_register_scheme_handler_factory_13401;
+  GetStruct()->clear_scheme_handler_factories = request_context_clear_scheme_handler_factories_13401;
+  GetStruct()->clear_certificate_exceptions = request_context_clear_certificate_exceptions_13401;
+  GetStruct()->clear_http_auth_credentials = request_context_clear_http_auth_credentials_13401;
+  GetStruct()->close_all_connections = request_context_close_all_connections_13401;
+  GetStruct()->resolve_host = request_context_resolve_host_13401;
+  GetStruct()->get_media_router = request_context_get_media_router_13401;
+  GetStruct()->get_website_setting = request_context_get_website_setting_13401;
+  GetStruct()->set_website_setting = request_context_set_website_setting_13401;
+  GetStruct()->get_content_setting = request_context_get_content_setting_13401;
+  GetStruct()->set_content_setting = request_context_set_content_setting_13401;
+  GetStruct()->set_chrome_color_scheme = request_context_set_chrome_color_scheme_13401;
+  GetStruct()->get_chrome_color_scheme_mode = request_context_get_chrome_color_scheme_mode_13401;
+  GetStruct()->get_chrome_color_scheme_color = request_context_get_chrome_color_scheme_color_13401;
+  GetStruct()->get_chrome_color_scheme_variant = request_context_get_chrome_color_scheme_variant_13401;
+  GetStruct()->add_setting_observer = request_context_add_setting_observer_13401;
+  GetStruct()->base.has_preference = request_context_has_preference_13401;
+  GetStruct()->base.get_preference = request_context_get_preference_13401;
+  GetStruct()->base.get_all_preferences = request_context_get_all_preferences_13401;
+  GetStruct()->base.can_set_preference = request_context_can_set_preference_13401;
+  GetStruct()->base.set_preference = request_context_set_preference_13401;
+  GetStruct()->base.add_preference_observer = request_context_add_preference_observer_13401;
+}
+
+// DESTRUCTOR FOR VERSION 13401 - Do not edit by hand.
+
+CefRequestContext_13401_CppToC::~CefRequestContext_13401_CppToC() {
+}
+
+template<> CefRefPtr<CefRequestContext> CefCppToCRefCounted<CefRequestContext_13401_CppToC, CefRequestContext, cef_request_context_13401_t>::UnwrapDerived(CefWrapperType type, cef_request_context_13401_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefRequestContext_13401_CppToC, CefRequestContext, cef_request_context_13401_t>::kWrapperType = WT_REQUEST_CONTEXT;
+
+

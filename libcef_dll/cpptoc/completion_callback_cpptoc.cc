@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=52284a32e135412e00f865e8bdd2877ec5ab3b6f$
+// $hash=65a83e1a6c8986ad870b2bf51d904a6d782f6006$
 //
 
 #include "libcef_dll/cpptoc/completion_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-completion_callback_on_complete(struct _cef_completion_callback_t* self) {
+void CEF_CALLBACK completion_callback_on_complete(struct _cef_completion_callback_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -49,18 +47,11 @@ CefCompletionCallbackCppToC::~CefCompletionCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefCompletionCallback> CefCppToCRefCounted<
-    CefCompletionCallbackCppToC,
-    CefCompletionCallback,
-    cef_completion_callback_t>::UnwrapDerived(CefWrapperType type,
-                                              cef_completion_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefCompletionCallback> CefCppToCRefCounted<CefCompletionCallbackCppToC, CefCompletionCallback, cef_completion_callback_t>::UnwrapDerived(CefWrapperType type, cef_completion_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefCompletionCallbackCppToC,
-                                   CefCompletionCallback,
-                                   cef_completion_callback_t>::kWrapperType =
-    WT_COMPLETION_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefCompletionCallbackCppToC, CefCompletionCallback, cef_completion_callback_t>::kWrapperType = WT_COMPLETION_CALLBACK;
+
+

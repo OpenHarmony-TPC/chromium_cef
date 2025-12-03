@@ -9,21 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2baf5d02f9be0e77ca6b205a69d0ae0717302309$
+// $hash=34c21edf0ddb3d28717f7e5d4727ea3f3f31e912$
 //
 
 #include "libcef_dll/ctocpp/preference_registrar_ctocpp.h"
-
 #include "libcef_dll/ctocpp/value_ctocpp.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefPreferenceRegistrarCToCpp::AddPreference(
-    const CefString& name,
-    CefRefPtr<CefValue> default_value) {
-  cef_preference_registrar_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, add_preference)) {
+NO_SANITIZE("cfi-icall") bool CefPreferenceRegistrarCToCpp::AddPreference(const CefString& name, CefRefPtr<CefValue> default_value) {
+  auto* _struct = GetStruct();
+  if (!_struct->add_preference) {
     return false;
   }
 
@@ -41,41 +38,34 @@ bool CefPreferenceRegistrarCToCpp::AddPreference(
   }
 
   // Execute
-  int _retval = _struct->add_preference(_struct, name.GetStruct(),
-                                        CefValueCToCpp::Unwrap(default_value));
+  int _retval = _struct->add_preference(_struct,
+      name.GetStruct(),
+      CefValueCToCpp_Unwrap(default_value));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefPreferenceRegistrarCToCpp::CefPreferenceRegistrarCToCpp() {}
+CefPreferenceRegistrarCToCpp::CefPreferenceRegistrarCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefPreferenceRegistrarCToCpp::~CefPreferenceRegistrarCToCpp() {}
+CefPreferenceRegistrarCToCpp::~CefPreferenceRegistrarCToCpp() {
+}
 
-template <>
-cef_preference_registrar_t* CefCToCppScoped<CefPreferenceRegistrarCToCpp,
-                                            CefPreferenceRegistrar,
-                                            cef_preference_registrar_t>::
-    UnwrapDerivedOwn(CefWrapperType type, CefOwnPtr<CefPreferenceRegistrar> c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_preference_registrar_t* CefCToCppScoped<CefPreferenceRegistrarCToCpp, CefPreferenceRegistrar, cef_preference_registrar_t>::UnwrapDerivedOwn(CefWrapperType type, CefOwnPtr<CefPreferenceRegistrar> c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-cef_preference_registrar_t* CefCToCppScoped<CefPreferenceRegistrarCToCpp,
-                                            CefPreferenceRegistrar,
-                                            cef_preference_registrar_t>::
-    UnwrapDerivedRaw(CefWrapperType type, CefRawPtr<CefPreferenceRegistrar> c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_preference_registrar_t* CefCToCppScoped<CefPreferenceRegistrarCToCpp, CefPreferenceRegistrar, cef_preference_registrar_t>::UnwrapDerivedRaw(CefWrapperType type, CefRawPtr<CefPreferenceRegistrar> c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppScoped<CefPreferenceRegistrarCToCpp,
-                               CefPreferenceRegistrar,
-                               cef_preference_registrar_t>::kWrapperType =
-    WT_PREFERENCE_REGISTRAR;
+template<> CefWrapperType CefCToCppScoped<CefPreferenceRegistrarCToCpp, CefPreferenceRegistrar, cef_preference_registrar_t>::kWrapperType = WT_PREFERENCE_REGISTRAR;
+
+

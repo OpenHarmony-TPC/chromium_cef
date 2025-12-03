@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=694e08991414053a96b1da419633e2e27538f990$
+// $hash=3f7ea198c831e4030f2e147c26012d4a75170f30$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_OVERLAY_CONTROLLER_CPPTOC_H_
@@ -20,23 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_overlay_controller_capi.h"
-#include "include/capi/views/cef_view_capi.h"
-#include "include/capi/views/cef_window_capi.h"
 #include "include/views/cef_overlay_controller.h"
+#include "include/capi/views/cef_overlay_controller_capi_versions.h"
 #include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi_versions.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefOverlayControllerCppToC
-    : public CefCppToCRefCounted<CefOverlayControllerCppToC,
-                                 CefOverlayController,
-                                 cef_overlay_controller_t> {
+class CefOverlayController_0_CppToC
+    : public CefCppToCRefCounted<CefOverlayController_0_CppToC, CefOverlayController, cef_overlay_controller_0_t> {
  public:
-  CefOverlayControllerCppToC();
-  virtual ~CefOverlayControllerCppToC();
+  CefOverlayController_0_CppToC();
+  virtual ~CefOverlayController_0_CppToC();
 };
+
+constexpr auto CefOverlayControllerCppToC_Wrap = CefOverlayController_0_CppToC::Wrap;
+constexpr auto CefOverlayControllerCppToC_Unwrap = CefOverlayController_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_OVERLAY_CONTROLLER_CPPTOC_H_

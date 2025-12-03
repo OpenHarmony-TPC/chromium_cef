@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=07026369cc67b7e8f3ac3bd6b0d45db2f80b2daf$
+// $hash=e14d99fb9d2bf69aa90602012d57aa719be766a7$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESPONSE_FILTER_CTOCPP_H_
@@ -20,28 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_response_filter_capi.h"
 #include "include/cef_response_filter.h"
+#include "include/capi/cef_response_filter_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResponseFilterCToCpp
-    : public CefCToCppRefCounted<CefResponseFilterCToCpp,
-                                 CefResponseFilter,
-                                 cef_response_filter_t> {
+class CefResponseFilter_0_CToCpp
+    : public CefCToCppRefCounted<CefResponseFilter_0_CToCpp, CefResponseFilter, cef_response_filter_0_t> {
  public:
-  CefResponseFilterCToCpp();
-  virtual ~CefResponseFilterCToCpp();
+  CefResponseFilter_0_CToCpp();
+  virtual ~CefResponseFilter_0_CToCpp();
 
   // CefResponseFilter methods.
   bool InitFilter() override;
-  FilterStatus Filter(void* data_in,
-                      size_t data_in_size,
-                      size_t& data_in_read,
-                      void* data_out,
-                      size_t data_out_size,
-                      size_t& data_out_written) override;
+  FilterStatus Filter(void* data_in, size_t data_in_size, size_t& data_in_read, void* data_out, size_t data_out_size, size_t& data_out_written) override;
 };
+
+constexpr auto CefResponseFilterCToCpp_Wrap = CefResponseFilter_0_CToCpp::Wrap;
+constexpr auto CefResponseFilterCToCpp_Unwrap = CefResponseFilter_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESPONSE_FILTER_CTOCPP_H_

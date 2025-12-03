@@ -9,11 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cfde60e10148a7ce190e61909d2d5f87d241b61a$
+// $hash=36a3a8f59ddfbf514d3716553d5db69b20ee6bd7$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
-
 #include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/cpptoc/stream_writer_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -21,7 +21,7 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_drag_data_t* cef_drag_data_create() {
+CEF_EXPORT cef_drag_data_0_t* cef_drag_data_create() {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -30,15 +30,14 @@ CEF_EXPORT cef_drag_data_t* cef_drag_data_create() {
   CefRefPtr<CefDragData> _retval = CefDragData::Create();
 
   // Return type: refptr_same
-  return CefDragDataCppToC::Wrap(_retval);
+  return CefDragDataCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-struct _cef_drag_data_t* CEF_CALLBACK
-drag_data_clone(struct _cef_drag_data_t* self) {
+cef_drag_data_0_t* CEF_CALLBACK drag_data_clone(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -49,13 +48,13 @@ drag_data_clone(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefDragData> _retval = CefDragDataCppToC::Get(self)->Clone();
+  CefRefPtr<CefDragData> _retval = CefDragData_0_CppToC::Get(self)->Clone();
 
   // Return type: refptr_same
-  return CefDragDataCppToC::Wrap(_retval);
+  return CefDragDataCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK drag_data_is_read_only(struct _cef_drag_data_t* self) {
+int CEF_CALLBACK drag_data_is_read_only(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -66,13 +65,13 @@ int CEF_CALLBACK drag_data_is_read_only(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->IsReadOnly();
+  bool _retval = CefDragData_0_CppToC::Get(self)->IsReadOnly();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_is_link(struct _cef_drag_data_t* self) {
+int CEF_CALLBACK drag_data_is_link(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -83,13 +82,13 @@ int CEF_CALLBACK drag_data_is_link(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->IsLink();
+  bool _retval = CefDragData_0_CppToC::Get(self)->IsLink();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_is_fragment(struct _cef_drag_data_t* self) {
+int CEF_CALLBACK drag_data_is_fragment(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -100,13 +99,13 @@ int CEF_CALLBACK drag_data_is_fragment(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->IsFragment();
+  bool _retval = CefDragData_0_CppToC::Get(self)->IsFragment();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_is_file(struct _cef_drag_data_t* self) {
+int CEF_CALLBACK drag_data_is_file(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -117,14 +116,13 @@ int CEF_CALLBACK drag_data_is_file(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->IsFile();
+  bool _retval = CefDragData_0_CppToC::Get(self)->IsFile();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_link_url(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_link_url(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -135,14 +133,13 @@ drag_data_get_link_url(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetLinkURL();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetLinkURL();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_link_title(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_link_title(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -153,14 +150,13 @@ drag_data_get_link_title(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetLinkTitle();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetLinkTitle();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_link_metadata(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_link_metadata(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -171,14 +167,13 @@ drag_data_get_link_metadata(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetLinkMetadata();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetLinkMetadata();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_fragment_text(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_fragment_text(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -189,14 +184,13 @@ drag_data_get_fragment_text(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetFragmentText();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetFragmentText();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_fragment_html(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_fragment_html(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -207,14 +201,13 @@ drag_data_get_fragment_html(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetFragmentHtml();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetFragmentHtml();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_fragment_base_url(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_fragment_base_url(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -225,14 +218,13 @@ drag_data_get_fragment_base_url(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetFragmentBaseURL();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetFragmentBaseURL();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-drag_data_get_file_name(struct _cef_drag_data_t* self) {
+cef_string_userfree_t CEF_CALLBACK drag_data_get_file_name(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -243,15 +235,13 @@ drag_data_get_file_name(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefString _retval = CefDragDataCppToC::Get(self)->GetFileName();
+  CefString _retval = CefDragData_0_CppToC::Get(self)->GetFileName();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-size_t CEF_CALLBACK
-drag_data_get_file_contents(struct _cef_drag_data_t* self,
-                            struct _cef_stream_writer_t* writer) {
+size_t CEF_CALLBACK drag_data_get_file_contents(struct _cef_drag_data_0_t* self, struct _cef_stream_writer_0_t* writer) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -263,15 +253,14 @@ drag_data_get_file_contents(struct _cef_drag_data_t* self,
   // Unverified params: writer
 
   // Execute
-  size_t _retval = CefDragDataCppToC::Get(self)->GetFileContents(
-      CefStreamWriterCppToC::Unwrap(writer));
+  size_t _retval = CefDragData_0_CppToC::Get(self)->GetFileContents(
+      CefStreamWriterCppToC_Unwrap(writer));
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_get_file_names(struct _cef_drag_data_t* self,
-                                          cef_string_list_t names) {
+int CEF_CALLBACK drag_data_get_file_names(struct _cef_drag_data_0_t* self, cef_string_list_t names) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -291,7 +280,8 @@ int CEF_CALLBACK drag_data_get_file_names(struct _cef_drag_data_t* self,
   transfer_string_list_contents(names, namesList);
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->GetFileNames(namesList);
+  bool _retval = CefDragData_0_CppToC::Get(self)->GetFileNames(
+      namesList);
 
   // Restore param: names; type: string_vec_byref
   cef_string_list_clear(names);
@@ -301,8 +291,7 @@ int CEF_CALLBACK drag_data_get_file_names(struct _cef_drag_data_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_get_file_paths(struct _cef_drag_data_t* self,
-                                          cef_string_list_t paths) {
+int CEF_CALLBACK drag_data_get_file_paths(struct _cef_drag_data_0_t* self, cef_string_list_t paths) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -322,7 +311,8 @@ int CEF_CALLBACK drag_data_get_file_paths(struct _cef_drag_data_t* self,
   transfer_string_list_contents(paths, pathsList);
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->GetFilePaths(pathsList);
+  bool _retval = CefDragData_0_CppToC::Get(self)->GetFilePaths(
+      pathsList);
 
   // Restore param: paths; type: string_vec_byref
   cef_string_list_clear(paths);
@@ -332,8 +322,7 @@ int CEF_CALLBACK drag_data_get_file_paths(struct _cef_drag_data_t* self,
   return _retval;
 }
 
-void CEF_CALLBACK drag_data_set_link_url(struct _cef_drag_data_t* self,
-                                         const cef_string_t* url) {
+void CEF_CALLBACK drag_data_set_link_url(struct _cef_drag_data_0_t* self, const cef_string_t* url) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -345,11 +334,11 @@ void CEF_CALLBACK drag_data_set_link_url(struct _cef_drag_data_t* self,
   // Unverified params: url
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetLinkURL(CefString(url));
+  CefDragData_0_CppToC::Get(self)->SetLinkURL(
+      CefString(url));
 }
 
-void CEF_CALLBACK drag_data_set_link_title(struct _cef_drag_data_t* self,
-                                           const cef_string_t* title) {
+void CEF_CALLBACK drag_data_set_link_title(struct _cef_drag_data_0_t* self, const cef_string_t* title) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -361,11 +350,11 @@ void CEF_CALLBACK drag_data_set_link_title(struct _cef_drag_data_t* self,
   // Unverified params: title
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetLinkTitle(CefString(title));
+  CefDragData_0_CppToC::Get(self)->SetLinkTitle(
+      CefString(title));
 }
 
-void CEF_CALLBACK drag_data_set_link_metadata(struct _cef_drag_data_t* self,
-                                              const cef_string_t* data) {
+void CEF_CALLBACK drag_data_set_link_metadata(struct _cef_drag_data_0_t* self, const cef_string_t* data) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -377,11 +366,11 @@ void CEF_CALLBACK drag_data_set_link_metadata(struct _cef_drag_data_t* self,
   // Unverified params: data
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetLinkMetadata(CefString(data));
+  CefDragData_0_CppToC::Get(self)->SetLinkMetadata(
+      CefString(data));
 }
 
-void CEF_CALLBACK drag_data_set_fragment_text(struct _cef_drag_data_t* self,
-                                              const cef_string_t* text) {
+void CEF_CALLBACK drag_data_set_fragment_text(struct _cef_drag_data_0_t* self, const cef_string_t* text) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -393,11 +382,11 @@ void CEF_CALLBACK drag_data_set_fragment_text(struct _cef_drag_data_t* self,
   // Unverified params: text
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetFragmentText(CefString(text));
+  CefDragData_0_CppToC::Get(self)->SetFragmentText(
+      CefString(text));
 }
 
-void CEF_CALLBACK drag_data_set_fragment_html(struct _cef_drag_data_t* self,
-                                              const cef_string_t* html) {
+void CEF_CALLBACK drag_data_set_fragment_html(struct _cef_drag_data_0_t* self, const cef_string_t* html) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -409,12 +398,11 @@ void CEF_CALLBACK drag_data_set_fragment_html(struct _cef_drag_data_t* self,
   // Unverified params: html
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetFragmentHtml(CefString(html));
+  CefDragData_0_CppToC::Get(self)->SetFragmentHtml(
+      CefString(html));
 }
 
-void CEF_CALLBACK
-drag_data_set_fragment_base_url(struct _cef_drag_data_t* self,
-                                const cef_string_t* base_url) {
+void CEF_CALLBACK drag_data_set_fragment_base_url(struct _cef_drag_data_0_t* self, const cef_string_t* base_url) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -426,10 +414,11 @@ drag_data_set_fragment_base_url(struct _cef_drag_data_t* self,
   // Unverified params: base_url
 
   // Execute
-  CefDragDataCppToC::Get(self)->SetFragmentBaseURL(CefString(base_url));
+  CefDragData_0_CppToC::Get(self)->SetFragmentBaseURL(
+      CefString(base_url));
 }
 
-void CEF_CALLBACK drag_data_reset_file_contents(struct _cef_drag_data_t* self) {
+void CEF_CALLBACK drag_data_reset_file_contents(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -440,12 +429,10 @@ void CEF_CALLBACK drag_data_reset_file_contents(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefDragDataCppToC::Get(self)->ResetFileContents();
+  CefDragData_0_CppToC::Get(self)->ResetFileContents();
 }
 
-void CEF_CALLBACK drag_data_add_file(struct _cef_drag_data_t* self,
-                                     const cef_string_t* path,
-                                     const cef_string_t* display_name) {
+void CEF_CALLBACK drag_data_add_file(struct _cef_drag_data_0_t* self, const cef_string_t* path, const cef_string_t* display_name) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -462,11 +449,12 @@ void CEF_CALLBACK drag_data_add_file(struct _cef_drag_data_t* self,
   // Unverified params: display_name
 
   // Execute
-  CefDragDataCppToC::Get(self)->AddFile(CefString(path),
-                                        CefString(display_name));
+  CefDragData_0_CppToC::Get(self)->AddFile(
+      CefString(path),
+      CefString(display_name));
 }
 
-void CEF_CALLBACK drag_data_clear_filenames(struct _cef_drag_data_t* self) {
+void CEF_CALLBACK drag_data_clear_filenames(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -477,11 +465,10 @@ void CEF_CALLBACK drag_data_clear_filenames(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefDragDataCppToC::Get(self)->ClearFilenames();
+  CefDragData_0_CppToC::Get(self)->ClearFilenames();
 }
 
-struct _cef_image_t* CEF_CALLBACK
-drag_data_get_image(struct _cef_drag_data_t* self) {
+struct _cef_image_0_t* CEF_CALLBACK drag_data_get_image(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -492,14 +479,13 @@ drag_data_get_image(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefImage> _retval = CefDragDataCppToC::Get(self)->GetImage();
+  CefRefPtr<CefImage> _retval = CefDragData_0_CppToC::Get(self)->GetImage();
 
   // Return type: refptr_same
-  return CefImageCppToC::Wrap(_retval);
+  return CefImageCppToC_Wrap(_retval);
 }
 
-cef_point_t CEF_CALLBACK
-drag_data_get_image_hotspot(struct _cef_drag_data_t* self) {
+cef_point_t CEF_CALLBACK drag_data_get_image_hotspot(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -510,13 +496,13 @@ drag_data_get_image_hotspot(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  cef_point_t _retval = CefDragDataCppToC::Get(self)->GetImageHotspot();
+  cef_point_t _retval = CefDragData_0_CppToC::Get(self)->GetImageHotspot();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_t* self) {
+int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -527,7 +513,7 @@ int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefDragDataCppToC::Get(self)->HasImage();
+  bool _retval = CefDragData_0_CppToC::Get(self)->HasImage();
 
   // Return type: bool
   return _retval;
@@ -535,9 +521,12 @@ int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDragDataCppToC::CefDragDataCppToC() {
+CefDragData_0_CppToC::CefDragData_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->clone = drag_data_clone;
   GetStruct()->is_read_only = drag_data_is_read_only;
   GetStruct()->is_link = drag_data_is_link;
@@ -567,22 +556,16 @@ CefDragDataCppToC::CefDragDataCppToC() {
   GetStruct()->has_image = drag_data_has_image;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDragDataCppToC::~CefDragDataCppToC() {
+CefDragData_0_CppToC::~CefDragData_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefDragData>
-CefCppToCRefCounted<CefDragDataCppToC, CefDragData, cef_drag_data_t>::
-    UnwrapDerived(CefWrapperType type, cef_drag_data_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefDragData> CefCppToCRefCounted<CefDragData_0_CppToC, CefDragData, cef_drag_data_0_t>::UnwrapDerived(CefWrapperType type, cef_drag_data_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefDragDataCppToC,
-                                   CefDragData,
-                                   cef_drag_data_t>::kWrapperType =
-    WT_DRAG_DATA;
+template<> CefWrapperType CefCppToCRefCounted<CefDragData_0_CppToC, CefDragData, cef_drag_data_0_t>::kWrapperType = WT_DRAG_DATA;
+
+

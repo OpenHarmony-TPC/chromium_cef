@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cda0c8884a3a8b0c997b4a9d10dceed6deb32197$
+// $hash=a4c87660f4f7bf9f373c54672ae0397257fe24ad$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_textfield_capi.h"
 #include "include/views/cef_textfield.h"
+#include "include/capi/views/cef_textfield_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTextfieldCppToC : public CefCppToCRefCounted<CefTextfieldCppToC,
-                                                      CefTextfield,
-                                                      cef_textfield_t> {
+class CefTextfield_0_CppToC
+    : public CefCppToCRefCounted<CefTextfield_0_CppToC, CefTextfield, cef_textfield_0_t> {
  public:
-  CefTextfieldCppToC();
-  virtual ~CefTextfieldCppToC();
+  CefTextfield_0_CppToC();
+  virtual ~CefTextfield_0_CppToC();
 };
+
+constexpr auto CefTextfieldCppToC_Wrap = CefTextfield_0_CppToC::Wrap;
+constexpr auto CefTextfieldCppToC_Unwrap = CefTextfield_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_CPPTOC_H_

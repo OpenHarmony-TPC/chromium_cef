@@ -31,22 +31,21 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_WIN_H_
 #pragma once
 
+#if !defined(GENERATING_CEF_API_HASH)
 #include "include/base/cef_build.h"
+#endif
 
 #if defined(OS_WIN)
+
+#if !defined(GENERATING_CEF_API_HASH)
 #include <windows.h>
+#endif
 
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_types_color.h"
 #include "include/internal/cef_types_geometry.h"
 #include "include/internal/cef_types_osr.h"
 #include "include/internal/cef_types_runtime.h"
-
-// Handle types.
-#define cef_cursor_handle_t HCURSOR
-#define cef_event_handle_t MSG*
-#define cef_window_handle_t HWND
-#define cef_shared_texture_handle_t HANDLE
 
 #define kNullCursorHandle NULL
 #define kNullEventHandle NULL
@@ -55,6 +54,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Handle types.
+typedef HCURSOR cef_cursor_handle_t;
+typedef MSG* cef_event_handle_t;
+typedef HWND cef_window_handle_t;
+typedef HANDLE cef_shared_texture_handle_t;
 
 ///
 /// Structure representing CefExecuteProcess arguments.
@@ -67,6 +72,11 @@ typedef struct _cef_main_args_t {
 /// Structure representing window information.
 ///
 typedef struct _cef_window_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
   // Standard parameters required by CreateWindowEx()
   DWORD ex_style;
   cef_string_t window_name;
@@ -121,6 +131,11 @@ typedef struct _cef_window_info_t {
 /// the callback returns from client code.
 ///
 typedef struct _cef_accelerated_paint_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
   ///
   /// Handle for the shared texture. The shared texture is instantiated
   /// without a keyed mutex.

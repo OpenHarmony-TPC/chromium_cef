@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1dd7832e09541b9a084f980adeda117988ae1526$
+// $hash=ca9efd62de0787de01609fb3fecd67cb06ae820d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESPONSE_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_response_capi.h"
 #include "include/cef_response.h"
+#include "include/capi/cef_response_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefResponseCToCpp : public CefCToCppRefCounted<CefResponseCToCpp,
-                                                     CefResponse,
-                                                     cef_response_t> {
+class CefResponseCToCpp
+    : public CefCToCppRefCounted<CefResponseCToCpp, CefResponse, cef_response_t> {
  public:
   CefResponseCToCpp();
   virtual ~CefResponseCToCpp();
@@ -46,13 +45,14 @@ class CefResponseCToCpp : public CefCToCppRefCounted<CefResponseCToCpp,
   CefString GetCharset() override;
   void SetCharset(const CefString& charset) override;
   CefString GetHeaderByName(const CefString& name) override;
-  void SetHeaderByName(const CefString& name,
-                       const CefString& value,
-                       bool overwrite) override;
+  void SetHeaderByName(const CefString& name, const CefString& value, bool overwrite) override;
   void GetHeaderMap(HeaderMap& headerMap) override;
   void SetHeaderMap(const HeaderMap& headerMap) override;
   CefString GetURL() override;
   void SetURL(const CefString& url) override;
 };
+
+constexpr auto CefResponseCToCpp_Wrap = CefResponseCToCpp::Wrap;
+constexpr auto CefResponseCToCpp_Unwrap = CefResponseCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESPONSE_CTOCPP_H_

@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1b752bda80158ff20c6b241ac974328749258141$
+// $hash=00ff7f42df5625ed0767ed1b956caf462666126a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_PANEL_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_PANEL_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_view_delegate_capi.h"
 
@@ -46,10 +50,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to handle Panel events. The functions of this
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_panel_delegate_t {
   ///
@@ -57,6 +64,7 @@ typedef struct _cef_panel_delegate_t {
   ///
   cef_view_delegate_t base;
 } cef_panel_delegate_t;
+
 
 #ifdef __cplusplus
 }

@@ -9,21 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5dc1571d48d1350977e4700e4d32c1567819e29e$
+// $hash=569d2551cdd1db8e3d9cc57404aa7d399a891c84$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/print_dialog_callback_cpptoc.h"
-
 #include "libcef_dll/cpptoc/print_settings_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-print_dialog_callback_cont(struct _cef_print_dialog_callback_t* self,
-                           struct _cef_print_settings_t* settings) {
+void CEF_CALLBACK print_dialog_callback_cont(struct _cef_print_dialog_callback_0_t* self, struct _cef_print_settings_0_t* settings) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -39,12 +37,11 @@ print_dialog_callback_cont(struct _cef_print_dialog_callback_t* self,
   }
 
   // Execute
-  CefPrintDialogCallbackCppToC::Get(self)->Continue(
-      CefPrintSettingsCppToC::Unwrap(settings));
+  CefPrintDialogCallback_0_CppToC::Get(self)->Continue(
+      CefPrintSettingsCppToC_Unwrap(settings));
 }
 
-void CEF_CALLBACK
-print_dialog_callback_cancel(struct _cef_print_dialog_callback_t* self) {
+void CEF_CALLBACK print_dialog_callback_cancel(struct _cef_print_dialog_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -55,37 +52,31 @@ print_dialog_callback_cancel(struct _cef_print_dialog_callback_t* self) {
   }
 
   // Execute
-  CefPrintDialogCallbackCppToC::Get(self)->Cancel();
+  CefPrintDialogCallback_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintDialogCallbackCppToC::CefPrintDialogCallbackCppToC() {
+CefPrintDialogCallback_0_CppToC::CefPrintDialogCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = print_dialog_callback_cont;
   GetStruct()->cancel = print_dialog_callback_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintDialogCallbackCppToC::~CefPrintDialogCallbackCppToC() {
+CefPrintDialogCallback_0_CppToC::~CefPrintDialogCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPrintDialogCallback> CefCppToCRefCounted<
-    CefPrintDialogCallbackCppToC,
-    CefPrintDialogCallback,
-    cef_print_dialog_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                cef_print_dialog_callback_t*
-                                                    s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefPrintDialogCallback> CefCppToCRefCounted<CefPrintDialogCallback_0_CppToC, CefPrintDialogCallback, cef_print_dialog_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_print_dialog_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPrintDialogCallbackCppToC,
-                                   CefPrintDialogCallback,
-                                   cef_print_dialog_callback_t>::kWrapperType =
-    WT_PRINT_DIALOG_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefPrintDialogCallback_0_CppToC, CefPrintDialogCallback, cef_print_dialog_callback_0_t>::kWrapperType = WT_PRINT_DIALOG_CALLBACK;
+
+

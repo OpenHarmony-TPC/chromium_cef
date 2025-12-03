@@ -21,6 +21,7 @@
 #include "tests/cefclient/browser/base_client_handler.h"
 #include "tests/cefclient/browser/binary_transfer_test.h"
 #include "tests/cefclient/browser/binding_test.h"
+#include "tests/cefclient/browser/config_test.h"
 #include "tests/cefclient/browser/dialog_test.h"
 #include "tests/cefclient/browser/hang_test.h"
 #include "tests/cefclient/browser/main_context.h"
@@ -145,7 +146,9 @@ void RunNewWindowTest(CefRefPtr<CefBrowser> browser) {
 
 void RunPopupWindowTest(CefRefPtr<CefBrowser> browser) {
   browser->GetMainFrame()->ExecuteJavaScript(
-      "window.open('https://www.google.com');", "about:blank", 0);
+      "window.open('https://www.google.com', 'google', "
+      "'left=100,top=100,width=600,height=400');",
+      "about:blank", 0);
 }
 
 void RunDialogWindowTest(CefRefPtr<CefBrowser> browser) {
@@ -268,8 +271,8 @@ void PromptDSF(CefRefPtr<CefBrowser> browser) {
 
   // Format the default value string.
   std::stringstream ss;
-  ss << RootWindow::GetForBrowser(browser->GetIdentifier())
-            ->GetDeviceScaleFactor();
+  ss << *RootWindow::GetForBrowser(browser->GetIdentifier())
+             ->GetDeviceScaleFactor();
 
   Prompt(browser, kPromptDSF, "Enter Device Scale Factor", ss.str());
 }
@@ -775,6 +778,8 @@ std::string GetErrorString(cef_termination_status_t status) {
       return "LAUNCH_FAILED";
     case TS_INTEGRITY_FAILURE:
       return "INTEGRITY_FAILURE";
+    case TS_NUM_VALUES:
+      break;
   }
   NOTREACHED();
   return std::string();
@@ -862,6 +867,9 @@ void CreateMessageHandlers(MessageHandlerSet& handlers) {
 
   // Create the binding test handlers.
   binding_test::CreateMessageHandlers(handlers);
+
+  // Create the config test handlers.
+  config_test::CreateMessageHandlers(handlers);
 
   // Create the dialog test handlers.
   dialog_test::CreateMessageHandlers(handlers);

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8773dd313fb7dd35988f634935056410126be0f9$
+// $hash=ace0c8a5e2624eda62bf72702c9d63bf92f4386a$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_browser_view_capi.h"
 #include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBrowserViewCToCpp : public CefCToCppRefCounted<CefBrowserViewCToCpp,
-                                                        CefBrowserView,
-                                                        cef_browser_view_t> {
+class CefBrowserViewCToCpp
+    : public CefCToCppRefCounted<CefBrowserViewCToCpp, CefBrowserView, cef_browser_view_t> {
  public:
   CefBrowserViewCToCpp();
   virtual ~CefBrowserViewCToCpp();
@@ -93,5 +92,8 @@ class CefBrowserViewCToCpp : public CefCToCppRefCounted<CefBrowserViewCToCpp,
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefBrowserViewCToCpp_Wrap = CefBrowserViewCToCpp::Wrap;
+constexpr auto CefBrowserViewCToCpp_Unwrap = CefBrowserViewCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_CTOCPP_H_

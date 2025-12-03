@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da6d6fb80f9e558b3d05817dce9fdb784e473441$
+// $hash=922c0a64d3d984827f0bcbeb83f4d5d1bd4c5cc0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_SINK_DEVICE_INFO_CALLBACK_CTOCPP_H_
@@ -20,23 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaSinkDeviceInfoCallbackCToCpp
-    : public CefCToCppRefCounted<CefMediaSinkDeviceInfoCallbackCToCpp,
-                                 CefMediaSinkDeviceInfoCallback,
-                                 cef_media_sink_device_info_callback_t> {
+class CefMediaSinkDeviceInfoCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefMediaSinkDeviceInfoCallback_0_CToCpp, CefMediaSinkDeviceInfoCallback, cef_media_sink_device_info_callback_0_t> {
  public:
-  CefMediaSinkDeviceInfoCallbackCToCpp();
-  virtual ~CefMediaSinkDeviceInfoCallbackCToCpp();
+  CefMediaSinkDeviceInfoCallback_0_CToCpp();
+  virtual ~CefMediaSinkDeviceInfoCallback_0_CToCpp();
 
   // CefMediaSinkDeviceInfoCallback methods.
-  void OnMediaSinkDeviceInfo(
-      const CefMediaSinkDeviceInfo& device_info) override;
+  void OnMediaSinkDeviceInfo(const CefMediaSinkDeviceInfo& device_info) override;
 };
+
+constexpr auto CefMediaSinkDeviceInfoCallbackCToCpp_Wrap = CefMediaSinkDeviceInfoCallback_0_CToCpp::Wrap;
+constexpr auto CefMediaSinkDeviceInfoCallbackCToCpp_Unwrap = CefMediaSinkDeviceInfoCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SINK_DEVICE_INFO_CALLBACK_CTOCPP_H_

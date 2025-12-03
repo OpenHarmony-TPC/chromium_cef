@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=05ac7271f6b7de54c2b979fee7bee6fa1e6b83f1$
+// $hash=0cd35ec8658e6c96e816efbe4075da89d6f6954d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PERMISSION_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_permission_handler_capi.h"
 #include "include/cef_permission_handler.h"
+#include "include/capi/cef_permission_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPermissionHandlerCppToC
-    : public CefCppToCRefCounted<CefPermissionHandlerCppToC,
-                                 CefPermissionHandler,
-                                 cef_permission_handler_t> {
+    : public CefCppToCRefCounted<CefPermissionHandlerCppToC, CefPermissionHandler, cef_permission_handler_t> {
  public:
   CefPermissionHandlerCppToC();
   virtual ~CefPermissionHandlerCppToC();
 };
+
+constexpr auto CefPermissionHandlerCppToC_Wrap = CefPermissionHandlerCppToC::Wrap;
+constexpr auto CefPermissionHandlerCppToC_Unwrap = CefPermissionHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PERMISSION_HANDLER_CPPTOC_H_

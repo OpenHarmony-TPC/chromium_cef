@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=150534116571b134c16926af46ab9a9c997204c7$
+// $hash=2f1d7b3c12b344ffa572d4783c864de3079579a6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_URLREQUEST_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_urlrequest_capi.h"
 #include "include/cef_urlrequest.h"
+#include "include/capi/cef_urlrequest_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefURLRequestCToCpp : public CefCToCppRefCounted<CefURLRequestCToCpp,
-                                                       CefURLRequest,
-                                                       cef_urlrequest_t> {
+class CefURLRequestCToCpp
+    : public CefCToCppRefCounted<CefURLRequestCToCpp, CefURLRequest, cef_urlrequest_t> {
  public:
   CefURLRequestCToCpp();
   virtual ~CefURLRequestCToCpp();
@@ -42,5 +41,8 @@ class CefURLRequestCToCpp : public CefCToCppRefCounted<CefURLRequestCToCpp,
   bool ResponseWasCached() override;
   void Cancel() override;
 };
+
+constexpr auto CefURLRequestCToCpp_Wrap = CefURLRequestCToCpp::Wrap;
+constexpr auto CefURLRequestCToCpp_Unwrap = CefURLRequestCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_URLREQUEST_CTOCPP_H_

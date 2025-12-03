@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=064ad20d41aaad70c7e010ee344e949206fb9c2c$
+// $hash=dedc73aa9a27ee614d17cf1f15670675c31351ac$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FIND_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_FIND_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,9 +51,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to handle events related to find results. The
 /// functions of this structure will be called on the UI thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_find_handler_t {
   ///
@@ -66,14 +73,9 @@ typedef struct _cef_find_handler_t {
   /// results, and |finalUpdate| is true (1) if this is the last find
   /// notification.
   ///
-  void(CEF_CALLBACK* on_find_result)(struct _cef_find_handler_t* self,
-                                     struct _cef_browser_t* browser,
-                                     int identifier,
-                                     int count,
-                                     const cef_rect_t* selectionRect,
-                                     int activeMatchOrdinal,
-                                     int finalUpdate);
+  void (CEF_CALLBACK *on_find_result)(struct _cef_find_handler_t* self, struct _cef_browser_t* browser, int identifier, int count, const cef_rect_t* selectionRect, int activeMatchOrdinal, int finalUpdate);
 } cef_find_handler_t;
+
 
 #ifdef __cplusplus
 }

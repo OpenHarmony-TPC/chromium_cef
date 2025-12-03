@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=eedbfaa645c0dd5af1762c6928a2dad1c9fd5c5e$
+// $hash=63490702baf48d6909771965b4259337dd4bf575$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_ZIP_READER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_zip_reader_capi.h"
 #include "include/cef_zip_reader.h"
+#include "include/capi/cef_zip_reader_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefZipReaderCppToC : public CefCppToCRefCounted<CefZipReaderCppToC,
-                                                      CefZipReader,
-                                                      cef_zip_reader_t> {
+class CefZipReader_0_CppToC
+    : public CefCppToCRefCounted<CefZipReader_0_CppToC, CefZipReader, cef_zip_reader_0_t> {
  public:
-  CefZipReaderCppToC();
-  virtual ~CefZipReaderCppToC();
+  CefZipReader_0_CppToC();
+  virtual ~CefZipReader_0_CppToC();
 };
+
+constexpr auto CefZipReaderCppToC_Wrap = CefZipReader_0_CppToC::Wrap;
+constexpr auto CefZipReaderCppToC_Unwrap = CefZipReader_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_ZIP_READER_CPPTOC_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7d7be59b4d38264c6dd775b295df227ce5f558d0$
+// $hash=aafd3dfc5322b81f16e005be3b608d37361caddd$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/test/cef_test_server_capi.h"
 #include "include/test/cef_test_server.h"
+#include "include/capi/test/cef_test_server_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTestServerCToCpp : public CefCToCppRefCounted<CefTestServerCToCpp,
-                                                       CefTestServer,
-                                                       cef_test_server_t> {
+class CefTestServerCToCpp
+    : public CefCToCppRefCounted<CefTestServerCToCpp, CefTestServer, cef_test_server_t> {
  public:
   CefTestServerCToCpp();
   virtual ~CefTestServerCToCpp();
@@ -37,5 +36,8 @@ class CefTestServerCToCpp : public CefCToCppRefCounted<CefTestServerCToCpp,
   void Stop() override;
   CefString GetOrigin() override;
 };
+
+constexpr auto CefTestServerCToCpp_Wrap = CefTestServerCToCpp::Wrap;
+constexpr auto CefTestServerCToCpp_Unwrap = CefTestServerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CTOCPP_H_

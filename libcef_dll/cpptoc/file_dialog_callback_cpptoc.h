@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3652fa021e46e0e104e51afb54d9eb2e47369396$
+// $hash=ba293d79b969d7646cb6138ccf8b036a2bfdf727$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_FILE_DIALOG_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_dialog_handler_capi.h"
 #include "include/cef_dialog_handler.h"
+#include "include/capi/cef_dialog_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefFileDialogCallbackCppToC
-    : public CefCppToCRefCounted<CefFileDialogCallbackCppToC,
-                                 CefFileDialogCallback,
-                                 cef_file_dialog_callback_t> {
+class CefFileDialogCallback_0_CppToC
+    : public CefCppToCRefCounted<CefFileDialogCallback_0_CppToC, CefFileDialogCallback, cef_file_dialog_callback_0_t> {
  public:
-  CefFileDialogCallbackCppToC();
-  virtual ~CefFileDialogCallbackCppToC();
+  CefFileDialogCallback_0_CppToC();
+  virtual ~CefFileDialogCallback_0_CppToC();
 };
+
+constexpr auto CefFileDialogCallbackCppToC_Wrap = CefFileDialogCallback_0_CppToC::Wrap;
+constexpr auto CefFileDialogCallbackCppToC_Unwrap = CefFileDialogCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_FILE_DIALOG_CALLBACK_CPPTOC_H_

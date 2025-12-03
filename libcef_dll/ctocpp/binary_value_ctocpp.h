@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=708b96abb6d7bf9c2f73d9cbf0487548e536ca3d$
+// $hash=661d8e54cd47020516e9c076416d71d4986495f3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BINARY_VALUE_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_values_capi.h"
 #include "include/cef_values.h"
+#include "include/capi/cef_values_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBinaryValueCToCpp : public CefCToCppRefCounted<CefBinaryValueCToCpp,
-                                                        CefBinaryValue,
-                                                        cef_binary_value_t> {
+class CefBinaryValueCToCpp
+    : public CefCToCppRefCounted<CefBinaryValueCToCpp, CefBinaryValue, cef_binary_value_t> {
  public:
   CefBinaryValueCToCpp();
   virtual ~CefBinaryValueCToCpp();
@@ -43,5 +42,8 @@ class CefBinaryValueCToCpp : public CefCToCppRefCounted<CefBinaryValueCToCpp,
   size_t GetSize() override;
   size_t GetData(void* buffer, size_t buffer_size, size_t data_offset) override;
 };
+
+constexpr auto CefBinaryValueCToCpp_Wrap = CefBinaryValueCToCpp::Wrap;
+constexpr auto CefBinaryValueCToCpp_Unwrap = CefBinaryValueCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BINARY_VALUE_CTOCPP_H_

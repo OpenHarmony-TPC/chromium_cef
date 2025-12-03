@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=dafd734ff7dcf7073946e7731823abe2d6e2ffe8$
+// $hash=8c45f30dd1dc404020c91509d0f93e03fa363007$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_UNRESPONSIVE_PROCESS_CALLBACK_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_UNRESPONSIVE_PROCESS_CALLBACK_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,8 +50,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure for asynchronous handling of an unresponsive process.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_unresponsive_process_callback_t {
   ///
@@ -58,14 +65,14 @@ typedef struct _cef_unresponsive_process_callback_t {
   ///
   /// Reset the timeout for the unresponsive process.
   ///
-  void(CEF_CALLBACK* wait)(struct _cef_unresponsive_process_callback_t* self);
+  void (CEF_CALLBACK *wait)(struct _cef_unresponsive_process_callback_t* self);
 
   ///
   /// Terminate the unresponsive process.
   ///
-  void(CEF_CALLBACK* terminate)(
-      struct _cef_unresponsive_process_callback_t* self);
+  void (CEF_CALLBACK *terminate)(struct _cef_unresponsive_process_callback_t* self);
 } cef_unresponsive_process_callback_t;
+
 
 #ifdef __cplusplus
 }

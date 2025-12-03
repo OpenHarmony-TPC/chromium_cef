@@ -9,24 +9,24 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f63888530fc94b699b4f64533feface041129e44$
+// $hash=4c5a0584d35f0857a1a917df1b9df9a910817178$
 //
 
-#include "libcef_dll/ctocpp/views/button_delegate_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
+#include "libcef_dll/ctocpp/views/button_delegate_ctocpp.h"
 #include "libcef_dll/ctocpp/views/menu_button_delegate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnButtonPressed(CefRefPtr<CefButton> button) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnButtonPressed(CefRefPtr<CefButton> button) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_button_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_button_pressed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_button_pressed) {
     return;
   }
 
@@ -39,16 +39,15 @@ void CefButtonDelegateCToCpp::OnButtonPressed(CefRefPtr<CefButton> button) {
   }
 
   // Execute
-  _struct->on_button_pressed(_struct, CefButtonCppToC::Wrap(button));
+  _struct->on_button_pressed(_struct,
+      CefButtonCppToC_Wrap(button));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnButtonStateChanged(
-    CefRefPtr<CefButton> button) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnButtonStateChanged(CefRefPtr<CefButton> button) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_button_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_button_state_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_button_state_changed) {
     return;
   }
 
@@ -61,16 +60,15 @@ void CefButtonDelegateCToCpp::OnButtonStateChanged(
   }
 
   // Execute
-  _struct->on_button_state_changed(_struct, CefButtonCppToC::Wrap(button));
+  _struct->on_button_state_changed(_struct,
+      CefButtonCppToC_Wrap(button));
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefButtonDelegateCToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefButtonDelegate_0_CToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_preferred_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_preferred_size) {
     return CefSize();
   }
 
@@ -83,20 +81,18 @@ CefSize CefButtonDelegateCToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_preferred_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_preferred_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefButtonDelegateCToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefButtonDelegate_0_CToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_minimum_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_minimum_size) {
     return CefSize();
   }
 
@@ -109,20 +105,18 @@ CefSize CefButtonDelegateCToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_minimum_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_minimum_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefButtonDelegateCToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefButtonDelegate_0_CToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_maximum_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_maximum_size) {
     return CefSize();
   }
 
@@ -135,21 +129,18 @@ CefSize CefButtonDelegateCToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_maximum_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_maximum_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-int CefButtonDelegateCToCpp::GetHeightForWidth(CefRefPtr<CefView> view,
-                                               int width) {
+NO_SANITIZE("cfi-icall") int CefButtonDelegate_0_CToCpp::GetHeightForWidth(CefRefPtr<CefView> view, int width) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_height_for_width)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_height_for_width) {
     return 0;
   }
 
@@ -162,22 +153,19 @@ int CefButtonDelegateCToCpp::GetHeightForWidth(CefRefPtr<CefView> view,
   }
 
   // Execute
-  int _retval =
-      _struct->get_height_for_width(_struct, CefViewCppToC::Wrap(view), width);
+  int _retval = _struct->get_height_for_width(_struct,
+      CefViewCppToC_Wrap(view),
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnParentViewChanged(CefRefPtr<CefView> view,
-                                                  bool added,
-                                                  CefRefPtr<CefView> parent) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_parent_view_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_parent_view_changed) {
     return;
   }
 
@@ -195,19 +183,17 @@ void CefButtonDelegateCToCpp::OnParentViewChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_parent_view_changed(_struct, CefViewCppToC::Wrap(view), added,
-                                  CefViewCppToC::Wrap(parent));
+  _struct->on_parent_view_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added,
+      CefViewCppToC_Wrap(parent));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnChildViewChanged(CefRefPtr<CefView> view,
-                                                 bool added,
-                                                 CefRefPtr<CefView> child) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_child_view_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_child_view_changed) {
     return;
   }
 
@@ -225,18 +211,17 @@ void CefButtonDelegateCToCpp::OnChildViewChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_child_view_changed(_struct, CefViewCppToC::Wrap(view), added,
-                                 CefViewCppToC::Wrap(child));
+  _struct->on_child_view_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added,
+      CefViewCppToC_Wrap(child));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnWindowChanged(CefRefPtr<CefView> view,
-                                              bool added) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnWindowChanged(CefRefPtr<CefView> view, bool added) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_window_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_window_changed) {
     return;
   }
 
@@ -249,17 +234,16 @@ void CefButtonDelegateCToCpp::OnWindowChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_window_changed(_struct, CefViewCppToC::Wrap(view), added);
+  _struct->on_window_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnLayoutChanged(CefRefPtr<CefView> view,
-                                              const CefRect& new_bounds) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_layout_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_layout_changed) {
     return;
   }
 
@@ -272,16 +256,16 @@ void CefButtonDelegateCToCpp::OnLayoutChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_layout_changed(_struct, CefViewCppToC::Wrap(view), &new_bounds);
+  _struct->on_layout_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      &new_bounds);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnFocus(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnFocus(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_focus)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_focus) {
     return;
   }
 
@@ -294,16 +278,15 @@ void CefButtonDelegateCToCpp::OnFocus(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_focus(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_focus(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnBlur(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnBlur(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_blur)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_blur) {
     return;
   }
 
@@ -316,16 +299,15 @@ void CefButtonDelegateCToCpp::OnBlur(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_blur(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_blur(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefButtonDelegateCToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefButtonDelegate_0_CToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_theme_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_theme_changed) {
     return;
   }
 
@@ -338,36 +320,30 @@ void CefButtonDelegateCToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_theme_changed(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_theme_changed(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefButtonDelegateCToCpp::CefButtonDelegateCToCpp() {}
+CefButtonDelegate_0_CToCpp::CefButtonDelegate_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefButtonDelegateCToCpp::~CefButtonDelegateCToCpp() {
+CefButtonDelegate_0_CToCpp::~CefButtonDelegate_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_button_delegate_t* CefCToCppRefCounted<
-    CefButtonDelegateCToCpp,
-    CefButtonDelegate,
-    cef_button_delegate_t>::UnwrapDerived(CefWrapperType type,
-                                          CefButtonDelegate* c) {
+template<> cef_button_delegate_0_t* CefCToCppRefCounted<CefButtonDelegate_0_CToCpp, CefButtonDelegate, cef_button_delegate_0_t>::UnwrapDerived(CefWrapperType type, CefButtonDelegate* c) {
   if (type == WT_MENU_BUTTON_DELEGATE) {
-    return reinterpret_cast<cef_button_delegate_t*>(
-        CefMenuButtonDelegateCToCpp::Unwrap(
-            reinterpret_cast<CefMenuButtonDelegate*>(c)));
+    return reinterpret_cast<cef_button_delegate_0_t*>(CefMenuButtonDelegateCToCpp_Unwrap(reinterpret_cast<CefMenuButtonDelegate*>(c)));
   }
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefButtonDelegateCToCpp,
-                                   CefButtonDelegate,
-                                   cef_button_delegate_t>::kWrapperType =
-    WT_BUTTON_DELEGATE;
+template<> CefWrapperType CefCToCppRefCounted<CefButtonDelegate_0_CToCpp, CefButtonDelegate, cef_button_delegate_0_t>::kWrapperType = WT_BUTTON_DELEGATE;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6c41cc2d2dfe1706e61869b764607617f9dcb216$
+// $hash=8d00c563d4dc4ba4486066b8e6a4c0ad0c287c50$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COMMAND_HANDLER_CTOCPP_H_
@@ -20,32 +20,27 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_command_handler_capi.h"
 #include "include/cef_command_handler.h"
+#include "include/capi/cef_command_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCommandHandlerCToCpp
-    : public CefCToCppRefCounted<CefCommandHandlerCToCpp,
-                                 CefCommandHandler,
-                                 cef_command_handler_t> {
+class CefCommandHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefCommandHandler_0_CToCpp, CefCommandHandler, cef_command_handler_0_t> {
  public:
-  CefCommandHandlerCToCpp();
-  virtual ~CefCommandHandlerCToCpp();
+  CefCommandHandler_0_CToCpp();
+  virtual ~CefCommandHandler_0_CToCpp();
 
   // CefCommandHandler methods.
-  bool OnChromeCommand(CefRefPtr<CefBrowser> browser,
-                       int command_id,
-                       cef_window_open_disposition_t disposition) override;
-  bool IsChromeAppMenuItemVisible(CefRefPtr<CefBrowser> browser,
-                                  int command_id) override;
-  bool IsChromeAppMenuItemEnabled(CefRefPtr<CefBrowser> browser,
-                                  int command_id) override;
-  bool IsChromePageActionIconVisible(
-      cef_chrome_page_action_icon_type_t icon_type) override;
-  bool IsChromeToolbarButtonVisible(
-      cef_chrome_toolbar_button_type_t button_type) override;
+  bool OnChromeCommand(CefRefPtr<CefBrowser> browser, int command_id, cef_window_open_disposition_t disposition) override;
+  bool IsChromeAppMenuItemVisible(CefRefPtr<CefBrowser> browser, int command_id) override;
+  bool IsChromeAppMenuItemEnabled(CefRefPtr<CefBrowser> browser, int command_id) override;
+  bool IsChromePageActionIconVisible(cef_chrome_page_action_icon_type_t icon_type) override;
+  bool IsChromeToolbarButtonVisible(cef_chrome_toolbar_button_type_t button_type) override;
 };
+
+constexpr auto CefCommandHandlerCToCpp_Wrap = CefCommandHandler_0_CToCpp::Wrap;
+constexpr auto CefCommandHandlerCToCpp_Unwrap = CefCommandHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COMMAND_HANDLER_CTOCPP_H_

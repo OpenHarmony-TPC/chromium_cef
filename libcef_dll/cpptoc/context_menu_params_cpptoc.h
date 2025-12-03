@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=23dfd9dda6c7fec01e22de0dd380d6d9d00cb8e6$
+// $hash=e7ad26214c490bc7d2b959000deb5be5a6d827ed$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_CONTEXT_MENU_PARAMS_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_context_menu_handler_capi.h"
 #include "include/cef_context_menu_handler.h"
+#include "include/capi/cef_context_menu_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefContextMenuParamsCppToC
-    : public CefCppToCRefCounted<CefContextMenuParamsCppToC,
-                                 CefContextMenuParams,
-                                 cef_context_menu_params_t> {
+class CefContextMenuParams_0_CppToC
+    : public CefCppToCRefCounted<CefContextMenuParams_0_CppToC, CefContextMenuParams, cef_context_menu_params_0_t> {
  public:
-  CefContextMenuParamsCppToC();
-  virtual ~CefContextMenuParamsCppToC();
+  CefContextMenuParams_0_CppToC();
+  virtual ~CefContextMenuParams_0_CppToC();
 };
+
+constexpr auto CefContextMenuParamsCppToC_Wrap = CefContextMenuParams_0_CppToC::Wrap;
+constexpr auto CefContextMenuParamsCppToC_Unwrap = CefContextMenuParams_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_CONTEXT_MENU_PARAMS_CPPTOC_H_

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=561b810f40c15c612e1c9c1a14793599d31d940c$
+// $hash=98b1bd897143ff25a5f5110d601d5bd4c9ab56a8$
 //
 
 #include "libcef_dll/cpptoc/server_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/callback_ctocpp.h"
 #include "libcef_dll/ctocpp/request_ctocpp.h"
 #include "libcef_dll/ctocpp/server_ctocpp.h"
@@ -23,9 +22,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-server_handler_on_server_created(struct _cef_server_handler_t* self,
-                                 cef_server_t* server) {
+void CEF_CALLBACK server_handler_on_server_created(struct _cef_server_handler_t* self, struct _cef_server_t* server) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -42,12 +39,10 @@ server_handler_on_server_created(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnServerCreated(
-      CefServerCToCpp::Wrap(server));
+      CefServerCToCpp_Wrap(server));
 }
 
-void CEF_CALLBACK
-server_handler_on_server_destroyed(struct _cef_server_handler_t* self,
-                                   cef_server_t* server) {
+void CEF_CALLBACK server_handler_on_server_destroyed(struct _cef_server_handler_t* self, struct _cef_server_t* server) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -64,13 +59,10 @@ server_handler_on_server_destroyed(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnServerDestroyed(
-      CefServerCToCpp::Wrap(server));
+      CefServerCToCpp_Wrap(server));
 }
 
-void CEF_CALLBACK
-server_handler_on_client_connected(struct _cef_server_handler_t* self,
-                                   cef_server_t* server,
-                                   int connection_id) {
+void CEF_CALLBACK server_handler_on_client_connected(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -87,13 +79,11 @@ server_handler_on_client_connected(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnClientConnected(
-      CefServerCToCpp::Wrap(server), connection_id);
+      CefServerCToCpp_Wrap(server),
+      connection_id);
 }
 
-void CEF_CALLBACK
-server_handler_on_client_disconnected(struct _cef_server_handler_t* self,
-                                      cef_server_t* server,
-                                      int connection_id) {
+void CEF_CALLBACK server_handler_on_client_disconnected(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -110,15 +100,11 @@ server_handler_on_client_disconnected(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnClientDisconnected(
-      CefServerCToCpp::Wrap(server), connection_id);
+      CefServerCToCpp_Wrap(server),
+      connection_id);
 }
 
-void CEF_CALLBACK
-server_handler_on_http_request(struct _cef_server_handler_t* self,
-                               cef_server_t* server,
-                               int connection_id,
-                               const cef_string_t* client_address,
-                               cef_request_t* request) {
+void CEF_CALLBACK server_handler_on_http_request(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id, const cef_string_t* client_address, struct _cef_request_t* request) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -145,17 +131,13 @@ server_handler_on_http_request(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnHttpRequest(
-      CefServerCToCpp::Wrap(server), connection_id, CefString(client_address),
-      CefRequestCToCpp::Wrap(request));
+      CefServerCToCpp_Wrap(server),
+      connection_id,
+      CefString(client_address),
+      CefRequestCToCpp_Wrap(request));
 }
 
-void CEF_CALLBACK
-server_handler_on_web_socket_request(struct _cef_server_handler_t* self,
-                                     cef_server_t* server,
-                                     int connection_id,
-                                     const cef_string_t* client_address,
-                                     cef_request_t* request,
-                                     cef_callback_t* callback) {
+void CEF_CALLBACK server_handler_on_web_socket_request(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id, const cef_string_t* client_address, struct _cef_request_t* request, struct _cef_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -187,14 +169,14 @@ server_handler_on_web_socket_request(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnWebSocketRequest(
-      CefServerCToCpp::Wrap(server), connection_id, CefString(client_address),
-      CefRequestCToCpp::Wrap(request), CefCallbackCToCpp::Wrap(callback));
+      CefServerCToCpp_Wrap(server),
+      connection_id,
+      CefString(client_address),
+      CefRequestCToCpp_Wrap(request),
+      CefCallbackCToCpp_Wrap(callback));
 }
 
-void CEF_CALLBACK
-server_handler_on_web_socket_connected(struct _cef_server_handler_t* self,
-                                       cef_server_t* server,
-                                       int connection_id) {
+void CEF_CALLBACK server_handler_on_web_socket_connected(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -211,15 +193,11 @@ server_handler_on_web_socket_connected(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnWebSocketConnected(
-      CefServerCToCpp::Wrap(server), connection_id);
+      CefServerCToCpp_Wrap(server),
+      connection_id);
 }
 
-void CEF_CALLBACK
-server_handler_on_web_socket_message(struct _cef_server_handler_t* self,
-                                     cef_server_t* server,
-                                     int connection_id,
-                                     const void* data,
-                                     size_t data_size) {
+void CEF_CALLBACK server_handler_on_web_socket_message(struct _cef_server_handler_t* self, struct _cef_server_t* server, int connection_id, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -241,7 +219,10 @@ server_handler_on_web_socket_message(struct _cef_server_handler_t* self,
 
   // Execute
   CefServerHandlerCppToC::Get(self)->OnWebSocketMessage(
-      CefServerCToCpp::Wrap(server), connection_id, data, data_size);
+      CefServerCToCpp_Wrap(server),
+      connection_id,
+      data,
+      data_size);
 }
 
 }  // namespace
@@ -265,18 +246,11 @@ CefServerHandlerCppToC::~CefServerHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefServerHandler> CefCppToCRefCounted<
-    CefServerHandlerCppToC,
-    CefServerHandler,
-    cef_server_handler_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_server_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefServerHandler> CefCppToCRefCounted<CefServerHandlerCppToC, CefServerHandler, cef_server_handler_t>::UnwrapDerived(CefWrapperType type, cef_server_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefServerHandlerCppToC,
-                                   CefServerHandler,
-                                   cef_server_handler_t>::kWrapperType =
-    WT_SERVER_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefServerHandlerCppToC, CefServerHandler, cef_server_handler_t>::kWrapperType = WT_SERVER_HANDLER;
+
+

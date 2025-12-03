@@ -27,8 +27,6 @@
 #endif
 #elif defined(OS_LINUX)
 #include <GL/gl.h>
-#elif defined(OS_OHOS)
-#include <GLES3/gl3.h>
 #else
 #error Platform is not supported.
 #endif

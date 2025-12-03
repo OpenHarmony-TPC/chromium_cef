@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=06118bdc1c922e6d3a9525dc2f5b4c24856eb195$
+// $hash=4856cd65d08a87e40c5262ee21df372410a9c320$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_STRING_VISITOR_CTOCPP_H_
@@ -20,22 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_string_visitor_capi.h"
 #include "include/cef_string_visitor.h"
+#include "include/capi/cef_string_visitor_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefStringVisitorCToCpp
-    : public CefCToCppRefCounted<CefStringVisitorCToCpp,
-                                 CefStringVisitor,
-                                 cef_string_visitor_t> {
+class CefStringVisitor_0_CToCpp
+    : public CefCToCppRefCounted<CefStringVisitor_0_CToCpp, CefStringVisitor, cef_string_visitor_0_t> {
  public:
-  CefStringVisitorCToCpp();
-  virtual ~CefStringVisitorCToCpp();
+  CefStringVisitor_0_CToCpp();
+  virtual ~CefStringVisitor_0_CToCpp();
 
   // CefStringVisitor methods.
   void Visit(const CefString& string) override;
 };
+
+constexpr auto CefStringVisitorCToCpp_Wrap = CefStringVisitor_0_CToCpp::Wrap;
+constexpr auto CefStringVisitorCToCpp_Unwrap = CefStringVisitor_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_STRING_VISITOR_CTOCPP_H_

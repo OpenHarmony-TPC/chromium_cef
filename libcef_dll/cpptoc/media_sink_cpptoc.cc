@@ -9,21 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=88a77516f3b8169beab1044457d10fae00915bec$
+// $hash=b1312027f5fcc99d4ce723ddf549f94056010501$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/media_sink_cpptoc.h"
-
 #include "libcef_dll/cpptoc/media_source_cpptoc.h"
 #include "libcef_dll/ctocpp/media_sink_device_info_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-cef_string_userfree_t CEF_CALLBACK
-media_sink_get_id(struct _cef_media_sink_t* self) {
+cef_string_userfree_t CEF_CALLBACK media_sink_get_id(struct _cef_media_sink_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -34,14 +33,13 @@ media_sink_get_id(struct _cef_media_sink_t* self) {
   }
 
   // Execute
-  CefString _retval = CefMediaSinkCppToC::Get(self)->GetId();
+  CefString _retval = CefMediaSink_0_CppToC::Get(self)->GetId();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-media_sink_get_name(struct _cef_media_sink_t* self) {
+cef_string_userfree_t CEF_CALLBACK media_sink_get_name(struct _cef_media_sink_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -52,14 +50,13 @@ media_sink_get_name(struct _cef_media_sink_t* self) {
   }
 
   // Execute
-  CefString _retval = CefMediaSinkCppToC::Get(self)->GetName();
+  CefString _retval = CefMediaSink_0_CppToC::Get(self)->GetName();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_media_sink_icon_type_t CEF_CALLBACK
-media_sink_get_icon_type(struct _cef_media_sink_t* self) {
+cef_media_sink_icon_type_t CEF_CALLBACK media_sink_get_icon_type(struct _cef_media_sink_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -70,16 +67,13 @@ media_sink_get_icon_type(struct _cef_media_sink_t* self) {
   }
 
   // Execute
-  cef_media_sink_icon_type_t _retval =
-      CefMediaSinkCppToC::Get(self)->GetIconType();
+  cef_media_sink_icon_type_t _retval = CefMediaSink_0_CppToC::Get(self)->GetIconType();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK media_sink_get_device_info(
-    struct _cef_media_sink_t* self,
-    struct _cef_media_sink_device_info_callback_t* callback) {
+void CEF_CALLBACK media_sink_get_device_info(struct _cef_media_sink_0_t* self, struct _cef_media_sink_device_info_callback_0_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -95,11 +89,11 @@ void CEF_CALLBACK media_sink_get_device_info(
   }
 
   // Execute
-  CefMediaSinkCppToC::Get(self)->GetDeviceInfo(
-      CefMediaSinkDeviceInfoCallbackCToCpp::Wrap(callback));
+  CefMediaSink_0_CppToC::Get(self)->GetDeviceInfo(
+      CefMediaSinkDeviceInfoCallbackCToCpp_Wrap(callback));
 }
 
-int CEF_CALLBACK media_sink_is_cast_sink(struct _cef_media_sink_t* self) {
+int CEF_CALLBACK media_sink_is_cast_sink(struct _cef_media_sink_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -110,13 +104,13 @@ int CEF_CALLBACK media_sink_is_cast_sink(struct _cef_media_sink_t* self) {
   }
 
   // Execute
-  bool _retval = CefMediaSinkCppToC::Get(self)->IsCastSink();
+  bool _retval = CefMediaSink_0_CppToC::Get(self)->IsCastSink();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK media_sink_is_dial_sink(struct _cef_media_sink_t* self) {
+int CEF_CALLBACK media_sink_is_dial_sink(struct _cef_media_sink_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -127,15 +121,13 @@ int CEF_CALLBACK media_sink_is_dial_sink(struct _cef_media_sink_t* self) {
   }
 
   // Execute
-  bool _retval = CefMediaSinkCppToC::Get(self)->IsDialSink();
+  bool _retval = CefMediaSink_0_CppToC::Get(self)->IsDialSink();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-media_sink_is_compatible_with(struct _cef_media_sink_t* self,
-                              struct _cef_media_source_t* source) {
+int CEF_CALLBACK media_sink_is_compatible_with(struct _cef_media_sink_0_t* self, struct _cef_media_source_0_t* source) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -151,8 +143,8 @@ media_sink_is_compatible_with(struct _cef_media_sink_t* self,
   }
 
   // Execute
-  bool _retval = CefMediaSinkCppToC::Get(self)->IsCompatibleWith(
-      CefMediaSourceCppToC::Unwrap(source));
+  bool _retval = CefMediaSink_0_CppToC::Get(self)->IsCompatibleWith(
+      CefMediaSourceCppToC_Unwrap(source));
 
   // Return type: bool
   return _retval;
@@ -160,9 +152,12 @@ media_sink_is_compatible_with(struct _cef_media_sink_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSinkCppToC::CefMediaSinkCppToC() {
+CefMediaSink_0_CppToC::CefMediaSink_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_id = media_sink_get_id;
   GetStruct()->get_name = media_sink_get_name;
   GetStruct()->get_icon_type = media_sink_get_icon_type;
@@ -172,22 +167,16 @@ CefMediaSinkCppToC::CefMediaSinkCppToC() {
   GetStruct()->is_compatible_with = media_sink_is_compatible_with;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaSinkCppToC::~CefMediaSinkCppToC() {
+CefMediaSink_0_CppToC::~CefMediaSink_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMediaSink>
-CefCppToCRefCounted<CefMediaSinkCppToC, CefMediaSink, cef_media_sink_t>::
-    UnwrapDerived(CefWrapperType type, cef_media_sink_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefMediaSink> CefCppToCRefCounted<CefMediaSink_0_CppToC, CefMediaSink, cef_media_sink_0_t>::UnwrapDerived(CefWrapperType type, cef_media_sink_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefMediaSinkCppToC,
-                                   CefMediaSink,
-                                   cef_media_sink_t>::kWrapperType =
-    WT_MEDIA_SINK;
+template<> CefWrapperType CefCppToCRefCounted<CefMediaSink_0_CppToC, CefMediaSink, cef_media_sink_0_t>::kWrapperType = WT_MEDIA_SINK;
+
+

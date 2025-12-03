@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=12b9d23a340925251cdb584ed9f37bcb2e8570a1$
+// $hash=25b50034c80a8146c5cc99f280ef7f2ef913e3af$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestCppToC
-    : public CefCppToCRefCounted<CefTranslatorTestCppToC,
-                                 CefTranslatorTest,
-                                 cef_translator_test_t> {
+class CefTranslatorTest_0_CppToC
+    : public CefCppToCRefCounted<CefTranslatorTest_0_CppToC, CefTranslatorTest, cef_translator_test_0_t> {
  public:
-  CefTranslatorTestCppToC();
-  virtual ~CefTranslatorTestCppToC();
+  CefTranslatorTest_0_CppToC();
+  virtual ~CefTranslatorTest_0_CppToC();
 };
+
+constexpr auto CefTranslatorTestCppToC_Wrap = CefTranslatorTest_0_CppToC::Wrap;
+constexpr auto CefTranslatorTestCppToC_Unwrap = CefTranslatorTest_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_CPPTOC_H_

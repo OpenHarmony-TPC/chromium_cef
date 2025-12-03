@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=461c39e89b24145e753e075b400bcc894222c823$
+// $hash=a3dcd09c050f97beb07c31b3a6787a2a371b253f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SHARED_PROCESS_MESSAGE_BUILDER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_shared_process_message_builder_capi.h"
 #include "include/cef_shared_process_message_builder.h"
+#include "include/capi/cef_shared_process_message_builder_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSharedProcessMessageBuilderCppToC
-    : public CefCppToCRefCounted<CefSharedProcessMessageBuilderCppToC,
-                                 CefSharedProcessMessageBuilder,
-                                 cef_shared_process_message_builder_t> {
+class CefSharedProcessMessageBuilder_0_CppToC
+    : public CefCppToCRefCounted<CefSharedProcessMessageBuilder_0_CppToC, CefSharedProcessMessageBuilder, cef_shared_process_message_builder_0_t> {
  public:
-  CefSharedProcessMessageBuilderCppToC();
-  virtual ~CefSharedProcessMessageBuilderCppToC();
+  CefSharedProcessMessageBuilder_0_CppToC();
+  virtual ~CefSharedProcessMessageBuilder_0_CppToC();
 };
+
+constexpr auto CefSharedProcessMessageBuilderCppToC_Wrap = CefSharedProcessMessageBuilder_0_CppToC::Wrap;
+constexpr auto CefSharedProcessMessageBuilderCppToC_Unwrap = CefSharedProcessMessageBuilder_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SHARED_PROCESS_MESSAGE_BUILDER_CPPTOC_H_

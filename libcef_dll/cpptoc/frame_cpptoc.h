@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fb1d03cb251806fdf0258fe1d4f688f3ddc22fdc$
+// $hash=d5349467e4e954f80e30f28b38589e071fe200ad$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_FRAME_CPPTOC_H_
@@ -20,23 +20,28 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_frame_capi.h"
-#include "include/capi/cef_urlrequest_capi.h"
-#include "include/capi/cef_v8_capi.h"
-#include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/capi/cef_frame_capi_versions.h"
+#include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi_versions.h"
 #include "include/cef_urlrequest.h"
+#include "include/capi/cef_urlrequest_capi_versions.h"
+#include "include/cef_urlrequest.h"
+#include "include/capi/cef_urlrequest_capi_versions.h"
 #include "include/cef_v8.h"
+#include "include/capi/cef_v8_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefFrameCppToC
-    : public CefCppToCRefCounted<CefFrameCppToC, CefFrame, cef_frame_t> {
+class CefFrame_0_CppToC
+    : public CefCppToCRefCounted<CefFrame_0_CppToC, CefFrame, cef_frame_0_t> {
  public:
-  CefFrameCppToC();
-  virtual ~CefFrameCppToC();
+  CefFrame_0_CppToC();
+  virtual ~CefFrame_0_CppToC();
 };
+
+constexpr auto CefFrameCppToC_Wrap = CefFrame_0_CppToC::Wrap;
+constexpr auto CefFrameCppToC_Unwrap = CefFrame_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_FRAME_CPPTOC_H_

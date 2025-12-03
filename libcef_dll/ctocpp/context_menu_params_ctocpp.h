@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4169348ecc4d8efbc9bbc71d0b3fa292cb2e2017$
+// $hash=21061d249680a1edd730d0275a411b27632cab69$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_
@@ -21,17 +21,14 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_context_menu_handler_capi.h"
 #include "include/cef_context_menu_handler.h"
+#include "include/capi/cef_context_menu_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefContextMenuParamsCToCpp
-    : public CefCToCppRefCounted<CefContextMenuParamsCToCpp,
-                                 CefContextMenuParams,
-                                 cef_context_menu_params_t> {
+    : public CefCToCppRefCounted<CefContextMenuParamsCToCpp, CefContextMenuParams, cef_context_menu_params_t> {
  public:
   CefContextMenuParamsCToCpp();
   virtual ~CefContextMenuParamsCToCpp();
@@ -58,5 +55,8 @@ class CefContextMenuParamsCToCpp
   EditStateFlags GetEditStateFlags() override;
   bool IsCustomMenu() override;
 };
+
+constexpr auto CefContextMenuParamsCToCpp_Wrap = CefContextMenuParamsCToCpp::Wrap;
+constexpr auto CefContextMenuParamsCToCpp_Unwrap = CefContextMenuParamsCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_

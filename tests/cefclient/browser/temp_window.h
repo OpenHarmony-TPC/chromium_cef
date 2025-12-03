@@ -14,8 +14,6 @@
 #include "tests/cefclient/browser/temp_window_x11.h"
 #elif defined(OS_MAC)
 #include "tests/cefclient/browser/temp_window_mac.h"
-#elif defined(OS_OHOS)
-#include "tests/cefclient/browser/temp_window_ohos.h"
 #endif
 
 namespace client {
@@ -26,8 +24,6 @@ typedef TempWindowWin TempWindow;
 typedef TempWindowX11 TempWindow;
 #elif defined(OS_MAC)
 typedef TempWindowMac TempWindow;
-#elif defined(OS_OHOS)
-typedef TempWindowOhos TempWindow;
 #endif
 
 }  // namespace client

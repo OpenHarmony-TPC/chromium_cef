@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a1d886e033583695f8d9310246a432b3bc054508$
+// $hash=2369c87fff99cf450a662a4372d2c202321bf2ec$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -21,11 +21,10 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -53,12 +52,14 @@ class CefBrowserCToCpp
   bool HasDocument() override;
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
-  CefRefPtr<CefFrame> GetFrameByIdentifier(
-      const CefString& identifier) override;
+  CefRefPtr<CefFrame> GetFrameByIdentifier(const CefString& identifier) override;
   CefRefPtr<CefFrame> GetFrameByName(const CefString& name) override;
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<CefString>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
 };
+
+constexpr auto CefBrowserCToCpp_Wrap = CefBrowserCToCpp::Wrap;
+constexpr auto CefBrowserCToCpp_Unwrap = CefBrowserCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

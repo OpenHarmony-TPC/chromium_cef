@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d76a693367c4ec83e7ba017d7dd1fc5b523a2d7d$
+// $hash=e9148b51bd8de1851d92974a97765448cd44d09b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DOMDOCUMENT_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_dom_capi.h"
 #include "include/cef_dom.h"
+#include "include/capi/cef_dom_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDOMDocumentCppToC : public CefCppToCRefCounted<CefDOMDocumentCppToC,
-                                                        CefDOMDocument,
-                                                        cef_domdocument_t> {
+class CefDOMDocument_0_CppToC
+    : public CefCppToCRefCounted<CefDOMDocument_0_CppToC, CefDOMDocument, cef_domdocument_0_t> {
  public:
-  CefDOMDocumentCppToC();
-  virtual ~CefDOMDocumentCppToC();
+  CefDOMDocument_0_CppToC();
+  virtual ~CefDOMDocument_0_CppToC();
 };
+
+constexpr auto CefDOMDocumentCppToC_Wrap = CefDOMDocument_0_CppToC::Wrap;
+constexpr auto CefDOMDocumentCppToC_Unwrap = CefDOMDocument_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DOMDOCUMENT_CPPTOC_H_

@@ -23,11 +23,6 @@
 #include "net/base/filename_util.h"
 #include "third_party/blink/public/mojom/choosers/file_chooser.mojom.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include <accesstoken/ability_access_control.h>
-#include "ohos/adapter/permission_manager/permission_manager_adapter.h"
-#endif
-
 using content::DownloadManager;
 using content::WebContents;
 using download::DownloadItem;

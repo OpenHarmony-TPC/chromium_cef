@@ -9,24 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b8dc091dabb3daa03ac50dfc52cb44aacc7749e0$
+// $hash=2cbaaab9ed8fc40f5591757316b5381b8f69bceb$
 //
 
-#include "libcef_dll/ctocpp/browser_process_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/command_line_cpptoc.h"
 #include "libcef_dll/cpptoc/preference_registrar_cpptoc.h"
+#include "libcef_dll/ctocpp/browser_process_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
 #include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnRegisterCustomPreferences(
-    cef_preferences_type_t type,
-    CefRawPtr<CefPreferenceRegistrar> registrar) {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_register_custom_preferences)) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefBrowserProcessHandler_0_CToCpp::OnRegisterCustomPreferences(cef_preferences_type_t type, CefRawPtr<CefPreferenceRegistrar> registrar) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_register_custom_preferences) {
     return;
   }
 
@@ -39,18 +37,17 @@ void CefBrowserProcessHandlerCToCpp::OnRegisterCustomPreferences(
   }
 
   // Translate param: registrar; type: rawptr_diff
-  CefOwnPtr<CefPreferenceRegistrarCppToC> registrarPtr(
-      CefPreferenceRegistrarCppToC::WrapRaw(registrar));
+  auto [registrarPtr, registrarStruct] = CefPreferenceRegistrarCppToC_WrapRaw(registrar);
 
   // Execute
-  _struct->on_register_custom_preferences(_struct, type,
-                                          registrarPtr->GetStruct());
+  _struct->on_register_custom_preferences(_struct,
+      type,
+      registrarStruct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnContextInitialized() {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_context_initialized)) {
+NO_SANITIZE("cfi-icall") void CefBrowserProcessHandler_0_CToCpp::OnContextInitialized() {
+  auto* _struct = GetStruct();
+  if (!_struct->on_context_initialized) {
     return;
   }
 
@@ -60,11 +57,9 @@ void CefBrowserProcessHandlerCToCpp::OnContextInitialized() {
   _struct->on_context_initialized(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnBeforeChildProcessLaunch(
-    CefRefPtr<CefCommandLine> command_line) {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_child_process_launch)) {
+NO_SANITIZE("cfi-icall") void CefBrowserProcessHandler_0_CToCpp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_child_process_launch) {
     return;
   }
 
@@ -77,16 +72,13 @@ void CefBrowserProcessHandlerCToCpp::OnBeforeChildProcessLaunch(
   }
 
   // Execute
-  _struct->on_before_child_process_launch(
-      _struct, CefCommandLineCppToC::Wrap(command_line));
+  _struct->on_before_child_process_launch(_struct,
+      CefCommandLineCppToC_Wrap(command_line));
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefBrowserProcessHandlerCToCpp::OnAlreadyRunningAppRelaunch(
-    CefRefPtr<CefCommandLine> command_line,
-    const CefString& current_directory) {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_already_running_app_relaunch)) {
+NO_SANITIZE("cfi-icall") bool CefBrowserProcessHandler_0_CToCpp::OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line, const CefString& current_directory) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_already_running_app_relaunch) {
     return false;
   }
 
@@ -100,83 +92,73 @@ bool CefBrowserProcessHandlerCToCpp::OnAlreadyRunningAppRelaunch(
   // Unverified params: current_directory
 
   // Execute
-  int _retval = _struct->on_already_running_app_relaunch(
-      _struct, CefCommandLineCppToC::Wrap(command_line),
+  int _retval = _struct->on_already_running_app_relaunch(_struct,
+      CefCommandLineCppToC_Wrap(command_line),
       current_directory.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnScheduleMessagePumpWork(
-    int64_t delay_ms) {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_schedule_message_pump_work)) {
+NO_SANITIZE("cfi-icall") void CefBrowserProcessHandler_0_CToCpp::OnScheduleMessagePumpWork(int64_t delay_ms) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_schedule_message_pump_work) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_schedule_message_pump_work(_struct, delay_ms);
+  _struct->on_schedule_message_pump_work(_struct,
+      delay_ms);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefClient> CefBrowserProcessHandlerCToCpp::GetDefaultClient() {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_default_client)) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefClient> CefBrowserProcessHandler_0_CToCpp::GetDefaultClient() {
+  auto* _struct = GetStruct();
+  if (!_struct->get_default_client) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_client_t* _retval = _struct->get_default_client(_struct);
+  auto* _retval = _struct->get_default_client(_struct);
 
   // Return type: refptr_same
-  return CefClientCToCpp::Wrap(_retval);
+  return CefClientCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefRequestContextHandler>
-CefBrowserProcessHandlerCToCpp::GetDefaultRequestContextHandler() {
-  cef_browser_process_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_default_request_context_handler)) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefRequestContextHandler> CefBrowserProcessHandler_0_CToCpp::GetDefaultRequestContextHandler() {
+  auto* _struct = GetStruct();
+  if (!_struct->get_default_request_context_handler) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_request_context_handler_t* _retval =
-      _struct->get_default_request_context_handler(_struct);
+  auto* _retval = _struct->get_default_request_context_handler(_struct);
 
   // Return type: refptr_same
-  return CefRequestContextHandlerCToCpp::Wrap(_retval);
+  return CefRequestContextHandlerCToCpp_Wrap(_retval);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBrowserProcessHandlerCToCpp::CefBrowserProcessHandlerCToCpp() {}
-
-// DESTRUCTOR - Do not edit by hand.
-
-CefBrowserProcessHandlerCToCpp::~CefBrowserProcessHandlerCToCpp() {}
-
-template <>
-cef_browser_process_handler_t* CefCToCppRefCounted<
-    CefBrowserProcessHandlerCToCpp,
-    CefBrowserProcessHandler,
-    cef_browser_process_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                  CefBrowserProcessHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefBrowserProcessHandler_0_CToCpp::CefBrowserProcessHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefBrowserProcessHandlerCToCpp,
-                        CefBrowserProcessHandler,
-                        cef_browser_process_handler_t>::kWrapperType =
-        WT_BROWSER_PROCESS_HANDLER;
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefBrowserProcessHandler_0_CToCpp::~CefBrowserProcessHandler_0_CToCpp() {
+}
+
+template<> cef_browser_process_handler_0_t* CefCToCppRefCounted<CefBrowserProcessHandler_0_CToCpp, CefBrowserProcessHandler, cef_browser_process_handler_0_t>::UnwrapDerived(CefWrapperType type, CefBrowserProcessHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCToCppRefCounted<CefBrowserProcessHandler_0_CToCpp, CefBrowserProcessHandler, cef_browser_process_handler_0_t>::kWrapperType = WT_BROWSER_PROCESS_HANDLER;
+
+

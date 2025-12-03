@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b179e0a4cbb0d0a221057529dd42377244dbc45b$
+// $hash=e219136f14ea77cc56f2fa9d3ab1553bae4e8a4a$
 //
 
 #include "libcef_dll/cpptoc/cookie_visitor_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/template_util.h"
 
@@ -21,11 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK cookie_visitor_visit(struct _cef_cookie_visitor_t* self,
-                                      const struct _cef_cookie_t* cookie,
-                                      int count,
-                                      int total,
-                                      int* deleteCookie) {
+int CEF_CALLBACK cookie_visitor_visit(struct _cef_cookie_visitor_t* self, const struct _cef_cookie_t* cookie, int count, int total, int* deleteCookie) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -55,15 +50,18 @@ int CEF_CALLBACK cookie_visitor_visit(struct _cef_cookie_visitor_t* self,
     cookieObj.Set(*cookie, false);
   }
   // Translate param: deleteCookie; type: bool_byref
-  bool deleteCookieBool = (deleteCookie && *deleteCookie) ? true : false;
+  bool deleteCookieBool = (deleteCookie && *deleteCookie)?true:false;
 
   // Execute
   bool _retval = CefCookieVisitorCppToC::Get(self)->Visit(
-      cookieObj, count, total, deleteCookieBool);
+      cookieObj,
+      count,
+      total,
+      deleteCookieBool);
 
   // Restore param: deleteCookie; type: bool_byref
   if (deleteCookie) {
-    *deleteCookie = deleteCookieBool ? true : false;
+    *deleteCookie = deleteCookieBool?true:false;
   }
 
   // Return type: bool
@@ -84,18 +82,11 @@ CefCookieVisitorCppToC::~CefCookieVisitorCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefCookieVisitor> CefCppToCRefCounted<
-    CefCookieVisitorCppToC,
-    CefCookieVisitor,
-    cef_cookie_visitor_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_cookie_visitor_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefCookieVisitor> CefCppToCRefCounted<CefCookieVisitorCppToC, CefCookieVisitor, cef_cookie_visitor_t>::UnwrapDerived(CefWrapperType type, cef_cookie_visitor_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefCookieVisitorCppToC,
-                                   CefCookieVisitor,
-                                   cef_cookie_visitor_t>::kWrapperType =
-    WT_COOKIE_VISITOR;
+template<> CefWrapperType CefCppToCRefCounted<CefCookieVisitorCppToC, CefCookieVisitor, cef_cookie_visitor_t>::kWrapperType = WT_COOKIE_VISITOR;
+
+

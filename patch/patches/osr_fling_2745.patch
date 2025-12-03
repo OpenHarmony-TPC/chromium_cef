@@ -1,13 +1,14 @@
 diff --git components/input/fling_scheduler_base.h components/input/fling_scheduler_base.h
-index 76057b3e50f78..d3b63a3b07805 100644
+index 6e331ee24bddf1b6f4b0f99d40c94504707dbba8..ab6c61c2e57ac8a93d7f1413b2627c3b78699777 100644
 --- components/input/fling_scheduler_base.h
 +++ components/input/fling_scheduler_base.h
-@@ -5,14 +5,26 @@
+@@ -5,9 +5,14 @@
  #ifndef COMPONENTS_INPUT_FLING_SCHEDULER_BASE_H_
  #define COMPONENTS_INPUT_FLING_SCHEDULER_BASE_H_
  
 +#include "base/memory/raw_ptr.h"
  #include "components/input/fling_controller.h"
+ #include "components/viz/common/frame_sinks/begin_frame_source.h"
  
 +namespace ui {
 +class Compositor;
@@ -16,9 +17,10 @@ index 76057b3e50f78..d3b63a3b07805 100644
  namespace input {
  
  class FlingSchedulerBase : public FlingControllerSchedulerClient {
-  public:
-   virtual void ProgressFlingOnBeginFrameIfneeded(
-       base::TimeTicks current_time) = 0;
+@@ -19,6 +24,13 @@ class FlingSchedulerBase : public FlingControllerSchedulerClient {
+   // in Viz currently, but in future we would want to migrate browser's
+   // implementations to use this to progress flings.
+   virtual void SetBeginFrameSource(viz::BeginFrameSource* begin_frame_source) {}
 +  
 +  void SetCompositor(ui::Compositor* compositor) {
 +    compositor_ = compositor;
@@ -30,10 +32,10 @@ index 76057b3e50f78..d3b63a3b07805 100644
  
  }  // namespace input
 diff --git components/input/render_input_router.h components/input/render_input_router.h
-index d5c125e621004..cd1177744e1a8 100644
+index f9b608527a252d81049ef5b3de968c907d55d5c8..ec64323db09bee87efeacb4a746283d6275ca82f 100644
 --- components/input/render_input_router.h
 +++ components/input/render_input_router.h
-@@ -67,6 +67,7 @@ class COMPONENT_EXPORT(INPUT) RenderInputRouter
+@@ -68,6 +68,7 @@ class COMPONENT_EXPORT(INPUT) RenderInputRouter
  
    InputRouter* input_router() { return input_router_.get(); }
    RenderInputRouterDelegate* delegate() { return delegate_; }
@@ -42,7 +44,7 @@ index d5c125e621004..cd1177744e1a8 100644
    void SetForceEnableZoom(bool);
    void SetDeviceScaleFactor(float device_scale_factor);
 diff --git content/browser/renderer_host/input/fling_scheduler.cc content/browser/renderer_host/input/fling_scheduler.cc
-index f1030a744809c..c222a209949e6 100644
+index 477389a1cb1d3c328fa6c796174244c70894326a..b7b7edbfbdf5d08fdebfde8c1515fa687aa6f767 100644
 --- content/browser/renderer_host/input/fling_scheduler.cc
 +++ content/browser/renderer_host/input/fling_scheduler.cc
 @@ -98,6 +98,9 @@ void FlingScheduler::ProgressFlingOnBeginFrameIfneeded(
@@ -56,20 +58,11 @@ index f1030a744809c..c222a209949e6 100644
      return nullptr;
    }
 diff --git content/browser/renderer_host/render_widget_host_impl.cc content/browser/renderer_host/render_widget_host_impl.cc
-index e8f68eca2104c..c579cff86fbbb 100644
+index 252edf0bb40ba4c16061425013d9e4c559b91e78..759fb1cf40b323bdb0e8a293c8d9db4535f550d9 100644
 --- content/browser/renderer_host/render_widget_host_impl.cc
 +++ content/browser/renderer_host/render_widget_host_impl.cc
-@@ -791,7 +791,7 @@ void RenderWidgetHostImpl::WasHidden() {
- 
-   // Cancel pending pointer lock requests, unless there's an open user prompt.
-   // Prompts should remain open and functional across tab switches.
--  if (!delegate_->IsWaitingForPointerLockPrompt(this)) {
-+  if (!delegate_ || !delegate_->IsWaitingForPointerLockPrompt(this)) {
-     RejectPointerLockOrUnlockIfNecessary(
-         blink::mojom::PointerLockResult::kWrongDocument);
-   }
-@@ -3248,6 +3248,11 @@ void RenderWidgetHostImpl::DecrementInFlightEventCount(
-   }
+@@ -3769,6 +3769,11 @@ void RenderWidgetHostImpl::StopFling() {
+   GetRenderInputRouter()->StopFling();
  }
  
 +void RenderWidgetHostImpl::SetCompositorForFlingScheduler(
@@ -77,14 +70,14 @@ index e8f68eca2104c..c579cff86fbbb 100644
 +  GetRenderInputRouter()->fling_scheduler()->SetCompositor(compositor);
 +}
 +
- void RenderWidgetHostImpl::AddPendingUserActivation(
-     const WebInputEvent& event) {
-   if ((base::FeatureList::IsEnabled(
+ void RenderWidgetHostImpl::SetScreenOrientationForTesting(
+     uint16_t angle,
+     display::mojom::ScreenOrientation type) {
 diff --git content/browser/renderer_host/render_widget_host_impl.h content/browser/renderer_host/render_widget_host_impl.h
-index 01b87c84b32c0..e6061b75d201d 100644
+index f24d02054c89c8bc6b75e127146cb97a72e3f94a..e40453cd2ccd58cabff866f240bc6aa8f9bdeff6 100644
 --- content/browser/renderer_host/render_widget_host_impl.h
 +++ content/browser/renderer_host/render_widget_host_impl.h
-@@ -841,6 +841,7 @@ class CONTENT_EXPORT RenderWidgetHostImpl
+@@ -852,6 +852,7 @@ class CONTENT_EXPORT RenderWidgetHostImpl
  
    void ProgressFlingIfNeeded(base::TimeTicks current_time);
    void StopFling();

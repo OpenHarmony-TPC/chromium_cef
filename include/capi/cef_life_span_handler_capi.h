@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b262d702e9aca386a917905843892ab84c08c785$
+// $hash=239f4760e09071556a555cdce7d945e7e2169e4e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LIFE_SPAN_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_LIFE_SPAN_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -53,6 +57,8 @@ struct _cef_client_t;
 /// Implement this structure to handle events related to browser life span. The
 /// functions of this structure will be called on the UI thread unless otherwise
 /// indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_life_span_handler_t {
   ///
@@ -91,21 +97,7 @@ typedef struct _cef_life_span_handler_t {
   /// called for the opener browser. See OnBeforePopupAborted documentation for
   /// additional details.
   ///
-  int(CEF_CALLBACK* on_before_popup)(
-      struct _cef_life_span_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      int popup_id,
-      const cef_string_t* target_url,
-      const cef_string_t* target_frame_name,
-      cef_window_open_disposition_t target_disposition,
-      int user_gesture,
-      const cef_popup_features_t* popupFeatures,
-      struct _cef_window_info_t* windowInfo,
-      struct _cef_client_t** client,
-      struct _cef_browser_settings_t* settings,
-      struct _cef_dictionary_value_t** extra_info,
-      int* no_javascript_access);
+  int (CEF_CALLBACK *on_before_popup)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int popup_id, const cef_string_t* target_url, const cef_string_t* target_frame_name, cef_window_open_disposition_t target_disposition, int user_gesture, const cef_popup_features_t* popupFeatures, struct _cef_window_info_t* windowInfo, struct _cef_client_t** client, struct _cef_browser_settings_t* settings, struct _cef_dictionary_value_t** extra_info, int* no_javascript_access);
 
   ///
   /// Called on the UI thread if a new popup browser is aborted. This only
@@ -122,10 +114,7 @@ typedef struct _cef_life_span_handler_t {
   /// during popup creation, in which case cef_browser_host_t::IsValid will
   /// return false (0) in this function.
   ///
-  void(CEF_CALLBACK* on_before_popup_aborted)(
-      struct _cef_life_span_handler_t* self,
-      struct _cef_browser_t* browser,
-      int popup_id);
+  void (CEF_CALLBACK *on_before_popup_aborted)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, int popup_id);
 
   ///
   /// Called on the UI thread before a new DevTools popup browser is created.
@@ -146,14 +135,7 @@ typedef struct _cef_life_span_handler_t {
   /// blocked by returning true (1) from cef_command_handler_t::OnChromeCommand
   /// for IDC_DEV_TOOLS. Only used with Chrome style.
   ///
-  void(CEF_CALLBACK* on_before_dev_tools_popup)(
-      struct _cef_life_span_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_window_info_t* windowInfo,
-      struct _cef_client_t** client,
-      struct _cef_browser_settings_t* settings,
-      struct _cef_dictionary_value_t** extra_info,
-      int* use_default_window);
+  void (CEF_CALLBACK *on_before_dev_tools_popup)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser, struct _cef_window_info_t* windowInfo, struct _cef_client_t** client, struct _cef_browser_settings_t* settings, struct _cef_dictionary_value_t** extra_info, int* use_default_window);
 
   ///
   /// Called after a new browser is created. It is now safe to begin performing
@@ -161,8 +143,7 @@ typedef struct _cef_life_span_handler_t {
   /// main frame creation will arrive before this callback. See
   /// cef_frame_handler_t documentation for additional usage information.
   ///
-  void(CEF_CALLBACK* on_after_created)(struct _cef_life_span_handler_t* self,
-                                       struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_after_created)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called when an Alloy style browser is ready to be closed, meaning that the
@@ -271,8 +252,7 @@ typedef struct _cef_life_span_handler_t {
   /// browsers
   ///     exist.
   ///
-  int(CEF_CALLBACK* do_close)(struct _cef_life_span_handler_t* self,
-                              struct _cef_browser_t* browser);
+  int (CEF_CALLBACK *do_close)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called just before a browser is destroyed. Release all references to the
@@ -287,9 +267,9 @@ typedef struct _cef_life_span_handler_t {
   /// still arrive on the IO thread after this callback. See cef_frame_handler_t
   /// and do_close() documentation for additional usage information.
   ///
-  void(CEF_CALLBACK* on_before_close)(struct _cef_life_span_handler_t* self,
-                                      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_before_close)(struct _cef_life_span_handler_t* self, struct _cef_browser_t* browser);
 } cef_life_span_handler_t;
+
 
 #ifdef __cplusplus
 }

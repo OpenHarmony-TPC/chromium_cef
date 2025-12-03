@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9226842553e0a1e5a3a8583ab4469ca37223d40b$
+// $hash=ab3fe62f6359064206a89bfd69438996284185b8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PROCESS_MESSAGE_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_process_message_capi.h"
 #include "include/cef_process_message.h"
+#include "include/capi/cef_process_message_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefProcessMessageCppToC
-    : public CefCppToCRefCounted<CefProcessMessageCppToC,
-                                 CefProcessMessage,
-                                 cef_process_message_t> {
+class CefProcessMessage_0_CppToC
+    : public CefCppToCRefCounted<CefProcessMessage_0_CppToC, CefProcessMessage, cef_process_message_0_t> {
  public:
-  CefProcessMessageCppToC();
-  virtual ~CefProcessMessageCppToC();
+  CefProcessMessage_0_CppToC();
+  virtual ~CefProcessMessage_0_CppToC();
 };
+
+constexpr auto CefProcessMessageCppToC_Wrap = CefProcessMessage_0_CppToC::Wrap;
+constexpr auto CefProcessMessageCppToC_Unwrap = CefProcessMessage_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PROCESS_MESSAGE_CPPTOC_H_

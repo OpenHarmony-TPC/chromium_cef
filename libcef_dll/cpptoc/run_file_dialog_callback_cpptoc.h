@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=78d32521270e047ab96c6ab750fc91f40d3ba1db$
+// $hash=da0b8711c279d6d00b69bc84abb881008c53d206$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RUN_FILE_DIALOG_CALLBACK_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefRunFileDialogCallbackCppToC
-    : public CefCppToCRefCounted<CefRunFileDialogCallbackCppToC,
-                                 CefRunFileDialogCallback,
-                                 cef_run_file_dialog_callback_t> {
+    : public CefCppToCRefCounted<CefRunFileDialogCallbackCppToC, CefRunFileDialogCallback, cef_run_file_dialog_callback_t> {
  public:
   CefRunFileDialogCallbackCppToC();
   virtual ~CefRunFileDialogCallbackCppToC();
 };
+
+constexpr auto CefRunFileDialogCallbackCppToC_Wrap = CefRunFileDialogCallbackCppToC::Wrap;
+constexpr auto CefRunFileDialogCallbackCppToC_Unwrap = CefRunFileDialogCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RUN_FILE_DIALOG_CALLBACK_CPPTOC_H_

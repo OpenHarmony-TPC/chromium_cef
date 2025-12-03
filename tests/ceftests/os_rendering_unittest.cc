@@ -20,11 +20,11 @@
 #include "tests/ceftests/os_rendering_unittest_mac.h"
 #elif defined(OS_LINUX)
 #include <X11/keysym.h>
-#elif defined(OS_OHOS)
-#include <ace/xcomponent/native_xcomponent_key_event.h>
 #elif defined(OS_WIN)
+#include "tests/shared/browser/util_win.h"
+
 // Required for resource_util_win, which uses this as an extern
-HINSTANCE hInst = ::GetModuleHandle(nullptr);
+HINSTANCE hInst = client::GetCodeModuleHandle();
 #endif
 
 // Set to 1 to enable verbose debugging info logging.
@@ -37,11 +37,7 @@ const char kTestUrl[] = "https://tests/osrtest";
 // Must be both large enough for the drag/drop region to be visible and small
 // enough for a little vertical offset with scrollbar.
 const int kOsrWidth = 600;
-#if defined(OS_OHOS)
-const int kOsrHeight = 550;
-#else
 const int kOsrHeight = 450;
-#endif
 
 // bounding client rects for edit box and navigate button
 #if defined(OS_WIN)
@@ -50,8 +46,6 @@ const CefRect kExpandedSelectRect(462, 42, 81, 334);
 const CefRect kExpandedSelectRect(462, 42, 75, 334);
 #elif defined(OS_LINUX)
 const CefRect kExpandedSelectRect(462, 42, 79, 334);
-#elif defined(OS_OHOS)
-const CefRect kExpandedSelectRect(502, 48, 80, 2);
 #else
 #error "Unsupported platform"
 #endif  // defined(OS_WIN)
@@ -93,24 +87,6 @@ const unsigned int kNativeKeyTestCodes[] = {kVK_ANSI_D, kVK_ANSI_O, kVK_ANSI_N,
 
 const unsigned int kNativeKeyEscape = kVK_Escape;
 const unsigned int kNativeKeyTab = kVK_Tab;
-
-#elif defined(OS_OHOS)
-
-#define VKEY_D 0x64
-#define VKEY_O 0x6F
-#define VKEY_N 0x6E
-#define VKEY_E 0x65
-#define VKEY_ESCAPE 0x1B
-#define VKEY_TAB 0x09
-
-const unsigned int kNativeKeyTestCodes[] = {
-    OH_NativeXComponent_KeyCode::KEY_D, OH_NativeXComponent_KeyCode::KEY_O,
-    OH_NativeXComponent_KeyCode::KEY_N, OH_NativeXComponent_KeyCode::KEY_E};
-
-const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
-
-const unsigned int kNativeKeyEscape = OH_NativeXComponent_KeyCode::KEY_ESCAPE;
-const unsigned int kNativeKeyTab = OH_NativeXComponent_KeyCode::KEY_TAB;
 
 #endif
 
@@ -329,7 +305,7 @@ class OSRTestHandler : public RoutingTestHandler,
                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
                                             browser, VK_TAB),
                              50);
-#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_MAC) || defined(OS_LINUX)
           CefPostDelayedTask(TID_UI,
                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
                                             browser, kNativeKeyTab, VKEY_TAB),
@@ -989,7 +965,7 @@ class OSRTestHandler : public RoutingTestHandler,
         if (type == PET_POPUP) {
 #if defined(OS_WIN)
           SendKeyEvent(browser, VK_ESCAPE);
-#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_MAC) || defined(OS_LINUX)
           SendKeyEvent(browser, kNativeKeyEscape, VKEY_ESCAPE);
 #else
 #error "Unsupported platform"
@@ -1509,7 +1485,7 @@ class OSRTestHandler : public RoutingTestHandler,
     } else {
       windowInfo.SetAsWindowless(kNullWindowHandle);
     }
-#elif defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_LINUX)
     windowInfo.SetAsWindowless(kNullWindowHandle);
 #else
 #error "Unsupported platform"
@@ -1592,7 +1568,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_MAC) || defined(OS_LINUX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1610,7 +1586,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_MAC) || defined(OS_LINUX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1633,7 +1609,7 @@ class OSRTestHandler : public RoutingTestHandler,
     for (size_t i = 0; i < word_length; ++i) {
 #if defined(OS_WIN)
       SendKeyEvent(browser, kKeyTestWord[i]);
-#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_MAC) || defined(OS_LINUX)
       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
 #else
 #error "Unsupported platform"
@@ -1655,7 +1631,8 @@ class OSRTestHandler : public RoutingTestHandler,
 
     // Use a thin black underline by default.
     CefRange range(0, static_cast<uint32_t>(markedText.length()));
-    cef_composition_underline_t line = {range, 0xFF000000, 0, false};
+    cef_composition_underline_t line = {sizeof(cef_composition_underline_t),
+                                        range, 0xFF000000, 0, false};
     underlines.push_back(line);
 
     CefRange replacement_range(0, static_cast<uint32_t>(markedText.length()));
@@ -1680,7 +1657,8 @@ class OSRTestHandler : public RoutingTestHandler,
 
     // Use a thin black underline by default.
     CefRange range(0, static_cast<uint32_t>(markedText.length()));
-    cef_composition_underline_t line = {range, 0xFF000000, 0, false};
+    cef_composition_underline_t line = {sizeof(cef_composition_underline_t),
+                                        range, 0xFF000000, 0, false};
     underlines.push_back(line);
 
     CefRange replacement_range(0, static_cast<uint32_t>(markedText.length()));
@@ -1760,7 +1738,7 @@ class OSRTestHandler : public RoutingTestHandler,
   }
 
   void SendKeyEvent(CefRefPtr<CefBrowser> browser,
-#if defined(OS_LINUX) || defined(OS_MAC) || defined(OS_OHOS)
+#if defined(OS_LINUX) || defined(OS_MAC)
                     unsigned int native_key_code,
 #endif
                     int key_code) {
@@ -1785,10 +1763,6 @@ class OSRTestHandler : public RoutingTestHandler,
     event.native_key_code = native_key_code;
     event.windows_key_code = key_code;
     event.character = event.unmodified_character = native_key_code;
-#elif defined(OS_OHOS)
-    event.native_key_code = native_key_code;
-    event.windows_key_code = key_code;
-    event.character = event.unmodified_character = key_code;
 #else
     NOTREACHED();
 #endif

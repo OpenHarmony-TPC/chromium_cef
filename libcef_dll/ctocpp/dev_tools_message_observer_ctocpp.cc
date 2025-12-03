@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cfcdc4b994e5f9483741c7ad2cf6f9854016ff61$
+// $hash=2ac5dcfc0f97e77175bef56ac7daac291bea0f2c$
 //
 
-#include "libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefDevToolsMessageObserverCToCpp::OnDevToolsMessage(
-    CefRefPtr<CefBrowser> browser,
-    const void* message,
-    size_t message_size) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefDevToolsMessageObserver_0_CToCpp::OnDevToolsMessage(CefRefPtr<CefBrowser> browser, const void* message, size_t message_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_dev_tools_message_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dev_tools_message)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dev_tools_message) {
     return false;
   }
 
@@ -45,24 +42,20 @@ bool CefDevToolsMessageObserverCToCpp::OnDevToolsMessage(
   }
 
   // Execute
-  int _retval = _struct->on_dev_tools_message(
-      _struct, CefBrowserCppToC::Wrap(browser), message, message_size);
+  int _retval = _struct->on_dev_tools_message(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      message,
+      message_size);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDevToolsMessageObserverCToCpp::OnDevToolsMethodResult(
-    CefRefPtr<CefBrowser> browser,
-    int message_id,
-    bool success,
-    const void* result,
-    size_t result_size) {
+NO_SANITIZE("cfi-icall") void CefDevToolsMessageObserver_0_CToCpp::OnDevToolsMethodResult(CefRefPtr<CefBrowser> browser, int message_id, bool success, const void* result, size_t result_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_dev_tools_message_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dev_tools_method_result)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dev_tools_method_result) {
     return;
   }
 
@@ -76,20 +69,19 @@ void CefDevToolsMessageObserverCToCpp::OnDevToolsMethodResult(
   // Unverified params: result
 
   // Execute
-  _struct->on_dev_tools_method_result(_struct, CefBrowserCppToC::Wrap(browser),
-                                      message_id, success, result, result_size);
+  _struct->on_dev_tools_method_result(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      message_id,
+      success,
+      result,
+      result_size);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDevToolsMessageObserverCToCpp::OnDevToolsEvent(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& method,
-    const void* params,
-    size_t params_size) {
+NO_SANITIZE("cfi-icall") void CefDevToolsMessageObserver_0_CToCpp::OnDevToolsEvent(CefRefPtr<CefBrowser> browser, const CefString& method, const void* params, size_t params_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_dev_tools_message_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dev_tools_event)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dev_tools_event) {
     return;
   }
 
@@ -108,17 +100,18 @@ void CefDevToolsMessageObserverCToCpp::OnDevToolsEvent(
   // Unverified params: params
 
   // Execute
-  _struct->on_dev_tools_event(_struct, CefBrowserCppToC::Wrap(browser),
-                              method.GetStruct(), params, params_size);
+  _struct->on_dev_tools_event(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      method.GetStruct(),
+      params,
+      params_size);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDevToolsMessageObserverCToCpp::OnDevToolsAgentAttached(
-    CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefDevToolsMessageObserver_0_CToCpp::OnDevToolsAgentAttached(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_dev_tools_message_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dev_tools_agent_attached)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dev_tools_agent_attached) {
     return;
   }
 
@@ -132,16 +125,14 @@ void CefDevToolsMessageObserverCToCpp::OnDevToolsAgentAttached(
 
   // Execute
   _struct->on_dev_tools_agent_attached(_struct,
-                                       CefBrowserCppToC::Wrap(browser));
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDevToolsMessageObserverCToCpp::OnDevToolsAgentDetached(
-    CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefDevToolsMessageObserver_0_CToCpp::OnDevToolsAgentDetached(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_dev_tools_message_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dev_tools_agent_detached)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dev_tools_agent_detached) {
     return;
   }
 
@@ -155,33 +146,26 @@ void CefDevToolsMessageObserverCToCpp::OnDevToolsAgentDetached(
 
   // Execute
   _struct->on_dev_tools_agent_detached(_struct,
-                                       CefBrowserCppToC::Wrap(browser));
+      CefBrowserCppToC_Wrap(browser));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDevToolsMessageObserverCToCpp::CefDevToolsMessageObserverCToCpp() {}
+CefDevToolsMessageObserver_0_CToCpp::CefDevToolsMessageObserver_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDevToolsMessageObserverCToCpp::~CefDevToolsMessageObserverCToCpp() {
+CefDevToolsMessageObserver_0_CToCpp::~CefDevToolsMessageObserver_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_dev_tools_message_observer_t* CefCToCppRefCounted<
-    CefDevToolsMessageObserverCToCpp,
-    CefDevToolsMessageObserver,
-    cef_dev_tools_message_observer_t>::UnwrapDerived(CefWrapperType type,
-                                                     CefDevToolsMessageObserver*
-                                                         c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_dev_tools_message_observer_0_t* CefCToCppRefCounted<CefDevToolsMessageObserver_0_CToCpp, CefDevToolsMessageObserver, cef_dev_tools_message_observer_0_t>::UnwrapDerived(CefWrapperType type, CefDevToolsMessageObserver* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefDevToolsMessageObserverCToCpp,
-                        CefDevToolsMessageObserver,
-                        cef_dev_tools_message_observer_t>::kWrapperType =
-        WT_DEV_TOOLS_MESSAGE_OBSERVER;
+template<> CefWrapperType CefCToCppRefCounted<CefDevToolsMessageObserver_0_CToCpp, CefDevToolsMessageObserver, cef_dev_tools_message_observer_0_t>::kWrapperType = WT_DEV_TOOLS_MESSAGE_OBSERVER;
+
+

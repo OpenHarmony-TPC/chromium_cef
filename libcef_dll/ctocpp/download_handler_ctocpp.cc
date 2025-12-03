@@ -9,27 +9,25 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1e2da961b0bb6ae732efbc9f4d597bf1b605155b$
+// $hash=0a1a34c12edec47e3259db5ac4c25cb26bca703c$
 //
 
-#include "libcef_dll/ctocpp/download_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/before_download_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/download_item_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/download_item_cpptoc.h"
+#include "libcef_dll/ctocpp/download_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefDownloadHandlerCToCpp::CanDownload(CefRefPtr<CefBrowser> browser,
-                                           const CefString& url,
-                                           const CefString& request_method) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefDownloadHandler_0_CToCpp::CanDownload(CefRefPtr<CefBrowser> browser, const CefString& url, const CefString& request_method) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_download_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_download)) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_download) {
     return false;
   }
 
@@ -52,24 +50,20 @@ bool CefDownloadHandlerCToCpp::CanDownload(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  int _retval =
-      _struct->can_download(_struct, CefBrowserCppToC::Wrap(browser),
-                            url.GetStruct(), request_method.GetStruct());
+  int _retval = _struct->can_download(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      url.GetStruct(),
+      request_method.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefDownloadHandlerCToCpp::OnBeforeDownload(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefDownloadItem> download_item,
-    const CefString& suggested_name,
-    CefRefPtr<CefBeforeDownloadCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefDownloadHandler_0_CToCpp::OnBeforeDownload(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownloadItem> download_item, const CefString& suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_download_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_download)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_download) {
     return false;
   }
 
@@ -97,24 +91,21 @@ bool CefDownloadHandlerCToCpp::OnBeforeDownload(
   }
 
   // Execute
-  int _retval = _struct->on_before_download(
-      _struct, CefBrowserCppToC::Wrap(browser),
-      CefDownloadItemCppToC::Wrap(download_item), suggested_name.GetStruct(),
-      CefBeforeDownloadCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_before_download(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefDownloadItemCppToC_Wrap(download_item),
+      suggested_name.GetStruct(),
+      CefBeforeDownloadCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDownloadHandlerCToCpp::OnDownloadUpdated(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefDownloadItem> download_item,
-    CefRefPtr<CefDownloadItemCallback> callback) {
+NO_SANITIZE("cfi-icall") void CefDownloadHandler_0_CToCpp::OnDownloadUpdated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownloadItem> download_item, CefRefPtr<CefDownloadItemCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_download_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_download_updated)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_download_updated) {
     return;
   }
 
@@ -137,33 +128,29 @@ void CefDownloadHandlerCToCpp::OnDownloadUpdated(
   }
 
   // Execute
-  _struct->on_download_updated(_struct, CefBrowserCppToC::Wrap(browser),
-                               CefDownloadItemCppToC::Wrap(download_item),
-                               CefDownloadItemCallbackCppToC::Wrap(callback));
+  _struct->on_download_updated(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefDownloadItemCppToC_Wrap(download_item),
+      CefDownloadItemCallbackCppToC_Wrap(callback));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadHandlerCToCpp::CefDownloadHandlerCToCpp() {}
+CefDownloadHandler_0_CToCpp::CefDownloadHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadHandlerCToCpp::~CefDownloadHandlerCToCpp() {
+CefDownloadHandler_0_CToCpp::~CefDownloadHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_download_handler_t* CefCToCppRefCounted<
-    CefDownloadHandlerCToCpp,
-    CefDownloadHandler,
-    cef_download_handler_t>::UnwrapDerived(CefWrapperType type,
-                                           CefDownloadHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_download_handler_0_t* CefCToCppRefCounted<CefDownloadHandler_0_CToCpp, CefDownloadHandler, cef_download_handler_0_t>::UnwrapDerived(CefWrapperType type, CefDownloadHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefDownloadHandlerCToCpp,
-                                   CefDownloadHandler,
-                                   cef_download_handler_t>::kWrapperType =
-    WT_DOWNLOAD_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefDownloadHandler_0_CToCpp, CefDownloadHandler, cef_download_handler_0_t>::kWrapperType = WT_DOWNLOAD_HANDLER;
+
+

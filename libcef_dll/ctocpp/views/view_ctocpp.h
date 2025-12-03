@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=93fd1ba50ce38fc0f7ba88d9f4c2d5be2542934c$
+// $hash=90e1fe5345b4b64e1bf9c745ee6f99f0a95c5a17$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_VIEW_CTOCPP_H_
@@ -20,20 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_browser_view_capi.h"
-#include "include/capi/views/cef_button_capi.h"
-#include "include/capi/views/cef_panel_capi.h"
-#include "include/capi/views/cef_scroll_view_capi.h"
-#include "include/capi/views/cef_textfield_capi.h"
-#include "include/capi/views/cef_view_capi.h"
-#include "include/capi/views/cef_window_capi.h"
-#include "include/views/cef_browser_view.h"
-#include "include/views/cef_button.h"
-#include "include/views/cef_panel.h"
-#include "include/views/cef_scroll_view.h"
-#include "include/views/cef_textfield.h"
 #include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi.h"
+#include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi.h"
+#include "include/views/cef_button.h"
+#include "include/capi/views/cef_button_capi.h"
+#include "include/views/cef_panel.h"
+#include "include/capi/views/cef_panel_capi.h"
+#include "include/views/cef_scroll_view.h"
+#include "include/capi/views/cef_scroll_view_capi.h"
+#include "include/views/cef_textfield.h"
+#include "include/capi/views/cef_textfield_capi.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -98,5 +98,8 @@ class CefViewCToCpp
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefViewCToCpp_Wrap = CefViewCToCpp::Wrap;
+constexpr auto CefViewCToCpp_Unwrap = CefViewCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_VIEW_CTOCPP_H_

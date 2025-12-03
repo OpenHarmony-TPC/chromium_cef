@@ -9,33 +9,34 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=84a8e26ffc30dba9813d0f5498198ae2e8851e50$
+// $hash=f014f626ee0ddbc224548c83c2b8774f1c2b9fd6$
 //
 
 #include "libcef_dll/ctocpp/resource_skip_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefResourceSkipCallbackCToCpp::Continue(int64_t bytes_skipped) {
+NO_SANITIZE("cfi-icall") void CefResourceSkipCallbackCToCpp::Continue(int64_t bytes_skipped) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_skip_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->cont(_struct, bytes_skipped);
+  _struct->cont(_struct,
+      bytes_skipped);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefResourceSkipCallbackCToCpp::CefResourceSkipCallbackCToCpp() {}
+CefResourceSkipCallbackCToCpp::CefResourceSkipCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -43,18 +44,11 @@ CefResourceSkipCallbackCToCpp::~CefResourceSkipCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_resource_skip_callback_t* CefCToCppRefCounted<
-    CefResourceSkipCallbackCToCpp,
-    CefResourceSkipCallback,
-    cef_resource_skip_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                 CefResourceSkipCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_resource_skip_callback_t* CefCToCppRefCounted<CefResourceSkipCallbackCToCpp, CefResourceSkipCallback, cef_resource_skip_callback_t>::UnwrapDerived(CefWrapperType type, CefResourceSkipCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefResourceSkipCallbackCToCpp,
-                                   CefResourceSkipCallback,
-                                   cef_resource_skip_callback_t>::kWrapperType =
-    WT_RESOURCE_SKIP_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefResourceSkipCallbackCToCpp, CefResourceSkipCallback, cef_resource_skip_callback_t>::kWrapperType = WT_RESOURCE_SKIP_CALLBACK;
+
+

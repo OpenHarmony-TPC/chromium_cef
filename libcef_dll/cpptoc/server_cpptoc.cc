@@ -9,11 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8dd8552393c945a26e68a35d5c366696f7d6c90c$
+// $hash=db9b00b2ccccc7c531626fafcaa499e9c2cf7484$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/server_cpptoc.h"
-
 #include "libcef_dll/cpptoc/task_runner_cpptoc.h"
 #include "libcef_dll/ctocpp/server_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -21,10 +21,7 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT void cef_server_create(const cef_string_t* address,
-                                  uint16_t port,
-                                  int backlog,
-                                  struct _cef_server_handler_t* handler) {
+CEF_EXPORT void cef_server_create(const cef_string_t* address, uint16_t port, int backlog, struct _cef_server_handler_0_t* handler) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -41,16 +38,18 @@ CEF_EXPORT void cef_server_create(const cef_string_t* address,
   }
 
   // Execute
-  CefServer::CreateServer(CefString(address), port, backlog,
-                          CefServerHandlerCToCpp::Wrap(handler));
+  CefServer::CreateServer(
+      CefString(address),
+      port,
+      backlog,
+      CefServerHandlerCToCpp_Wrap(handler));
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-struct _cef_task_runner_t* CEF_CALLBACK
-server_get_task_runner(struct _cef_server_t* self) {
+struct _cef_task_runner_0_t* CEF_CALLBACK server_get_task_runner(struct _cef_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -61,14 +60,13 @@ server_get_task_runner(struct _cef_server_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefTaskRunner> _retval =
-      CefServerCppToC::Get(self)->GetTaskRunner();
+  CefRefPtr<CefTaskRunner> _retval = CefServer_0_CppToC::Get(self)->GetTaskRunner();
 
   // Return type: refptr_same
-  return CefTaskRunnerCppToC::Wrap(_retval);
+  return CefTaskRunnerCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK server_shutdown(struct _cef_server_t* self) {
+void CEF_CALLBACK server_shutdown(struct _cef_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -79,10 +77,10 @@ void CEF_CALLBACK server_shutdown(struct _cef_server_t* self) {
   }
 
   // Execute
-  CefServerCppToC::Get(self)->Shutdown();
+  CefServer_0_CppToC::Get(self)->Shutdown();
 }
 
-int CEF_CALLBACK server_is_running(struct _cef_server_t* self) {
+int CEF_CALLBACK server_is_running(struct _cef_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -93,14 +91,13 @@ int CEF_CALLBACK server_is_running(struct _cef_server_t* self) {
   }
 
   // Execute
-  bool _retval = CefServerCppToC::Get(self)->IsRunning();
+  bool _retval = CefServer_0_CppToC::Get(self)->IsRunning();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-server_get_address(struct _cef_server_t* self) {
+cef_string_userfree_t CEF_CALLBACK server_get_address(struct _cef_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -111,13 +108,13 @@ server_get_address(struct _cef_server_t* self) {
   }
 
   // Execute
-  CefString _retval = CefServerCppToC::Get(self)->GetAddress();
+  CefString _retval = CefServer_0_CppToC::Get(self)->GetAddress();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK server_has_connection(struct _cef_server_t* self) {
+int CEF_CALLBACK server_has_connection(struct _cef_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -128,14 +125,13 @@ int CEF_CALLBACK server_has_connection(struct _cef_server_t* self) {
   }
 
   // Execute
-  bool _retval = CefServerCppToC::Get(self)->HasConnection();
+  bool _retval = CefServer_0_CppToC::Get(self)->HasConnection();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK server_is_valid_connection(struct _cef_server_t* self,
-                                            int connection_id) {
+int CEF_CALLBACK server_is_valid_connection(struct _cef_server_0_t* self, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -146,17 +142,14 @@ int CEF_CALLBACK server_is_valid_connection(struct _cef_server_t* self,
   }
 
   // Execute
-  bool _retval = CefServerCppToC::Get(self)->IsValidConnection(connection_id);
+  bool _retval = CefServer_0_CppToC::Get(self)->IsValidConnection(
+      connection_id);
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK server_send_http200response(struct _cef_server_t* self,
-                                              int connection_id,
-                                              const cef_string_t* content_type,
-                                              const void* data,
-                                              size_t data_size) {
+void CEF_CALLBACK server_send_http200_response(struct _cef_server_0_t* self, int connection_id, const cef_string_t* content_type, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -177,12 +170,14 @@ void CEF_CALLBACK server_send_http200response(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->SendHttp200Response(
-      connection_id, CefString(content_type), data, data_size);
+  CefServer_0_CppToC::Get(self)->SendHttp200Response(
+      connection_id,
+      CefString(content_type),
+      data,
+      data_size);
 }
 
-void CEF_CALLBACK server_send_http404response(struct _cef_server_t* self,
-                                              int connection_id) {
+void CEF_CALLBACK server_send_http404_response(struct _cef_server_0_t* self, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -193,13 +188,11 @@ void CEF_CALLBACK server_send_http404response(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->SendHttp404Response(connection_id);
+  CefServer_0_CppToC::Get(self)->SendHttp404Response(
+      connection_id);
 }
 
-void CEF_CALLBACK
-server_send_http500response(struct _cef_server_t* self,
-                            int connection_id,
-                            const cef_string_t* error_message) {
+void CEF_CALLBACK server_send_http500_response(struct _cef_server_0_t* self, int connection_id, const cef_string_t* error_message) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -215,17 +208,12 @@ server_send_http500response(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->SendHttp500Response(connection_id,
-                                                  CefString(error_message));
+  CefServer_0_CppToC::Get(self)->SendHttp500Response(
+      connection_id,
+      CefString(error_message));
 }
 
-void CEF_CALLBACK
-server_send_http_response(struct _cef_server_t* self,
-                          int connection_id,
-                          int response_code,
-                          const cef_string_t* content_type,
-                          int64_t content_length,
-                          cef_string_multimap_t extra_headers) {
+void CEF_CALLBACK server_send_http_response(struct _cef_server_0_t* self, int connection_id, int response_code, const cef_string_t* content_type, int64_t content_length, cef_string_multimap_t extra_headers) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -246,15 +234,15 @@ server_send_http_response(struct _cef_server_t* self,
   transfer_string_multimap_contents(extra_headers, extra_headersMultimap);
 
   // Execute
-  CefServerCppToC::Get(self)->SendHttpResponse(
-      connection_id, response_code, CefString(content_type), content_length,
+  CefServer_0_CppToC::Get(self)->SendHttpResponse(
+      connection_id,
+      response_code,
+      CefString(content_type),
+      content_length,
       extra_headersMultimap);
 }
 
-void CEF_CALLBACK server_send_raw_data(struct _cef_server_t* self,
-                                       int connection_id,
-                                       const void* data,
-                                       size_t data_size) {
+void CEF_CALLBACK server_send_raw_data(struct _cef_server_0_t* self, int connection_id, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -270,11 +258,13 @@ void CEF_CALLBACK server_send_raw_data(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->SendRawData(connection_id, data, data_size);
+  CefServer_0_CppToC::Get(self)->SendRawData(
+      connection_id,
+      data,
+      data_size);
 }
 
-void CEF_CALLBACK server_close_connection(struct _cef_server_t* self,
-                                          int connection_id) {
+void CEF_CALLBACK server_close_connection(struct _cef_server_0_t* self, int connection_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -285,13 +275,11 @@ void CEF_CALLBACK server_close_connection(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->CloseConnection(connection_id);
+  CefServer_0_CppToC::Get(self)->CloseConnection(
+      connection_id);
 }
 
-void CEF_CALLBACK server_send_web_socket_message(struct _cef_server_t* self,
-                                                 int connection_id,
-                                                 const void* data,
-                                                 size_t data_size) {
+void CEF_CALLBACK server_send_web_socket_message(struct _cef_server_0_t* self, int connection_id, const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -307,45 +295,45 @@ void CEF_CALLBACK server_send_web_socket_message(struct _cef_server_t* self,
   }
 
   // Execute
-  CefServerCppToC::Get(self)->SendWebSocketMessage(connection_id, data,
-                                                   data_size);
+  CefServer_0_CppToC::Get(self)->SendWebSocketMessage(
+      connection_id,
+      data,
+      data_size);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefServerCppToC::CefServerCppToC() {
+CefServer_0_CppToC::CefServer_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_task_runner = server_get_task_runner;
   GetStruct()->shutdown = server_shutdown;
   GetStruct()->is_running = server_is_running;
   GetStruct()->get_address = server_get_address;
   GetStruct()->has_connection = server_has_connection;
   GetStruct()->is_valid_connection = server_is_valid_connection;
-  GetStruct()->send_http200response = server_send_http200response;
-  GetStruct()->send_http404response = server_send_http404response;
-  GetStruct()->send_http500response = server_send_http500response;
+  GetStruct()->send_http200_response = server_send_http200_response;
+  GetStruct()->send_http404_response = server_send_http404_response;
+  GetStruct()->send_http500_response = server_send_http500_response;
   GetStruct()->send_http_response = server_send_http_response;
   GetStruct()->send_raw_data = server_send_raw_data;
   GetStruct()->close_connection = server_close_connection;
   GetStruct()->send_web_socket_message = server_send_web_socket_message;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefServerCppToC::~CefServerCppToC() {
+CefServer_0_CppToC::~CefServer_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefServer>
-CefCppToCRefCounted<CefServerCppToC, CefServer, cef_server_t>::UnwrapDerived(
-    CefWrapperType type,
-    cef_server_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefServer> CefCppToCRefCounted<CefServer_0_CppToC, CefServer, cef_server_0_t>::UnwrapDerived(CefWrapperType type, cef_server_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefServerCppToC, CefServer, cef_server_t>::
-    kWrapperType = WT_SERVER;
+template<> CefWrapperType CefCppToCRefCounted<CefServer_0_CppToC, CefServer, cef_server_0_t>::kWrapperType = WT_SERVER;
+
+

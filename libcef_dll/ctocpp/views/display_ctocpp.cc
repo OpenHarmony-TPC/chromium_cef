@@ -9,14 +9,14 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=731b1cb864083bfacad902f9a5791482d090eefe$
+// $hash=0fdf023044b55c1ef8c536646fc90dc8c291f08c$
 //
-
-#include "libcef_dll/ctocpp/views/display_ctocpp.h"
 
 #include <algorithm>
 
+#include "libcef_dll/ctocpp/views/display_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
@@ -26,42 +26,38 @@ NO_SANITIZE("cfi-icall") CefRefPtr<CefDisplay> CefDisplay::GetPrimaryDisplay() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_display_t* _retval = cef_display_get_primary();
+  auto* _retval = cef_display_get_primary();
 
   // Return type: refptr_same
-  return CefDisplayCToCpp::Wrap(_retval);
+  return CefDisplayCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefDisplay> CefDisplay::GetDisplayNearestPoint(
-    const CefPoint& point,
-    bool input_pixel_coords) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefDisplay> CefDisplay::GetDisplayNearestPoint(const CefPoint& point, bool input_pixel_coords) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_display_t* _retval =
-      cef_display_get_nearest_point(&point, input_pixel_coords);
+  auto* _retval = cef_display_get_nearest_point(
+      &point,
+      input_pixel_coords);
 
   // Return type: refptr_same
-  return CefDisplayCToCpp::Wrap(_retval);
+  return CefDisplayCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefDisplay> CefDisplay::GetDisplayMatchingBounds(
-    const CefRect& bounds,
-    bool input_pixel_coords) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefDisplay> CefDisplay::GetDisplayMatchingBounds(const CefRect& bounds, bool input_pixel_coords) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_display_t* _retval =
-      cef_display_get_matching_bounds(&bounds, input_pixel_coords);
+  auto* _retval = cef_display_get_matching_bounds(
+      &bounds,
+      input_pixel_coords);
 
   // Return type: refptr_same
-  return CefDisplayCToCpp::Wrap(_retval);
+  return CefDisplayCToCpp_Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall") size_t CefDisplay::GetDisplayCount() {
@@ -76,8 +72,7 @@ NO_SANITIZE("cfi-icall") size_t CefDisplay::GetDisplayCount() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDisplay::GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays) {
+NO_SANITIZE("cfi-icall") void CefDisplay::GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -90,87 +85,90 @@ void CefDisplay::GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays) {
     displaysList = new cef_display_t*[displaysCount];
     DCHECK(displaysList);
     if (displaysList) {
-      memset(displaysList, 0, sizeof(cef_display_t*) * displaysCount);
+       memset(displaysList, 0, sizeof(cef_display_t*)*displaysCount);
     }
     if (displaysList && displaysSize > 0) {
       for (size_t i = 0; i < displaysSize; ++i) {
-        displaysList[i] = CefDisplayCToCpp::Unwrap(displays[i]);
+        displaysList[i] = CefDisplayCToCpp_Unwrap(displays[i]);
       }
     }
   }
 
   // Execute
-  cef_display_get_alls(&displaysCount, displaysList);
+  cef_display_get_alls(
+      &displaysCount,
+      displaysList);
 
   // Restore param:displays; type: refptr_vec_same_byref
   displays.clear();
   if (displaysCount > 0 && displaysList) {
     for (size_t i = 0; i < displaysCount; ++i) {
-      displays.push_back(CefDisplayCToCpp::Wrap(displaysList[i]));
+      displays.push_back(CefDisplayCToCpp_Wrap(displaysList[i]));
     }
-    delete[] displaysList;
+    delete [] displaysList;
   }
 }
 
-NO_SANITIZE("cfi-icall")
-CefPoint CefDisplay::ConvertScreenPointToPixels(const CefPoint& point) {
+NO_SANITIZE("cfi-icall") CefPoint CefDisplay::ConvertScreenPointToPixels(const CefPoint& point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_point_t _retval = cef_display_convert_screen_point_to_pixels(&point);
+  cef_point_t _retval = cef_display_convert_screen_point_to_pixels(
+      &point);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefPoint CefDisplay::ConvertScreenPointFromPixels(const CefPoint& point) {
+NO_SANITIZE("cfi-icall") CefPoint CefDisplay::ConvertScreenPointFromPixels(const CefPoint& point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_point_t _retval = cef_display_convert_screen_point_from_pixels(&point);
+  cef_point_t _retval = cef_display_convert_screen_point_from_pixels(
+      &point);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRect CefDisplay::ConvertScreenRectToPixels(const CefRect& rect) {
+NO_SANITIZE("cfi-icall") CefRect CefDisplay::ConvertScreenRectToPixels(const CefRect& rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_rect_t _retval = cef_display_convert_screen_rect_to_pixels(&rect);
+  cef_rect_t _retval = cef_display_convert_screen_rect_to_pixels(
+      &rect);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRect CefDisplay::ConvertScreenRectFromPixels(const CefRect& rect) {
+NO_SANITIZE("cfi-icall") CefRect CefDisplay::ConvertScreenRectFromPixels(const CefRect& rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_rect_t _retval = cef_display_convert_screen_rect_from_pixels(&rect);
+  cef_rect_t _retval = cef_display_convert_screen_rect_from_pixels(
+      &rect);
 
   // Return type: simple
   return _retval;
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") int64_t CefDisplayCToCpp::GetID() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_id)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_id) {
     return 0;
   }
 
@@ -186,8 +184,8 @@ NO_SANITIZE("cfi-icall") int64_t CefDisplayCToCpp::GetID() {
 NO_SANITIZE("cfi-icall") float CefDisplayCToCpp::GetDeviceScaleFactor() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_device_scale_factor)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_device_scale_factor) {
     return 0;
   }
 
@@ -200,41 +198,41 @@ NO_SANITIZE("cfi-icall") float CefDisplayCToCpp::GetDeviceScaleFactor() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDisplayCToCpp::ConvertPointToPixels(CefPoint& point) {
+NO_SANITIZE("cfi-icall") void CefDisplayCToCpp::ConvertPointToPixels(CefPoint& point) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, convert_point_to_pixels)) {
+  auto* _struct = GetStruct();
+  if (!_struct->convert_point_to_pixels) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->convert_point_to_pixels(_struct, &point);
+  _struct->convert_point_to_pixels(_struct,
+      &point);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefDisplayCToCpp::ConvertPointFromPixels(CefPoint& point) {
+NO_SANITIZE("cfi-icall") void CefDisplayCToCpp::ConvertPointFromPixels(CefPoint& point) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, convert_point_from_pixels)) {
+  auto* _struct = GetStruct();
+  if (!_struct->convert_point_from_pixels) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->convert_point_from_pixels(_struct, &point);
+  _struct->convert_point_from_pixels(_struct,
+      &point);
 }
 
 NO_SANITIZE("cfi-icall") CefRect CefDisplayCToCpp::GetBounds() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_bounds)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_bounds) {
     return CefRect();
   }
 
@@ -250,8 +248,8 @@ NO_SANITIZE("cfi-icall") CefRect CefDisplayCToCpp::GetBounds() {
 NO_SANITIZE("cfi-icall") CefRect CefDisplayCToCpp::GetWorkArea() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_work_area)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_work_area) {
     return CefRect();
   }
 
@@ -267,8 +265,8 @@ NO_SANITIZE("cfi-icall") CefRect CefDisplayCToCpp::GetWorkArea() {
 NO_SANITIZE("cfi-icall") int CefDisplayCToCpp::GetRotation() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_display_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_rotation)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_rotation) {
     return 0;
   }
 
@@ -283,7 +281,8 @@ NO_SANITIZE("cfi-icall") int CefDisplayCToCpp::GetRotation() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefDisplayCToCpp::CefDisplayCToCpp() {}
+CefDisplayCToCpp::CefDisplayCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -291,16 +290,11 @@ CefDisplayCToCpp::~CefDisplayCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_display_t*
-CefCToCppRefCounted<CefDisplayCToCpp, CefDisplay, cef_display_t>::UnwrapDerived(
-    CefWrapperType type,
-    CefDisplay* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_display_t* CefCToCppRefCounted<CefDisplayCToCpp, CefDisplay, cef_display_t>::UnwrapDerived(CefWrapperType type, CefDisplay* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefDisplayCToCpp,
-                                   CefDisplay,
-                                   cef_display_t>::kWrapperType = WT_DISPLAY;
+template<> CefWrapperType CefCToCppRefCounted<CefDisplayCToCpp, CefDisplay, cef_display_t>::kWrapperType = WT_DISPLAY;
+
+

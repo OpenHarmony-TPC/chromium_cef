@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=baaa6c03f8b1f9940234bc1802b3b61e721983cd$
+// $hash=cf6e46e8dab4acfcb0b07220ecc22e989854466d$
 //
 
 #include "libcef_dll/cpptoc/app_cpptoc.h"
-
 #include "libcef_dll/cpptoc/browser_process_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/render_process_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/resource_bundle_handler_cpptoc.h"
@@ -24,10 +23,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK app_on_before_command_line_processing(
-    struct _cef_app_t* self,
-    const cef_string_t* process_type,
-    struct _cef_command_line_t* command_line) {
+void CEF_CALLBACK app_on_before_command_line_processing(struct _cef_app_t* self, const cef_string_t* process_type, struct _cef_command_line_t* command_line) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -43,12 +39,11 @@ void CEF_CALLBACK app_on_before_command_line_processing(
 
   // Execute
   CefAppCppToC::Get(self)->OnBeforeCommandLineProcessing(
-      CefString(process_type), CefCommandLineCToCpp::Wrap(command_line));
+      CefString(process_type),
+      CefCommandLineCToCpp_Wrap(command_line));
 }
 
-void CEF_CALLBACK
-app_on_register_custom_schemes(struct _cef_app_t* self,
-                               struct _cef_scheme_registrar_t* registrar) {
+void CEF_CALLBACK app_on_register_custom_schemes(struct _cef_app_t* self, struct _cef_scheme_registrar_t* registrar) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -62,15 +57,14 @@ app_on_register_custom_schemes(struct _cef_app_t* self,
   }
 
   // Translate param: registrar; type: rawptr_diff
-  CefOwnPtr<CefSchemeRegistrar> registrarPtr(
-      CefSchemeRegistrarCToCpp::Wrap(registrar));
+  CefOwnPtr<CefSchemeRegistrar> registrarPtr(CefSchemeRegistrarCToCpp_Wrap(registrar));
 
   // Execute
-  CefAppCppToC::Get(self)->OnRegisterCustomSchemes(registrarPtr.get());
+  CefAppCppToC::Get(self)->OnRegisterCustomSchemes(
+      registrarPtr.get());
 }
 
-struct _cef_resource_bundle_handler_t* CEF_CALLBACK
-app_get_resource_bundle_handler(struct _cef_app_t* self) {
+struct _cef_resource_bundle_handler_t* CEF_CALLBACK app_get_resource_bundle_handler(struct _cef_app_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -79,15 +73,13 @@ app_get_resource_bundle_handler(struct _cef_app_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefResourceBundleHandler> _retval =
-      CefAppCppToC::Get(self)->GetResourceBundleHandler();
+  CefRefPtr<CefResourceBundleHandler> _retval = CefAppCppToC::Get(self)->GetResourceBundleHandler();
 
   // Return type: refptr_same
-  return CefResourceBundleHandlerCppToC::Wrap(_retval);
+  return CefResourceBundleHandlerCppToC_Wrap(_retval);
 }
 
-struct _cef_browser_process_handler_t* CEF_CALLBACK
-app_get_browser_process_handler(struct _cef_app_t* self) {
+struct _cef_browser_process_handler_t* CEF_CALLBACK app_get_browser_process_handler(struct _cef_app_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -96,15 +88,13 @@ app_get_browser_process_handler(struct _cef_app_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBrowserProcessHandler> _retval =
-      CefAppCppToC::Get(self)->GetBrowserProcessHandler();
+  CefRefPtr<CefBrowserProcessHandler> _retval = CefAppCppToC::Get(self)->GetBrowserProcessHandler();
 
   // Return type: refptr_same
-  return CefBrowserProcessHandlerCppToC::Wrap(_retval);
+  return CefBrowserProcessHandlerCppToC_Wrap(_retval);
 }
 
-struct _cef_render_process_handler_t* CEF_CALLBACK
-app_get_render_process_handler(struct _cef_app_t* self) {
+struct _cef_render_process_handler_t* CEF_CALLBACK app_get_render_process_handler(struct _cef_app_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -113,11 +103,10 @@ app_get_render_process_handler(struct _cef_app_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefRenderProcessHandler> _retval =
-      CefAppCppToC::Get(self)->GetRenderProcessHandler();
+  CefRefPtr<CefRenderProcessHandler> _retval = CefAppCppToC::Get(self)->GetRenderProcessHandler();
 
   // Return type: refptr_same
-  return CefRenderProcessHandlerCppToC::Wrap(_retval);
+  return CefRenderProcessHandlerCppToC_Wrap(_retval);
 }
 
 }  // namespace
@@ -125,8 +114,7 @@ app_get_render_process_handler(struct _cef_app_t* self) {
 // CONSTRUCTOR - Do not edit by hand.
 
 CefAppCppToC::CefAppCppToC() {
-  GetStruct()->on_before_command_line_processing =
-      app_on_before_command_line_processing;
+  GetStruct()->on_before_command_line_processing = app_on_before_command_line_processing;
   GetStruct()->on_register_custom_schemes = app_on_register_custom_schemes;
   GetStruct()->get_resource_bundle_handler = app_get_resource_bundle_handler;
   GetStruct()->get_browser_process_handler = app_get_browser_process_handler;
@@ -135,17 +123,14 @@ CefAppCppToC::CefAppCppToC() {
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefAppCppToC::~CefAppCppToC() {}
+CefAppCppToC::~CefAppCppToC() {
+}
 
-template <>
-CefRefPtr<CefApp>
-CefCppToCRefCounted<CefAppCppToC, CefApp, cef_app_t>::UnwrapDerived(
-    CefWrapperType type,
-    cef_app_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefApp> CefCppToCRefCounted<CefAppCppToC, CefApp, cef_app_t>::UnwrapDerived(CefWrapperType type, cef_app_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefAppCppToC, CefApp, cef_app_t>::kWrapperType = WT_APP;
+template<> CefWrapperType CefCppToCRefCounted<CefAppCppToC, CefApp, cef_app_t>::kWrapperType = WT_APP;
+
+

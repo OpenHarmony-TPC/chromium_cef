@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=01238f347bddad41cf94d3834e4ad1edc47e83ae$
+// $hash=2e944b611077562e89ee578e28142b61677f517e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SELECT_CLIENT_CERTIFICATE_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_request_handler_capi.h"
 #include "include/cef_request_handler.h"
+#include "include/capi/cef_request_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSelectClientCertificateCallbackCppToC
-    : public CefCppToCRefCounted<CefSelectClientCertificateCallbackCppToC,
-                                 CefSelectClientCertificateCallback,
-                                 cef_select_client_certificate_callback_t> {
+class CefSelectClientCertificateCallback_0_CppToC
+    : public CefCppToCRefCounted<CefSelectClientCertificateCallback_0_CppToC, CefSelectClientCertificateCallback, cef_select_client_certificate_callback_0_t> {
  public:
-  CefSelectClientCertificateCallbackCppToC();
-  virtual ~CefSelectClientCertificateCallbackCppToC();
+  CefSelectClientCertificateCallback_0_CppToC();
+  virtual ~CefSelectClientCertificateCallback_0_CppToC();
 };
+
+constexpr auto CefSelectClientCertificateCallbackCppToC_Wrap = CefSelectClientCertificateCallback_0_CppToC::Wrap;
+constexpr auto CefSelectClientCertificateCallbackCppToC_Unwrap = CefSelectClientCertificateCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SELECT_CLIENT_CERTIFICATE_CALLBACK_CPPTOC_H_

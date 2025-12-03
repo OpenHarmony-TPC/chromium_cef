@@ -262,7 +262,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetNavigationEntries(CefRefPtr<CefNavigationEntryVisitor> visitor,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
+  void SetAudioMuted(bool mute) override;
+  bool IsAudioMuted() override;
   void NotifyMoveOrResizeStarted() override;
+  void NotifyScreenInfoChanged() override;
   bool IsFullscreen() override;
   void ExitFullscreen(bool will_cause_resize) override;
   bool IsRenderProcessUnresponsive() override;
@@ -390,9 +393,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   RenderViewContextMenuObserver* context_menu_observer() const {
     return context_menu_observer_;
   }
-  void set_context_menu_observer(RenderViewContextMenuObserver* observer) {
-    context_menu_observer_ = observer;
-  }
+  void set_context_menu_observer(RenderViewContextMenuObserver* observer);
+  void clear_context_menu_observer(RenderViewContextMenuObserver* observer);
 
   // Returns the Widget owner for the browser window. Only used with windowed
   // browsers.

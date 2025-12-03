@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ed35cb427dec9b97a1a742888b760f99cc0f51e0$
+// $hash=28b49e0efdf1a19233f17d4849b0a4068f529e51$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_BUTTON_CPPTOC_H_
@@ -20,19 +20,22 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_button_capi.h"
-#include "include/capi/views/cef_label_button_capi.h"
 #include "include/views/cef_button.h"
+#include "include/capi/views/cef_button_capi_versions.h"
 #include "include/views/cef_label_button.h"
+#include "include/capi/views/cef_label_button_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefButtonCppToC
-    : public CefCppToCRefCounted<CefButtonCppToC, CefButton, cef_button_t> {
+class CefButton_0_CppToC
+    : public CefCppToCRefCounted<CefButton_0_CppToC, CefButton, cef_button_0_t> {
  public:
-  CefButtonCppToC();
-  virtual ~CefButtonCppToC();
+  CefButton_0_CppToC();
+  virtual ~CefButton_0_CppToC();
 };
+
+constexpr auto CefButtonCppToC_Wrap = CefButton_0_CppToC::Wrap;
+constexpr auto CefButtonCppToC_Unwrap = CefButton_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BUTTON_CPPTOC_H_

@@ -9,6 +9,7 @@
 
 #include "base/command_line.h"
 #include "base/path_service.h"
+#include "cef/include/wrapper/cef_library_loader.h"
 #include "cef/libcef/browser/browser_frame.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info_manager.h"
@@ -48,6 +49,10 @@
 
 #if !BUILDFLAG(IS_MAC)
 #include "cef/libcef/browser/chrome/chrome_web_contents_view_delegate_cef.h"
+#endif
+
+#if BUILDFLAG(IS_WIN)
+#include "cef/libcef_dll/bootstrap/bootstrap_util_win.h"
 #endif
 
 namespace {
@@ -132,7 +137,7 @@ void HandleExternalProtocolHelper(
     ChromeContentBrowserClientCef* self,
     content::WebContents::Getter web_contents_getter,
     content::FrameTreeNodeId frame_tree_node_id,
-    content::NavigationUIData* navigation_data,
+    std::unique_ptr<content::NavigationUIData> navigation_data,
     bool is_primary_main_frame,
     bool is_in_fenced_frame_tree,
     network::mojom::WebSandboxFlags sandbox_flags,
@@ -153,12 +158,24 @@ void HandleExternalProtocolHelper(
   // NavigationURLLoaderImpl::PrepareForNonInterceptedRequest.
   self->HandleExternalProtocol(
       resource_request.url, web_contents_getter, frame_tree_node_id,
-      navigation_data, is_primary_main_frame, is_in_fenced_frame_tree,
+      navigation_data.get(), is_primary_main_frame, is_in_fenced_frame_tree,
       sandbox_flags,
       static_cast<ui::PageTransition>(resource_request.transition_type),
       resource_request.has_user_gesture, initiating_origin, initiator_rfh,
       isolation_info, nullptr);
 }
+
+#if BUILDFLAG(IS_WIN)
+// Returns the module handle that contains this code (e.g. libcef.dll).
+HINSTANCE GetCodeModuleHandle() {
+  HMODULE hModule = nullptr;
+  CHECK(::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCWSTR>(GetCodeModuleHandle),
+                            &hModule));
+  return hModule;
+}
+#endif
 
 }  // namespace
 
@@ -213,6 +230,23 @@ void ChromeContentBrowserClientCef::AppendExtraCommandLineSwitches(
     };
     command_line->CopySwitchesFrom(*browser_cmd, kSwitchNames);
   }
+
+#if BUILDFLAG(IS_WIN)
+  {
+    const auto& exe_path = bootstrap_util::GetExePath();
+    const auto& module_value =
+        bootstrap_util::GetValidatedModuleValue(*browser_cmd, exe_path);
+    if (!module_value.empty()) {
+      command_line->AppendSwitchNative(bootstrap_util::switches::kModule,
+                                       module_value);
+    }
+    const auto& libcef_path =
+        bootstrap_util::GetModulePath(GetCodeModuleHandle());
+    if (libcef_path.DirName() != exe_path.DirName()) {
+      command_line->AppendSwitchPath(switches::kLibcefPath, libcef_path);
+    }
+  }
+#endif
 
   const std::string& process_type =
       command_line->GetSwitchValueASCII(switches::kProcessType);
@@ -375,12 +409,14 @@ void ChromeContentBrowserClientCef::CreateWindowResult(
   CefBrowserInfoManager::GetInstance()->CreateWindowResult(opener, success);
 }
 
-void ChromeContentBrowserClientCef::OverrideWebkitPrefs(
+void ChromeContentBrowserClientCef::OverrideWebPreferences(
     content::WebContents* web_contents,
+    content::SiteInstance& main_frame_site,
     blink::web_pref::WebPreferences* prefs) {
   renderer_prefs::SetDefaultPrefs(*prefs);
 
-  ChromeContentBrowserClient::OverrideWebkitPrefs(web_contents, prefs);
+  ChromeContentBrowserClient::OverrideWebPreferences(web_contents,
+                                                     main_frame_site, prefs);
 
   SkColor base_background_color;
   auto browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
@@ -542,23 +578,20 @@ bool ChromeContentBrowserClientCef::HandleExternalProtocol(
       web_contents_getter, frame_tree_node_id, request,
       base::BindRepeating(HandleExternalProtocolHelper, base::Unretained(this),
                           web_contents_getter, frame_tree_node_id,
-                          navigation_data, is_primary_main_frame,
-                          is_in_fenced_frame_tree, sandbox_flags, request,
-                          initiating_origin, std::move(weak_initiator_document),
-                          isolation_info));
+                          base::Passed(navigation_data->Clone()),
+                          is_primary_main_frame, is_in_fenced_frame_tree,
+                          sandbox_flags, request, initiating_origin,
+                          std::move(weak_initiator_document), isolation_info));
 
   net_service::ProxyURLLoaderFactory::CreateProxy(
       web_contents_getter, std::move(receiver), std::move(request_handler));
   return true;
 }
 
-std::vector<std::unique_ptr<content::NavigationThrottle>>
-ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
-    content::NavigationHandle* navigation_handle) {
-  auto throttles = ChromeContentBrowserClient::CreateThrottlesForNavigation(
-      navigation_handle);
-  throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
-  return throttles;
+void ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
+    content::NavigationThrottleRegistry& registry) {
+  ChromeContentBrowserClient::CreateThrottlesForNavigation(registry);
+  throttle::CreateThrottlesForNavigation(registry);
 }
 
 bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
@@ -599,7 +632,8 @@ ChromeContentBrowserClientCef::CreateLoginDelegate(
     const GURL& url,
     scoped_refptr<net::HttpResponseHeaders> response_headers,
     bool first_auth_attempt,
-    LoginAuthRequiredCallback auth_required_callback) {
+    content::GuestPageHolder* guest,
+    content::LoginDelegate::LoginAuthRequiredCallback auth_required_callback) {
   // |web_contents| is nullptr for CefURLRequests without an associated frame.
   if (!web_contents || base::CommandLine::ForCurrentProcess()->HasSwitch(
                            switches::kDisableChromeLoginPrompt)) {
@@ -612,7 +646,7 @@ ChromeContentBrowserClientCef::CreateLoginDelegate(
   return ChromeContentBrowserClient::CreateLoginDelegate(
       auth_info, web_contents, browser_context, request_id,
       is_request_for_primary_main_frame_navigation, is_request_for_navigation,
-      url, response_headers, first_auth_attempt,
+      url, response_headers, first_auth_attempt, guest,
       std::move(auth_required_callback));
 }
 

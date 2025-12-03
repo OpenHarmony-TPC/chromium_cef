@@ -9,23 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=36357864917ddfdc9e99264dddb06478c931860d$
+// $hash=6a3a6bc5ef4037e7d2afd2521600c6d3f64ebb04$
 //
 
-#include "libcef_dll/ctocpp/views/window_delegate_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/window_cpptoc.h"
+#include "libcef_dll/ctocpp/views/window_delegate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowCreated(CefRefPtr<CefWindow> window) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowCreated(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_created)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_created) {
     return;
   }
 
@@ -38,15 +38,15 @@ void CefWindowDelegateCToCpp::OnWindowCreated(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  _struct->on_window_created(_struct, CefWindowCppToC::Wrap(window));
+  _struct->on_window_created(_struct,
+      CefWindowCppToC_Wrap(window));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowClosing(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowClosing(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_closing)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_closing) {
     return;
   }
 
@@ -59,15 +59,15 @@ void CefWindowDelegateCToCpp::OnWindowClosing(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  _struct->on_window_closing(_struct, CefWindowCppToC::Wrap(window));
+  _struct->on_window_closing(_struct,
+      CefWindowCppToC_Wrap(window));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowDestroyed(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowDestroyed(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_destroyed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_destroyed) {
     return;
   }
 
@@ -80,17 +80,15 @@ void CefWindowDelegateCToCpp::OnWindowDestroyed(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  _struct->on_window_destroyed(_struct, CefWindowCppToC::Wrap(window));
+  _struct->on_window_destroyed(_struct,
+      CefWindowCppToC_Wrap(window));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowActivationChanged(
-    CefRefPtr<CefWindow> window,
-    bool active) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowActivationChanged(CefRefPtr<CefWindow> window, bool active) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_activation_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_activation_changed) {
     return;
   }
 
@@ -103,17 +101,16 @@ void CefWindowDelegateCToCpp::OnWindowActivationChanged(
   }
 
   // Execute
-  _struct->on_window_activation_changed(_struct, CefWindowCppToC::Wrap(window),
-                                        active);
+  _struct->on_window_activation_changed(_struct,
+      CefWindowCppToC_Wrap(window),
+      active);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowBoundsChanged(CefRefPtr<CefWindow> window,
-                                                    const CefRect& new_bounds) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowBoundsChanged(CefRefPtr<CefWindow> window, const CefRect& new_bounds) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_bounds_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_bounds_changed) {
     return;
   }
 
@@ -126,18 +123,16 @@ void CefWindowDelegateCToCpp::OnWindowBoundsChanged(CefRefPtr<CefWindow> window,
   }
 
   // Execute
-  _struct->on_window_bounds_changed(_struct, CefWindowCppToC::Wrap(window),
-                                    &new_bounds);
+  _struct->on_window_bounds_changed(_struct,
+      CefWindowCppToC_Wrap(window),
+      &new_bounds);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowFullscreenTransition(
-    CefRefPtr<CefWindow> window,
-    bool is_completed) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowFullscreenTransition(CefRefPtr<CefWindow> window, bool is_completed) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_window_fullscreen_transition)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_window_fullscreen_transition) {
     return;
   }
 
@@ -150,19 +145,16 @@ void CefWindowDelegateCToCpp::OnWindowFullscreenTransition(
   }
 
   // Execute
-  _struct->on_window_fullscreen_transition(
-      _struct, CefWindowCppToC::Wrap(window), is_completed);
+  _struct->on_window_fullscreen_transition(_struct,
+      CefWindowCppToC_Wrap(window),
+      is_completed);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefWindow> CefWindowDelegateCToCpp::GetParentWindow(
-    CefRefPtr<CefWindow> window,
-    bool* is_menu,
-    bool* can_activate_menu) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefWindow> CefWindowDelegate_0_CToCpp::GetParentWindow(CefRefPtr<CefWindow> window, bool* is_menu, bool* can_activate_menu) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_parent_window)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_parent_window) {
     return nullptr;
   }
 
@@ -185,34 +177,34 @@ CefRefPtr<CefWindow> CefWindowDelegateCToCpp::GetParentWindow(
   }
 
   // Translate param: is_menu; type: bool_byaddr
-  int is_menuInt = is_menu ? *is_menu : 0;
+  int is_menuInt = is_menu?*is_menu:0;
   // Translate param: can_activate_menu; type: bool_byaddr
-  int can_activate_menuInt = can_activate_menu ? *can_activate_menu : 0;
+  int can_activate_menuInt = can_activate_menu?*can_activate_menu:0;
 
   // Execute
-  cef_window_t* _retval =
-      _struct->get_parent_window(_struct, CefWindowCppToC::Wrap(window),
-                                 &is_menuInt, &can_activate_menuInt);
+  auto* _retval = _struct->get_parent_window(_struct,
+      CefWindowCppToC_Wrap(window),
+      &is_menuInt,
+      &can_activate_menuInt);
 
   // Restore param:is_menu; type: bool_byaddr
   if (is_menu) {
-    *is_menu = is_menuInt ? true : false;
+    *is_menu = is_menuInt?true:false;
   }
   // Restore param:can_activate_menu; type: bool_byaddr
   if (can_activate_menu) {
-    *can_activate_menu = can_activate_menuInt ? true : false;
+    *can_activate_menu = can_activate_menuInt?true:false;
   }
 
   // Return type: refptr_diff
-  return CefWindowCppToC::Unwrap(_retval);
+  return CefWindowCppToC_Unwrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::IsWindowModalDialog(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::IsWindowModalDialog(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_window_modal_dialog)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_window_modal_dialog) {
     return false;
   }
 
@@ -225,19 +217,18 @@ bool CefWindowDelegateCToCpp::IsWindowModalDialog(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval =
-      _struct->is_window_modal_dialog(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->is_window_modal_dialog(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRect CefWindowDelegateCToCpp::GetInitialBounds(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") CefRect CefWindowDelegate_0_CToCpp::GetInitialBounds(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_initial_bounds)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_initial_bounds) {
     return CefRect();
   }
 
@@ -250,20 +241,18 @@ CefRect CefWindowDelegateCToCpp::GetInitialBounds(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      _struct->get_initial_bounds(_struct, CefWindowCppToC::Wrap(window));
+  cef_rect_t _retval = _struct->get_initial_bounds(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-cef_show_state_t CefWindowDelegateCToCpp::GetInitialShowState(
-    CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") cef_show_state_t CefWindowDelegate_0_CToCpp::GetInitialShowState(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_initial_show_state)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_initial_show_state) {
     return CEF_SHOW_STATE_NORMAL;
   }
 
@@ -276,19 +265,18 @@ cef_show_state_t CefWindowDelegateCToCpp::GetInitialShowState(
   }
 
   // Execute
-  cef_show_state_t _retval =
-      _struct->get_initial_show_state(_struct, CefWindowCppToC::Wrap(window));
+  cef_show_state_t _retval = _struct->get_initial_show_state(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::IsFrameless(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::IsFrameless(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_frameless)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_frameless) {
     return false;
   }
 
@@ -301,19 +289,18 @@ bool CefWindowDelegateCToCpp::IsFrameless(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval = _struct->is_frameless(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->is_frameless(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::WithStandardWindowButtons(
-    CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::WithStandardWindowButtons(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, with_standard_window_buttons)) {
+  auto* _struct = GetStruct();
+  if (!_struct->with_standard_window_buttons) {
     return false;
   }
 
@@ -326,20 +313,18 @@ bool CefWindowDelegateCToCpp::WithStandardWindowButtons(
   }
 
   // Execute
-  int _retval = _struct->with_standard_window_buttons(
-      _struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->with_standard_window_buttons(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::GetTitlebarHeight(CefRefPtr<CefWindow> window,
-                                                float* titlebar_height) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::GetTitlebarHeight(CefRefPtr<CefWindow> window, float* titlebar_height) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_titlebar_height)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_titlebar_height) {
     return false;
   }
 
@@ -357,20 +342,19 @@ bool CefWindowDelegateCToCpp::GetTitlebarHeight(CefRefPtr<CefWindow> window,
   }
 
   // Execute
-  int _retval = _struct->get_titlebar_height(
-      _struct, CefWindowCppToC::Wrap(window), titlebar_height);
+  int _retval = _struct->get_titlebar_height(_struct,
+      CefWindowCppToC_Wrap(window),
+      titlebar_height);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-cef_state_t CefWindowDelegateCToCpp::AcceptsFirstMouse(
-    CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") cef_state_t CefWindowDelegate_0_CToCpp::AcceptsFirstMouse(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, accepts_first_mouse)) {
+  auto* _struct = GetStruct();
+  if (!_struct->accepts_first_mouse) {
     return STATE_DEFAULT;
   }
 
@@ -383,19 +367,18 @@ cef_state_t CefWindowDelegateCToCpp::AcceptsFirstMouse(
   }
 
   // Execute
-  cef_state_t _retval =
-      _struct->accepts_first_mouse(_struct, CefWindowCppToC::Wrap(window));
+  cef_state_t _retval = _struct->accepts_first_mouse(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::CanResize(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::CanResize(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_resize)) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_resize) {
     return false;
   }
 
@@ -408,18 +391,18 @@ bool CefWindowDelegateCToCpp::CanResize(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval = _struct->can_resize(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->can_resize(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::CanMaximize(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::CanMaximize(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_maximize)) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_maximize) {
     return false;
   }
 
@@ -432,18 +415,18 @@ bool CefWindowDelegateCToCpp::CanMaximize(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval = _struct->can_maximize(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->can_maximize(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::CanMinimize(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::CanMinimize(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_minimize)) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_minimize) {
     return false;
   }
 
@@ -456,18 +439,18 @@ bool CefWindowDelegateCToCpp::CanMinimize(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval = _struct->can_minimize(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->can_minimize(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::CanClose(CefRefPtr<CefWindow> window) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::CanClose(CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_close)) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_close) {
     return false;
   }
 
@@ -480,19 +463,18 @@ bool CefWindowDelegateCToCpp::CanClose(CefRefPtr<CefWindow> window) {
   }
 
   // Execute
-  int _retval = _struct->can_close(_struct, CefWindowCppToC::Wrap(window));
+  int _retval = _struct->can_close(_struct,
+      CefWindowCppToC_Wrap(window));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::OnAccelerator(CefRefPtr<CefWindow> window,
-                                            int command_id) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::OnAccelerator(CefRefPtr<CefWindow> window, int command_id) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_accelerator)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_accelerator) {
     return false;
   }
 
@@ -505,20 +487,19 @@ bool CefWindowDelegateCToCpp::OnAccelerator(CefRefPtr<CefWindow> window,
   }
 
   // Execute
-  int _retval = _struct->on_accelerator(_struct, CefWindowCppToC::Wrap(window),
-                                        command_id);
+  int _retval = _struct->on_accelerator(_struct,
+      CefWindowCppToC_Wrap(window),
+      command_id);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::OnKeyEvent(CefRefPtr<CefWindow> window,
-                                         const CefKeyEvent& event) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::OnKeyEvent(CefRefPtr<CefWindow> window, const CefKeyEvent& event) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_key_event)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_key_event) {
     return false;
   }
 
@@ -531,20 +512,19 @@ bool CefWindowDelegateCToCpp::OnKeyEvent(CefRefPtr<CefWindow> window,
   }
 
   // Execute
-  int _retval =
-      _struct->on_key_event(_struct, CefWindowCppToC::Wrap(window), &event);
+  int _retval = _struct->on_key_event(_struct,
+      CefWindowCppToC_Wrap(window),
+      &event);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnThemeColorsChanged(CefRefPtr<CefWindow> window,
-                                                   bool chrome_theme) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnThemeColorsChanged(CefRefPtr<CefWindow> window, bool chrome_theme) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_theme_colors_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_theme_colors_changed) {
     return;
   }
 
@@ -557,16 +537,16 @@ void CefWindowDelegateCToCpp::OnThemeColorsChanged(CefRefPtr<CefWindow> window,
   }
 
   // Execute
-  _struct->on_theme_colors_changed(_struct, CefWindowCppToC::Wrap(window),
-                                   chrome_theme);
+  _struct->on_theme_colors_changed(_struct,
+      CefWindowCppToC_Wrap(window),
+      chrome_theme);
 }
 
-NO_SANITIZE("cfi-icall")
-cef_runtime_style_t CefWindowDelegateCToCpp::GetWindowRuntimeStyle() {
+NO_SANITIZE("cfi-icall") cef_runtime_style_t CefWindowDelegate_0_CToCpp::GetWindowRuntimeStyle() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_window_runtime_style)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_window_runtime_style) {
     return CEF_RUNTIME_STYLE_DEFAULT;
   }
 
@@ -579,14 +559,11 @@ cef_runtime_style_t CefWindowDelegateCToCpp::GetWindowRuntimeStyle() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefWindowDelegateCToCpp::GetLinuxWindowProperties(
-    CefRefPtr<CefWindow> window,
-    CefLinuxWindowProperties& properties) {
+NO_SANITIZE("cfi-icall") bool CefWindowDelegate_0_CToCpp::GetLinuxWindowProperties(CefRefPtr<CefWindow> window, CefLinuxWindowProperties& properties) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_window_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_linux_window_properties)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_linux_window_properties) {
     return false;
   }
 
@@ -599,20 +576,19 @@ bool CefWindowDelegateCToCpp::GetLinuxWindowProperties(
   }
 
   // Execute
-  int _retval = _struct->get_linux_window_properties(
-      _struct, CefWindowCppToC::Wrap(window), &properties);
+  int _retval = _struct->get_linux_window_properties(_struct,
+      CefWindowCppToC_Wrap(window),
+      &properties);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefWindowDelegateCToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefWindowDelegate_0_CToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_preferred_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_preferred_size) {
     return CefSize();
   }
 
@@ -625,20 +601,18 @@ CefSize CefWindowDelegateCToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_preferred_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_preferred_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefWindowDelegateCToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefWindowDelegate_0_CToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_minimum_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_minimum_size) {
     return CefSize();
   }
 
@@ -651,20 +625,18 @@ CefSize CefWindowDelegateCToCpp::GetMinimumSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_minimum_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_minimum_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefWindowDelegateCToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") CefSize CefWindowDelegate_0_CToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_maximum_size)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_maximum_size) {
     return CefSize();
   }
 
@@ -677,21 +649,18 @@ CefSize CefWindowDelegateCToCpp::GetMaximumSize(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  cef_size_t _retval =
-      _struct->get_maximum_size(_struct, CefViewCppToC::Wrap(view));
+  cef_size_t _retval = _struct->get_maximum_size(_struct,
+      CefViewCppToC_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-int CefWindowDelegateCToCpp::GetHeightForWidth(CefRefPtr<CefView> view,
-                                               int width) {
+NO_SANITIZE("cfi-icall") int CefWindowDelegate_0_CToCpp::GetHeightForWidth(CefRefPtr<CefView> view, int width) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, get_height_for_width)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->get_height_for_width) {
     return 0;
   }
 
@@ -704,22 +673,19 @@ int CefWindowDelegateCToCpp::GetHeightForWidth(CefRefPtr<CefView> view,
   }
 
   // Execute
-  int _retval =
-      _struct->get_height_for_width(_struct, CefViewCppToC::Wrap(view), width);
+  int _retval = _struct->get_height_for_width(_struct,
+      CefViewCppToC_Wrap(view),
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnParentViewChanged(CefRefPtr<CefView> view,
-                                                  bool added,
-                                                  CefRefPtr<CefView> parent) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_parent_view_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_parent_view_changed) {
     return;
   }
 
@@ -737,19 +703,17 @@ void CefWindowDelegateCToCpp::OnParentViewChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_parent_view_changed(_struct, CefViewCppToC::Wrap(view), added,
-                                  CefViewCppToC::Wrap(parent));
+  _struct->on_parent_view_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added,
+      CefViewCppToC_Wrap(parent));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnChildViewChanged(CefRefPtr<CefView> view,
-                                                 bool added,
-                                                 CefRefPtr<CefView> child) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_child_view_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_child_view_changed) {
     return;
   }
 
@@ -767,18 +731,17 @@ void CefWindowDelegateCToCpp::OnChildViewChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_child_view_changed(_struct, CefViewCppToC::Wrap(view), added,
-                                 CefViewCppToC::Wrap(child));
+  _struct->on_child_view_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added,
+      CefViewCppToC_Wrap(child));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnWindowChanged(CefRefPtr<CefView> view,
-                                              bool added) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnWindowChanged(CefRefPtr<CefView> view, bool added) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_window_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_window_changed) {
     return;
   }
 
@@ -791,17 +754,16 @@ void CefWindowDelegateCToCpp::OnWindowChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_window_changed(_struct, CefViewCppToC::Wrap(view), added);
+  _struct->on_window_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      added);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnLayoutChanged(CefRefPtr<CefView> view,
-                                              const CefRect& new_bounds) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_layout_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_layout_changed) {
     return;
   }
 
@@ -814,16 +776,16 @@ void CefWindowDelegateCToCpp::OnLayoutChanged(CefRefPtr<CefView> view,
   }
 
   // Execute
-  _struct->on_layout_changed(_struct, CefViewCppToC::Wrap(view), &new_bounds);
+  _struct->on_layout_changed(_struct,
+      CefViewCppToC_Wrap(view),
+      &new_bounds);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnFocus(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnFocus(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_focus)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_focus) {
     return;
   }
 
@@ -836,16 +798,15 @@ void CefWindowDelegateCToCpp::OnFocus(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_focus(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_focus(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnBlur(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnBlur(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_blur)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_blur) {
     return;
   }
 
@@ -858,16 +819,15 @@ void CefWindowDelegateCToCpp::OnBlur(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_blur(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_blur(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefWindowDelegateCToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
+NO_SANITIZE("cfi-icall") void CefWindowDelegate_0_CToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_view_delegate_t* _struct =
-      reinterpret_cast<cef_view_delegate_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, on_theme_changed)) {
+  auto* _struct = reinterpret_cast<cef_view_delegate_0_t*>(GetStruct());
+  if (!_struct->on_theme_changed) {
     return;
   }
 
@@ -880,31 +840,27 @@ void CefWindowDelegateCToCpp::OnThemeChanged(CefRefPtr<CefView> view) {
   }
 
   // Execute
-  _struct->on_theme_changed(_struct, CefViewCppToC::Wrap(view));
+  _struct->on_theme_changed(_struct,
+      CefViewCppToC_Wrap(view));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWindowDelegateCToCpp::CefWindowDelegateCToCpp() {}
+CefWindowDelegate_0_CToCpp::CefWindowDelegate_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWindowDelegateCToCpp::~CefWindowDelegateCToCpp() {
+CefWindowDelegate_0_CToCpp::~CefWindowDelegate_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_window_delegate_t* CefCToCppRefCounted<
-    CefWindowDelegateCToCpp,
-    CefWindowDelegate,
-    cef_window_delegate_t>::UnwrapDerived(CefWrapperType type,
-                                          CefWindowDelegate* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_window_delegate_0_t* CefCToCppRefCounted<CefWindowDelegate_0_CToCpp, CefWindowDelegate, cef_window_delegate_0_t>::UnwrapDerived(CefWrapperType type, CefWindowDelegate* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefWindowDelegateCToCpp,
-                                   CefWindowDelegate,
-                                   cef_window_delegate_t>::kWrapperType =
-    WT_WINDOW_DELEGATE;
+template<> CefWrapperType CefCToCppRefCounted<CefWindowDelegate_0_CToCpp, CefWindowDelegate, cef_window_delegate_0_t>::kWrapperType = WT_WINDOW_DELEGATE;
+
+

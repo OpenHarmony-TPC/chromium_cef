@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0ea27a43544ce74b3957e46a9a977387bb8573df$
+// $hash=97d6a7f9d22d3d07926e6e39e3c5eaa798241196$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_MENU_BUTTON_CTOCPP_H_
@@ -20,31 +20,27 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_menu_button_capi.h"
 #include "include/views/cef_menu_button.h"
+#include "include/capi/views/cef_menu_button_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMenuButtonCToCpp : public CefCToCppRefCounted<CefMenuButtonCToCpp,
-                                                       CefMenuButton,
-                                                       cef_menu_button_t> {
+class CefMenuButtonCToCpp
+    : public CefCToCppRefCounted<CefMenuButtonCToCpp, CefMenuButton, cef_menu_button_t> {
  public:
   CefMenuButtonCToCpp();
   virtual ~CefMenuButtonCToCpp();
 
   // CefMenuButton methods.
-  void ShowMenu(CefRefPtr<CefMenuModel> menu_model,
-                const CefPoint& screen_point,
-                cef_menu_anchor_position_t anchor_position) override;
+  void ShowMenu(CefRefPtr<CefMenuModel> menu_model, const CefPoint& screen_point, cef_menu_anchor_position_t anchor_position) override;
   void TriggerMenu() override;
 
   // CefLabelButton methods.
   CefRefPtr<CefMenuButton> AsMenuButton() override;
   void SetText(const CefString& text) override;
   CefString GetText() override;
-  void SetImage(cef_button_state_t button_state,
-                CefRefPtr<CefImage> image) override;
+  void SetImage(cef_button_state_t button_state, CefRefPtr<CefImage> image) override;
   CefRefPtr<CefImage> GetImage(cef_button_state_t button_state) override;
   void SetTextColor(cef_button_state_t for_state, cef_color_t color) override;
   void SetEnabledTextColors(cef_color_t color) override;
@@ -115,5 +111,8 @@ class CefMenuButtonCToCpp : public CefCToCppRefCounted<CefMenuButtonCToCpp,
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefMenuButtonCToCpp_Wrap = CefMenuButtonCToCpp::Wrap;
+constexpr auto CefMenuButtonCToCpp_Unwrap = CefMenuButtonCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_MENU_BUTTON_CTOCPP_H_

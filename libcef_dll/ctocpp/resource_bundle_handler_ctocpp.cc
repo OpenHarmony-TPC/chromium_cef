@@ -9,102 +9,93 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b218109b82f77246f31df480e651adf4312afa4f$
+// $hash=06bcfef13820ea7d7db090176dde578e901f26fc$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/resource_bundle_handler_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceBundleHandlerCToCpp::GetLocalizedString(int string_id,
-                                                        CefString& string) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefResourceBundleHandler_0_CToCpp::GetLocalizedString(int string_id, CefString& string) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_bundle_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_localized_string)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_localized_string) {
     return false;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->get_localized_string(_struct, string_id,
-                                              string.GetWritableStruct());
+  int _retval = _struct->get_localized_string(_struct,
+      string_id,
+      string.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceBundleHandlerCToCpp::GetDataResource(int resource_id,
-                                                     void*& data,
-                                                     size_t& data_size) {
+NO_SANITIZE("cfi-icall") bool CefResourceBundleHandler_0_CToCpp::GetDataResource(int resource_id, void*& data, size_t& data_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_bundle_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_data_resource)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_data_resource) {
     return false;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval =
-      _struct->get_data_resource(_struct, resource_id, &data, &data_size);
+  int _retval = _struct->get_data_resource(_struct,
+      resource_id,
+      &data,
+      &data_size);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceBundleHandlerCToCpp::GetDataResourceForScale(
-    int resource_id,
-    ScaleFactor scale_factor,
-    void*& data,
-    size_t& data_size) {
+NO_SANITIZE("cfi-icall") bool CefResourceBundleHandler_0_CToCpp::GetDataResourceForScale(int resource_id, ScaleFactor scale_factor, void*& data, size_t& data_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_bundle_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_data_resource_for_scale)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_data_resource_for_scale) {
     return false;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->get_data_resource_for_scale(
-      _struct, resource_id, scale_factor, &data, &data_size);
+  int _retval = _struct->get_data_resource_for_scale(_struct,
+      resource_id,
+      scale_factor,
+      &data,
+      &data_size);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceBundleHandlerCToCpp::CefResourceBundleHandlerCToCpp() {}
+CefResourceBundleHandler_0_CToCpp::CefResourceBundleHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceBundleHandlerCToCpp::~CefResourceBundleHandlerCToCpp() {
+CefResourceBundleHandler_0_CToCpp::~CefResourceBundleHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_resource_bundle_handler_t* CefCToCppRefCounted<
-    CefResourceBundleHandlerCToCpp,
-    CefResourceBundleHandler,
-    cef_resource_bundle_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                  CefResourceBundleHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_resource_bundle_handler_0_t* CefCToCppRefCounted<CefResourceBundleHandler_0_CToCpp, CefResourceBundleHandler, cef_resource_bundle_handler_0_t>::UnwrapDerived(CefWrapperType type, CefResourceBundleHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefResourceBundleHandlerCToCpp,
-                        CefResourceBundleHandler,
-                        cef_resource_bundle_handler_t>::kWrapperType =
-        WT_RESOURCE_BUNDLE_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefResourceBundleHandler_0_CToCpp, CefResourceBundleHandler, cef_resource_bundle_handler_0_t>::kWrapperType = WT_RESOURCE_BUNDLE_HANDLER;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=aab6dc72e48fae68951725d58958ec8e1ab586f9$
+// $hash=6cb26ac07c5366d3b312a93e6b715c5a8e977448$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_REQUEST_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_handler_capi.h"
 #include "include/cef_request_handler.h"
+#include "include/capi/cef_request_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefRequestHandlerCppToC
-    : public CefCppToCRefCounted<CefRequestHandlerCppToC,
-                                 CefRequestHandler,
-                                 cef_request_handler_t> {
+    : public CefCppToCRefCounted<CefRequestHandlerCppToC, CefRequestHandler, cef_request_handler_t> {
  public:
   CefRequestHandlerCppToC();
   virtual ~CefRequestHandlerCppToC();
 };
+
+constexpr auto CefRequestHandlerCppToC_Wrap = CefRequestHandlerCppToC::Wrap;
+constexpr auto CefRequestHandlerCppToC_Unwrap = CefRequestHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_REQUEST_HANDLER_CPPTOC_H_

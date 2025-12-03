@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=743213b38cad34225f5ca77bef41a06698a0d983$
+// $hash=7bde27fb35364eba4d4453c2033caa3a61fa79be$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/shared_memory_region_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK
-shared_memory_region_is_valid(struct _cef_shared_memory_region_t* self) {
+int CEF_CALLBACK shared_memory_region_is_valid(struct _cef_shared_memory_region_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,14 +31,13 @@ shared_memory_region_is_valid(struct _cef_shared_memory_region_t* self) {
   }
 
   // Execute
-  bool _retval = CefSharedMemoryRegionCppToC::Get(self)->IsValid();
+  bool _retval = CefSharedMemoryRegion_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-size_t CEF_CALLBACK
-shared_memory_region_size(struct _cef_shared_memory_region_t* self) {
+size_t CEF_CALLBACK shared_memory_region_size(struct _cef_shared_memory_region_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -50,14 +48,13 @@ shared_memory_region_size(struct _cef_shared_memory_region_t* self) {
   }
 
   // Execute
-  size_t _retval = CefSharedMemoryRegionCppToC::Get(self)->Size();
+  size_t _retval = CefSharedMemoryRegion_0_CppToC::Get(self)->Size();
 
   // Return type: simple
   return _retval;
 }
 
-void* CEF_CALLBACK
-shared_memory_region_memory(struct _cef_shared_memory_region_t* self) {
+void* CEF_CALLBACK shared_memory_region_memory(struct _cef_shared_memory_region_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -68,7 +65,7 @@ shared_memory_region_memory(struct _cef_shared_memory_region_t* self) {
   }
 
   // Execute
-  void* _retval = CefSharedMemoryRegionCppToC::Get(self)->Memory();
+  void* _retval = CefSharedMemoryRegion_0_CppToC::Get(self)->Memory();
 
   // Return type: simple_byaddr
   return _retval;
@@ -76,32 +73,27 @@ shared_memory_region_memory(struct _cef_shared_memory_region_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSharedMemoryRegionCppToC::CefSharedMemoryRegionCppToC() {
+CefSharedMemoryRegion_0_CppToC::CefSharedMemoryRegion_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = shared_memory_region_is_valid;
   GetStruct()->size = shared_memory_region_size;
   GetStruct()->memory = shared_memory_region_memory;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSharedMemoryRegionCppToC::~CefSharedMemoryRegionCppToC() {
+CefSharedMemoryRegion_0_CppToC::~CefSharedMemoryRegion_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefSharedMemoryRegion> CefCppToCRefCounted<
-    CefSharedMemoryRegionCppToC,
-    CefSharedMemoryRegion,
-    cef_shared_memory_region_t>::UnwrapDerived(CefWrapperType type,
-                                               cef_shared_memory_region_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefSharedMemoryRegion> CefCppToCRefCounted<CefSharedMemoryRegion_0_CppToC, CefSharedMemoryRegion, cef_shared_memory_region_0_t>::UnwrapDerived(CefWrapperType type, cef_shared_memory_region_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefSharedMemoryRegionCppToC,
-                                   CefSharedMemoryRegion,
-                                   cef_shared_memory_region_t>::kWrapperType =
-    WT_SHARED_MEMORY_REGION;
+template<> CefWrapperType CefCppToCRefCounted<CefSharedMemoryRegion_0_CppToC, CefSharedMemoryRegion, cef_shared_memory_region_0_t>::kWrapperType = WT_SHARED_MEMORY_REGION;
+
+

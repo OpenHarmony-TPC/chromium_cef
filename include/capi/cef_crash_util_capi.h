@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4e76f0bd07a6814bf05cdb7b39ba24a88c7c2e55$
+// $hash=79ce82867dc40d8d2ebc54e17b8bc181b81df870$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CRASH_UTIL_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_CRASH_UTIL_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Crash reporting is configured using an INI-style config file named
@@ -144,8 +149,7 @@ CEF_EXPORT int cef_crash_reporting_enabled(void);
 ///
 /// Sets or clears a specific key-value pair from the crash metadata.
 ///
-CEF_EXPORT void cef_set_crash_key_value(const cef_string_t* key,
-                                        const cef_string_t* value);
+CEF_EXPORT void cef_set_crash_key_value(const cef_string_t* key, const cef_string_t* value);
 
 #ifdef __cplusplus
 }

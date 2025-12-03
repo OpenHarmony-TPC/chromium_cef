@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=91c66ee23f48d15e9957f33b72f3bb8cdb40c7fa$
+// $hash=9c1c94147282bba74d95af95b7ca0ef5cabb6ea2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESOURCE_REQUEST_HANDLER_CTOCPP_H_
@@ -20,57 +20,30 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_request_handler_capi.h"
 #include "include/cef_resource_request_handler.h"
+#include "include/capi/cef_resource_request_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResourceRequestHandlerCToCpp
-    : public CefCToCppRefCounted<CefResourceRequestHandlerCToCpp,
-                                 CefResourceRequestHandler,
-                                 cef_resource_request_handler_t> {
+class CefResourceRequestHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefResourceRequestHandler_0_CToCpp, CefResourceRequestHandler, cef_resource_request_handler_0_t> {
  public:
-  CefResourceRequestHandlerCToCpp();
-  virtual ~CefResourceRequestHandlerCToCpp();
+  CefResourceRequestHandler_0_CToCpp();
+  virtual ~CefResourceRequestHandler_0_CToCpp();
 
   // CefResourceRequestHandler methods.
-  CefRefPtr<CefCookieAccessFilter> GetCookieAccessFilter(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) override;
-  ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> browser,
-                                   CefRefPtr<CefFrame> frame,
-                                   CefRefPtr<CefRequest> request,
-                                   CefRefPtr<CefCallback> callback) override;
-  CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) override;
-  void OnResourceRedirect(CefRefPtr<CefBrowser> browser,
-                          CefRefPtr<CefFrame> frame,
-                          CefRefPtr<CefRequest> request,
-                          CefRefPtr<CefResponse> response,
-                          CefString& new_url) override;
-  bool OnResourceResponse(CefRefPtr<CefBrowser> browser,
-                          CefRefPtr<CefFrame> frame,
-                          CefRefPtr<CefRequest> request,
-                          CefRefPtr<CefResponse> response) override;
-  CefRefPtr<CefResponseFilter> GetResourceResponseFilter(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefResponse> response) override;
-  void OnResourceLoadComplete(CefRefPtr<CefBrowser> browser,
-                              CefRefPtr<CefFrame> frame,
-                              CefRefPtr<CefRequest> request,
-                              CefRefPtr<CefResponse> response,
-                              URLRequestStatus status,
-                              int64_t received_content_length) override;
-  void OnProtocolExecution(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame,
-                           CefRefPtr<CefRequest> request,
-                           bool& allow_os_execution) override;
+  CefRefPtr<CefCookieAccessFilter> GetCookieAccessFilter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request) override;
+  ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) override;
+  CefRefPtr<CefResourceHandler> GetResourceHandler(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request) override;
+  void OnResourceRedirect(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response, CefString& new_url) override;
+  bool OnResourceResponse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response) override;
+  CefRefPtr<CefResponseFilter> GetResourceResponseFilter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response) override;
+  void OnResourceLoadComplete(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response, URLRequestStatus status, int64_t received_content_length) override;
+  void OnProtocolExecution(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool& allow_os_execution) override;
 };
+
+constexpr auto CefResourceRequestHandlerCToCpp_Wrap = CefResourceRequestHandler_0_CToCpp::Wrap;
+constexpr auto CefResourceRequestHandlerCToCpp_Unwrap = CefResourceRequestHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_REQUEST_HANDLER_CTOCPP_H_

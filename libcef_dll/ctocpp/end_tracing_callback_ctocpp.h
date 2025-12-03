@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3af447ef35d841660e98eb8c68b7a1aca16344ab$
+// $hash=cb6e9dc4563617c94e81be1eab400a8383df96e4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_END_TRACING_CALLBACK_CTOCPP_H_
@@ -20,22 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_trace_capi.h"
 #include "include/cef_trace.h"
+#include "include/capi/cef_trace_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefEndTracingCallbackCToCpp
-    : public CefCToCppRefCounted<CefEndTracingCallbackCToCpp,
-                                 CefEndTracingCallback,
-                                 cef_end_tracing_callback_t> {
+class CefEndTracingCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefEndTracingCallback_0_CToCpp, CefEndTracingCallback, cef_end_tracing_callback_0_t> {
  public:
-  CefEndTracingCallbackCToCpp();
-  virtual ~CefEndTracingCallbackCToCpp();
+  CefEndTracingCallback_0_CToCpp();
+  virtual ~CefEndTracingCallback_0_CToCpp();
 
   // CefEndTracingCallback methods.
   void OnEndTracingComplete(const CefString& tracing_file) override;
 };
+
+constexpr auto CefEndTracingCallbackCToCpp_Wrap = CefEndTracingCallback_0_CToCpp::Wrap;
+constexpr auto CefEndTracingCallbackCToCpp_Unwrap = CefEndTracingCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_END_TRACING_CALLBACK_CTOCPP_H_

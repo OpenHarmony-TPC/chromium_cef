@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d74aadaf89719b398ad621a28ccfffce47eae675$
+// $hash=268d30259de303036ee340a6f0d9ca1e6f094050$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MEDIA_OBSERVER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefMediaObserverCppToC
-    : public CefCppToCRefCounted<CefMediaObserverCppToC,
-                                 CefMediaObserver,
-                                 cef_media_observer_t> {
+    : public CefCppToCRefCounted<CefMediaObserverCppToC, CefMediaObserver, cef_media_observer_t> {
  public:
   CefMediaObserverCppToC();
   virtual ~CefMediaObserverCppToC();
 };
+
+constexpr auto CefMediaObserverCppToC_Wrap = CefMediaObserverCppToC::Wrap;
+constexpr auto CefMediaObserverCppToC_Unwrap = CefMediaObserverCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_OBSERVER_CPPTOC_H_

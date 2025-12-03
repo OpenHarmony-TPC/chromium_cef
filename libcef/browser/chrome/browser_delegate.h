@@ -99,8 +99,8 @@ class BrowserDelegate : public content::WebContentsDelegate {
 
   enum class ToolbarButtonType {
     kCast = 0,
-    kDownload,
-    kSendTabToSelf,
+    kDownload_DEPRECATED,
+    kSendTabToSelf_DEPRECATED,
     kSidePanel,
     kMaxValue = kSidePanel,
   };
@@ -172,6 +172,12 @@ class BrowserDelegate : public content::WebContentsDelegate {
       base::OnceCallback<void(content::NavigationHandle&)>&
           navigation_handle_callback) {
     return true;
+  }
+
+  // Same as SetContentsBounds but returning false if unhandled.
+  virtual bool SetContentsBoundsEx(content::WebContents* source,
+                                   const gfx::Rect& bounds) {
+    return false;
   }
 };
 

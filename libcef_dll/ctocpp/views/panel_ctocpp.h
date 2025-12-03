@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=39a75c981365aba232221203ffd65130a30ee36d$
+// $hash=fd113f92e49f22d78b874fbbf87e98437e4573fb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_PANEL_CTOCPP_H_
@@ -20,16 +20,16 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_box_layout_capi.h"
-#include "include/capi/views/cef_fill_layout_capi.h"
-#include "include/capi/views/cef_layout_capi.h"
-#include "include/capi/views/cef_panel_capi.h"
-#include "include/capi/views/cef_window_capi.h"
-#include "include/views/cef_box_layout.h"
-#include "include/views/cef_fill_layout.h"
-#include "include/views/cef_layout.h"
 #include "include/views/cef_panel.h"
+#include "include/capi/views/cef_panel_capi.h"
+#include "include/views/cef_box_layout.h"
+#include "include/capi/views/cef_box_layout_capi.h"
+#include "include/views/cef_fill_layout.h"
+#include "include/capi/views/cef_fill_layout_capi.h"
+#include "include/views/cef_layout.h"
+#include "include/capi/views/cef_layout_capi.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -43,8 +43,7 @@ class CefPanelCToCpp
   // CefPanel methods.
   CefRefPtr<CefWindow> AsWindow() override;
   CefRefPtr<CefFillLayout> SetToFillLayout() override;
-  CefRefPtr<CefBoxLayout> SetToBoxLayout(
-      const CefBoxLayoutSettings& settings) override;
+  CefRefPtr<CefBoxLayout> SetToBoxLayout(const CefBoxLayoutSettings& settings) override;
   CefRefPtr<CefLayout> GetLayout() override;
   void Layout() override;
   void AddChildView(CefRefPtr<CefView> view) override;
@@ -109,5 +108,8 @@ class CefPanelCToCpp
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefPanelCToCpp_Wrap = CefPanelCToCpp::Wrap;
+constexpr auto CefPanelCToCpp_Unwrap = CefPanelCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_PANEL_CTOCPP_H_

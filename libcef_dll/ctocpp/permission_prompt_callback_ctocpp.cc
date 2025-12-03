@@ -9,34 +9,34 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=121ac4cb8e098238d3e6b4a2749b9caa1627ccec$
+// $hash=85c9861aebc3d72c74df5bb149494347f07b6ccf$
 //
 
 #include "libcef_dll/ctocpp/permission_prompt_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefPermissionPromptCallbackCToCpp::Continue(
-    cef_permission_request_result_t result) {
+NO_SANITIZE("cfi-icall") void CefPermissionPromptCallbackCToCpp::Continue(cef_permission_request_result_t result) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_permission_prompt_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->cont(_struct, result);
+  _struct->cont(_struct,
+      result);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefPermissionPromptCallbackCToCpp::CefPermissionPromptCallbackCToCpp() {}
+CefPermissionPromptCallbackCToCpp::CefPermissionPromptCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -44,19 +44,11 @@ CefPermissionPromptCallbackCToCpp::~CefPermissionPromptCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_permission_prompt_callback_t*
-CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp,
-                    CefPermissionPromptCallback,
-                    cef_permission_prompt_callback_t>::
-    UnwrapDerived(CefWrapperType type, CefPermissionPromptCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_permission_prompt_callback_t* CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp, CefPermissionPromptCallback, cef_permission_prompt_callback_t>::UnwrapDerived(CefWrapperType type, CefPermissionPromptCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp,
-                        CefPermissionPromptCallback,
-                        cef_permission_prompt_callback_t>::kWrapperType =
-        WT_PERMISSION_PROMPT_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp, CefPermissionPromptCallback, cef_permission_prompt_callback_t>::kWrapperType = WT_PERMISSION_PROMPT_CALLBACK;
+
+

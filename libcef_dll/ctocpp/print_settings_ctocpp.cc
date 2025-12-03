@@ -9,37 +9,37 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a0cb547a15be02edc651d7557390983eb08fba0a$
+// $hash=7e33702f9d8c2a0f436dafbd13d594dcbcfac043$
 //
-
-#include "libcef_dll/ctocpp/print_settings_ctocpp.h"
 
 #include <algorithm>
 
+#include "libcef_dll/ctocpp/print_settings_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefPrintSettings> CefPrintSettings::Create() {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefPrintSettings> CefPrintSettings::Create() {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_print_settings_t* _retval = cef_print_settings_create();
+  auto* _retval = cef_print_settings_create();
 
   // Return type: refptr_same
-  return CefPrintSettingsCToCpp::Wrap(_retval);
+  return CefPrintSettingsCToCpp_Wrap(_retval);
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsValid() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_valid)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_valid) {
     return false;
   }
 
@@ -49,14 +49,14 @@ NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsValid() {
   int _retval = _struct->is_valid(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsReadOnly() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_read_only)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_read_only) {
     return false;
   }
 
@@ -66,29 +66,29 @@ NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsReadOnly() {
   int _retval = _struct->is_read_only(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetOrientation(bool landscape) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetOrientation(bool landscape) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_orientation)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_orientation) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_orientation(_struct, landscape);
+  _struct->set_orientation(_struct,
+      landscape);
 }
 
 NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsLandscape() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_landscape)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_landscape) {
     return false;
   }
 
@@ -98,35 +98,31 @@ NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsLandscape() {
   int _retval = _struct->is_landscape(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetPrinterPrintableArea(
-    const CefSize& physical_size_device_units,
-    const CefRect& printable_area_device_units,
-    bool landscape_needs_flip) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetPrinterPrintableArea(const CefSize& physical_size_device_units, const CefRect& printable_area_device_units, bool landscape_needs_flip) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_printer_printable_area)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_printer_printable_area) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_printer_printable_area(_struct, &physical_size_device_units,
-                                      &printable_area_device_units,
-                                      landscape_needs_flip);
+  _struct->set_printer_printable_area(_struct,
+      &physical_size_device_units,
+      &printable_area_device_units,
+      landscape_needs_flip);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetDeviceName(const CefString& name) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetDeviceName(const CefString& name) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_device_name)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_device_name) {
     return;
   }
 
@@ -135,14 +131,15 @@ void CefPrintSettingsCToCpp::SetDeviceName(const CefString& name) {
   // Unverified params: name
 
   // Execute
-  _struct->set_device_name(_struct, name.GetStruct());
+  _struct->set_device_name(_struct,
+      name.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") CefString CefPrintSettingsCToCpp::GetDeviceName() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_device_name)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_device_name) {
     return CefString();
   }
 
@@ -160,22 +157,23 @@ NO_SANITIZE("cfi-icall") CefString CefPrintSettingsCToCpp::GetDeviceName() {
 NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetDPI(int dpi) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_dpi)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_dpi) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_dpi(_struct, dpi);
+  _struct->set_dpi(_struct,
+      dpi);
 }
 
 NO_SANITIZE("cfi-icall") int CefPrintSettingsCToCpp::GetDPI() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_dpi)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_dpi) {
     return 0;
   }
 
@@ -188,12 +186,11 @@ NO_SANITIZE("cfi-icall") int CefPrintSettingsCToCpp::GetDPI() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetPageRanges(const PageRangeList& ranges) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetPageRanges(const PageRangeList& ranges) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_page_ranges)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_page_ranges) {
     return;
   }
 
@@ -213,19 +210,21 @@ void CefPrintSettingsCToCpp::SetPageRanges(const PageRangeList& ranges) {
   }
 
   // Execute
-  _struct->set_page_ranges(_struct, rangesCount, rangesList);
+  _struct->set_page_ranges(_struct,
+      rangesCount,
+      rangesList);
 
   // Restore param:ranges; type: simple_vec_byref_const
   if (rangesList) {
-    delete[] rangesList;
+    delete [] rangesList;
   }
 }
 
 NO_SANITIZE("cfi-icall") size_t CefPrintSettingsCToCpp::GetPageRangesCount() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_page_ranges_count)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_page_ranges_count) {
     return 0;
   }
 
@@ -238,12 +237,11 @@ NO_SANITIZE("cfi-icall") size_t CefPrintSettingsCToCpp::GetPageRangesCount() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::GetPageRanges(PageRangeList& ranges) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::GetPageRanges(PageRangeList& ranges) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_page_ranges)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_page_ranges) {
     return;
   }
 
@@ -257,7 +255,7 @@ void CefPrintSettingsCToCpp::GetPageRanges(PageRangeList& ranges) {
     rangesList = new cef_range_t[rangesCount];
     DCHECK(rangesList);
     if (rangesList) {
-      memset(rangesList, 0, sizeof(cef_range_t) * rangesCount);
+       memset(rangesList, 0, sizeof(cef_range_t)*rangesCount);
     }
     if (rangesList && rangesSize > 0) {
       for (size_t i = 0; i < rangesSize; ++i) {
@@ -267,7 +265,9 @@ void CefPrintSettingsCToCpp::GetPageRanges(PageRangeList& ranges) {
   }
 
   // Execute
-  _struct->get_page_ranges(_struct, &rangesCount, rangesList);
+  _struct->get_page_ranges(_struct,
+      &rangesCount,
+      rangesList);
 
   // Restore param:ranges; type: simple_vec_byref
   ranges.clear();
@@ -275,30 +275,30 @@ void CefPrintSettingsCToCpp::GetPageRanges(PageRangeList& ranges) {
     for (size_t i = 0; i < rangesCount; ++i) {
       ranges.push_back(rangesList[i]);
     }
-    delete[] rangesList;
+    delete [] rangesList;
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetSelectionOnly(bool selection_only) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetSelectionOnly(bool selection_only) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_selection_only)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_selection_only) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_selection_only(_struct, selection_only);
+  _struct->set_selection_only(_struct,
+      selection_only);
 }
 
 NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsSelectionOnly() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_selection_only)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_selection_only) {
     return false;
   }
 
@@ -308,28 +308,29 @@ NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::IsSelectionOnly() {
   int _retval = _struct->is_selection_only(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetCollate(bool collate) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_collate)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_collate) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_collate(_struct, collate);
+  _struct->set_collate(_struct,
+      collate);
 }
 
 NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::WillCollate() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, will_collate)) {
+  auto* _struct = GetStruct();
+  if (!_struct->will_collate) {
     return false;
   }
 
@@ -339,30 +340,29 @@ NO_SANITIZE("cfi-icall") bool CefPrintSettingsCToCpp::WillCollate() {
   int _retval = _struct->will_collate(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetColorModel(ColorModel model) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetColorModel(ColorModel model) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_color_model)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_color_model) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_color_model(_struct, model);
+  _struct->set_color_model(_struct,
+      model);
 }
 
-NO_SANITIZE("cfi-icall")
-CefPrintSettings::ColorModel CefPrintSettingsCToCpp::GetColorModel() {
+NO_SANITIZE("cfi-icall") CefPrintSettings::ColorModel CefPrintSettingsCToCpp::GetColorModel() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_color_model)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_color_model) {
     return COLOR_MODEL_UNKNOWN;
   }
 
@@ -378,22 +378,23 @@ CefPrintSettings::ColorModel CefPrintSettingsCToCpp::GetColorModel() {
 NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetCopies(int copies) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_copies)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_copies) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_copies(_struct, copies);
+  _struct->set_copies(_struct,
+      copies);
 }
 
 NO_SANITIZE("cfi-icall") int CefPrintSettingsCToCpp::GetCopies() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_copies)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_copies) {
     return 0;
   }
 
@@ -406,27 +407,26 @@ NO_SANITIZE("cfi-icall") int CefPrintSettingsCToCpp::GetCopies() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintSettingsCToCpp::SetDuplexMode(DuplexMode mode) {
+NO_SANITIZE("cfi-icall") void CefPrintSettingsCToCpp::SetDuplexMode(DuplexMode mode) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_duplex_mode)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_duplex_mode) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_duplex_mode(_struct, mode);
+  _struct->set_duplex_mode(_struct,
+      mode);
 }
 
-NO_SANITIZE("cfi-icall")
-CefPrintSettings::DuplexMode CefPrintSettingsCToCpp::GetDuplexMode() {
+NO_SANITIZE("cfi-icall") CefPrintSettings::DuplexMode CefPrintSettingsCToCpp::GetDuplexMode() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_settings_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_duplex_mode)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_duplex_mode) {
     return DUPLEX_MODE_UNKNOWN;
   }
 
@@ -441,7 +441,8 @@ CefPrintSettings::DuplexMode CefPrintSettingsCToCpp::GetDuplexMode() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefPrintSettingsCToCpp::CefPrintSettingsCToCpp() {}
+CefPrintSettingsCToCpp::CefPrintSettingsCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -449,18 +450,11 @@ CefPrintSettingsCToCpp::~CefPrintSettingsCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_print_settings_t*
-CefCToCppRefCounted<CefPrintSettingsCToCpp,
-                    CefPrintSettings,
-                    cef_print_settings_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefPrintSettings* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_print_settings_t* CefCToCppRefCounted<CefPrintSettingsCToCpp, CefPrintSettings, cef_print_settings_t>::UnwrapDerived(CefWrapperType type, CefPrintSettings* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefPrintSettingsCToCpp,
-                                   CefPrintSettings,
-                                   cef_print_settings_t>::kWrapperType =
-    WT_PRINT_SETTINGS;
+template<> CefWrapperType CefCToCppRefCounted<CefPrintSettingsCToCpp, CefPrintSettings, cef_print_settings_t>::kWrapperType = WT_PRINT_SETTINGS;
+
+

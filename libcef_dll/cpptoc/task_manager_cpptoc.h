@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bbd787077a803baefdbd44f5bc937922bbc4c319$
+// $hash=d7566c4a773d064247d052c3bd31a6057bcac03d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TASK_MANAGER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_task_manager_capi.h"
 #include "include/cef_task_manager.h"
+#include "include/capi/cef_task_manager_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTaskManagerCppToC : public CefCppToCRefCounted<CefTaskManagerCppToC,
-                                                        CefTaskManager,
-                                                        cef_task_manager_t> {
+class CefTaskManager_0_CppToC
+    : public CefCppToCRefCounted<CefTaskManager_0_CppToC, CefTaskManager, cef_task_manager_0_t> {
  public:
-  CefTaskManagerCppToC();
-  virtual ~CefTaskManagerCppToC();
+  CefTaskManager_0_CppToC();
+  virtual ~CefTaskManager_0_CppToC();
 };
+
+constexpr auto CefTaskManagerCppToC_Wrap = CefTaskManager_0_CppToC::Wrap;
+constexpr auto CefTaskManagerCppToC_Unwrap = CefTaskManager_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TASK_MANAGER_CPPTOC_H_

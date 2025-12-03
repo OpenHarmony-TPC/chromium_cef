@@ -17,6 +17,7 @@
       'include/base/cef_cancelable_callback.h',
       'include/base/cef_compiler_specific.h',
       'include/base/cef_dump_without_crashing.h',
+      'include/base/cef_immediate_crash.h',
       'include/base/cef_lock.h',
       'include/base/cef_logging.h',
       'include/base/cef_macros.h',
@@ -36,7 +37,6 @@
       'include/base/internal/cef_thread_checker_impl.h',
       'include/cef_api_hash.h',
       'include/cef_base.h',
-      'include/cef_version.h',
       'include/internal/cef_export.h',
       'include/internal/cef_ptr.h',
       'include/internal/cef_string_wrappers.h',
@@ -44,6 +44,8 @@
       'include/internal/cef_types_wrappers.h',
     ],
     'includes_common_capi': [
+      'include/cef_id_mappers.h',
+      'include/cef_version_info.h',
       'include/internal/cef_dump_without_crashing_internal.h',
       'include/internal/cef_logging_internal.h',
       'include/internal/cef_string.h',
@@ -78,6 +80,11 @@
     'includes_wrapper_mac': [
       'include/wrapper/cef_library_loader.h',
     ],
+    'includes_wrapper_win': [
+      'include/wrapper/cef_certificate_util_win.h',
+      'include/wrapper/cef_library_loader.h',
+      'include/wrapper/cef_util_win.h',
+    ],
     'includes_win': [
       'include/cef_sandbox_win.h',
       'include/internal/cef_win.h',
@@ -100,12 +107,6 @@
       'include/internal/cef_linux.h',
     ],
     'includes_linux_capi': [
-      'include/internal/cef_types_linux.h',
-    ],
-    'includes_ohos': [
-      'include/internal/cef_linux.h',
-    ],
-    'includes_ohos_capi': [
       'include/internal/cef_types_linux.h',
     ],
     'libcef_sources_common': [
@@ -170,8 +171,14 @@
       'libcef_dll/wrapper/libcef_dll_wrapper2.cc',
     ],
     'libcef_dll_wrapper_sources_mac': [
-      'libcef_dll/wrapper/cef_library_loader_mac.mm',
+      'libcef_dll/wrapper/cef_scoped_library_loader_mac.mm',
+      'libcef_dll/wrapper/cef_scoped_sandbox_context_mac.mm',
       'libcef_dll/wrapper/libcef_dll_dylib.cc',
+    ],
+    'libcef_dll_wrapper_sources_win': [
+      'libcef_dll/wrapper/cef_certificate_util_win.cc',
+      'libcef_dll/wrapper/cef_scoped_library_loader_win.cc',
+      'libcef_dll/wrapper/cef_util_win.cc',
     ],
     'shared_sources_browser': [
       'tests/shared/browser/client_app_browser.cc',
@@ -215,10 +222,6 @@
       'tests/shared/browser/main_message_loop_external_pump_linux.cc',
       'tests/shared/browser/resource_util_posix.cc',
     ],
-    'shared_sources_ohos': [
-      'tests/shared/browser/main_message_loop_external_pump_ohos.cc',
-      'tests/shared/browser/resource_util_posix.cc',
-    ],
     'shared_sources_mac': [
       'tests/shared/browser/main_message_loop_external_pump_mac.mm',
       'tests/shared/browser/resource_util_mac.mm',
@@ -256,6 +259,8 @@
       'tests/cefclient/browser/client_prefs.cc',
       'tests/cefclient/browser/client_prefs.h',
       'tests/cefclient/browser/client_types.h',
+      'tests/cefclient/browser/config_test.cc',
+      'tests/cefclient/browser/config_test.h',
       'tests/cefclient/browser/default_client_handler.cc',
       'tests/cefclient/browser/default_client_handler.h',
       'tests/cefclient/browser/dialog_test.cc',
@@ -333,6 +338,7 @@
     'cefclient_sources_resources': [
       'tests/cefclient/resources/binary_transfer.html',
       'tests/cefclient/resources/binding.html',
+      'tests/cefclient/resources/config.html',
       'tests/cefclient/resources/dialogs.html',
       'tests/cefclient/resources/draggable.html',
       'tests/cefclient/resources/hang.html',
@@ -416,6 +422,8 @@
       'tests/cefclient/browser/temp_window_mac.mm',
       'tests/cefclient/browser/text_input_client_osr_mac.h',
       'tests/cefclient/browser/text_input_client_osr_mac.mm',
+      'tests/cefclient/browser/util_mac.h',
+      'tests/cefclient/browser/util_mac.mm',
       'tests/cefclient/browser/views_window_mac.mm',
       'tests/cefclient/browser/window_test_runner_mac.h',
       'tests/cefclient/browser/window_test_runner_mac.mm',
@@ -450,21 +458,6 @@
       'tests/cefclient/browser/window_test_runner_gtk.h',
       'tests/cefclient/cefclient_gtk.cc',
     ],
-    'cefclient_sources_ohos': [
-      'tests/cefclient/browser/browser_window_osr_ohos.cc',
-      'tests/cefclient/browser/browser_window_osr_ohos.h',  
-      'tests/cefclient/browser/browser_window_std_ohos.cc',
-      'tests/cefclient/browser/browser_window_std_ohos.h',        
-      'tests/cefclient/browser/root_window_ohos.cc',
-      'tests/cefclient/browser/root_window_ohos.h',
-      'tests/cefclient/browser/temp_window_ohos.cc',
-      'tests/cefclient/browser/temp_window_ohos.h',
-      'tests/cefclient/browser/main_context_impl_posix.cc',
-      'tests/cefclient/browser/resource_util_ohos.cc',
-      'tests/cefclient/browser/window_test_runner_ohos.h',
-      'tests/cefclient/browser/window_test_runner_ohos.cc',
-      'tests/cefclient/cefclient_ohos.cc',
-    ],    
     'cefsimple_sources_common': [
       'tests/cefsimple/simple_app.cc',
       'tests/cefsimple/simple_app.h',
@@ -501,10 +494,6 @@
       'tests/cefsimple/cefsimple_linux.cc',
       'tests/cefsimple/simple_handler_linux.cc',
     ],
-    'cefsimple_sources_ohos': [
-      'tests/cefsimple/cefsimple_ohos.cc',
-      'tests/cefsimple/simple_handler_ohos.cc',
-    ],
     'ceftests_data_resources': [
       'tests/ceftests/resources/net/data/ssl/certificates/expired_cert.pem',
       'tests/ceftests/resources/net/data/ssl/certificates/localhost_cert.pem',
@@ -512,6 +501,7 @@
       'tests/ceftests/resources/net/data/ssl/certificates/root_ca_cert.pem',
     ],
     'ceftests_sources_common': [
+      'tests/ceftests/api_version_unittest.cc',
       'tests/ceftests/audio_output_unittest.cc',
       'tests/ceftests/browser_info_map_unittest.cc',
       'tests/ceftests/certificate_error_unittest.cc',
@@ -550,6 +540,7 @@
       'tests/ceftests/permission_prompt_unittest.cc',
       'tests/ceftests/preference_unittest.cc',
       'tests/ceftests/print_unittest.cc',
+      'tests/ceftests/print_to_pdf_unittest.cc',
       'tests/ceftests/process_message_unittest.cc',
       'tests/ceftests/request_context_unittest.cc',
       'tests/ceftests/request_handler_unittest.cc',
@@ -705,9 +696,6 @@
     ],
     'ceftests_sources_linux': [
       'tests/ceftests/resource_util_linux.cc',
-    ],
-    'ceftests_sources_ohos': [
-      'tests/ceftests/resource_util_ohos.cc',
     ],
   },
 }

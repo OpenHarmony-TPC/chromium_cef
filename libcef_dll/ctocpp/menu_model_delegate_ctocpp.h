@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=41c4ac72bca411ac0dd1b90df39a09810dbc1241$
+// $hash=3a6b1b35d9b5a942010585228325fe62971d19d6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MENU_MODEL_DELEGATE_CTOCPP_H_
@@ -20,36 +20,31 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_menu_model_capi.h"
-#include "include/capi/cef_menu_model_delegate_capi.h"
-#include "include/cef_menu_model.h"
 #include "include/cef_menu_model_delegate.h"
+#include "include/capi/cef_menu_model_delegate_capi_versions.h"
+#include "include/cef_menu_model.h"
+#include "include/capi/cef_menu_model_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMenuModelDelegateCToCpp
-    : public CefCToCppRefCounted<CefMenuModelDelegateCToCpp,
-                                 CefMenuModelDelegate,
-                                 cef_menu_model_delegate_t> {
+class CefMenuModelDelegate_0_CToCpp
+    : public CefCToCppRefCounted<CefMenuModelDelegate_0_CToCpp, CefMenuModelDelegate, cef_menu_model_delegate_0_t> {
  public:
-  CefMenuModelDelegateCToCpp();
-  virtual ~CefMenuModelDelegateCToCpp();
+  CefMenuModelDelegate_0_CToCpp();
+  virtual ~CefMenuModelDelegate_0_CToCpp();
 
   // CefMenuModelDelegate methods.
-  void ExecuteCommand(CefRefPtr<CefMenuModel> menu_model,
-                      int command_id,
-                      cef_event_flags_t event_flags) override;
-  void MouseOutsideMenu(CefRefPtr<CefMenuModel> menu_model,
-                        const CefPoint& screen_point) override;
-  void UnhandledOpenSubmenu(CefRefPtr<CefMenuModel> menu_model,
-                            bool is_rtl) override;
-  void UnhandledCloseSubmenu(CefRefPtr<CefMenuModel> menu_model,
-                             bool is_rtl) override;
+  void ExecuteCommand(CefRefPtr<CefMenuModel> menu_model, int command_id, cef_event_flags_t event_flags) override;
+  void MouseOutsideMenu(CefRefPtr<CefMenuModel> menu_model, const CefPoint& screen_point) override;
+  void UnhandledOpenSubmenu(CefRefPtr<CefMenuModel> menu_model, bool is_rtl) override;
+  void UnhandledCloseSubmenu(CefRefPtr<CefMenuModel> menu_model, bool is_rtl) override;
   void MenuWillShow(CefRefPtr<CefMenuModel> menu_model) override;
   void MenuClosed(CefRefPtr<CefMenuModel> menu_model) override;
-  bool FormatLabel(CefRefPtr<CefMenuModel> menu_model,
-                   CefString& label) override;
+  bool FormatLabel(CefRefPtr<CefMenuModel> menu_model, CefString& label) override;
 };
+
+constexpr auto CefMenuModelDelegateCToCpp_Wrap = CefMenuModelDelegate_0_CToCpp::Wrap;
+constexpr auto CefMenuModelDelegateCToCpp_Unwrap = CefMenuModelDelegate_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MENU_MODEL_DELEGATE_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=69bbe376cb477c61416c537243b66d89e967f5d1$
+// $hash=ea795c8d2083501232a28e904d062cf028cf60a4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TASK_RUNNER_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_task_capi.h"
 #include "include/cef_task.h"
+#include "include/capi/cef_task_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTaskRunnerCToCpp : public CefCToCppRefCounted<CefTaskRunnerCToCpp,
-                                                       CefTaskRunner,
-                                                       cef_task_runner_t> {
+class CefTaskRunnerCToCpp
+    : public CefCToCppRefCounted<CefTaskRunnerCToCpp, CefTaskRunner, cef_task_runner_t> {
  public:
   CefTaskRunnerCToCpp();
   virtual ~CefTaskRunnerCToCpp();
@@ -40,5 +39,8 @@ class CefTaskRunnerCToCpp : public CefCToCppRefCounted<CefTaskRunnerCToCpp,
   bool PostTask(CefRefPtr<CefTask> task) override;
   bool PostDelayedTask(CefRefPtr<CefTask> task, int64_t delay_ms) override;
 };
+
+constexpr auto CefTaskRunnerCToCpp_Wrap = CefTaskRunnerCToCpp::Wrap;
+constexpr auto CefTaskRunnerCToCpp_Unwrap = CefTaskRunnerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TASK_RUNNER_CTOCPP_H_

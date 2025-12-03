@@ -9,25 +9,25 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f27cb1bc2b6d37a010819f818a9d7c9dff7ad02b$
+// $hash=7e992d3fed808a8a453aa05efaaf0ba39d2147ef$
 //
 
-#include "libcef_dll/ctocpp/print_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/print_dialog_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/print_job_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/print_settings_cpptoc.h"
+#include "libcef_dll/ctocpp/print_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefPrintHandlerCToCpp::OnPrintStart(CefRefPtr<CefBrowser> browser) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefPrintHandler_0_CToCpp::OnPrintStart(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_print_start)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_print_start) {
     return;
   }
 
@@ -40,18 +40,15 @@ void CefPrintHandlerCToCpp::OnPrintStart(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_print_start(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_print_start(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintHandlerCToCpp::OnPrintSettings(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefPrintSettings> settings,
-    bool get_defaults) {
+NO_SANITIZE("cfi-icall") void CefPrintHandler_0_CToCpp::OnPrintSettings(CefRefPtr<CefBrowser> browser, CefRefPtr<CefPrintSettings> settings, bool get_defaults) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_print_settings)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_print_settings) {
     return;
   }
 
@@ -69,20 +66,17 @@ void CefPrintHandlerCToCpp::OnPrintSettings(
   }
 
   // Execute
-  _struct->on_print_settings(_struct, CefBrowserCppToC::Wrap(browser),
-                             CefPrintSettingsCppToC::Wrap(settings),
-                             get_defaults);
+  _struct->on_print_settings(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefPrintSettingsCppToC_Wrap(settings),
+      get_defaults);
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefPrintHandlerCToCpp::OnPrintDialog(
-    CefRefPtr<CefBrowser> browser,
-    bool has_selection,
-    CefRefPtr<CefPrintDialogCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefPrintHandler_0_CToCpp::OnPrintDialog(CefRefPtr<CefBrowser> browser, bool has_selection, CefRefPtr<CefPrintDialogCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_print_dialog)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_print_dialog) {
     return false;
   }
 
@@ -100,24 +94,20 @@ bool CefPrintHandlerCToCpp::OnPrintDialog(
   }
 
   // Execute
-  int _retval = _struct->on_print_dialog(
-      _struct, CefBrowserCppToC::Wrap(browser), has_selection,
-      CefPrintDialogCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_print_dialog(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      has_selection,
+      CefPrintDialogCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefPrintHandlerCToCpp::OnPrintJob(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& document_name,
-    const CefString& pdf_file_path,
-    CefRefPtr<CefPrintJobCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefPrintHandler_0_CToCpp::OnPrintJob(CefRefPtr<CefBrowser> browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr<CefPrintJobCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_print_job)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_print_job) {
     return false;
   }
 
@@ -145,20 +135,21 @@ bool CefPrintHandlerCToCpp::OnPrintJob(
   }
 
   // Execute
-  int _retval = _struct->on_print_job(
-      _struct, CefBrowserCppToC::Wrap(browser), document_name.GetStruct(),
-      pdf_file_path.GetStruct(), CefPrintJobCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_print_job(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      document_name.GetStruct(),
+      pdf_file_path.GetStruct(),
+      CefPrintJobCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPrintHandlerCToCpp::OnPrintReset(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefPrintHandler_0_CToCpp::OnPrintReset(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_print_reset)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_print_reset) {
     return;
   }
 
@@ -171,16 +162,15 @@ void CefPrintHandlerCToCpp::OnPrintReset(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_print_reset(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_print_reset(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-CefSize CefPrintHandlerCToCpp::GetPdfPaperSize(CefRefPtr<CefBrowser> browser,
-                                               int device_units_per_inch) {
+NO_SANITIZE("cfi-icall") CefSize CefPrintHandler_0_CToCpp::GetPdfPaperSize(CefRefPtr<CefBrowser> browser, int device_units_per_inch) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_pdf_paper_size)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_pdf_paper_size) {
     return CefSize();
   }
 
@@ -193,35 +183,31 @@ CefSize CefPrintHandlerCToCpp::GetPdfPaperSize(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  cef_size_t _retval = _struct->get_pdf_paper_size(
-      _struct, CefBrowserCppToC::Wrap(browser), device_units_per_inch);
+  cef_size_t _retval = _struct->get_pdf_paper_size(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      device_units_per_inch);
 
   // Return type: simple
   return _retval;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintHandlerCToCpp::CefPrintHandlerCToCpp() {}
+CefPrintHandler_0_CToCpp::CefPrintHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPrintHandlerCToCpp::~CefPrintHandlerCToCpp() {
+CefPrintHandler_0_CToCpp::~CefPrintHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_print_handler_t*
-CefCToCppRefCounted<CefPrintHandlerCToCpp,
-                    CefPrintHandler,
-                    cef_print_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                        CefPrintHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_print_handler_0_t* CefCToCppRefCounted<CefPrintHandler_0_CToCpp, CefPrintHandler, cef_print_handler_0_t>::UnwrapDerived(CefWrapperType type, CefPrintHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefPrintHandlerCToCpp,
-                                   CefPrintHandler,
-                                   cef_print_handler_t>::kWrapperType =
-    WT_PRINT_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefPrintHandler_0_CToCpp, CefPrintHandler, cef_print_handler_0_t>::kWrapperType = WT_PRINT_HANDLER;
+
+

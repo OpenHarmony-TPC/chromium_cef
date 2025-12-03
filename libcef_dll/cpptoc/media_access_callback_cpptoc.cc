@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc38a36179ddf9a5ce5baaa3d5aa1907422c29a0$
+// $hash=adc99dbf5e6b282a20d9546e164fb98206088e65$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/media_access_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-media_access_callback_cont(struct _cef_media_access_callback_t* self,
-                           uint32_t allowed_permissions) {
+void CEF_CALLBACK media_access_callback_cont(struct _cef_media_access_callback_0_t* self, uint32_t allowed_permissions) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,11 +31,11 @@ media_access_callback_cont(struct _cef_media_access_callback_t* self,
   }
 
   // Execute
-  CefMediaAccessCallbackCppToC::Get(self)->Continue(allowed_permissions);
+  CefMediaAccessCallback_0_CppToC::Get(self)->Continue(
+      allowed_permissions);
 }
 
-void CEF_CALLBACK
-media_access_callback_cancel(struct _cef_media_access_callback_t* self) {
+void CEF_CALLBACK media_access_callback_cancel(struct _cef_media_access_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -48,37 +46,31 @@ media_access_callback_cancel(struct _cef_media_access_callback_t* self) {
   }
 
   // Execute
-  CefMediaAccessCallbackCppToC::Get(self)->Cancel();
+  CefMediaAccessCallback_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaAccessCallbackCppToC::CefMediaAccessCallbackCppToC() {
+CefMediaAccessCallback_0_CppToC::CefMediaAccessCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = media_access_callback_cont;
   GetStruct()->cancel = media_access_callback_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaAccessCallbackCppToC::~CefMediaAccessCallbackCppToC() {
+CefMediaAccessCallback_0_CppToC::~CefMediaAccessCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMediaAccessCallback> CefCppToCRefCounted<
-    CefMediaAccessCallbackCppToC,
-    CefMediaAccessCallback,
-    cef_media_access_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                cef_media_access_callback_t*
-                                                    s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefMediaAccessCallback> CefCppToCRefCounted<CefMediaAccessCallback_0_CppToC, CefMediaAccessCallback, cef_media_access_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_media_access_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefMediaAccessCallbackCppToC,
-                                   CefMediaAccessCallback,
-                                   cef_media_access_callback_t>::kWrapperType =
-    WT_MEDIA_ACCESS_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefMediaAccessCallback_0_CppToC, CefMediaAccessCallback, cef_media_access_callback_0_t>::kWrapperType = WT_MEDIA_ACCESS_CALLBACK;
+
+

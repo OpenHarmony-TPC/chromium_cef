@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3da5a83d21f4314ba28b236dea29334ad7f90278$
+// $hash=b2c3395a0f549c3e25878cf33b619a5bb6d0f132$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_WINDOW_CTOCPP_H_
@@ -21,13 +21,12 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/views/cef_browser_view_capi.h"
-#include "include/capi/views/cef_view_capi.h"
+#include "include/views/cef_window.h"
 #include "include/capi/views/cef_window_capi.h"
 #include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi.h"
 #include "include/views/cef_view.h"
-#include "include/views/cef_window.h"
+#include "include/capi/views/cef_view_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -40,8 +39,7 @@ class CefWindowCToCpp
 
   // CefWindow methods.
   void Show() override;
-  void ShowAsBrowserModalDialog(
-      CefRefPtr<CefBrowserView> browser_view) override;
+  void ShowAsBrowserModalDialog(CefRefPtr<CefBrowserView> browser_view) override;
   void Hide() override;
   void CenterWindow(const CefSize& size) override;
   void Close() override;
@@ -66,30 +64,17 @@ class CefWindowCToCpp
   CefRefPtr<CefImage> GetWindowIcon() override;
   void SetWindowAppIcon(CefRefPtr<CefImage> image) override;
   CefRefPtr<CefImage> GetWindowAppIcon() override;
-  CefRefPtr<CefOverlayController> AddOverlayView(
-      CefRefPtr<CefView> view,
-      cef_docking_mode_t docking_mode,
-      bool can_activate) override;
-  void ShowMenu(CefRefPtr<CefMenuModel> menu_model,
-                const CefPoint& screen_point,
-                cef_menu_anchor_position_t anchor_position) override;
+  CefRefPtr<CefOverlayController> AddOverlayView(CefRefPtr<CefView> view, cef_docking_mode_t docking_mode, bool can_activate) override;
+  void ShowMenu(CefRefPtr<CefMenuModel> menu_model, const CefPoint& screen_point, cef_menu_anchor_position_t anchor_position) override;
   void CancelMenu() override;
   CefRefPtr<CefDisplay> GetDisplay() override;
   CefRect GetClientAreaBoundsInScreen() override;
-  void SetDraggableRegions(
-      const std::vector<CefDraggableRegion>& regions) override;
+  void SetDraggableRegions(const std::vector<CefDraggableRegion>& regions) override;
   CefWindowHandle GetWindowHandle() override;
   void SendKeyPress(int key_code, uint32_t event_flags) override;
   void SendMouseMove(int screen_x, int screen_y) override;
-  void SendMouseEvents(cef_mouse_button_type_t button,
-                       bool mouse_down,
-                       bool mouse_up) override;
-  void SetAccelerator(int command_id,
-                      int key_code,
-                      bool shift_pressed,
-                      bool ctrl_pressed,
-                      bool alt_pressed,
-                      bool high_priority) override;
+  void SendMouseEvents(cef_mouse_button_type_t button, bool mouse_down, bool mouse_up) override;
+  void SetAccelerator(int command_id, int key_code, bool shift_pressed, bool ctrl_pressed, bool alt_pressed, bool high_priority) override;
   void RemoveAccelerator(int command_id) override;
   void RemoveAllAccelerators() override;
   void SetThemeColor(int color_id, cef_color_t color) override;
@@ -99,8 +84,7 @@ class CefWindowCToCpp
   // CefPanel methods.
   CefRefPtr<CefWindow> AsWindow() override;
   CefRefPtr<CefFillLayout> SetToFillLayout() override;
-  CefRefPtr<CefBoxLayout> SetToBoxLayout(
-      const CefBoxLayoutSettings& settings) override;
+  CefRefPtr<CefBoxLayout> SetToBoxLayout(const CefBoxLayoutSettings& settings) override;
   CefRefPtr<CefLayout> GetLayout() override;
   void Layout() override;
   void AddChildView(CefRefPtr<CefView> view) override;
@@ -165,5 +149,8 @@ class CefWindowCToCpp
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefWindowCToCpp_Wrap = CefWindowCToCpp::Wrap;
+constexpr auto CefWindowCToCpp_Unwrap = CefWindowCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_WINDOW_CTOCPP_H_

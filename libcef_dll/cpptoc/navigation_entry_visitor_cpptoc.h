@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cbf6007843991acfef1f2b42731f4dbfd76e0b01$
+// $hash=a59dff3f80d746f02623c73cf61c9a2426ccf4cf$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_NAVIGATION_ENTRY_VISITOR_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefNavigationEntryVisitorCppToC
-    : public CefCppToCRefCounted<CefNavigationEntryVisitorCppToC,
-                                 CefNavigationEntryVisitor,
-                                 cef_navigation_entry_visitor_t> {
+    : public CefCppToCRefCounted<CefNavigationEntryVisitorCppToC, CefNavigationEntryVisitor, cef_navigation_entry_visitor_t> {
  public:
   CefNavigationEntryVisitorCppToC();
   virtual ~CefNavigationEntryVisitorCppToC();
 };
+
+constexpr auto CefNavigationEntryVisitorCppToC_Wrap = CefNavigationEntryVisitorCppToC::Wrap;
+constexpr auto CefNavigationEntryVisitorCppToC_Unwrap = CefNavigationEntryVisitorCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_NAVIGATION_ENTRY_VISITOR_CPPTOC_H_

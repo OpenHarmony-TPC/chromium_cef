@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c46c975e4826d9f58a208b2efe7c417e1ffdba51$
+// $hash=62859097510036135679070817e19b339ec1248b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DEVTOOLS_MESSAGE_OBSERVER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_DEVTOOLS_MESSAGE_OBSERVER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -51,6 +55,8 @@ struct _cef_browser_t;
 ///
 /// Callback structure for cef_browser_host_t::AddDevToolsMessageObserver. The
 /// functions of this structure will be called on the browser process UI thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_dev_tools_message_observer_t {
   ///
@@ -80,11 +86,7 @@ typedef struct _cef_dev_tools_message_observer_t {
   /// if desired, however be aware of performance considerations when parsing
   /// large messages (some of which may exceed 1MB in size).
   ///
-  int(CEF_CALLBACK* on_dev_tools_message)(
-      struct _cef_dev_tools_message_observer_t* self,
-      struct _cef_browser_t* browser,
-      const void* message,
-      size_t message_size);
+  int (CEF_CALLBACK *on_dev_tools_message)(struct _cef_dev_tools_message_observer_t* self, struct _cef_browser_t* browser, const void* message, size_t message_size);
 
   ///
   /// Method that will be called after attempted execution of a DevTools
@@ -98,13 +100,7 @@ typedef struct _cef_dev_tools_message_observer_t {
   /// necessary. See the OnDevToolsMessage documentation for additional details
   /// on |result| contents.
   ///
-  void(CEF_CALLBACK* on_dev_tools_method_result)(
-      struct _cef_dev_tools_message_observer_t* self,
-      struct _cef_browser_t* browser,
-      int message_id,
-      int success,
-      const void* result,
-      size_t result_size);
+  void (CEF_CALLBACK *on_dev_tools_method_result)(struct _cef_dev_tools_message_observer_t* self, struct _cef_browser_t* browser, int message_id, int success, const void* result, size_t result_size);
 
   ///
   /// Method that will be called on receipt of a DevTools protocol event.
@@ -114,21 +110,14 @@ typedef struct _cef_dev_tools_message_observer_t {
   /// callback and should be copied if necessary. See the OnDevToolsMessage
   /// documentation for additional details on |params| contents.
   ///
-  void(CEF_CALLBACK* on_dev_tools_event)(
-      struct _cef_dev_tools_message_observer_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* method,
-      const void* params,
-      size_t params_size);
+  void (CEF_CALLBACK *on_dev_tools_event)(struct _cef_dev_tools_message_observer_t* self, struct _cef_browser_t* browser, const cef_string_t* method, const void* params, size_t params_size);
 
   ///
   /// Method that will be called when the DevTools agent has attached. |browser|
   /// is the originating browser instance. This will generally occur in response
   /// to the first message sent while the agent is detached.
   ///
-  void(CEF_CALLBACK* on_dev_tools_agent_attached)(
-      struct _cef_dev_tools_message_observer_t* self,
-      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_dev_tools_agent_attached)(struct _cef_dev_tools_message_observer_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Method that will be called when the DevTools agent has detached. |browser|
@@ -136,10 +125,9 @@ typedef struct _cef_dev_tools_message_observer_t {
   /// pending before the agent became detached will not be delivered, and any
   /// active event subscriptions will be canceled.
   ///
-  void(CEF_CALLBACK* on_dev_tools_agent_detached)(
-      struct _cef_dev_tools_message_observer_t* self,
-      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_dev_tools_agent_detached)(struct _cef_dev_tools_message_observer_t* self, struct _cef_browser_t* browser);
 } cef_dev_tools_message_observer_t;
+
 
 #ifdef __cplusplus
 }

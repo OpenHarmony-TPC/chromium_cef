@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=75eebc9d3615a8d7e8e9399cb56f13379bdd2604$
+// $hash=cc06453abb17bae72be8bda8a9abca8514ebd0d0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PRINT_HANDLER_CTOCPP_H_
@@ -20,34 +20,28 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_print_handler_capi.h"
 #include "include/cef_print_handler.h"
+#include "include/capi/cef_print_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPrintHandlerCToCpp : public CefCToCppRefCounted<CefPrintHandlerCToCpp,
-                                                         CefPrintHandler,
-                                                         cef_print_handler_t> {
+class CefPrintHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefPrintHandler_0_CToCpp, CefPrintHandler, cef_print_handler_0_t> {
  public:
-  CefPrintHandlerCToCpp();
-  virtual ~CefPrintHandlerCToCpp();
+  CefPrintHandler_0_CToCpp();
+  virtual ~CefPrintHandler_0_CToCpp();
 
   // CefPrintHandler methods.
   void OnPrintStart(CefRefPtr<CefBrowser> browser) override;
-  void OnPrintSettings(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefPrintSettings> settings,
-                       bool get_defaults) override;
-  bool OnPrintDialog(CefRefPtr<CefBrowser> browser,
-                     bool has_selection,
-                     CefRefPtr<CefPrintDialogCallback> callback) override;
-  bool OnPrintJob(CefRefPtr<CefBrowser> browser,
-                  const CefString& document_name,
-                  const CefString& pdf_file_path,
-                  CefRefPtr<CefPrintJobCallback> callback) override;
+  void OnPrintSettings(CefRefPtr<CefBrowser> browser, CefRefPtr<CefPrintSettings> settings, bool get_defaults) override;
+  bool OnPrintDialog(CefRefPtr<CefBrowser> browser, bool has_selection, CefRefPtr<CefPrintDialogCallback> callback) override;
+  bool OnPrintJob(CefRefPtr<CefBrowser> browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr<CefPrintJobCallback> callback) override;
   void OnPrintReset(CefRefPtr<CefBrowser> browser) override;
-  CefSize GetPdfPaperSize(CefRefPtr<CefBrowser> browser,
-                          int device_units_per_inch) override;
+  CefSize GetPdfPaperSize(CefRefPtr<CefBrowser> browser, int device_units_per_inch) override;
 };
+
+constexpr auto CefPrintHandlerCToCpp_Wrap = CefPrintHandler_0_CToCpp::Wrap;
+constexpr auto CefPrintHandlerCToCpp_Unwrap = CefPrintHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_HANDLER_CTOCPP_H_

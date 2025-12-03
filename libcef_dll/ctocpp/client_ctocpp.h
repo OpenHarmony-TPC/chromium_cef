@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c636a5fd65fd41d46e8d37877307c7ac0d36b6b8$
+// $hash=1c941f4dbf1016b15efb2dd4f188819e9dac5b08$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -20,17 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefClientCToCpp
-    : public CefCToCppRefCounted<CefClientCToCpp, CefClient, cef_client_t> {
+class CefClient_0_CToCpp
+    : public CefCToCppRefCounted<CefClient_0_CToCpp, CefClient, cef_client_0_t> {
  public:
-  CefClientCToCpp();
-  virtual ~CefClientCToCpp();
+  CefClient_0_CToCpp();
+  virtual ~CefClient_0_CToCpp();
 
   // CefClient methods.
   CefRefPtr<CefAudioHandler> GetAudioHandler() override;
@@ -51,10 +51,10 @@ class CefClientCToCpp
   CefRefPtr<CefPrintHandler> GetPrintHandler() override;
   CefRefPtr<CefRenderHandler> GetRenderHandler() override;
   CefRefPtr<CefRequestHandler> GetRequestHandler() override;
-  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                CefProcessId source_process,
-                                CefRefPtr<CefProcessMessage> message) override;
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 };
+
+constexpr auto CefClientCToCpp_Wrap = CefClient_0_CToCpp::Wrap;
+constexpr auto CefClientCToCpp_Unwrap = CefClient_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

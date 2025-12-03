@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=019a5f57d997cb1932e832fc57c86495593ffac7$
+// $hash=6dd863f0d11df84332c372efe61878dfeb421680$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaSinkCppToC : public CefCppToCRefCounted<CefMediaSinkCppToC,
-                                                      CefMediaSink,
-                                                      cef_media_sink_t> {
+class CefMediaSink_0_CppToC
+    : public CefCppToCRefCounted<CefMediaSink_0_CppToC, CefMediaSink, cef_media_sink_0_t> {
  public:
-  CefMediaSinkCppToC();
-  virtual ~CefMediaSinkCppToC();
+  CefMediaSink_0_CppToC();
+  virtual ~CefMediaSink_0_CppToC();
 };
+
+constexpr auto CefMediaSinkCppToC_Wrap = CefMediaSink_0_CppToC::Wrap;
+constexpr auto CefMediaSinkCppToC_Unwrap = CefMediaSink_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_CPPTOC_H_

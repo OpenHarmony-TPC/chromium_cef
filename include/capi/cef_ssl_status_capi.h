@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3e144b8b8ddb285457d5382e6098891bacb11f55$
+// $hash=9f93bc0dbf57e4dda50f1f1100ccd52249bd3aa7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SSL_STATUS_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_SSL_STATUS_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_values_capi.h"
@@ -48,8 +52,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure representing the SSL information for a navigation entry.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_sslstatus_t {
   ///
@@ -60,33 +67,30 @@ typedef struct _cef_sslstatus_t {
   ///
   /// Returns true (1) if the status is related to a secure SSL/TLS connection.
   ///
-  int(CEF_CALLBACK* is_secure_connection)(struct _cef_sslstatus_t* self);
+  int (CEF_CALLBACK *is_secure_connection)(struct _cef_sslstatus_t* self);
 
   ///
   /// Returns a bitmask containing any and all problems verifying the server
   /// certificate.
   ///
-  cef_cert_status_t(CEF_CALLBACK* get_cert_status)(
-      struct _cef_sslstatus_t* self);
+  cef_cert_status_t (CEF_CALLBACK *get_cert_status)(struct _cef_sslstatus_t* self);
 
   ///
   /// Returns the SSL version used for the SSL connection.
   ///
-  cef_ssl_version_t(CEF_CALLBACK* get_sslversion)(
-      struct _cef_sslstatus_t* self);
+  cef_ssl_version_t (CEF_CALLBACK *get_sslversion)(struct _cef_sslstatus_t* self);
 
   ///
   /// Returns a bitmask containing the page security content status.
   ///
-  cef_ssl_content_status_t(CEF_CALLBACK* get_content_status)(
-      struct _cef_sslstatus_t* self);
+  cef_ssl_content_status_t (CEF_CALLBACK *get_content_status)(struct _cef_sslstatus_t* self);
 
   ///
   /// Returns the X.509 certificate.
   ///
-  struct _cef_x509certificate_t*(CEF_CALLBACK* get_x509certificate)(
-      struct _cef_sslstatus_t* self);
+  struct _cef_x509_certificate_t* (CEF_CALLBACK *get_x509_certificate)(struct _cef_sslstatus_t* self);
 } cef_sslstatus_t;
+
 
 #ifdef __cplusplus
 }

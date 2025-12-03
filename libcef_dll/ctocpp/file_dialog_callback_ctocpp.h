@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=84eee401af76b260dae64f70cbf0ff2b39f7c66e$
+// $hash=aa1eab590cc2d7e69ef12a5e5d481eb260ec9c3c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FILE_DIALOG_CALLBACK_CTOCPP_H_
@@ -21,17 +21,14 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_dialog_handler_capi.h"
 #include "include/cef_dialog_handler.h"
+#include "include/capi/cef_dialog_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefFileDialogCallbackCToCpp
-    : public CefCToCppRefCounted<CefFileDialogCallbackCToCpp,
-                                 CefFileDialogCallback,
-                                 cef_file_dialog_callback_t> {
+    : public CefCToCppRefCounted<CefFileDialogCallbackCToCpp, CefFileDialogCallback, cef_file_dialog_callback_t> {
  public:
   CefFileDialogCallbackCToCpp();
   virtual ~CefFileDialogCallbackCToCpp();
@@ -40,5 +37,8 @@ class CefFileDialogCallbackCToCpp
   void Continue(const std::vector<CefString>& file_paths) override;
   void Cancel() override;
 };
+
+constexpr auto CefFileDialogCallbackCToCpp_Wrap = CefFileDialogCallbackCToCpp::Wrap;
+constexpr auto CefFileDialogCallbackCToCpp_Unwrap = CefFileDialogCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FILE_DIALOG_CALLBACK_CTOCPP_H_

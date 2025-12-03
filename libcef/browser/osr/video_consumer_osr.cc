@@ -137,7 +137,8 @@ void CefVideoConsumerOSR::OnFrameCaptured(
                             : CEF_COLOR_TYPE_BGRA_8888;
 
     // Build extra common info.
-    cef_accelerated_paint_info_common_t extra = {};
+    cef_accelerated_paint_info_common_t extra = {
+        sizeof(cef_accelerated_paint_info_common_t)};
     extra.timestamp = info->timestamp.InMicroseconds();
     extra.coded_size = {info->coded_size.width(), info->coded_size.height()};
     extra.visible_rect = {info->visible_rect.x(), info->visible_rect.y(),
@@ -174,7 +175,7 @@ void CefVideoConsumerOSR::OnFrameCaptured(
     auto& gmb_handle = data->get_gpu_memory_buffer_handle();
     cef_accelerated_paint_info_t paint_info;
     paint_info.extra = extra;
-    paint_info.shared_texture_handle = gmb_handle.dxgi_handle.Get();
+    paint_info.shared_texture_handle = gmb_handle.dxgi_handle().buffer_handle();
     paint_info.format = pixel_format;
     view_->OnAcceleratedPaint(damage_rect, info->coded_size, paint_info);
 #elif BUILDFLAG(IS_APPLE)
@@ -186,7 +187,7 @@ void CefVideoConsumerOSR::OnFrameCaptured(
     view_->OnAcceleratedPaint(damage_rect, info->coded_size, paint_info);
 #elif BUILDFLAG(IS_LINUX)
     auto& gmb_handle = data->get_gpu_memory_buffer_handle();
-    auto& native_pixmap = gmb_handle.native_pixmap_handle;
+    auto& native_pixmap = gmb_handle.native_pixmap_handle();
     CHECK(native_pixmap.planes.size() <= kAcceleratedPaintMaxPlanes);
 
     cef_accelerated_paint_info_t paint_info;

@@ -9,23 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9e5f1e567f0521575833f9d63de1ccc5688ce52b$
+// $hash=3a8bf629ebbdfe1613a9903b5e6287eb5fb1bf87$
 //
 
-#include "libcef_dll/ctocpp/focus_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/focus_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefFocusHandlerCToCpp::OnTakeFocus(CefRefPtr<CefBrowser> browser,
-                                        bool next) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefFocusHandler_0_CToCpp::OnTakeFocus(CefRefPtr<CefBrowser> browser, bool next) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_focus_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_take_focus)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_take_focus) {
     return;
   }
 
@@ -38,16 +37,16 @@ void CefFocusHandlerCToCpp::OnTakeFocus(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_take_focus(_struct, CefBrowserCppToC::Wrap(browser), next);
+  _struct->on_take_focus(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      next);
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefFocusHandlerCToCpp::OnSetFocus(CefRefPtr<CefBrowser> browser,
-                                       FocusSource source) {
+NO_SANITIZE("cfi-icall") bool CefFocusHandler_0_CToCpp::OnSetFocus(CefRefPtr<CefBrowser> browser, FocusSource source) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_focus_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_set_focus)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_set_focus) {
     return false;
   }
 
@@ -60,19 +59,19 @@ bool CefFocusHandlerCToCpp::OnSetFocus(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  int _retval =
-      _struct->on_set_focus(_struct, CefBrowserCppToC::Wrap(browser), source);
+  int _retval = _struct->on_set_focus(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      source);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefFocusHandlerCToCpp::OnGotFocus(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefFocusHandler_0_CToCpp::OnGotFocus(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_focus_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_got_focus)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_got_focus) {
     return;
   }
 
@@ -85,31 +84,27 @@ void CefFocusHandlerCToCpp::OnGotFocus(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_got_focus(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_got_focus(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFocusHandlerCToCpp::CefFocusHandlerCToCpp() {}
+CefFocusHandler_0_CToCpp::CefFocusHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFocusHandlerCToCpp::~CefFocusHandlerCToCpp() {
+CefFocusHandler_0_CToCpp::~CefFocusHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_focus_handler_t*
-CefCToCppRefCounted<CefFocusHandlerCToCpp,
-                    CefFocusHandler,
-                    cef_focus_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                        CefFocusHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_focus_handler_0_t* CefCToCppRefCounted<CefFocusHandler_0_CToCpp, CefFocusHandler, cef_focus_handler_0_t>::UnwrapDerived(CefWrapperType type, CefFocusHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefFocusHandlerCToCpp,
-                                   CefFocusHandler,
-                                   cef_focus_handler_t>::kWrapperType =
-    WT_FOCUS_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefFocusHandler_0_CToCpp, CefFocusHandler, cef_focus_handler_0_t>::kWrapperType = WT_FOCUS_HANDLER;
+
+

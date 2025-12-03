@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f977e209e1d9811b2e505a1d5739067f05ae15f3$
+// $hash=216c996b71739319038d4edfbe44c11da2b2cdfa$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_button_delegate_capi.h"
 
@@ -51,6 +55,8 @@ struct _cef_menu_button_t;
 ///
 /// MenuButton pressed lock is released when this object is destroyed.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_menu_button_pressed_lock_t {
   ///
   /// Base structure.
@@ -58,10 +64,13 @@ typedef struct _cef_menu_button_pressed_lock_t {
   cef_base_ref_counted_t base;
 } cef_menu_button_pressed_lock_t;
 
+
 ///
 /// Implement this structure to handle MenuButton events. The functions of this
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_menu_button_delegate_t {
   ///
@@ -75,12 +84,9 @@ typedef struct _cef_menu_button_delegate_t {
   /// window keep a reference to |button_pressed_lock| until the popup is hidden
   /// to maintain the pressed button state.
   ///
-  void(CEF_CALLBACK* on_menu_button_pressed)(
-      struct _cef_menu_button_delegate_t* self,
-      struct _cef_menu_button_t* menu_button,
-      const cef_point_t* screen_point,
-      struct _cef_menu_button_pressed_lock_t* button_pressed_lock);
+  void (CEF_CALLBACK *on_menu_button_pressed)(struct _cef_menu_button_delegate_t* self, struct _cef_menu_button_t* menu_button, const cef_point_t* screen_point, struct _cef_menu_button_pressed_lock_t* button_pressed_lock);
 } cef_menu_button_delegate_t;
+
 
 #ifdef __cplusplus
 }

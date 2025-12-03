@@ -9,52 +9,48 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4658681ede510574b02568dee2638b889131b12a$
+// $hash=5f4cdcb0fdf72a70b8040839aedce013e5aece1e$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/set_cookie_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefSetCookieCallbackCToCpp::OnComplete(bool success) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefSetCookieCallback_0_CToCpp::OnComplete(bool success) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_set_cookie_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_complete)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_complete) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_complete(_struct, success);
+  _struct->on_complete(_struct,
+      success);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSetCookieCallbackCToCpp::CefSetCookieCallbackCToCpp() {}
+CefSetCookieCallback_0_CToCpp::CefSetCookieCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSetCookieCallbackCToCpp::~CefSetCookieCallbackCToCpp() {
+CefSetCookieCallback_0_CToCpp::~CefSetCookieCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_set_cookie_callback_t* CefCToCppRefCounted<
-    CefSetCookieCallbackCToCpp,
-    CefSetCookieCallback,
-    cef_set_cookie_callback_t>::UnwrapDerived(CefWrapperType type,
-                                              CefSetCookieCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_set_cookie_callback_0_t* CefCToCppRefCounted<CefSetCookieCallback_0_CToCpp, CefSetCookieCallback, cef_set_cookie_callback_0_t>::UnwrapDerived(CefWrapperType type, CefSetCookieCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefSetCookieCallbackCToCpp,
-                                   CefSetCookieCallback,
-                                   cef_set_cookie_callback_t>::kWrapperType =
-    WT_SET_COOKIE_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefSetCookieCallback_0_CToCpp, CefSetCookieCallback, cef_set_cookie_callback_0_t>::kWrapperType = WT_SET_COOKIE_CALLBACK;
+
+

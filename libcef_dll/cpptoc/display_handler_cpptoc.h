@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a54526b4557ee7faa4e922e3a8e93cdc1567a362$
+// $hash=57fc1dd943e0c0702688c3a684b4aa703468e3d9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DISPLAY_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_display_handler_capi.h"
 #include "include/cef_display_handler.h"
+#include "include/capi/cef_display_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDisplayHandlerCppToC
-    : public CefCppToCRefCounted<CefDisplayHandlerCppToC,
-                                 CefDisplayHandler,
-                                 cef_display_handler_t> {
+    : public CefCppToCRefCounted<CefDisplayHandlerCppToC, CefDisplayHandler, cef_display_handler_t> {
  public:
   CefDisplayHandlerCppToC();
   virtual ~CefDisplayHandlerCppToC();
 };
+
+constexpr auto CefDisplayHandlerCppToC_Wrap = CefDisplayHandlerCppToC::Wrap;
+constexpr auto CefDisplayHandlerCppToC_Unwrap = CefDisplayHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DISPLAY_HANDLER_CPPTOC_H_

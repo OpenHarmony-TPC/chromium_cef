@@ -9,24 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=01f34a8fa9b253e72b7b89a5ad1d61c30c27270e$
+// $hash=0619c0ee9645512c01cd2749a6888c2fa05d29d0$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/cookie_visitor_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieVisitorCToCpp::Visit(const CefCookie& cookie,
-                                   int count,
-                                   int total,
-                                   bool& deleteCookie) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefCookieVisitor_0_CToCpp::Visit(const CefCookie& cookie, int count, int total, bool& deleteCookie) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_cookie_visitor_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit)) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit) {
     return false;
   }
 
@@ -36,38 +33,36 @@ bool CefCookieVisitorCToCpp::Visit(const CefCookie& cookie,
   int deleteCookieInt = deleteCookie;
 
   // Execute
-  int _retval =
-      _struct->visit(_struct, &cookie, count, total, &deleteCookieInt);
+  int _retval = _struct->visit(_struct,
+      &cookie,
+      count,
+      total,
+      &deleteCookieInt);
 
   // Restore param:deleteCookie; type: bool_byref
-  deleteCookie = deleteCookieInt ? true : false;
+  deleteCookie = deleteCookieInt?true:false;
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCookieVisitorCToCpp::CefCookieVisitorCToCpp() {}
+CefCookieVisitor_0_CToCpp::CefCookieVisitor_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCookieVisitorCToCpp::~CefCookieVisitorCToCpp() {
+CefCookieVisitor_0_CToCpp::~CefCookieVisitor_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_cookie_visitor_t*
-CefCToCppRefCounted<CefCookieVisitorCToCpp,
-                    CefCookieVisitor,
-                    cef_cookie_visitor_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefCookieVisitor* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_cookie_visitor_0_t* CefCToCppRefCounted<CefCookieVisitor_0_CToCpp, CefCookieVisitor, cef_cookie_visitor_0_t>::UnwrapDerived(CefWrapperType type, CefCookieVisitor* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCookieVisitorCToCpp,
-                                   CefCookieVisitor,
-                                   cef_cookie_visitor_t>::kWrapperType =
-    WT_COOKIE_VISITOR;
+template<> CefWrapperType CefCToCppRefCounted<CefCookieVisitor_0_CToCpp, CefCookieVisitor, cef_cookie_visitor_0_t>::kWrapperType = WT_COOKIE_VISITOR;
+
+

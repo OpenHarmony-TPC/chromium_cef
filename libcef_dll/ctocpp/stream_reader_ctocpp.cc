@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b4c20f02d1879db97205c3cc06a666e09e0d477a$
+// $hash=ef079baa8eb823a977368d61700ee4e8994a22fe$
 //
 
-#include "libcef_dll/ctocpp/stream_reader_ctocpp.h"
-
 #include "libcef_dll/cpptoc/read_handler_cpptoc.h"
+#include "libcef_dll/ctocpp/stream_reader_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefStreamReader> CefStreamReader::CreateForFile(
-    const CefString& fileName) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefStreamReader> CefStreamReader::CreateForFile(const CefString& fileName) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,16 +31,14 @@ CefRefPtr<CefStreamReader> CefStreamReader::CreateForFile(
   }
 
   // Execute
-  cef_stream_reader_t* _retval =
-      cef_stream_reader_create_for_file(fileName.GetStruct());
+  auto* _retval = cef_stream_reader_create_for_file(
+      fileName.GetStruct());
 
   // Return type: refptr_same
-  return CefStreamReaderCToCpp::Wrap(_retval);
+  return CefStreamReaderCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefStreamReader> CefStreamReader::CreateForData(void* data,
-                                                          size_t size) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefStreamReader> CefStreamReader::CreateForData(void* data, size_t size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -54,15 +50,15 @@ CefRefPtr<CefStreamReader> CefStreamReader::CreateForData(void* data,
   }
 
   // Execute
-  cef_stream_reader_t* _retval = cef_stream_reader_create_for_data(data, size);
+  auto* _retval = cef_stream_reader_create_for_data(
+      data,
+      size);
 
   // Return type: refptr_same
-  return CefStreamReaderCToCpp::Wrap(_retval);
+  return CefStreamReaderCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefStreamReader> CefStreamReader::CreateForHandler(
-    CefRefPtr<CefReadHandler> handler) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefStreamReader> CefStreamReader::CreateForHandler(CefRefPtr<CefReadHandler> handler) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -74,21 +70,21 @@ CefRefPtr<CefStreamReader> CefStreamReader::CreateForHandler(
   }
 
   // Execute
-  cef_stream_reader_t* _retval =
-      cef_stream_reader_create_for_handler(CefReadHandlerCppToC::Wrap(handler));
+  auto* _retval = cef_stream_reader_create_for_handler(
+      CefReadHandlerCppToC_Wrap(handler));
 
   // Return type: refptr_same
-  return CefStreamReaderCToCpp::Wrap(_retval);
+  return CefStreamReaderCToCpp_Wrap(_retval);
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-size_t CefStreamReaderCToCpp::Read(void* ptr, size_t size, size_t n) {
+NO_SANITIZE("cfi-icall") size_t CefStreamReaderCToCpp::Read(void* ptr, size_t size, size_t n) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_stream_reader_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, read)) {
+  auto* _struct = GetStruct();
+  if (!_struct->read) {
     return 0;
   }
 
@@ -101,25 +97,29 @@ size_t CefStreamReaderCToCpp::Read(void* ptr, size_t size, size_t n) {
   }
 
   // Execute
-  size_t _retval = _struct->read(_struct, ptr, size, n);
+  size_t _retval = _struct->read(_struct,
+      ptr,
+      size,
+      n);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-int CefStreamReaderCToCpp::Seek(int64_t offset, int whence) {
+NO_SANITIZE("cfi-icall") int CefStreamReaderCToCpp::Seek(int64_t offset, int whence) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_stream_reader_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, seek)) {
+  auto* _struct = GetStruct();
+  if (!_struct->seek) {
     return 0;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->seek(_struct, offset, whence);
+  int _retval = _struct->seek(_struct,
+      offset,
+      whence);
 
   // Return type: simple
   return _retval;
@@ -128,8 +128,8 @@ int CefStreamReaderCToCpp::Seek(int64_t offset, int whence) {
 NO_SANITIZE("cfi-icall") int64_t CefStreamReaderCToCpp::Tell() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_stream_reader_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, tell)) {
+  auto* _struct = GetStruct();
+  if (!_struct->tell) {
     return 0;
   }
 
@@ -145,8 +145,8 @@ NO_SANITIZE("cfi-icall") int64_t CefStreamReaderCToCpp::Tell() {
 NO_SANITIZE("cfi-icall") int CefStreamReaderCToCpp::Eof() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_stream_reader_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, eof)) {
+  auto* _struct = GetStruct();
+  if (!_struct->eof) {
     return 0;
   }
 
@@ -162,8 +162,8 @@ NO_SANITIZE("cfi-icall") int CefStreamReaderCToCpp::Eof() {
 NO_SANITIZE("cfi-icall") bool CefStreamReaderCToCpp::MayBlock() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_stream_reader_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, may_block)) {
+  auto* _struct = GetStruct();
+  if (!_struct->may_block) {
     return false;
   }
 
@@ -173,12 +173,13 @@ NO_SANITIZE("cfi-icall") bool CefStreamReaderCToCpp::MayBlock() {
   int _retval = _struct->may_block(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefStreamReaderCToCpp::CefStreamReaderCToCpp() {}
+CefStreamReaderCToCpp::CefStreamReaderCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -186,18 +187,11 @@ CefStreamReaderCToCpp::~CefStreamReaderCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_stream_reader_t*
-CefCToCppRefCounted<CefStreamReaderCToCpp,
-                    CefStreamReader,
-                    cef_stream_reader_t>::UnwrapDerived(CefWrapperType type,
-                                                        CefStreamReader* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_stream_reader_t* CefCToCppRefCounted<CefStreamReaderCToCpp, CefStreamReader, cef_stream_reader_t>::UnwrapDerived(CefWrapperType type, CefStreamReader* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefStreamReaderCToCpp,
-                                   CefStreamReader,
-                                   cef_stream_reader_t>::kWrapperType =
-    WT_STREAM_READER;
+template<> CefWrapperType CefCToCppRefCounted<CefStreamReaderCToCpp, CefStreamReader, cef_stream_reader_t>::kWrapperType = WT_STREAM_READER;
+
+

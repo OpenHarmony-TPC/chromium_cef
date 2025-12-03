@@ -9,30 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b8d723dab3a7379acea7e0115ee877177f67cf00$
+// $hash=fb0866489ecba5fb2ae403c94ed554512b879dc0$
 //
 
-#include "libcef_dll/ctocpp/jsdialog_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/jsdialog_callback_cpptoc.h"
+#include "libcef_dll/ctocpp/jsdialog_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefJSDialogHandlerCToCpp::OnJSDialog(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& origin_url,
-    JSDialogType dialog_type,
-    const CefString& message_text,
-    const CefString& default_prompt_text,
-    CefRefPtr<CefJSDialogCallback> callback,
-    bool& suppress_message) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefJSDialogHandler_0_CToCpp::OnJSDialog(CefRefPtr<CefBrowser> browser, const CefString& origin_url, JSDialogType dialog_type, const CefString& message_text, const CefString& default_prompt_text, CefRefPtr<CefJSDialogCallback> callback, bool& suppress_message) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_jsdialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_jsdialog)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_jsdialog) {
     return false;
   }
 
@@ -54,28 +47,27 @@ bool CefJSDialogHandlerCToCpp::OnJSDialog(
   int suppress_messageInt = suppress_message;
 
   // Execute
-  int _retval = _struct->on_jsdialog(
-      _struct, CefBrowserCppToC::Wrap(browser), origin_url.GetStruct(),
-      dialog_type, message_text.GetStruct(), default_prompt_text.GetStruct(),
-      CefJSDialogCallbackCppToC::Wrap(callback), &suppress_messageInt);
+  int _retval = _struct->on_jsdialog(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      origin_url.GetStruct(),
+      dialog_type,
+      message_text.GetStruct(),
+      default_prompt_text.GetStruct(),
+      CefJSDialogCallbackCppToC_Wrap(callback),
+      &suppress_messageInt);
 
   // Restore param:suppress_message; type: bool_byref
-  suppress_message = suppress_messageInt ? true : false;
+  suppress_message = suppress_messageInt?true:false;
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefJSDialogHandlerCToCpp::OnBeforeUnloadDialog(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& message_text,
-    bool is_reload,
-    CefRefPtr<CefJSDialogCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefJSDialogHandler_0_CToCpp::OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser, const CefString& message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_jsdialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_unload_dialog)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_unload_dialog) {
     return false;
   }
 
@@ -94,21 +86,21 @@ bool CefJSDialogHandlerCToCpp::OnBeforeUnloadDialog(
   // Unverified params: message_text
 
   // Execute
-  int _retval = _struct->on_before_unload_dialog(
-      _struct, CefBrowserCppToC::Wrap(browser), message_text.GetStruct(),
-      is_reload, CefJSDialogCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_before_unload_dialog(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      message_text.GetStruct(),
+      is_reload,
+      CefJSDialogCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefJSDialogHandlerCToCpp::OnResetDialogState(
-    CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefJSDialogHandler_0_CToCpp::OnResetDialogState(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_jsdialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_reset_dialog_state)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_reset_dialog_state) {
     return;
   }
 
@@ -121,15 +113,15 @@ void CefJSDialogHandlerCToCpp::OnResetDialogState(
   }
 
   // Execute
-  _struct->on_reset_dialog_state(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_reset_dialog_state(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefJSDialogHandlerCToCpp::OnDialogClosed(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefJSDialogHandler_0_CToCpp::OnDialogClosed(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_jsdialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dialog_closed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dialog_closed) {
     return;
   }
 
@@ -142,31 +134,27 @@ void CefJSDialogHandlerCToCpp::OnDialogClosed(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_dialog_closed(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_dialog_closed(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefJSDialogHandlerCToCpp::CefJSDialogHandlerCToCpp() {}
+CefJSDialogHandler_0_CToCpp::CefJSDialogHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefJSDialogHandlerCToCpp::~CefJSDialogHandlerCToCpp() {
+CefJSDialogHandler_0_CToCpp::~CefJSDialogHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_jsdialog_handler_t* CefCToCppRefCounted<
-    CefJSDialogHandlerCToCpp,
-    CefJSDialogHandler,
-    cef_jsdialog_handler_t>::UnwrapDerived(CefWrapperType type,
-                                           CefJSDialogHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_jsdialog_handler_0_t* CefCToCppRefCounted<CefJSDialogHandler_0_CToCpp, CefJSDialogHandler, cef_jsdialog_handler_0_t>::UnwrapDerived(CefWrapperType type, CefJSDialogHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefJSDialogHandlerCToCpp,
-                                   CefJSDialogHandler,
-                                   cef_jsdialog_handler_t>::kWrapperType =
-    WT_JSDIALOG_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefJSDialogHandler_0_CToCpp, CefJSDialogHandler, cef_jsdialog_handler_0_t>::kWrapperType = WT_JSDIALOG_HANDLER;
+
+

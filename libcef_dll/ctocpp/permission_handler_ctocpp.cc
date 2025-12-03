@@ -9,30 +9,25 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc62649e68314db730b90e53e06d09a8674cfb46$
+// $hash=1e19c931f49a1fd191dc6203d4663c16ca325f40$
 //
 
-#include "libcef_dll/ctocpp/permission_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/media_access_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/permission_prompt_callback_cpptoc.h"
+#include "libcef_dll/ctocpp/permission_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefPermissionHandlerCToCpp::OnRequestMediaAccessPermission(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    const CefString& requesting_origin,
-    uint32_t requested_permissions,
-    CefRefPtr<CefMediaAccessCallback> callback) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefPermissionHandler_0_CToCpp::OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32_t requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_permission_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_request_media_access_permission)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_request_media_access_permission) {
     return false;
   }
 
@@ -60,26 +55,22 @@ bool CefPermissionHandlerCToCpp::OnRequestMediaAccessPermission(
   }
 
   // Execute
-  int _retval = _struct->on_request_media_access_permission(
-      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      requesting_origin.GetStruct(), requested_permissions,
-      CefMediaAccessCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_request_media_access_permission(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      requesting_origin.GetStruct(),
+      requested_permissions,
+      CefMediaAccessCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefPermissionHandlerCToCpp::OnShowPermissionPrompt(
-    CefRefPtr<CefBrowser> browser,
-    uint64_t prompt_id,
-    const CefString& requesting_origin,
-    uint32_t requested_permissions,
-    CefRefPtr<CefPermissionPromptCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefPermissionHandler_0_CToCpp::OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id, const CefString& requesting_origin, uint32_t requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_permission_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_show_permission_prompt)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_show_permission_prompt) {
     return false;
   }
 
@@ -102,24 +93,22 @@ bool CefPermissionHandlerCToCpp::OnShowPermissionPrompt(
   }
 
   // Execute
-  int _retval = _struct->on_show_permission_prompt(
-      _struct, CefBrowserCppToC::Wrap(browser), prompt_id,
-      requesting_origin.GetStruct(), requested_permissions,
-      CefPermissionPromptCallbackCppToC::Wrap(callback));
+  int _retval = _struct->on_show_permission_prompt(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      prompt_id,
+      requesting_origin.GetStruct(),
+      requested_permissions,
+      CefPermissionPromptCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefPermissionHandlerCToCpp::OnDismissPermissionPrompt(
-    CefRefPtr<CefBrowser> browser,
-    uint64_t prompt_id,
-    cef_permission_request_result_t result) {
+NO_SANITIZE("cfi-icall") void CefPermissionHandler_0_CToCpp::OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id, cef_permission_request_result_t result) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_permission_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_dismiss_permission_prompt)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_dismiss_permission_prompt) {
     return;
   }
 
@@ -132,32 +121,29 @@ void CefPermissionHandlerCToCpp::OnDismissPermissionPrompt(
   }
 
   // Execute
-  _struct->on_dismiss_permission_prompt(
-      _struct, CefBrowserCppToC::Wrap(browser), prompt_id, result);
+  _struct->on_dismiss_permission_prompt(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      prompt_id,
+      result);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPermissionHandlerCToCpp::CefPermissionHandlerCToCpp() {}
+CefPermissionHandler_0_CToCpp::CefPermissionHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPermissionHandlerCToCpp::~CefPermissionHandlerCToCpp() {
+CefPermissionHandler_0_CToCpp::~CefPermissionHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_permission_handler_t* CefCToCppRefCounted<
-    CefPermissionHandlerCToCpp,
-    CefPermissionHandler,
-    cef_permission_handler_t>::UnwrapDerived(CefWrapperType type,
-                                             CefPermissionHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_permission_handler_0_t* CefCToCppRefCounted<CefPermissionHandler_0_CToCpp, CefPermissionHandler, cef_permission_handler_0_t>::UnwrapDerived(CefWrapperType type, CefPermissionHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefPermissionHandlerCToCpp,
-                                   CefPermissionHandler,
-                                   cef_permission_handler_t>::kWrapperType =
-    WT_PERMISSION_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefPermissionHandler_0_CToCpp, CefPermissionHandler, cef_permission_handler_0_t>::kWrapperType = WT_PERMISSION_HANDLER;
+
+

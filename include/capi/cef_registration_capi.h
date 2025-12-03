@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c0388c0cdbf26c23a437adcdb026ecc54f5097e8$
+// $hash=04c145d2d938e84ac015c3f8265f942d187943f7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REGISTRATION_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_REGISTRATION_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,8 +50,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Generic callback structure used for managing the lifespan of a registration.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_registration_t {
   ///
@@ -55,6 +62,7 @@ typedef struct _cef_registration_t {
   ///
   cef_base_ref_counted_t base;
 } cef_registration_t;
+
 
 #ifdef __cplusplus
 }

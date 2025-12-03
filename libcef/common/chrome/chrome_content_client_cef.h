@@ -18,10 +18,6 @@ class ChromeContentClientCef : public ChromeContentClient {
       std::vector<content::CdmInfo>* cdms,
       std::vector<media::CdmHostFilePath>* cdm_host_file_paths) override;
   void AddAdditionalSchemes(Schemes* schemes) override;
-
-#if BUILDFLAG(ENABLE_WISEPLAY)
-  media::OhosMediaDrmBridgeClient* GetOhosMediaDrmBridgeClient() override;
-#endif // BUILDFLAG(ENABLE_WISEPLAY)
 };
 
 #endif  // CEF_LIBCEF_COMMON_CHROME_CHROME_CONTENT_CLIENT_CEF_H_

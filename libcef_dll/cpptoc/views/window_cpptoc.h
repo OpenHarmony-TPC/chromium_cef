@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=baaeeb4ae85ea9340edbb02a8ee9918a49d98abf$
+// $hash=bb256b30d34ef290b3cebd1ee242060517ebaa28$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_WINDOW_CPPTOC_H_
@@ -20,21 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_browser_view_capi.h"
-#include "include/capi/views/cef_view_capi.h"
-#include "include/capi/views/cef_window_capi.h"
-#include "include/views/cef_browser_view.h"
-#include "include/views/cef_view.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi_versions.h"
+#include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi_versions.h"
+#include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefWindowCppToC
-    : public CefCppToCRefCounted<CefWindowCppToC, CefWindow, cef_window_t> {
+class CefWindow_0_CppToC
+    : public CefCppToCRefCounted<CefWindow_0_CppToC, CefWindow, cef_window_0_t> {
  public:
-  CefWindowCppToC();
-  virtual ~CefWindowCppToC();
+  CefWindow_0_CppToC();
+  virtual ~CefWindow_0_CppToC();
 };
+
+constexpr auto CefWindowCppToC_Wrap = CefWindow_0_CppToC::Wrap;
+constexpr auto CefWindowCppToC_Unwrap = CefWindow_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_WINDOW_CPPTOC_H_

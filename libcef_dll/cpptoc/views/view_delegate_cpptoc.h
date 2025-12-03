@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e6625d45c5760402c1ceabe9a3071616009fad9f$
+// $hash=db736a11e47229a28b185549646379fdce00fd14$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_VIEW_DELEGATE_CPPTOC_H_
@@ -20,20 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_view_capi.h"
+#include "include/views/cef_view_delegate.h"
 #include "include/capi/views/cef_view_delegate_capi.h"
 #include "include/views/cef_view.h"
-#include "include/views/cef_view_delegate.h"
+#include "include/capi/views/cef_view_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefViewDelegateCppToC : public CefCppToCRefCounted<CefViewDelegateCppToC,
-                                                         CefViewDelegate,
-                                                         cef_view_delegate_t> {
+class CefViewDelegateCppToC
+    : public CefCppToCRefCounted<CefViewDelegateCppToC, CefViewDelegate, cef_view_delegate_t> {
  public:
   CefViewDelegateCppToC();
   virtual ~CefViewDelegateCppToC();
 };
+
+constexpr auto CefViewDelegateCppToC_Wrap = CefViewDelegateCppToC::Wrap;
+constexpr auto CefViewDelegateCppToC_Unwrap = CefViewDelegateCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_VIEW_DELEGATE_CPPTOC_H_

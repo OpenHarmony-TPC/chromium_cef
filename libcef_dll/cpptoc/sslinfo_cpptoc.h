@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=67fb4b80af7c94c8f11a103e8579866d3b3b50f1$
+// $hash=533141f775f2c0a764213e0fcb1581c7363bb8ac$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SSLINFO_CPPTOC_H_
@@ -20,17 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_ssl_info_capi.h"
 #include "include/cef_ssl_info.h"
+#include "include/capi/cef_ssl_info_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSSLInfoCppToC
-    : public CefCppToCRefCounted<CefSSLInfoCppToC, CefSSLInfo, cef_sslinfo_t> {
+class CefSSLInfo_0_CppToC
+    : public CefCppToCRefCounted<CefSSLInfo_0_CppToC, CefSSLInfo, cef_sslinfo_0_t> {
  public:
-  CefSSLInfoCppToC();
-  virtual ~CefSSLInfoCppToC();
+  CefSSLInfo_0_CppToC();
+  virtual ~CefSSLInfo_0_CppToC();
 };
+
+constexpr auto CefSSLInfoCppToC_Wrap = CefSSLInfo_0_CppToC::Wrap;
+constexpr auto CefSSLInfoCppToC_Unwrap = CefSSLInfo_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SSLINFO_CPPTOC_H_

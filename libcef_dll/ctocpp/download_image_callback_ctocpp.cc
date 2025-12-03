@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b92327e23305e7207b1d62ff022779bdd55517bf$
+// $hash=c170a752ee66a55527a2357c570ced9a1061294c$
 //
 
-#include "libcef_dll/ctocpp/download_image_callback_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/image_cpptoc.h"
+#include "libcef_dll/ctocpp/download_image_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefDownloadImageCallbackCToCpp::OnDownloadImageFinished(
-    const CefString& image_url,
-    int http_status_code,
-    CefRefPtr<CefImage> image) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefDownloadImageCallback_0_CToCpp::OnDownloadImageFinished(const CefString& image_url, int http_status_code, CefRefPtr<CefImage> image) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_download_image_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_download_image_finished)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_download_image_finished) {
     return;
   }
 
@@ -41,34 +38,29 @@ void CefDownloadImageCallbackCToCpp::OnDownloadImageFinished(
   // Unverified params: image
 
   // Execute
-  _struct->on_download_image_finished(_struct, image_url.GetStruct(),
-                                      http_status_code,
-                                      CefImageCppToC::Wrap(image));
+  _struct->on_download_image_finished(_struct,
+      image_url.GetStruct(),
+      http_status_code,
+      CefImageCppToC_Wrap(image));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadImageCallbackCToCpp::CefDownloadImageCallbackCToCpp() {}
+CefDownloadImageCallback_0_CToCpp::CefDownloadImageCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadImageCallbackCToCpp::~CefDownloadImageCallbackCToCpp() {
+CefDownloadImageCallback_0_CToCpp::~CefDownloadImageCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_download_image_callback_t* CefCToCppRefCounted<
-    CefDownloadImageCallbackCToCpp,
-    CefDownloadImageCallback,
-    cef_download_image_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                  CefDownloadImageCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_download_image_callback_0_t* CefCToCppRefCounted<CefDownloadImageCallback_0_CToCpp, CefDownloadImageCallback, cef_download_image_callback_0_t>::UnwrapDerived(CefWrapperType type, CefDownloadImageCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefDownloadImageCallbackCToCpp,
-                        CefDownloadImageCallback,
-                        cef_download_image_callback_t>::kWrapperType =
-        WT_DOWNLOAD_IMAGE_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefDownloadImageCallback_0_CToCpp, CefDownloadImageCallback, cef_download_image_callback_0_t>::kWrapperType = WT_DOWNLOAD_IMAGE_CALLBACK;
+
+

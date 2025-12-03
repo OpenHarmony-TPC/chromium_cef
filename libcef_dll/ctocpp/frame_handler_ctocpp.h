@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7177b4d6cb09cf0ad72f48802aee04678452c835$
+// $hash=a697389b0489672a43239bec08dc77f1b1135ac5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FRAME_HANDLER_CTOCPP_H_
@@ -20,32 +20,27 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_frame_handler_capi.h"
 #include "include/cef_frame_handler.h"
+#include "include/capi/cef_frame_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefFrameHandlerCToCpp : public CefCToCppRefCounted<CefFrameHandlerCToCpp,
-                                                         CefFrameHandler,
-                                                         cef_frame_handler_t> {
+class CefFrameHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefFrameHandler_0_CToCpp, CefFrameHandler, cef_frame_handler_0_t> {
  public:
-  CefFrameHandlerCToCpp();
-  virtual ~CefFrameHandlerCToCpp();
+  CefFrameHandler_0_CToCpp();
+  virtual ~CefFrameHandler_0_CToCpp();
 
   // CefFrameHandler methods.
-  void OnFrameCreated(CefRefPtr<CefBrowser> browser,
-                      CefRefPtr<CefFrame> frame) override;
-  void OnFrameDestroyed(CefRefPtr<CefBrowser> browser,
-                        CefRefPtr<CefFrame> frame) override;
-  void OnFrameAttached(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefFrame> frame,
-                       bool reattached) override;
-  void OnFrameDetached(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefFrame> frame) override;
-  void OnMainFrameChanged(CefRefPtr<CefBrowser> browser,
-                          CefRefPtr<CefFrame> old_frame,
-                          CefRefPtr<CefFrame> new_frame) override;
+  void OnFrameCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) override;
+  void OnFrameDestroyed(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) override;
+  void OnFrameAttached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, bool reattached) override;
+  void OnFrameDetached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) override;
+  void OnMainFrameChanged(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> old_frame, CefRefPtr<CefFrame> new_frame) override;
 };
+
+constexpr auto CefFrameHandlerCToCpp_Wrap = CefFrameHandler_0_CToCpp::Wrap;
+constexpr auto CefFrameHandlerCToCpp_Unwrap = CefFrameHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_HANDLER_CTOCPP_H_

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f94de13c95bbd53a5c3528bd91c9a4c58b3e3863$
+// $hash=d6816cd565c1576c4489cde975a5ff2f5522fb12$
 //
 
 #include "libcef_dll/cpptoc/context_menu_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/context_menu_params_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -26,12 +25,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK context_menu_handler_on_before_context_menu(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame,
-    struct _cef_context_menu_params_t* params,
-    struct _cef_menu_model_t* model) {
+void CEF_CALLBACK context_menu_handler_on_before_context_menu(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_context_menu_params_t* params, struct _cef_menu_model_t* model) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -63,18 +57,13 @@ void CEF_CALLBACK context_menu_handler_on_before_context_menu(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnBeforeContextMenu(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefContextMenuParamsCToCpp::Wrap(params),
-      CefMenuModelCToCpp::Wrap(model));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefContextMenuParamsCToCpp_Wrap(params),
+      CefMenuModelCToCpp_Wrap(model));
 }
 
-int CEF_CALLBACK context_menu_handler_run_context_menu(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame,
-    struct _cef_context_menu_params_t* params,
-    struct _cef_menu_model_t* model,
-    cef_run_context_menu_callback_t* callback) {
+int CEF_CALLBACK context_menu_handler_run_context_menu(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_context_menu_params_t* params, struct _cef_menu_model_t* model, struct _cef_run_context_menu_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -111,21 +100,17 @@ int CEF_CALLBACK context_menu_handler_run_context_menu(
 
   // Execute
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->RunContextMenu(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefContextMenuParamsCToCpp::Wrap(params), CefMenuModelCToCpp::Wrap(model),
-      CefRunContextMenuCallbackCToCpp::Wrap(callback));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefContextMenuParamsCToCpp_Wrap(params),
+      CefMenuModelCToCpp_Wrap(model),
+      CefRunContextMenuCallbackCToCpp_Wrap(callback));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK context_menu_handler_on_context_menu_command(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame,
-    struct _cef_context_menu_params_t* params,
-    int command_id,
-    cef_event_flags_t event_flags) {
+int CEF_CALLBACK context_menu_handler_on_context_menu_command(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_context_menu_params_t* params, int command_id, cef_event_flags_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -152,17 +137,17 @@ int CEF_CALLBACK context_menu_handler_on_context_menu_command(
 
   // Execute
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->OnContextMenuCommand(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefContextMenuParamsCToCpp::Wrap(params), command_id, event_flags);
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefContextMenuParamsCToCpp_Wrap(params),
+      command_id,
+      event_flags);
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK context_menu_handler_on_context_menu_dismissed(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame) {
+void CEF_CALLBACK context_menu_handler_on_context_menu_dismissed(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -184,17 +169,11 @@ void CEF_CALLBACK context_menu_handler_on_context_menu_dismissed(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnContextMenuDismissed(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame));
 }
 
-int CEF_CALLBACK context_menu_handler_run_quick_menu(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame,
-    const cef_point_t* location,
-    const cef_size_t* size,
-    cef_quick_menu_edit_state_flags_t edit_state_flags,
-    cef_run_quick_menu_callback_t* callback) {
+int CEF_CALLBACK context_menu_handler_run_quick_menu(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, const cef_point_t* location, const cef_size_t* size, cef_quick_menu_edit_state_flags_t edit_state_flags, struct _cef_run_quick_menu_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -230,25 +209,24 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
   }
 
   // Translate param: location; type: simple_byref_const
-  CefPoint locationVal = location ? *location : CefPoint();
+  CefPoint locationVal = location?*location:CefPoint();
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->RunQuickMenu(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), locationVal,
-      sizeVal, edit_state_flags, CefRunQuickMenuCallbackCToCpp::Wrap(callback));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      locationVal,
+      sizeVal,
+      edit_state_flags,
+      CefRunQuickMenuCallbackCToCpp_Wrap(callback));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK context_menu_handler_on_quick_menu_command(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame,
-    int command_id,
-    cef_event_flags_t event_flags) {
+int CEF_CALLBACK context_menu_handler_on_quick_menu_command(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int command_id, cef_event_flags_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -270,17 +248,16 @@ int CEF_CALLBACK context_menu_handler_on_quick_menu_command(
 
   // Execute
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->OnQuickMenuCommand(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), command_id,
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      command_id,
       event_flags);
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
-    struct _cef_context_menu_handler_t* self,
-    cef_browser_t* browser,
-    struct _cef_frame_t* frame) {
+void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(struct _cef_context_menu_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -302,7 +279,8 @@ void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnQuickMenuDismissed(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame));
 }
 
 }  // namespace
@@ -310,18 +288,13 @@ void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefContextMenuHandlerCppToC::CefContextMenuHandlerCppToC() {
-  GetStruct()->on_before_context_menu =
-      context_menu_handler_on_before_context_menu;
+  GetStruct()->on_before_context_menu = context_menu_handler_on_before_context_menu;
   GetStruct()->run_context_menu = context_menu_handler_run_context_menu;
-  GetStruct()->on_context_menu_command =
-      context_menu_handler_on_context_menu_command;
-  GetStruct()->on_context_menu_dismissed =
-      context_menu_handler_on_context_menu_dismissed;
+  GetStruct()->on_context_menu_command = context_menu_handler_on_context_menu_command;
+  GetStruct()->on_context_menu_dismissed = context_menu_handler_on_context_menu_dismissed;
   GetStruct()->run_quick_menu = context_menu_handler_run_quick_menu;
-  GetStruct()->on_quick_menu_command =
-      context_menu_handler_on_quick_menu_command;
-  GetStruct()->on_quick_menu_dismissed =
-      context_menu_handler_on_quick_menu_dismissed;
+  GetStruct()->on_quick_menu_command = context_menu_handler_on_quick_menu_command;
+  GetStruct()->on_quick_menu_dismissed = context_menu_handler_on_quick_menu_dismissed;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -330,18 +303,11 @@ CefContextMenuHandlerCppToC::~CefContextMenuHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefContextMenuHandler> CefCppToCRefCounted<
-    CefContextMenuHandlerCppToC,
-    CefContextMenuHandler,
-    cef_context_menu_handler_t>::UnwrapDerived(CefWrapperType type,
-                                               cef_context_menu_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefContextMenuHandler> CefCppToCRefCounted<CefContextMenuHandlerCppToC, CefContextMenuHandler, cef_context_menu_handler_t>::UnwrapDerived(CefWrapperType type, cef_context_menu_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefContextMenuHandlerCppToC,
-                                   CefContextMenuHandler,
-                                   cef_context_menu_handler_t>::kWrapperType =
-    WT_CONTEXT_MENU_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefContextMenuHandlerCppToC, CefContextMenuHandler, cef_context_menu_handler_t>::kWrapperType = WT_CONTEXT_MENU_HANDLER;
+
+

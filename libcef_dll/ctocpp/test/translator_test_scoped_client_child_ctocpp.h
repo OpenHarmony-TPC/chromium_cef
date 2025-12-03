@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0a2a107567f710ccea1d3ec66d2e4fffb2f62f72$
+// $hash=4996f13630487247b93f8f48b000282dd9905332$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CHILD_CTOCPP_H_
@@ -20,19 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_scoped.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestScopedClientChildCToCpp
-    : public CefCToCppScoped<CefTranslatorTestScopedClientChildCToCpp,
-                             CefTranslatorTestScopedClientChild,
-                             cef_translator_test_scoped_client_child_t> {
+class CefTranslatorTestScopedClientChild_0_CToCpp
+    : public CefCToCppScoped<CefTranslatorTestScopedClientChild_0_CToCpp, CefTranslatorTestScopedClientChild, cef_translator_test_scoped_client_child_0_t> {
  public:
-  CefTranslatorTestScopedClientChildCToCpp();
-  virtual ~CefTranslatorTestScopedClientChildCToCpp();
+  CefTranslatorTestScopedClientChild_0_CToCpp();
+  virtual ~CefTranslatorTestScopedClientChild_0_CToCpp();
 
   // CefTranslatorTestScopedClientChild methods.
   int GetOtherValue() override;
@@ -40,5 +38,9 @@ class CefTranslatorTestScopedClientChildCToCpp
   // CefTranslatorTestScopedClient methods.
   int GetValue() override;
 };
+
+constexpr auto CefTranslatorTestScopedClientChildCToCpp_Wrap = CefTranslatorTestScopedClientChild_0_CToCpp::Wrap;
+constexpr auto CefTranslatorTestScopedClientChildCToCpp_UnwrapOwn = CefTranslatorTestScopedClientChild_0_CToCpp::UnwrapOwn;
+constexpr auto CefTranslatorTestScopedClientChildCToCpp_UnwrapRaw = CefTranslatorTestScopedClientChild_0_CToCpp::UnwrapRaw;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CHILD_CTOCPP_H_

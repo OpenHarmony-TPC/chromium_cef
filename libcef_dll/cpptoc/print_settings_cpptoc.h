@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fa46ecf7c22b92ee53745b5563fe915bdb47711d$
+// $hash=d2134c268be801287e5037623d322ba8a62d40d2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PRINT_SETTINGS_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_print_settings_capi.h"
 #include "include/cef_print_settings.h"
+#include "include/capi/cef_print_settings_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPrintSettingsCppToC
-    : public CefCppToCRefCounted<CefPrintSettingsCppToC,
-                                 CefPrintSettings,
-                                 cef_print_settings_t> {
+class CefPrintSettings_0_CppToC
+    : public CefCppToCRefCounted<CefPrintSettings_0_CppToC, CefPrintSettings, cef_print_settings_0_t> {
  public:
-  CefPrintSettingsCppToC();
-  virtual ~CefPrintSettingsCppToC();
+  CefPrintSettings_0_CppToC();
+  virtual ~CefPrintSettings_0_CppToC();
 };
+
+constexpr auto CefPrintSettingsCppToC_Wrap = CefPrintSettings_0_CppToC::Wrap;
+constexpr auto CefPrintSettingsCppToC_Unwrap = CefPrintSettings_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PRINT_SETTINGS_CPPTOC_H_

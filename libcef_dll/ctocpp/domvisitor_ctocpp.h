@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8b25c4f4dd4e3217050eedb4f90f63e656f5da22$
+// $hash=28619985c17acbd3565d3c68c295499b1cc1dbf0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOMVISITOR_CTOCPP_H_
@@ -20,21 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_dom_capi.h"
 #include "include/cef_dom.h"
+#include "include/capi/cef_dom_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDOMVisitorCToCpp : public CefCToCppRefCounted<CefDOMVisitorCToCpp,
-                                                       CefDOMVisitor,
-                                                       cef_domvisitor_t> {
+class CefDOMVisitor_0_CToCpp
+    : public CefCToCppRefCounted<CefDOMVisitor_0_CToCpp, CefDOMVisitor, cef_domvisitor_0_t> {
  public:
-  CefDOMVisitorCToCpp();
-  virtual ~CefDOMVisitorCToCpp();
+  CefDOMVisitor_0_CToCpp();
+  virtual ~CefDOMVisitor_0_CToCpp();
 
   // CefDOMVisitor methods.
   void Visit(CefRefPtr<CefDOMDocument> document) override;
 };
+
+constexpr auto CefDOMVisitorCToCpp_Wrap = CefDOMVisitor_0_CToCpp::Wrap;
+constexpr auto CefDOMVisitorCToCpp_Unwrap = CefDOMVisitor_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DOMVISITOR_CTOCPP_H_

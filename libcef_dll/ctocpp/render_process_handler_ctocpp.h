@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=89b9390042c6ab24bacacaf5c61e92ecfbb7726b$
+// $hash=a35b850a887c1f9701ee7039e6a2fbc1da1cfda7$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_PROCESS_HANDLER_CTOCPP_H_
@@ -20,44 +20,31 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_render_process_handler_capi.h"
 #include "include/cef_render_process_handler.h"
+#include "include/capi/cef_render_process_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefRenderProcessHandlerCToCpp
-    : public CefCToCppRefCounted<CefRenderProcessHandlerCToCpp,
-                                 CefRenderProcessHandler,
-                                 cef_render_process_handler_t> {
+class CefRenderProcessHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefRenderProcessHandler_0_CToCpp, CefRenderProcessHandler, cef_render_process_handler_0_t> {
  public:
-  CefRenderProcessHandlerCToCpp();
-  virtual ~CefRenderProcessHandlerCToCpp();
+  CefRenderProcessHandler_0_CToCpp();
+  virtual ~CefRenderProcessHandler_0_CToCpp();
 
   // CefRenderProcessHandler methods.
   void OnWebKitInitialized() override;
-  void OnBrowserCreated(CefRefPtr<CefBrowser> browser,
-                        CefRefPtr<CefDictionaryValue> extra_info) override;
+  void OnBrowserCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDictionaryValue> extra_info) override;
   void OnBrowserDestroyed(CefRefPtr<CefBrowser> browser) override;
   CefRefPtr<CefLoadHandler> GetLoadHandler() override;
-  void OnContextCreated(CefRefPtr<CefBrowser> browser,
-                        CefRefPtr<CefFrame> frame,
-                        CefRefPtr<CefV8Context> context) override;
-  void OnContextReleased(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame,
-                         CefRefPtr<CefV8Context> context) override;
-  void OnUncaughtException(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame,
-                           CefRefPtr<CefV8Context> context,
-                           CefRefPtr<CefV8Exception> exception,
-                           CefRefPtr<CefV8StackTrace> stackTrace) override;
-  void OnFocusedNodeChanged(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            CefRefPtr<CefDOMNode> node) override;
-  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                CefProcessId source_process,
-                                CefRefPtr<CefProcessMessage> message) override;
+  void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
+  void OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
+  void OnUncaughtException(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context, CefRefPtr<CefV8Exception> exception, CefRefPtr<CefV8StackTrace> stackTrace) override;
+  void OnFocusedNodeChanged(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefDOMNode> node) override;
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
 };
+
+constexpr auto CefRenderProcessHandlerCToCpp_Wrap = CefRenderProcessHandler_0_CToCpp::Wrap;
+constexpr auto CefRenderProcessHandlerCToCpp_Unwrap = CefRenderProcessHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_PROCESS_HANDLER_CTOCPP_H_

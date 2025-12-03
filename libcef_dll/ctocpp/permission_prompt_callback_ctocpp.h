@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7886182a3608cc2510c63cc0a393e29190ba9287$
+// $hash=5a9a00d10d684fdceceb874b1d379c0003dc1402$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PERMISSION_PROMPT_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_permission_handler_capi.h"
 #include "include/cef_permission_handler.h"
+#include "include/capi/cef_permission_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPermissionPromptCallbackCToCpp
-    : public CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp,
-                                 CefPermissionPromptCallback,
-                                 cef_permission_prompt_callback_t> {
+    : public CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp, CefPermissionPromptCallback, cef_permission_prompt_callback_t> {
  public:
   CefPermissionPromptCallbackCToCpp();
   virtual ~CefPermissionPromptCallbackCToCpp();
@@ -37,5 +35,8 @@ class CefPermissionPromptCallbackCToCpp
   // CefPermissionPromptCallback methods.
   void Continue(cef_permission_request_result_t result) override;
 };
+
+constexpr auto CefPermissionPromptCallbackCToCpp_Wrap = CefPermissionPromptCallbackCToCpp::Wrap;
+constexpr auto CefPermissionPromptCallbackCToCpp_Unwrap = CefPermissionPromptCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PERMISSION_PROMPT_CALLBACK_CTOCPP_H_

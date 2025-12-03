@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4ad737ae66411cc783d059a5ef56228676b5f41b$
+// $hash=4396c9fd69a7b460255e10ce1c87297115db388e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VALUE_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_values_capi.h"
 #include "include/cef_values.h"
+#include "include/capi/cef_values_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -56,5 +56,8 @@ class CefValueCToCpp
   bool SetDictionary(CefRefPtr<CefDictionaryValue> value) override;
   bool SetList(CefRefPtr<CefListValue> value) override;
 };
+
+constexpr auto CefValueCToCpp_Wrap = CefValueCToCpp::Wrap;
+constexpr auto CefValueCToCpp_Unwrap = CefValueCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VALUE_CTOCPP_H_

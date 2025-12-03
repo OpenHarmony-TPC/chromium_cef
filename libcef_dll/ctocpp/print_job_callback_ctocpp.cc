@@ -9,20 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b59e4e3b967988f312652d0b0b556a29575ccdb4$
+// $hash=938750132f616560b31ea791768868c61db1eb30$
 //
 
 #include "libcef_dll/ctocpp/print_job_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") void CefPrintJobCallbackCToCpp::Continue() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_print_job_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
@@ -34,7 +34,8 @@ NO_SANITIZE("cfi-icall") void CefPrintJobCallbackCToCpp::Continue() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefPrintJobCallbackCToCpp::CefPrintJobCallbackCToCpp() {}
+CefPrintJobCallbackCToCpp::CefPrintJobCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -42,18 +43,11 @@ CefPrintJobCallbackCToCpp::~CefPrintJobCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_print_job_callback_t* CefCToCppRefCounted<
-    CefPrintJobCallbackCToCpp,
-    CefPrintJobCallback,
-    cef_print_job_callback_t>::UnwrapDerived(CefWrapperType type,
-                                             CefPrintJobCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_print_job_callback_t* CefCToCppRefCounted<CefPrintJobCallbackCToCpp, CefPrintJobCallback, cef_print_job_callback_t>::UnwrapDerived(CefWrapperType type, CefPrintJobCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefPrintJobCallbackCToCpp,
-                                   CefPrintJobCallback,
-                                   cef_print_job_callback_t>::kWrapperType =
-    WT_PRINT_JOB_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefPrintJobCallbackCToCpp, CefPrintJobCallback, cef_print_job_callback_t>::kWrapperType = WT_PRINT_JOB_CALLBACK;
+
+

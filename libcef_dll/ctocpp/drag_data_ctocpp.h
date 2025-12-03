@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=93e7e5c9aa1f425cb60711b3672e43959884c1a9$
+// $hash=cb5fee4e9cce6753f899b7ee7e7dca5631a6ce66$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_
@@ -21,16 +21,14 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_drag_data_capi.h"
 #include "include/cef_drag_data.h"
+#include "include/capi/cef_drag_data_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
-                                                     CefDragData,
-                                                     cef_drag_data_t> {
+class CefDragDataCToCpp
+    : public CefCToCppRefCounted<CefDragDataCToCpp, CefDragData, cef_drag_data_t> {
  public:
   CefDragDataCToCpp();
   virtual ~CefDragDataCToCpp();
@@ -64,5 +62,8 @@ class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
   CefPoint GetImageHotspot() override;
   bool HasImage() override;
 };
+
+constexpr auto CefDragDataCToCpp_Wrap = CefDragDataCToCpp::Wrap;
+constexpr auto CefDragDataCToCpp_Unwrap = CefDragDataCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_

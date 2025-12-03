@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=abcaebe9fd03ddb46049bd4c1ce3f6cf53be126a$
+// $hash=02b5a1a8921d5addc60a4cd88ae34d27b5df5e96$
 //
 
 #include "libcef_dll/cpptoc/test/translator_test_ref_ptr_client_child_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK translator_test_ref_ptr_client_child_get_other_value(
-    struct _cef_translator_test_ref_ptr_client_child_t* self) {
+int CEF_CALLBACK translator_test_ref_ptr_client_child_get_other_value(struct _cef_translator_test_ref_ptr_client_child_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,15 +30,13 @@ int CEF_CALLBACK translator_test_ref_ptr_client_child_get_other_value(
   }
 
   // Execute
-  int _retval =
-      CefTranslatorTestRefPtrClientChildCppToC::Get(self)->GetOtherValue();
+  int _retval = CefTranslatorTestRefPtrClientChildCppToC::Get(self)->GetOtherValue();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK translator_test_ref_ptr_client_child_get_value(
-    struct _cef_translator_test_ref_ptr_client_t* self) {
+int CEF_CALLBACK translator_test_ref_ptr_client_child_get_value(struct _cef_translator_test_ref_ptr_client_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -51,10 +47,7 @@ int CEF_CALLBACK translator_test_ref_ptr_client_child_get_value(
   }
 
   // Execute
-  int _retval =
-      CefTranslatorTestRefPtrClientChildCppToC::Get(
-          reinterpret_cast<cef_translator_test_ref_ptr_client_child_t*>(self))
-          ->GetValue();
+  int _retval = CefTranslatorTestRefPtrClientChildCppToC::Get(reinterpret_cast<cef_translator_test_ref_ptr_client_child_t*>(self))->GetValue();
 
   // Return type: simple
   return _retval;
@@ -64,34 +57,22 @@ int CEF_CALLBACK translator_test_ref_ptr_client_child_get_value(
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefTranslatorTestRefPtrClientChildCppToC::
-    CefTranslatorTestRefPtrClientChildCppToC() {
-  GetStruct()->get_other_value =
-      translator_test_ref_ptr_client_child_get_other_value;
+CefTranslatorTestRefPtrClientChildCppToC::CefTranslatorTestRefPtrClientChildCppToC() {
+  GetStruct()->get_other_value = translator_test_ref_ptr_client_child_get_other_value;
   GetStruct()->base.get_value = translator_test_ref_ptr_client_child_get_value;
 }
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefTranslatorTestRefPtrClientChildCppToC::
-    ~CefTranslatorTestRefPtrClientChildCppToC() {
+CefTranslatorTestRefPtrClientChildCppToC::~CefTranslatorTestRefPtrClientChildCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTranslatorTestRefPtrClientChild>
-CefCppToCRefCounted<CefTranslatorTestRefPtrClientChildCppToC,
-                    CefTranslatorTestRefPtrClientChild,
-                    cef_translator_test_ref_ptr_client_child_t>::
-    UnwrapDerived(CefWrapperType type,
-                  cef_translator_test_ref_ptr_client_child_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefTranslatorTestRefPtrClientChild> CefCppToCRefCounted<CefTranslatorTestRefPtrClientChildCppToC, CefTranslatorTestRefPtrClientChild, cef_translator_test_ref_ptr_client_child_t>::UnwrapDerived(CefWrapperType type, cef_translator_test_ref_ptr_client_child_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<
-    CefTranslatorTestRefPtrClientChildCppToC,
-    CefTranslatorTestRefPtrClientChild,
-    cef_translator_test_ref_ptr_client_child_t>::kWrapperType =
-    WT_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD;
+template<> CefWrapperType CefCppToCRefCounted<CefTranslatorTestRefPtrClientChildCppToC, CefTranslatorTestRefPtrClientChild, cef_translator_test_ref_ptr_client_child_t>::kWrapperType = WT_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD;
+
+

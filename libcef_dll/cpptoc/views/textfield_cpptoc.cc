@@ -9,15 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b504152af54a5743e74809cc66bb7e6aa2b0ed6c$
+// $hash=8216d68b988a0ea644494285f1df6bf96d2a1d3c$
 //
 
-#include "libcef_dll/cpptoc/views/textfield_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
 #include "libcef_dll/cpptoc/views/panel_cpptoc.h"
 #include "libcef_dll/cpptoc/views/scroll_view_cpptoc.h"
+#include "libcef_dll/cpptoc/views/textfield_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/window_cpptoc.h"
 #include "libcef_dll/ctocpp/views/textfield_delegate_ctocpp.h"
@@ -26,8 +26,7 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_textfield_t* cef_textfield_create(
-    cef_textfield_delegate_t* delegate) {
+CEF_EXPORT cef_textfield_0_t* cef_textfield_create(struct _cef_textfield_delegate_0_t* delegate) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -35,19 +34,18 @@ CEF_EXPORT cef_textfield_t* cef_textfield_create(
   // Unverified params: delegate
 
   // Execute
-  CefRefPtr<CefTextfield> _retval =
-      CefTextfield::CreateTextfield(CefTextfieldDelegateCToCpp::Wrap(delegate));
+  CefRefPtr<CefTextfield> _retval = CefTextfield::CreateTextfield(
+      CefTextfieldDelegateCToCpp_Wrap(delegate));
 
   // Return type: refptr_same
-  return CefTextfieldCppToC::Wrap(_retval);
+  return CefTextfieldCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK textfield_set_password_input(struct _cef_textfield_t* self,
-                                               int password_input) {
+void CEF_CALLBACK textfield_set_password_input(struct _cef_textfield_0_t* self, int password_input) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -58,11 +56,11 @@ void CEF_CALLBACK textfield_set_password_input(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetPasswordInput(password_input ? true
-                                                                 : false);
+  CefTextfield_0_CppToC::Get(self)->SetPasswordInput(
+      password_input?true:false);
 }
 
-int CEF_CALLBACK textfield_is_password_input(struct _cef_textfield_t* self) {
+int CEF_CALLBACK textfield_is_password_input(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -73,14 +71,13 @@ int CEF_CALLBACK textfield_is_password_input(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  bool _retval = CefTextfieldCppToC::Get(self)->IsPasswordInput();
+  bool _retval = CefTextfield_0_CppToC::Get(self)->IsPasswordInput();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_read_only(struct _cef_textfield_t* self,
-                                          int read_only) {
+void CEF_CALLBACK textfield_set_read_only(struct _cef_textfield_0_t* self, int read_only) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -91,10 +88,11 @@ void CEF_CALLBACK textfield_set_read_only(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetReadOnly(read_only ? true : false);
+  CefTextfield_0_CppToC::Get(self)->SetReadOnly(
+      read_only?true:false);
 }
 
-int CEF_CALLBACK textfield_is_read_only(struct _cef_textfield_t* self) {
+int CEF_CALLBACK textfield_is_read_only(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -105,14 +103,13 @@ int CEF_CALLBACK textfield_is_read_only(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  bool _retval = CefTextfieldCppToC::Get(self)->IsReadOnly();
+  bool _retval = CefTextfield_0_CppToC::Get(self)->IsReadOnly();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-textfield_get_text(struct _cef_textfield_t* self) {
+cef_string_userfree_t CEF_CALLBACK textfield_get_text(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -123,14 +120,13 @@ textfield_get_text(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  CefString _retval = CefTextfieldCppToC::Get(self)->GetText();
+  CefString _retval = CefTextfield_0_CppToC::Get(self)->GetText();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-void CEF_CALLBACK textfield_set_text(struct _cef_textfield_t* self,
-                                     const cef_string_t* text) {
+void CEF_CALLBACK textfield_set_text(struct _cef_textfield_0_t* self, const cef_string_t* text) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -146,11 +142,11 @@ void CEF_CALLBACK textfield_set_text(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetText(CefString(text));
+  CefTextfield_0_CppToC::Get(self)->SetText(
+      CefString(text));
 }
 
-void CEF_CALLBACK textfield_append_text(struct _cef_textfield_t* self,
-                                        const cef_string_t* text) {
+void CEF_CALLBACK textfield_append_text(struct _cef_textfield_0_t* self, const cef_string_t* text) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -166,12 +162,11 @@ void CEF_CALLBACK textfield_append_text(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->AppendText(CefString(text));
+  CefTextfield_0_CppToC::Get(self)->AppendText(
+      CefString(text));
 }
 
-void CEF_CALLBACK
-textfield_insert_or_replace_text(struct _cef_textfield_t* self,
-                                 const cef_string_t* text) {
+void CEF_CALLBACK textfield_insert_or_replace_text(struct _cef_textfield_0_t* self, const cef_string_t* text) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -187,10 +182,11 @@ textfield_insert_or_replace_text(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->InsertOrReplaceText(CefString(text));
+  CefTextfield_0_CppToC::Get(self)->InsertOrReplaceText(
+      CefString(text));
 }
 
-int CEF_CALLBACK textfield_has_selection(struct _cef_textfield_t* self) {
+int CEF_CALLBACK textfield_has_selection(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -201,14 +197,13 @@ int CEF_CALLBACK textfield_has_selection(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  bool _retval = CefTextfieldCppToC::Get(self)->HasSelection();
+  bool _retval = CefTextfield_0_CppToC::Get(self)->HasSelection();
 
   // Return type: bool
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-textfield_get_selected_text(struct _cef_textfield_t* self) {
+cef_string_userfree_t CEF_CALLBACK textfield_get_selected_text(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -219,14 +214,13 @@ textfield_get_selected_text(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  CefString _retval = CefTextfieldCppToC::Get(self)->GetSelectedText();
+  CefString _retval = CefTextfield_0_CppToC::Get(self)->GetSelectedText();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-void CEF_CALLBACK textfield_select_all(struct _cef_textfield_t* self,
-                                       int reversed) {
+void CEF_CALLBACK textfield_select_all(struct _cef_textfield_0_t* self, int reversed) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -237,10 +231,11 @@ void CEF_CALLBACK textfield_select_all(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SelectAll(reversed ? true : false);
+  CefTextfield_0_CppToC::Get(self)->SelectAll(
+      reversed?true:false);
 }
 
-void CEF_CALLBACK textfield_clear_selection(struct _cef_textfield_t* self) {
+void CEF_CALLBACK textfield_clear_selection(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -251,11 +246,10 @@ void CEF_CALLBACK textfield_clear_selection(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->ClearSelection();
+  CefTextfield_0_CppToC::Get(self)->ClearSelection();
 }
 
-cef_range_t CEF_CALLBACK
-textfield_get_selected_range(struct _cef_textfield_t* self) {
+cef_range_t CEF_CALLBACK textfield_get_selected_range(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -266,14 +260,13 @@ textfield_get_selected_range(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  cef_range_t _retval = CefTextfieldCppToC::Get(self)->GetSelectedRange();
+  cef_range_t _retval = CefTextfield_0_CppToC::Get(self)->GetSelectedRange();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_select_range(struct _cef_textfield_t* self,
-                                         const cef_range_t* range) {
+void CEF_CALLBACK textfield_select_range(struct _cef_textfield_0_t* self, const cef_range_t* range) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -289,14 +282,14 @@ void CEF_CALLBACK textfield_select_range(struct _cef_textfield_t* self,
   }
 
   // Translate param: range; type: simple_byref_const
-  CefRange rangeVal = range ? *range : CefRange();
+  CefRange rangeVal = range?*range:CefRange();
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SelectRange(rangeVal);
+  CefTextfield_0_CppToC::Get(self)->SelectRange(
+      rangeVal);
 }
 
-size_t CEF_CALLBACK
-textfield_get_cursor_position(struct _cef_textfield_t* self) {
+size_t CEF_CALLBACK textfield_get_cursor_position(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -307,14 +300,13 @@ textfield_get_cursor_position(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  size_t _retval = CefTextfieldCppToC::Get(self)->GetCursorPosition();
+  size_t _retval = CefTextfield_0_CppToC::Get(self)->GetCursorPosition();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_text_color(struct _cef_textfield_t* self,
-                                           cef_color_t color) {
+void CEF_CALLBACK textfield_set_text_color(struct _cef_textfield_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -325,11 +317,11 @@ void CEF_CALLBACK textfield_set_text_color(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetTextColor(color);
+  CefTextfield_0_CppToC::Get(self)->SetTextColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK
-textfield_get_text_color(struct _cef_textfield_t* self) {
+cef_color_t CEF_CALLBACK textfield_get_text_color(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -340,15 +332,13 @@ textfield_get_text_color(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  cef_color_t _retval = CefTextfieldCppToC::Get(self)->GetTextColor();
+  cef_color_t _retval = CefTextfield_0_CppToC::Get(self)->GetTextColor();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-textfield_set_selection_text_color(struct _cef_textfield_t* self,
-                                   cef_color_t color) {
+void CEF_CALLBACK textfield_set_selection_text_color(struct _cef_textfield_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -359,11 +349,11 @@ textfield_set_selection_text_color(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetSelectionTextColor(color);
+  CefTextfield_0_CppToC::Get(self)->SetSelectionTextColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK
-textfield_get_selection_text_color(struct _cef_textfield_t* self) {
+cef_color_t CEF_CALLBACK textfield_get_selection_text_color(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -374,15 +364,13 @@ textfield_get_selection_text_color(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  cef_color_t _retval = CefTextfieldCppToC::Get(self)->GetSelectionTextColor();
+  cef_color_t _retval = CefTextfield_0_CppToC::Get(self)->GetSelectionTextColor();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-textfield_set_selection_background_color(struct _cef_textfield_t* self,
-                                         cef_color_t color) {
+void CEF_CALLBACK textfield_set_selection_background_color(struct _cef_textfield_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -393,11 +381,11 @@ textfield_set_selection_background_color(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetSelectionBackgroundColor(color);
+  CefTextfield_0_CppToC::Get(self)->SetSelectionBackgroundColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK
-textfield_get_selection_background_color(struct _cef_textfield_t* self) {
+cef_color_t CEF_CALLBACK textfield_get_selection_background_color(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -408,15 +396,13 @@ textfield_get_selection_background_color(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  cef_color_t _retval =
-      CefTextfieldCppToC::Get(self)->GetSelectionBackgroundColor();
+  cef_color_t _retval = CefTextfield_0_CppToC::Get(self)->GetSelectionBackgroundColor();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_font_list(struct _cef_textfield_t* self,
-                                          const cef_string_t* font_list) {
+void CEF_CALLBACK textfield_set_font_list(struct _cef_textfield_0_t* self, const cef_string_t* font_list) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -432,12 +418,11 @@ void CEF_CALLBACK textfield_set_font_list(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetFontList(CefString(font_list));
+  CefTextfield_0_CppToC::Get(self)->SetFontList(
+      CefString(font_list));
 }
 
-void CEF_CALLBACK textfield_apply_text_color(struct _cef_textfield_t* self,
-                                             cef_color_t color,
-                                             const cef_range_t* range) {
+void CEF_CALLBACK textfield_apply_text_color(struct _cef_textfield_0_t* self, cef_color_t color, const cef_range_t* range) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -453,16 +438,15 @@ void CEF_CALLBACK textfield_apply_text_color(struct _cef_textfield_t* self,
   }
 
   // Translate param: range; type: simple_byref_const
-  CefRange rangeVal = range ? *range : CefRange();
+  CefRange rangeVal = range?*range:CefRange();
 
   // Execute
-  CefTextfieldCppToC::Get(self)->ApplyTextColor(color, rangeVal);
+  CefTextfield_0_CppToC::Get(self)->ApplyTextColor(
+      color,
+      rangeVal);
 }
 
-void CEF_CALLBACK textfield_apply_text_style(struct _cef_textfield_t* self,
-                                             cef_text_style_t style,
-                                             int add,
-                                             const cef_range_t* range) {
+void CEF_CALLBACK textfield_apply_text_style(struct _cef_textfield_0_t* self, cef_text_style_t style, int add, const cef_range_t* range) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -478,16 +462,16 @@ void CEF_CALLBACK textfield_apply_text_style(struct _cef_textfield_t* self,
   }
 
   // Translate param: range; type: simple_byref_const
-  CefRange rangeVal = range ? *range : CefRange();
+  CefRange rangeVal = range?*range:CefRange();
 
   // Execute
-  CefTextfieldCppToC::Get(self)->ApplyTextStyle(style, add ? true : false,
-                                                rangeVal);
+  CefTextfield_0_CppToC::Get(self)->ApplyTextStyle(
+      style,
+      add?true:false,
+      rangeVal);
 }
 
-int CEF_CALLBACK
-textfield_is_command_enabled(struct _cef_textfield_t* self,
-                             cef_text_field_commands_t command_id) {
+int CEF_CALLBACK textfield_is_command_enabled(struct _cef_textfield_0_t* self, cef_text_field_commands_t command_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -498,15 +482,14 @@ textfield_is_command_enabled(struct _cef_textfield_t* self,
   }
 
   // Execute
-  bool _retval = CefTextfieldCppToC::Get(self)->IsCommandEnabled(command_id);
+  bool _retval = CefTextfield_0_CppToC::Get(self)->IsCommandEnabled(
+      command_id);
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK
-textfield_execute_command(struct _cef_textfield_t* self,
-                          cef_text_field_commands_t command_id) {
+void CEF_CALLBACK textfield_execute_command(struct _cef_textfield_0_t* self, cef_text_field_commands_t command_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -517,10 +500,11 @@ textfield_execute_command(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->ExecuteCommand(command_id);
+  CefTextfield_0_CppToC::Get(self)->ExecuteCommand(
+      command_id);
 }
 
-void CEF_CALLBACK textfield_clear_edit_history(struct _cef_textfield_t* self) {
+void CEF_CALLBACK textfield_clear_edit_history(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -531,11 +515,10 @@ void CEF_CALLBACK textfield_clear_edit_history(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->ClearEditHistory();
+  CefTextfield_0_CppToC::Get(self)->ClearEditHistory();
 }
 
-void CEF_CALLBACK textfield_set_placeholder_text(struct _cef_textfield_t* self,
-                                                 const cef_string_t* text) {
+void CEF_CALLBACK textfield_set_placeholder_text(struct _cef_textfield_0_t* self, const cef_string_t* text) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -551,11 +534,11 @@ void CEF_CALLBACK textfield_set_placeholder_text(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetPlaceholderText(CefString(text));
+  CefTextfield_0_CppToC::Get(self)->SetPlaceholderText(
+      CefString(text));
 }
 
-cef_string_userfree_t CEF_CALLBACK
-textfield_get_placeholder_text(struct _cef_textfield_t* self) {
+cef_string_userfree_t CEF_CALLBACK textfield_get_placeholder_text(struct _cef_textfield_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -566,15 +549,13 @@ textfield_get_placeholder_text(struct _cef_textfield_t* self) {
   }
 
   // Execute
-  CefString _retval = CefTextfieldCppToC::Get(self)->GetPlaceholderText();
+  CefString _retval = CefTextfield_0_CppToC::Get(self)->GetPlaceholderText();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-void CEF_CALLBACK
-textfield_set_placeholder_text_color(struct _cef_textfield_t* self,
-                                     cef_color_t color) {
+void CEF_CALLBACK textfield_set_placeholder_text_color(struct _cef_textfield_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -585,11 +566,11 @@ textfield_set_placeholder_text_color(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetPlaceholderTextColor(color);
+  CefTextfield_0_CppToC::Get(self)->SetPlaceholderTextColor(
+      color);
 }
 
-void CEF_CALLBACK textfield_set_accessible_name(struct _cef_textfield_t* self,
-                                                const cef_string_t* name) {
+void CEF_CALLBACK textfield_set_accessible_name(struct _cef_textfield_0_t* self, const cef_string_t* name) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -605,11 +586,11 @@ void CEF_CALLBACK textfield_set_accessible_name(struct _cef_textfield_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(self)->SetAccessibleName(CefString(name));
+  CefTextfield_0_CppToC::Get(self)->SetAccessibleName(
+      CefString(name));
 }
 
-cef_browser_view_t* CEF_CALLBACK
-textfield_as_browser_view(struct _cef_view_t* self) {
+struct _cef_browser_view_0_t* CEF_CALLBACK textfield_as_browser_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -620,15 +601,13 @@ textfield_as_browser_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBrowserView> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->AsBrowserView();
+  CefRefPtr<CefBrowserView> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->AsBrowserView();
 
   // Return type: refptr_same
-  return CefBrowserViewCppToC::Wrap(_retval);
+  return CefBrowserViewCppToC_Wrap(_retval);
 }
 
-cef_button_t* CEF_CALLBACK textfield_as_button(struct _cef_view_t* self) {
+struct _cef_button_0_t* CEF_CALLBACK textfield_as_button(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -639,15 +618,13 @@ cef_button_t* CEF_CALLBACK textfield_as_button(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefButton> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->AsButton();
+  CefRefPtr<CefButton> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->AsButton();
 
   // Return type: refptr_same
-  return CefButtonCppToC::Wrap(_retval);
+  return CefButtonCppToC_Wrap(_retval);
 }
 
-cef_panel_t* CEF_CALLBACK textfield_as_panel(struct _cef_view_t* self) {
+struct _cef_panel_0_t* CEF_CALLBACK textfield_as_panel(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -658,16 +635,13 @@ cef_panel_t* CEF_CALLBACK textfield_as_panel(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefPanel> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->AsPanel();
+  CefRefPtr<CefPanel> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->AsPanel();
 
   // Return type: refptr_same
-  return CefPanelCppToC::Wrap(_retval);
+  return CefPanelCppToC_Wrap(_retval);
 }
 
-cef_scroll_view_t* CEF_CALLBACK
-textfield_as_scroll_view(struct _cef_view_t* self) {
+struct _cef_scroll_view_0_t* CEF_CALLBACK textfield_as_scroll_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -678,15 +652,13 @@ textfield_as_scroll_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefScrollView> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->AsScrollView();
+  CefRefPtr<CefScrollView> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->AsScrollView();
 
   // Return type: refptr_same
-  return CefScrollViewCppToC::Wrap(_retval);
+  return CefScrollViewCppToC_Wrap(_retval);
 }
 
-cef_textfield_t* CEF_CALLBACK textfield_as_textfield(struct _cef_view_t* self) {
+cef_textfield_0_t* CEF_CALLBACK textfield_as_textfield(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -697,16 +669,13 @@ cef_textfield_t* CEF_CALLBACK textfield_as_textfield(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefTextfield> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->AsTextfield();
+  CefRefPtr<CefTextfield> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->AsTextfield();
 
   // Return type: refptr_same
-  return CefTextfieldCppToC::Wrap(_retval);
+  return CefTextfieldCppToC_Wrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-textfield_get_type_string(struct _cef_view_t* self) {
+cef_string_userfree_t CEF_CALLBACK textfield_get_type_string(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -717,16 +686,13 @@ textfield_get_type_string(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefString _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetTypeString();
+  CefString _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetTypeString();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK textfield_to_string(struct _cef_view_t* self,
-                                                       int include_children) {
+cef_string_userfree_t CEF_CALLBACK textfield_to_string(struct _cef_view_0_t* self, int include_children) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -737,15 +703,14 @@ cef_string_userfree_t CEF_CALLBACK textfield_to_string(struct _cef_view_t* self,
   }
 
   // Execute
-  CefString _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ToString(include_children ? true : false);
+  CefString _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ToString(
+      include_children?true:false);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK textfield_is_valid(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_valid(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -756,15 +721,13 @@ int CEF_CALLBACK textfield_is_valid(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsValid();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK textfield_is_attached(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_attached(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -775,16 +738,13 @@ int CEF_CALLBACK textfield_is_attached(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsAttached();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsAttached();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK textfield_is_same(struct _cef_view_t* self,
-                                   struct _cef_view_t* that) {
+int CEF_CALLBACK textfield_is_same(struct _cef_view_0_t* self, cef_view_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -800,16 +760,14 @@ int CEF_CALLBACK textfield_is_same(struct _cef_view_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsSame(CefViewCppToC::Unwrap(that));
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsSame(
+      CefViewCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_view_delegate_t* CEF_CALLBACK
-textfield_get_delegate(struct _cef_view_t* self) {
+struct _cef_view_delegate_0_t* CEF_CALLBACK textfield_get_delegate(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -820,16 +778,13 @@ textfield_get_delegate(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefViewDelegate> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetDelegate();
+  CefRefPtr<CefViewDelegate> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetDelegate();
 
   // Return type: refptr_diff
-  return CefViewDelegateCToCpp::Unwrap(_retval);
+  return CefViewDelegateCToCpp_Unwrap(_retval);
 }
 
-struct _cef_window_t* CEF_CALLBACK
-textfield_get_window(struct _cef_view_t* self) {
+struct _cef_window_0_t* CEF_CALLBACK textfield_get_window(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -840,15 +795,13 @@ textfield_get_window(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetWindow();
+  CefRefPtr<CefWindow> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK textfield_get_id(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_get_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -859,15 +812,13 @@ int CEF_CALLBACK textfield_get_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetID();
+  int _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_id(struct _cef_view_t* self, int id) {
+void CEF_CALLBACK textfield_set_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -878,10 +829,11 @@ void CEF_CALLBACK textfield_set_id(struct _cef_view_t* self, int id) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))->SetID(id);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetID(
+      id);
 }
 
-int CEF_CALLBACK textfield_get_group_id(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_get_group_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -892,16 +844,13 @@ int CEF_CALLBACK textfield_get_group_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetGroupID();
+  int _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetGroupID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_group_id(struct _cef_view_t* self,
-                                         int group_id) {
+void CEF_CALLBACK textfield_set_group_id(struct _cef_view_0_t* self, int group_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -912,12 +861,11 @@ void CEF_CALLBACK textfield_set_group_id(struct _cef_view_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetGroupID(group_id);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetGroupID(
+      group_id);
 }
 
-struct _cef_view_t* CEF_CALLBACK
-textfield_get_parent_view(struct _cef_view_t* self) {
+cef_view_0_t* CEF_CALLBACK textfield_get_parent_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -928,16 +876,13 @@ textfield_get_parent_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetParentView();
+  CefRefPtr<CefView> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetParentView();
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-struct _cef_view_t* CEF_CALLBACK
-textfield_get_view_for_id(struct _cef_view_t* self, int id) {
+cef_view_0_t* CEF_CALLBACK textfield_get_view_for_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -948,16 +893,14 @@ textfield_get_view_for_id(struct _cef_view_t* self, int id) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetViewForID(id);
+  CefRefPtr<CefView> _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetViewForID(
+      id);
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK textfield_set_bounds(struct _cef_view_t* self,
-                                       const cef_rect_t* bounds) {
+void CEF_CALLBACK textfield_set_bounds(struct _cef_view_0_t* self, const cef_rect_t* bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -973,14 +916,14 @@ void CEF_CALLBACK textfield_set_bounds(struct _cef_view_t* self,
   }
 
   // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
+  CefRect boundsVal = bounds?*bounds:CefRect();
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetBounds(boundsVal);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetBounds(
+      boundsVal);
 }
 
-cef_rect_t CEF_CALLBACK textfield_get_bounds(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK textfield_get_bounds(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -991,16 +934,13 @@ cef_rect_t CEF_CALLBACK textfield_get_bounds(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetBounds();
+  cef_rect_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetBounds();
 
   // Return type: simple
   return _retval;
 }
 
-cef_rect_t CEF_CALLBACK
-textfield_get_bounds_in_screen(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK textfield_get_bounds_in_screen(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1011,16 +951,13 @@ textfield_get_bounds_in_screen(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetBoundsInScreen();
+  cef_rect_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetBoundsInScreen();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_size(struct _cef_view_t* self,
-                                     const cef_size_t* size) {
+void CEF_CALLBACK textfield_set_size(struct _cef_view_0_t* self, const cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1036,14 +973,14 @@ void CEF_CALLBACK textfield_set_size(struct _cef_view_t* self,
   }
 
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetSize(sizeVal);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetSize(
+      sizeVal);
 }
 
-cef_size_t CEF_CALLBACK textfield_get_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK textfield_get_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1054,16 +991,13 @@ cef_size_t CEF_CALLBACK textfield_get_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetSize();
+  cef_size_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_position(struct _cef_view_t* self,
-                                         const cef_point_t* position) {
+void CEF_CALLBACK textfield_set_position(struct _cef_view_0_t* self, const cef_point_t* position) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1079,14 +1013,14 @@ void CEF_CALLBACK textfield_set_position(struct _cef_view_t* self,
   }
 
   // Translate param: position; type: simple_byref_const
-  CefPoint positionVal = position ? *position : CefPoint();
+  CefPoint positionVal = position?*position:CefPoint();
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetPosition(positionVal);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetPosition(
+      positionVal);
 }
 
-cef_point_t CEF_CALLBACK textfield_get_position(struct _cef_view_t* self) {
+cef_point_t CEF_CALLBACK textfield_get_position(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1097,16 +1031,13 @@ cef_point_t CEF_CALLBACK textfield_get_position(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_point_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetPosition();
+  cef_point_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetPosition();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_insets(struct _cef_view_t* self,
-                                       const cef_insets_t* insets) {
+void CEF_CALLBACK textfield_set_insets(struct _cef_view_0_t* self, const cef_insets_t* insets) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1122,14 +1053,14 @@ void CEF_CALLBACK textfield_set_insets(struct _cef_view_t* self,
   }
 
   // Translate param: insets; type: simple_byref_const
-  CefInsets insetsVal = insets ? *insets : CefInsets();
+  CefInsets insetsVal = insets?*insets:CefInsets();
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetInsets(insetsVal);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetInsets(
+      insetsVal);
 }
 
-cef_insets_t CEF_CALLBACK textfield_get_insets(struct _cef_view_t* self) {
+cef_insets_t CEF_CALLBACK textfield_get_insets(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1140,15 +1071,13 @@ cef_insets_t CEF_CALLBACK textfield_get_insets(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_insets_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetInsets();
+  cef_insets_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetInsets();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK textfield_get_preferred_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK textfield_get_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1159,15 +1088,13 @@ cef_size_t CEF_CALLBACK textfield_get_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetPreferredSize();
+  cef_size_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetPreferredSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_size_to_preferred_size(struct _cef_view_t* self) {
+void CEF_CALLBACK textfield_size_to_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1178,11 +1105,10 @@ void CEF_CALLBACK textfield_size_to_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SizeToPreferredSize();
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SizeToPreferredSize();
 }
 
-cef_size_t CEF_CALLBACK textfield_get_minimum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK textfield_get_minimum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1193,15 +1119,13 @@ cef_size_t CEF_CALLBACK textfield_get_minimum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetMinimumSize();
+  cef_size_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetMinimumSize();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK textfield_get_maximum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK textfield_get_maximum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1212,16 +1136,13 @@ cef_size_t CEF_CALLBACK textfield_get_maximum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetMaximumSize();
+  cef_size_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetMaximumSize();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK textfield_get_height_for_width(struct _cef_view_t* self,
-                                                int width) {
+int CEF_CALLBACK textfield_get_height_for_width(struct _cef_view_0_t* self, int width) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1232,15 +1153,14 @@ int CEF_CALLBACK textfield_get_height_for_width(struct _cef_view_t* self,
   }
 
   // Execute
-  int _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetHeightForWidth(width);
+  int _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetHeightForWidth(
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK textfield_invalidate_layout(struct _cef_view_t* self) {
+void CEF_CALLBACK textfield_invalidate_layout(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1251,11 +1171,10 @@ void CEF_CALLBACK textfield_invalidate_layout(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->InvalidateLayout();
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->InvalidateLayout();
 }
 
-void CEF_CALLBACK textfield_set_visible(struct _cef_view_t* self, int visible) {
+void CEF_CALLBACK textfield_set_visible(struct _cef_view_0_t* self, int visible) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1266,11 +1185,11 @@ void CEF_CALLBACK textfield_set_visible(struct _cef_view_t* self, int visible) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetVisible(visible ? true : false);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetVisible(
+      visible?true:false);
 }
 
-int CEF_CALLBACK textfield_is_visible(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_visible(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1281,15 +1200,13 @@ int CEF_CALLBACK textfield_is_visible(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsVisible();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsVisible();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK textfield_is_drawn(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_drawn(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1300,15 +1217,13 @@ int CEF_CALLBACK textfield_is_drawn(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsDrawn();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsDrawn();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_enabled(struct _cef_view_t* self, int enabled) {
+void CEF_CALLBACK textfield_set_enabled(struct _cef_view_0_t* self, int enabled) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1319,11 +1234,11 @@ void CEF_CALLBACK textfield_set_enabled(struct _cef_view_t* self, int enabled) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetEnabled(enabled ? true : false);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetEnabled(
+      enabled?true:false);
 }
 
-int CEF_CALLBACK textfield_is_enabled(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_enabled(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1334,16 +1249,13 @@ int CEF_CALLBACK textfield_is_enabled(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsEnabled();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsEnabled();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK textfield_set_focusable(struct _cef_view_t* self,
-                                          int focusable) {
+void CEF_CALLBACK textfield_set_focusable(struct _cef_view_0_t* self, int focusable) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1354,11 +1266,11 @@ void CEF_CALLBACK textfield_set_focusable(struct _cef_view_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetFocusable(focusable ? true : false);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetFocusable(
+      focusable?true:false);
 }
 
-int CEF_CALLBACK textfield_is_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1369,16 +1281,13 @@ int CEF_CALLBACK textfield_is_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsFocusable();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-textfield_is_accessibility_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_is_accessibility_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1389,15 +1298,13 @@ textfield_is_accessibility_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->IsAccessibilityFocusable();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->IsAccessibilityFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK textfield_has_focus(struct _cef_view_t* self) {
+int CEF_CALLBACK textfield_has_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1408,15 +1315,13 @@ int CEF_CALLBACK textfield_has_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->HasFocus();
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->HasFocus();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK textfield_request_focus(struct _cef_view_t* self) {
+void CEF_CALLBACK textfield_request_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1427,12 +1332,10 @@ void CEF_CALLBACK textfield_request_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->RequestFocus();
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->RequestFocus();
 }
 
-void CEF_CALLBACK textfield_set_background_color(struct _cef_view_t* self,
-                                                 cef_color_t color) {
+void CEF_CALLBACK textfield_set_background_color(struct _cef_view_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1443,12 +1346,11 @@ void CEF_CALLBACK textfield_set_background_color(struct _cef_view_t* self,
   }
 
   // Execute
-  CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-      ->SetBackgroundColor(color);
+  CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->SetBackgroundColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK
-textfield_get_background_color(struct _cef_view_t* self) {
+cef_color_t CEF_CALLBACK textfield_get_background_color(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1459,16 +1361,13 @@ textfield_get_background_color(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_color_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetBackgroundColor();
+  cef_color_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetBackgroundColor();
 
   // Return type: simple
   return _retval;
 }
 
-cef_color_t CEF_CALLBACK textfield_get_theme_color(struct _cef_view_t* self,
-                                                   int color_id) {
+cef_color_t CEF_CALLBACK textfield_get_theme_color(struct _cef_view_0_t* self, int color_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1479,16 +1378,14 @@ cef_color_t CEF_CALLBACK textfield_get_theme_color(struct _cef_view_t* self,
   }
 
   // Execute
-  cef_color_t _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->GetThemeColor(color_id);
+  cef_color_t _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->GetThemeColor(
+      color_id);
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_to_screen(struct _cef_view_t* self,
-                                                   cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_to_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1504,12 +1401,11 @@ int CEF_CALLBACK textfield_convert_point_to_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointToScreen(pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointToScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1520,8 +1416,7 @@ int CEF_CALLBACK textfield_convert_point_to_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_from_screen(struct _cef_view_t* self,
-                                                     cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_from_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1537,12 +1432,11 @@ int CEF_CALLBACK textfield_convert_point_from_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointFromScreen(pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointFromScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1553,8 +1447,7 @@ int CEF_CALLBACK textfield_convert_point_from_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_to_window(struct _cef_view_t* self,
-                                                   cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_to_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1570,12 +1463,11 @@ int CEF_CALLBACK textfield_convert_point_to_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointToWindow(pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointToWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1586,8 +1478,7 @@ int CEF_CALLBACK textfield_convert_point_to_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_from_window(struct _cef_view_t* self,
-                                                     cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_from_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1603,12 +1494,11 @@ int CEF_CALLBACK textfield_convert_point_from_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointFromWindow(pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointFromWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1619,9 +1509,7 @@ int CEF_CALLBACK textfield_convert_point_from_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_to_view(struct _cef_view_t* self,
-                                                 struct _cef_view_t* view,
-                                                 cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_to_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1642,12 +1530,12 @@ int CEF_CALLBACK textfield_convert_point_to_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointToView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointToView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1658,9 +1546,7 @@ int CEF_CALLBACK textfield_convert_point_to_view(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK textfield_convert_point_from_view(struct _cef_view_t* self,
-                                                   struct _cef_view_t* view,
-                                                   cef_point_t* point) {
+int CEF_CALLBACK textfield_convert_point_from_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1681,12 +1567,12 @@ int CEF_CALLBACK textfield_convert_point_from_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
-          ->ConvertPointFromView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefTextfield_0_CppToC::Get(reinterpret_cast<cef_textfield_0_t*>(self))->ConvertPointFromView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1699,9 +1585,12 @@ int CEF_CALLBACK textfield_convert_point_from_view(struct _cef_view_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTextfieldCppToC::CefTextfieldCppToC() {
+CefTextfield_0_CppToC::CefTextfield_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->set_password_input = textfield_set_password_input;
   GetStruct()->is_password_input = textfield_is_password_input;
   GetStruct()->set_read_only = textfield_set_read_only;
@@ -1721,10 +1610,8 @@ CefTextfieldCppToC::CefTextfieldCppToC() {
   GetStruct()->get_text_color = textfield_get_text_color;
   GetStruct()->set_selection_text_color = textfield_set_selection_text_color;
   GetStruct()->get_selection_text_color = textfield_get_selection_text_color;
-  GetStruct()->set_selection_background_color =
-      textfield_set_selection_background_color;
-  GetStruct()->get_selection_background_color =
-      textfield_get_selection_background_color;
+  GetStruct()->set_selection_background_color = textfield_set_selection_background_color;
+  GetStruct()->get_selection_background_color = textfield_get_selection_background_color;
   GetStruct()->set_font_list = textfield_set_font_list;
   GetStruct()->apply_text_color = textfield_apply_text_color;
   GetStruct()->apply_text_style = textfield_apply_text_style;
@@ -1733,8 +1620,7 @@ CefTextfieldCppToC::CefTextfieldCppToC() {
   GetStruct()->clear_edit_history = textfield_clear_edit_history;
   GetStruct()->set_placeholder_text = textfield_set_placeholder_text;
   GetStruct()->get_placeholder_text = textfield_get_placeholder_text;
-  GetStruct()->set_placeholder_text_color =
-      textfield_set_placeholder_text_color;
+  GetStruct()->set_placeholder_text_color = textfield_set_placeholder_text_color;
   GetStruct()->set_accessible_name = textfield_set_accessible_name;
   GetStruct()->base.as_browser_view = textfield_as_browser_view;
   GetStruct()->base.as_button = textfield_as_button;
@@ -1776,39 +1662,30 @@ CefTextfieldCppToC::CefTextfieldCppToC() {
   GetStruct()->base.is_enabled = textfield_is_enabled;
   GetStruct()->base.set_focusable = textfield_set_focusable;
   GetStruct()->base.is_focusable = textfield_is_focusable;
-  GetStruct()->base.is_accessibility_focusable =
-      textfield_is_accessibility_focusable;
+  GetStruct()->base.is_accessibility_focusable = textfield_is_accessibility_focusable;
   GetStruct()->base.has_focus = textfield_has_focus;
   GetStruct()->base.request_focus = textfield_request_focus;
   GetStruct()->base.set_background_color = textfield_set_background_color;
   GetStruct()->base.get_background_color = textfield_get_background_color;
   GetStruct()->base.get_theme_color = textfield_get_theme_color;
   GetStruct()->base.convert_point_to_screen = textfield_convert_point_to_screen;
-  GetStruct()->base.convert_point_from_screen =
-      textfield_convert_point_from_screen;
+  GetStruct()->base.convert_point_from_screen = textfield_convert_point_from_screen;
   GetStruct()->base.convert_point_to_window = textfield_convert_point_to_window;
-  GetStruct()->base.convert_point_from_window =
-      textfield_convert_point_from_window;
+  GetStruct()->base.convert_point_from_window = textfield_convert_point_from_window;
   GetStruct()->base.convert_point_to_view = textfield_convert_point_to_view;
   GetStruct()->base.convert_point_from_view = textfield_convert_point_from_view;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTextfieldCppToC::~CefTextfieldCppToC() {
+CefTextfield_0_CppToC::~CefTextfield_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTextfield>
-CefCppToCRefCounted<CefTextfieldCppToC, CefTextfield, cef_textfield_t>::
-    UnwrapDerived(CefWrapperType type, cef_textfield_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefTextfield> CefCppToCRefCounted<CefTextfield_0_CppToC, CefTextfield, cef_textfield_0_t>::UnwrapDerived(CefWrapperType type, cef_textfield_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTextfieldCppToC,
-                                   CefTextfield,
-                                   cef_textfield_t>::kWrapperType =
-    WT_TEXTFIELD;
+template<> CefWrapperType CefCppToCRefCounted<CefTextfield_0_CppToC, CefTextfield, cef_textfield_0_t>::kWrapperType = WT_TEXTFIELD;
+
+

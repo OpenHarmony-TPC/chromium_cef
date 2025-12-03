@@ -9,27 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e534b3b741b6c63dc5f269cc3d526cb4d3c20797$
+// $hash=869a55a5180e71e3e40fcdd07b165fec86536928$
 //
 
-#include "libcef_dll/ctocpp/find_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/find_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefFindHandlerCToCpp::OnFindResult(CefRefPtr<CefBrowser> browser,
-                                        int identifier,
-                                        int count,
-                                        const CefRect& selectionRect,
-                                        int activeMatchOrdinal,
-                                        bool finalUpdate) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefFindHandler_0_CToCpp::OnFindResult(CefRefPtr<CefBrowser> browser, int identifier, int count, const CefRect& selectionRect, int activeMatchOrdinal, bool finalUpdate) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_find_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_find_result)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_find_result) {
     return;
   }
 
@@ -42,31 +37,32 @@ void CefFindHandlerCToCpp::OnFindResult(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_find_result(_struct, CefBrowserCppToC::Wrap(browser), identifier,
-                          count, &selectionRect, activeMatchOrdinal,
-                          finalUpdate);
+  _struct->on_find_result(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      identifier,
+      count,
+      &selectionRect,
+      activeMatchOrdinal,
+      finalUpdate);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFindHandlerCToCpp::CefFindHandlerCToCpp() {}
+CefFindHandler_0_CToCpp::CefFindHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFindHandlerCToCpp::~CefFindHandlerCToCpp() {
+CefFindHandler_0_CToCpp::~CefFindHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_find_handler_t*
-CefCToCppRefCounted<CefFindHandlerCToCpp, CefFindHandler, cef_find_handler_t>::
-    UnwrapDerived(CefWrapperType type, CefFindHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_find_handler_0_t* CefCToCppRefCounted<CefFindHandler_0_CToCpp, CefFindHandler, cef_find_handler_0_t>::UnwrapDerived(CefWrapperType type, CefFindHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefFindHandlerCToCpp,
-                                   CefFindHandler,
-                                   cef_find_handler_t>::kWrapperType =
-    WT_FIND_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefFindHandler_0_CToCpp, CefFindHandler, cef_find_handler_0_t>::kWrapperType = WT_FIND_HANDLER;
+
+

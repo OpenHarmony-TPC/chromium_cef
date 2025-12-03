@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f272624c0eb247bdf928f95ebd5ea6869c3d7672$
+// $hash=e8c2b9b6b1e907c6c042cbd38fc8dab5ce4c744e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_STRING_VISITOR_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_STRING_VISITOR_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,8 +50,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to receive string values asynchronously.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_string_visitor_t {
   ///
@@ -58,9 +65,9 @@ typedef struct _cef_string_visitor_t {
   ///
   /// Method that will be executed.
   ///
-  void(CEF_CALLBACK* visit)(struct _cef_string_visitor_t* self,
-                            const cef_string_t* string);
+  void (CEF_CALLBACK *visit)(struct _cef_string_visitor_t* self, const cef_string_t* string);
 } cef_string_visitor_t;
+
 
 #ifdef __cplusplus
 }

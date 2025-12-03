@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1a97aef274293300c96999060b3c45741881e4ca$
+// $hash=cba75c42ec81d2b0288dd81cff202b7a6addc799$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REGISTRATION_CTOCPP_H_
@@ -20,20 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_registration_capi.h"
 #include "include/cef_registration.h"
+#include "include/capi/cef_registration_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefRegistrationCToCpp : public CefCToCppRefCounted<CefRegistrationCToCpp,
-                                                         CefRegistration,
-                                                         cef_registration_t> {
+class CefRegistrationCToCpp
+    : public CefCToCppRefCounted<CefRegistrationCToCpp, CefRegistration, cef_registration_t> {
  public:
   CefRegistrationCToCpp();
   virtual ~CefRegistrationCToCpp();
 
   // CefRegistration methods.
 };
+
+constexpr auto CefRegistrationCToCpp_Wrap = CefRegistrationCToCpp::Wrap;
+constexpr auto CefRegistrationCToCpp_Unwrap = CefRegistrationCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REGISTRATION_CTOCPP_H_

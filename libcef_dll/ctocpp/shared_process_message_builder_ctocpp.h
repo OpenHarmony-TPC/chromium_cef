@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6924de96e9c99122fbee157f9ede43c36e5b9407$
+// $hash=a42e15445b57a794238ae642db5de385dc24bd32$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SHARED_PROCESS_MESSAGE_BUILDER_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_shared_process_message_builder_capi.h"
 #include "include/cef_shared_process_message_builder.h"
+#include "include/capi/cef_shared_process_message_builder_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSharedProcessMessageBuilderCToCpp
-    : public CefCToCppRefCounted<CefSharedProcessMessageBuilderCToCpp,
-                                 CefSharedProcessMessageBuilder,
-                                 cef_shared_process_message_builder_t> {
+    : public CefCToCppRefCounted<CefSharedProcessMessageBuilderCToCpp, CefSharedProcessMessageBuilder, cef_shared_process_message_builder_t> {
  public:
   CefSharedProcessMessageBuilderCToCpp();
   virtual ~CefSharedProcessMessageBuilderCToCpp();
@@ -40,5 +38,8 @@ class CefSharedProcessMessageBuilderCToCpp
   void* Memory() override;
   CefRefPtr<CefProcessMessage> Build() override;
 };
+
+constexpr auto CefSharedProcessMessageBuilderCToCpp_Wrap = CefSharedProcessMessageBuilderCToCpp::Wrap;
+constexpr auto CefSharedProcessMessageBuilderCToCpp_Unwrap = CefSharedProcessMessageBuilderCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SHARED_PROCESS_MESSAGE_BUILDER_CTOCPP_H_

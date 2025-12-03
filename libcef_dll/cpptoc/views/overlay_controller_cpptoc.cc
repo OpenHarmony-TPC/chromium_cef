@@ -9,21 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=372d7d689582724e8d7de914f69471b984ee7a91$
+// $hash=c9bcbfa6fbb760cfd15398076bfcd67fbcb174b4$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/overlay_controller_cpptoc.h"
-
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/window_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK
-overlay_controller_is_valid(struct _cef_overlay_controller_t* self) {
+int CEF_CALLBACK overlay_controller_is_valid(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -34,15 +33,13 @@ overlay_controller_is_valid(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  bool _retval = CefOverlayControllerCppToC::Get(self)->IsValid();
+  bool _retval = CefOverlayController_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-overlay_controller_is_same(struct _cef_overlay_controller_t* self,
-                           struct _cef_overlay_controller_t* that) {
+int CEF_CALLBACK overlay_controller_is_same(struct _cef_overlay_controller_0_t* self, cef_overlay_controller_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -58,15 +55,14 @@ overlay_controller_is_same(struct _cef_overlay_controller_t* self,
   }
 
   // Execute
-  bool _retval = CefOverlayControllerCppToC::Get(self)->IsSame(
-      CefOverlayControllerCppToC::Unwrap(that));
+  bool _retval = CefOverlayController_0_CppToC::Get(self)->IsSame(
+      CefOverlayControllerCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_view_t* CEF_CALLBACK
-overlay_controller_get_contents_view(struct _cef_overlay_controller_t* self) {
+struct _cef_view_0_t* CEF_CALLBACK overlay_controller_get_contents_view(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -77,15 +73,13 @@ overlay_controller_get_contents_view(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefOverlayControllerCppToC::Get(self)->GetContentsView();
+  CefRefPtr<CefView> _retval = CefOverlayController_0_CppToC::Get(self)->GetContentsView();
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-struct _cef_window_t* CEF_CALLBACK
-overlay_controller_get_window(struct _cef_overlay_controller_t* self) {
+struct _cef_window_0_t* CEF_CALLBACK overlay_controller_get_window(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -96,15 +90,13 @@ overlay_controller_get_window(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefOverlayControllerCppToC::Get(self)->GetWindow();
+  CefRefPtr<CefWindow> _retval = CefOverlayController_0_CppToC::Get(self)->GetWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-cef_docking_mode_t CEF_CALLBACK
-overlay_controller_get_docking_mode(struct _cef_overlay_controller_t* self) {
+cef_docking_mode_t CEF_CALLBACK overlay_controller_get_docking_mode(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -115,15 +107,13 @@ overlay_controller_get_docking_mode(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  cef_docking_mode_t _retval =
-      CefOverlayControllerCppToC::Get(self)->GetDockingMode();
+  cef_docking_mode_t _retval = CefOverlayController_0_CppToC::Get(self)->GetDockingMode();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-overlay_controller_destroy(struct _cef_overlay_controller_t* self) {
+void CEF_CALLBACK overlay_controller_destroy(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -134,12 +124,10 @@ overlay_controller_destroy(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->Destroy();
+  CefOverlayController_0_CppToC::Get(self)->Destroy();
 }
 
-void CEF_CALLBACK
-overlay_controller_set_bounds(struct _cef_overlay_controller_t* self,
-                              const cef_rect_t* bounds) {
+void CEF_CALLBACK overlay_controller_set_bounds(struct _cef_overlay_controller_0_t* self, const cef_rect_t* bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -155,14 +143,14 @@ overlay_controller_set_bounds(struct _cef_overlay_controller_t* self,
   }
 
   // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
+  CefRect boundsVal = bounds?*bounds:CefRect();
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SetBounds(boundsVal);
+  CefOverlayController_0_CppToC::Get(self)->SetBounds(
+      boundsVal);
 }
 
-cef_rect_t CEF_CALLBACK
-overlay_controller_get_bounds(struct _cef_overlay_controller_t* self) {
+cef_rect_t CEF_CALLBACK overlay_controller_get_bounds(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -173,14 +161,13 @@ overlay_controller_get_bounds(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval = CefOverlayControllerCppToC::Get(self)->GetBounds();
+  cef_rect_t _retval = CefOverlayController_0_CppToC::Get(self)->GetBounds();
 
   // Return type: simple
   return _retval;
 }
 
-cef_rect_t CEF_CALLBACK overlay_controller_get_bounds_in_screen(
-    struct _cef_overlay_controller_t* self) {
+cef_rect_t CEF_CALLBACK overlay_controller_get_bounds_in_screen(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -191,16 +178,13 @@ cef_rect_t CEF_CALLBACK overlay_controller_get_bounds_in_screen(
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefOverlayControllerCppToC::Get(self)->GetBoundsInScreen();
+  cef_rect_t _retval = CefOverlayController_0_CppToC::Get(self)->GetBoundsInScreen();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-overlay_controller_set_size(struct _cef_overlay_controller_t* self,
-                            const cef_size_t* size) {
+void CEF_CALLBACK overlay_controller_set_size(struct _cef_overlay_controller_0_t* self, const cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -216,14 +200,14 @@ overlay_controller_set_size(struct _cef_overlay_controller_t* self,
   }
 
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SetSize(sizeVal);
+  CefOverlayController_0_CppToC::Get(self)->SetSize(
+      sizeVal);
 }
 
-cef_size_t CEF_CALLBACK
-overlay_controller_get_size(struct _cef_overlay_controller_t* self) {
+cef_size_t CEF_CALLBACK overlay_controller_get_size(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -234,15 +218,13 @@ overlay_controller_get_size(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  cef_size_t _retval = CefOverlayControllerCppToC::Get(self)->GetSize();
+  cef_size_t _retval = CefOverlayController_0_CppToC::Get(self)->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-overlay_controller_set_position(struct _cef_overlay_controller_t* self,
-                                const cef_point_t* position) {
+void CEF_CALLBACK overlay_controller_set_position(struct _cef_overlay_controller_0_t* self, const cef_point_t* position) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -258,14 +240,14 @@ overlay_controller_set_position(struct _cef_overlay_controller_t* self,
   }
 
   // Translate param: position; type: simple_byref_const
-  CefPoint positionVal = position ? *position : CefPoint();
+  CefPoint positionVal = position?*position:CefPoint();
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SetPosition(positionVal);
+  CefOverlayController_0_CppToC::Get(self)->SetPosition(
+      positionVal);
 }
 
-cef_point_t CEF_CALLBACK
-overlay_controller_get_position(struct _cef_overlay_controller_t* self) {
+cef_point_t CEF_CALLBACK overlay_controller_get_position(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -276,15 +258,13 @@ overlay_controller_get_position(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  cef_point_t _retval = CefOverlayControllerCppToC::Get(self)->GetPosition();
+  cef_point_t _retval = CefOverlayController_0_CppToC::Get(self)->GetPosition();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-overlay_controller_set_insets(struct _cef_overlay_controller_t* self,
-                              const cef_insets_t* insets) {
+void CEF_CALLBACK overlay_controller_set_insets(struct _cef_overlay_controller_0_t* self, const cef_insets_t* insets) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -300,14 +280,14 @@ overlay_controller_set_insets(struct _cef_overlay_controller_t* self,
   }
 
   // Translate param: insets; type: simple_byref_const
-  CefInsets insetsVal = insets ? *insets : CefInsets();
+  CefInsets insetsVal = insets?*insets:CefInsets();
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SetInsets(insetsVal);
+  CefOverlayController_0_CppToC::Get(self)->SetInsets(
+      insetsVal);
 }
 
-cef_insets_t CEF_CALLBACK
-overlay_controller_get_insets(struct _cef_overlay_controller_t* self) {
+cef_insets_t CEF_CALLBACK overlay_controller_get_insets(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -318,14 +298,13 @@ overlay_controller_get_insets(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  cef_insets_t _retval = CefOverlayControllerCppToC::Get(self)->GetInsets();
+  cef_insets_t _retval = CefOverlayController_0_CppToC::Get(self)->GetInsets();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK overlay_controller_size_to_preferred_size(
-    struct _cef_overlay_controller_t* self) {
+void CEF_CALLBACK overlay_controller_size_to_preferred_size(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -336,12 +315,10 @@ void CEF_CALLBACK overlay_controller_size_to_preferred_size(
   }
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SizeToPreferredSize();
+  CefOverlayController_0_CppToC::Get(self)->SizeToPreferredSize();
 }
 
-void CEF_CALLBACK
-overlay_controller_set_visible(struct _cef_overlay_controller_t* self,
-                               int visible) {
+void CEF_CALLBACK overlay_controller_set_visible(struct _cef_overlay_controller_0_t* self, int visible) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -352,11 +329,11 @@ overlay_controller_set_visible(struct _cef_overlay_controller_t* self,
   }
 
   // Execute
-  CefOverlayControllerCppToC::Get(self)->SetVisible(visible ? true : false);
+  CefOverlayController_0_CppToC::Get(self)->SetVisible(
+      visible?true:false);
 }
 
-int CEF_CALLBACK
-overlay_controller_is_visible(struct _cef_overlay_controller_t* self) {
+int CEF_CALLBACK overlay_controller_is_visible(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -367,14 +344,13 @@ overlay_controller_is_visible(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  bool _retval = CefOverlayControllerCppToC::Get(self)->IsVisible();
+  bool _retval = CefOverlayController_0_CppToC::Get(self)->IsVisible();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-overlay_controller_is_drawn(struct _cef_overlay_controller_t* self) {
+int CEF_CALLBACK overlay_controller_is_drawn(struct _cef_overlay_controller_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -385,7 +361,7 @@ overlay_controller_is_drawn(struct _cef_overlay_controller_t* self) {
   }
 
   // Execute
-  bool _retval = CefOverlayControllerCppToC::Get(self)->IsDrawn();
+  bool _retval = CefOverlayController_0_CppToC::Get(self)->IsDrawn();
 
   // Return type: bool
   return _retval;
@@ -393,9 +369,12 @@ overlay_controller_is_drawn(struct _cef_overlay_controller_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefOverlayControllerCppToC::CefOverlayControllerCppToC() {
+CefOverlayController_0_CppToC::CefOverlayController_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = overlay_controller_is_valid;
   GetStruct()->is_same = overlay_controller_is_same;
   GetStruct()->get_contents_view = overlay_controller_get_contents_view;
@@ -411,31 +390,22 @@ CefOverlayControllerCppToC::CefOverlayControllerCppToC() {
   GetStruct()->get_position = overlay_controller_get_position;
   GetStruct()->set_insets = overlay_controller_set_insets;
   GetStruct()->get_insets = overlay_controller_get_insets;
-  GetStruct()->size_to_preferred_size =
-      overlay_controller_size_to_preferred_size;
+  GetStruct()->size_to_preferred_size = overlay_controller_size_to_preferred_size;
   GetStruct()->set_visible = overlay_controller_set_visible;
   GetStruct()->is_visible = overlay_controller_is_visible;
   GetStruct()->is_drawn = overlay_controller_is_drawn;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefOverlayControllerCppToC::~CefOverlayControllerCppToC() {
+CefOverlayController_0_CppToC::~CefOverlayController_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefOverlayController> CefCppToCRefCounted<
-    CefOverlayControllerCppToC,
-    CefOverlayController,
-    cef_overlay_controller_t>::UnwrapDerived(CefWrapperType type,
-                                             cef_overlay_controller_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefOverlayController> CefCppToCRefCounted<CefOverlayController_0_CppToC, CefOverlayController, cef_overlay_controller_0_t>::UnwrapDerived(CefWrapperType type, cef_overlay_controller_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefOverlayControllerCppToC,
-                                   CefOverlayController,
-                                   cef_overlay_controller_t>::kWrapperType =
-    WT_OVERLAY_CONTROLLER;
+template<> CefWrapperType CefCppToCRefCounted<CefOverlayController_0_CppToC, CefOverlayController, cef_overlay_controller_0_t>::kWrapperType = WT_OVERLAY_CONTROLLER;
+
+

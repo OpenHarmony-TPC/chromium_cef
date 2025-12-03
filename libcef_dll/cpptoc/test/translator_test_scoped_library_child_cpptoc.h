@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=40d6cb41d5a63c6b4b6c8694c953e3e99d8c3cd0$
+// $hash=c7c5024c68115059e9bb276c64c9ad336125be8a$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CPPTOC_H_
@@ -20,19 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_scoped.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTranslatorTestScopedLibraryChildCppToC
-    : public CefCppToCScoped<CefTranslatorTestScopedLibraryChildCppToC,
-                             CefTranslatorTestScopedLibraryChild,
-                             cef_translator_test_scoped_library_child_t> {
+class CefTranslatorTestScopedLibraryChild_0_CppToC
+    : public CefCppToCScoped<CefTranslatorTestScopedLibraryChild_0_CppToC, CefTranslatorTestScopedLibraryChild, cef_translator_test_scoped_library_child_0_t> {
  public:
-  CefTranslatorTestScopedLibraryChildCppToC();
-  virtual ~CefTranslatorTestScopedLibraryChildCppToC();
+  CefTranslatorTestScopedLibraryChild_0_CppToC();
+  virtual ~CefTranslatorTestScopedLibraryChild_0_CppToC();
 };
+
+constexpr auto CefTranslatorTestScopedLibraryChildCppToC_WrapOwn = CefTranslatorTestScopedLibraryChild_0_CppToC::WrapOwn;
+constexpr auto CefTranslatorTestScopedLibraryChildCppToC_WrapRaw = CefTranslatorTestScopedLibraryChild_0_CppToC::WrapRaw;
+constexpr auto CefTranslatorTestScopedLibraryChildCppToC_UnwrapOwn = CefTranslatorTestScopedLibraryChild_0_CppToC::UnwrapOwn;
+constexpr auto CefTranslatorTestScopedLibraryChildCppToC_UnwrapRaw = CefTranslatorTestScopedLibraryChild_0_CppToC::UnwrapRaw;
+constexpr auto CefTranslatorTestScopedLibraryChildCppToC_GetWrapper = CefTranslatorTestScopedLibraryChild_0_CppToC::GetWrapper;
+
+inline cef_translator_test_scoped_library_child_0_t* CefTranslatorTestScopedLibraryChildCppToC_WrapRawAndRelease(CefRawPtr<CefTranslatorTestScopedLibraryChild> c) {
+  auto [ownerPtr, structPtr] = CefTranslatorTestScopedLibraryChildCppToC_WrapRaw(c);
+  ownerPtr.release();
+  return structPtr;
+}
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CPPTOC_H_

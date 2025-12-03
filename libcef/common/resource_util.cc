@@ -43,17 +43,6 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
   return true;
 }
 
-#elif BUILDFLAG(IS_OHOS)
-
-bool GetDefaultUserDataDirectory(base::FilePath* result) {
-  if (!base::PathService::Get(base::DIR_OHOS_APP_DATA, result)) {
-    return false;
-  }
-  *result = result->Append(FILE_PATH_LITERAL("CEF"));
-  *result = result->Append(FILE_PATH_LITERAL("User Data"));
-  return true;
-}
-
 #elif BUILDFLAG(IS_MAC)
 
 // Based on chrome/common/chrome_paths_mac.mm.

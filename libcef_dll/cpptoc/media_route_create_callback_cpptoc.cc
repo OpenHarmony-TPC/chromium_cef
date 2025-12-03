@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3ea710b913c4dba2d8d518afab2a486191c6f0ba$
+// $hash=2aff2d51154dddea48b2e6649b66b55856177936$
 //
 
 #include "libcef_dll/cpptoc/media_route_create_callback_cpptoc.h"
-
 #include "libcef_dll/ctocpp/media_route_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -21,11 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK media_route_create_callback_on_media_route_create_finished(
-    struct _cef_media_route_create_callback_t* self,
-    cef_media_route_create_result_t result,
-    const cef_string_t* error,
-    cef_media_route_t* route) {
+void CEF_CALLBACK media_route_create_callback_on_media_route_create_finished(struct _cef_media_route_create_callback_t* self, cef_media_route_create_result_t result, const cef_string_t* error, struct _cef_media_route_t* route) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -38,7 +33,9 @@ void CEF_CALLBACK media_route_create_callback_on_media_route_create_finished(
 
   // Execute
   CefMediaRouteCreateCallbackCppToC::Get(self)->OnMediaRouteCreateFinished(
-      result, CefString(error), CefMediaRouteCToCpp::Wrap(route));
+      result,
+      CefString(error),
+      CefMediaRouteCToCpp_Wrap(route));
 }
 
 }  // namespace
@@ -46,8 +43,7 @@ void CEF_CALLBACK media_route_create_callback_on_media_route_create_finished(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefMediaRouteCreateCallbackCppToC::CefMediaRouteCreateCallbackCppToC() {
-  GetStruct()->on_media_route_create_finished =
-      media_route_create_callback_on_media_route_create_finished;
+  GetStruct()->on_media_route_create_finished = media_route_create_callback_on_media_route_create_finished;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -56,19 +52,11 @@ CefMediaRouteCreateCallbackCppToC::~CefMediaRouteCreateCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMediaRouteCreateCallback>
-CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC,
-                    CefMediaRouteCreateCallback,
-                    cef_media_route_create_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_media_route_create_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefMediaRouteCreateCallback> CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC, CefMediaRouteCreateCallback, cef_media_route_create_callback_t>::UnwrapDerived(CefWrapperType type, cef_media_route_create_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC,
-                        CefMediaRouteCreateCallback,
-                        cef_media_route_create_callback_t>::kWrapperType =
-        WT_MEDIA_ROUTE_CREATE_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC, CefMediaRouteCreateCallback, cef_media_route_create_callback_t>::kWrapperType = WT_MEDIA_ROUTE_CREATE_CALLBACK;
+
+

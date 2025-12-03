@@ -4,23 +4,8 @@
 
 #include <algorithm>
 
-#include "include/base/cef_logging.h"
-#include "include/cef_path_util.h"
 #include "include/cef_stream.h"
-#include "include/internal/cef_types.h"
 #include "tests/gtest/include/gtest/gtest.h"
-
-#ifdef OS_OHOS
-bool GetResourceDir(std::string& dir) {
-  CefString files;
-  if (CefGetPath(PK_DIR_RESOURCES, files) && !files.empty()) {
-    dir = std::string(files.ToString());
-    return true;
-  } else {
-    return false;
-  }
-}
-#endif
 
 static void VerifyStreamReadBehavior(CefRefPtr<CefStreamReader> stream,
                                      const std::string& contents) {
@@ -84,22 +69,8 @@ static void VerifyStreamWriteBehavior(CefRefPtr<CefStreamWriter> stream,
 }
 
 TEST(StreamTest, ReadFile) {
-#ifdef OS_OHOS
-  std::string resource_dir;
-  if (GetResourceDir(resource_dir)) {
-    resource_dir.append("/");
-  }
-  const char* file_Name = "StreamTest.VerifyReadFile.txt";
-  std::string resource = resource_dir;
-  resource.append(file_Name);
-  const char* fileName = resource.c_str();
-  resource = resource_dir;
-  resource.append("StreamTest.VerifyReadFile.txt");
-  CefString fileNameStr = resource.c_str();
-#else
   const char* fileName = "StreamTest.VerifyReadFile.txt";
   CefString fileNameStr = "StreamTest.VerifyReadFile.txt";
-#endif
   std::string contents = "This is my test\ncontents for the file";
 
   // Create the file
@@ -144,22 +115,8 @@ TEST(StreamTest, ReadData) {
 }
 
 TEST(StreamTest, WriteFile) {
-#ifdef OS_OHOS
-  std::string resource_dir;
-  if (GetResourceDir(resource_dir)) {
-    resource_dir.append("/");
-  }
-  const char* file_Name = "StreamTest.VerifyWriteFile.txt";
-  std::string resource = resource_dir;
-  resource.append(file_Name);
-  const char* fileName = resource.c_str();
-  resource = resource_dir;
-  resource.append("StreamTest.VerifyWriteFile.txt");
-  CefString fileNameStr = resource.c_str();
-#else
   const char* fileName = "StreamTest.VerifyWriteFile.txt";
   CefString fileNameStr = "StreamTest.VerifyWriteFile.txt";
-#endif
   std::string contents = "This is my test\ncontents for the file";
 
   // Test the stream

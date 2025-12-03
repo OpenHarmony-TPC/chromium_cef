@@ -9,20 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2a3af46c591325dc72f117af72036e17096ec0db$
+// $hash=cf9da7c6e72ad081fee8669176cc436742870a75$
 //
 
 #include "libcef_dll/ctocpp/media_source_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") CefString CefMediaSourceCToCpp::GetId() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_source_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_id)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_id) {
     return CefString();
   }
 
@@ -40,8 +40,8 @@ NO_SANITIZE("cfi-icall") CefString CefMediaSourceCToCpp::GetId() {
 NO_SANITIZE("cfi-icall") bool CefMediaSourceCToCpp::IsCastSource() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_source_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_cast_source)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_cast_source) {
     return false;
   }
 
@@ -51,14 +51,14 @@ NO_SANITIZE("cfi-icall") bool CefMediaSourceCToCpp::IsCastSource() {
   int _retval = _struct->is_cast_source(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") bool CefMediaSourceCToCpp::IsDialSource() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_source_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_dial_source)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_dial_source) {
     return false;
   }
 
@@ -68,12 +68,13 @@ NO_SANITIZE("cfi-icall") bool CefMediaSourceCToCpp::IsDialSource() {
   int _retval = _struct->is_dial_source(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefMediaSourceCToCpp::CefMediaSourceCToCpp() {}
+CefMediaSourceCToCpp::CefMediaSourceCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -81,16 +82,11 @@ CefMediaSourceCToCpp::~CefMediaSourceCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_media_source_t*
-CefCToCppRefCounted<CefMediaSourceCToCpp, CefMediaSource, cef_media_source_t>::
-    UnwrapDerived(CefWrapperType type, CefMediaSource* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_media_source_t* CefCToCppRefCounted<CefMediaSourceCToCpp, CefMediaSource, cef_media_source_t>::UnwrapDerived(CefWrapperType type, CefMediaSource* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefMediaSourceCToCpp,
-                                   CefMediaSource,
-                                   cef_media_source_t>::kWrapperType =
-    WT_MEDIA_SOURCE;
+template<> CefWrapperType CefCToCppRefCounted<CefMediaSourceCToCpp, CefMediaSource, cef_media_source_t>::kWrapperType = WT_MEDIA_SOURCE;
+
+

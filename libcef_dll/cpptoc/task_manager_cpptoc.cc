@@ -9,19 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0bc78067d787fd6457cacc09765a5b3395a3bd22$
+// $hash=a8f93f816fd7653e5ea6c38d26952d5a51b50f6d$
 //
-
-#include "libcef_dll/cpptoc/task_manager_cpptoc.h"
 
 #include <algorithm>
 
+#include "include/cef_api_hash.h"
+#include "libcef_dll/cpptoc/task_manager_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/template_util.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_task_manager_t* cef_task_manager_get() {
+CEF_EXPORT cef_task_manager_0_t* cef_task_manager_get() {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -30,15 +30,14 @@ CEF_EXPORT cef_task_manager_t* cef_task_manager_get() {
   CefRefPtr<CefTaskManager> _retval = CefTaskManager::GetTaskManager();
 
   // Return type: refptr_same
-  return CefTaskManagerCppToC::Wrap(_retval);
+  return CefTaskManagerCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-size_t CEF_CALLBACK
-task_manager_get_tasks_count(struct _cef_task_manager_t* self) {
+size_t CEF_CALLBACK task_manager_get_tasks_count(struct _cef_task_manager_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -49,16 +48,13 @@ task_manager_get_tasks_count(struct _cef_task_manager_t* self) {
   }
 
   // Execute
-  size_t _retval = CefTaskManagerCppToC::Get(self)->GetTasksCount();
+  size_t _retval = CefTaskManager_0_CppToC::Get(self)->GetTasksCount();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK
-task_manager_get_task_ids_list(struct _cef_task_manager_t* self,
-                               size_t* task_idsCount,
-                               int64_t* task_ids) {
+int CEF_CALLBACK task_manager_get_task_ids_list(struct _cef_task_manager_0_t* self, size_t* task_idsCount, int64_t* task_ids) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -74,7 +70,7 @@ task_manager_get_task_ids_list(struct _cef_task_manager_t* self,
   }
 
   // Translate param: task_ids; type: simple_vec_byref
-  std::vector<int64_t> task_idsList;
+  std::vector<int64_t > task_idsList;
   if (task_idsCount && *task_idsCount > 0 && task_ids) {
     for (size_t i = 0; i < *task_idsCount; ++i) {
       task_idsList.push_back(task_ids[i]);
@@ -82,7 +78,8 @@ task_manager_get_task_ids_list(struct _cef_task_manager_t* self,
   }
 
   // Execute
-  bool _retval = CefTaskManagerCppToC::Get(self)->GetTaskIdsList(task_idsList);
+  bool _retval = CefTaskManager_0_CppToC::Get(self)->GetTaskIdsList(
+      task_idsList);
 
   // Restore param: task_ids; type: simple_vec_byref
   if (task_idsCount && task_ids) {
@@ -98,9 +95,7 @@ task_manager_get_task_ids_list(struct _cef_task_manager_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK task_manager_get_task_info(struct _cef_task_manager_t* self,
-                                            int64_t task_id,
-                                            struct _cef_task_info_t* info) {
+int CEF_CALLBACK task_manager_get_task_info(struct _cef_task_manager_0_t* self, int64_t task_id, struct _cef_task_info_t* info) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -126,7 +121,9 @@ int CEF_CALLBACK task_manager_get_task_info(struct _cef_task_manager_t* self,
   }
 
   // Execute
-  bool _retval = CefTaskManagerCppToC::Get(self)->GetTaskInfo(task_id, infoObj);
+  bool _retval = CefTaskManager_0_CppToC::Get(self)->GetTaskInfo(
+      task_id,
+      infoObj);
 
   // Restore param: info; type: struct_byref
   if (info) {
@@ -137,8 +134,7 @@ int CEF_CALLBACK task_manager_get_task_info(struct _cef_task_manager_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK task_manager_kill_task(struct _cef_task_manager_t* self,
-                                        int64_t task_id) {
+int CEF_CALLBACK task_manager_kill_task(struct _cef_task_manager_0_t* self, int64_t task_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -149,15 +145,14 @@ int CEF_CALLBACK task_manager_kill_task(struct _cef_task_manager_t* self,
   }
 
   // Execute
-  bool _retval = CefTaskManagerCppToC::Get(self)->KillTask(task_id);
+  bool _retval = CefTaskManager_0_CppToC::Get(self)->KillTask(
+      task_id);
 
   // Return type: bool
   return _retval;
 }
 
-int64_t CEF_CALLBACK
-task_manager_get_task_id_for_browser_id(struct _cef_task_manager_t* self,
-                                        int browser_id) {
+int64_t CEF_CALLBACK task_manager_get_task_id_for_browser_id(struct _cef_task_manager_0_t* self, int browser_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -168,8 +163,8 @@ task_manager_get_task_id_for_browser_id(struct _cef_task_manager_t* self,
   }
 
   // Execute
-  int64_t _retval =
-      CefTaskManagerCppToC::Get(self)->GetTaskIdForBrowserId(browser_id);
+  int64_t _retval = CefTaskManager_0_CppToC::Get(self)->GetTaskIdForBrowserId(
+      browser_id);
 
   // Return type: simple
   return _retval;
@@ -177,33 +172,29 @@ task_manager_get_task_id_for_browser_id(struct _cef_task_manager_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTaskManagerCppToC::CefTaskManagerCppToC() {
+CefTaskManager_0_CppToC::CefTaskManager_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_tasks_count = task_manager_get_tasks_count;
   GetStruct()->get_task_ids_list = task_manager_get_task_ids_list;
   GetStruct()->get_task_info = task_manager_get_task_info;
   GetStruct()->kill_task = task_manager_kill_task;
-  GetStruct()->get_task_id_for_browser_id =
-      task_manager_get_task_id_for_browser_id;
+  GetStruct()->get_task_id_for_browser_id = task_manager_get_task_id_for_browser_id;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTaskManagerCppToC::~CefTaskManagerCppToC() {
+CefTaskManager_0_CppToC::~CefTaskManager_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTaskManager>
-CefCppToCRefCounted<CefTaskManagerCppToC, CefTaskManager, cef_task_manager_t>::
-    UnwrapDerived(CefWrapperType type, cef_task_manager_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefTaskManager> CefCppToCRefCounted<CefTaskManager_0_CppToC, CefTaskManager, cef_task_manager_0_t>::UnwrapDerived(CefWrapperType type, cef_task_manager_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTaskManagerCppToC,
-                                   CefTaskManager,
-                                   cef_task_manager_t>::kWrapperType =
-    WT_TASK_MANAGER;
+template<> CefWrapperType CefCppToCRefCounted<CefTaskManager_0_CppToC, CefTaskManager, cef_task_manager_0_t>::kWrapperType = WT_TASK_MANAGER;
+
+

@@ -9,28 +9,26 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f56c5ef3b6fec23e07ca72276200ad9c6e8a8caf$
+// $hash=0ae60a8f13ae71954a1cf724fbd141d4ae7622cc$
 //
 
-#include "libcef_dll/ctocpp/resource_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/resource_read_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/resource_skip_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
+#include "libcef_dll/ctocpp/resource_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceHandlerCToCpp::Open(CefRefPtr<CefRequest> request,
-                                    bool& handle_request,
-                                    CefRefPtr<CefCallback> callback) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefResourceHandler_0_CToCpp::Open(CefRefPtr<CefRequest> request, bool& handle_request, CefRefPtr<CefCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, open)) {
+  auto* _struct = GetStruct();
+  if (!_struct->open) {
     return false;
   }
 
@@ -51,24 +49,23 @@ bool CefResourceHandlerCToCpp::Open(CefRefPtr<CefRequest> request,
   int handle_requestInt = handle_request;
 
   // Execute
-  int _retval =
-      _struct->open(_struct, CefRequestCppToC::Wrap(request),
-                    &handle_requestInt, CefCallbackCppToC::Wrap(callback));
+  int _retval = _struct->open(_struct,
+      CefRequestCppToC_Wrap(request),
+      &handle_requestInt,
+      CefCallbackCppToC_Wrap(callback));
 
   // Restore param:handle_request; type: bool_byref
-  handle_request = handle_requestInt ? true : false;
+  handle_request = handle_requestInt?true:false;
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceHandlerCToCpp::ProcessRequest(CefRefPtr<CefRequest> request,
-                                              CefRefPtr<CefCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefResourceHandler_0_CToCpp::ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, process_request)) {
+  auto* _struct = GetStruct();
+  if (!_struct->process_request) {
     return false;
   }
 
@@ -86,23 +83,19 @@ bool CefResourceHandlerCToCpp::ProcessRequest(CefRefPtr<CefRequest> request,
   }
 
   // Execute
-  int _retval =
-      _struct->process_request(_struct, CefRequestCppToC::Wrap(request),
-                               CefCallbackCppToC::Wrap(callback));
+  int _retval = _struct->process_request(_struct,
+      CefRequestCppToC_Wrap(request),
+      CefCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefResourceHandlerCToCpp::GetResponseHeaders(
-    CefRefPtr<CefResponse> response,
-    int64_t& response_length,
-    CefString& redirectUrl) {
+NO_SANITIZE("cfi-icall") void CefResourceHandler_0_CToCpp::GetResponseHeaders(CefRefPtr<CefResponse> response, int64_t& response_length, CefString& redirectUrl) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_response_headers)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_response_headers) {
     return;
   }
 
@@ -115,20 +108,17 @@ void CefResourceHandlerCToCpp::GetResponseHeaders(
   }
 
   // Execute
-  _struct->get_response_headers(_struct, CefResponseCppToC::Wrap(response),
-                                &response_length,
-                                redirectUrl.GetWritableStruct());
+  _struct->get_response_headers(_struct,
+      CefResponseCppToC_Wrap(response),
+      &response_length,
+      redirectUrl.GetWritableStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceHandlerCToCpp::Skip(
-    int64_t bytes_to_skip,
-    int64_t& bytes_skipped,
-    CefRefPtr<CefResourceSkipCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefResourceHandler_0_CToCpp::Skip(int64_t bytes_to_skip, int64_t& bytes_skipped, CefRefPtr<CefResourceSkipCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, skip)) {
+  auto* _struct = GetStruct();
+  if (!_struct->skip) {
     return false;
   }
 
@@ -141,23 +131,20 @@ bool CefResourceHandlerCToCpp::Skip(
   }
 
   // Execute
-  int _retval = _struct->skip(_struct, bytes_to_skip, &bytes_skipped,
-                              CefResourceSkipCallbackCppToC::Wrap(callback));
+  int _retval = _struct->skip(_struct,
+      bytes_to_skip,
+      &bytes_skipped,
+      CefResourceSkipCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceHandlerCToCpp::Read(
-    void* data_out,
-    int bytes_to_read,
-    int& bytes_read,
-    CefRefPtr<CefResourceReadCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefResourceHandler_0_CToCpp::Read(void* data_out, int bytes_to_read, int& bytes_read, CefRefPtr<CefResourceReadCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, read)) {
+  auto* _struct = GetStruct();
+  if (!_struct->read) {
     return false;
   }
 
@@ -175,22 +162,21 @@ bool CefResourceHandlerCToCpp::Read(
   }
 
   // Execute
-  int _retval = _struct->read(_struct, data_out, bytes_to_read, &bytes_read,
-                              CefResourceReadCallbackCppToC::Wrap(callback));
+  int _retval = _struct->read(_struct,
+      data_out,
+      bytes_to_read,
+      &bytes_read,
+      CefResourceReadCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefResourceHandlerCToCpp::ReadResponse(void* data_out,
-                                            int bytes_to_read,
-                                            int& bytes_read,
-                                            CefRefPtr<CefCallback> callback) {
+NO_SANITIZE("cfi-icall") bool CefResourceHandler_0_CToCpp::ReadResponse(void* data_out, int bytes_to_read, int& bytes_read, CefRefPtr<CefCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, read_response)) {
+  auto* _struct = GetStruct();
+  if (!_struct->read_response) {
     return false;
   }
 
@@ -208,19 +194,21 @@ bool CefResourceHandlerCToCpp::ReadResponse(void* data_out,
   }
 
   // Execute
-  int _retval =
-      _struct->read_response(_struct, data_out, bytes_to_read, &bytes_read,
-                             CefCallbackCppToC::Wrap(callback));
+  int _retval = _struct->read_response(_struct,
+      data_out,
+      bytes_to_read,
+      &bytes_read,
+      CefCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall") void CefResourceHandlerCToCpp::Cancel() {
+NO_SANITIZE("cfi-icall") void CefResourceHandler_0_CToCpp::Cancel() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cancel)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cancel) {
     return;
   }
 
@@ -230,28 +218,23 @@ NO_SANITIZE("cfi-icall") void CefResourceHandlerCToCpp::Cancel() {
   _struct->cancel(_struct);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceHandlerCToCpp::CefResourceHandlerCToCpp() {}
+CefResourceHandler_0_CToCpp::CefResourceHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceHandlerCToCpp::~CefResourceHandlerCToCpp() {
+CefResourceHandler_0_CToCpp::~CefResourceHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_resource_handler_t* CefCToCppRefCounted<
-    CefResourceHandlerCToCpp,
-    CefResourceHandler,
-    cef_resource_handler_t>::UnwrapDerived(CefWrapperType type,
-                                           CefResourceHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_resource_handler_0_t* CefCToCppRefCounted<CefResourceHandler_0_CToCpp, CefResourceHandler, cef_resource_handler_0_t>::UnwrapDerived(CefWrapperType type, CefResourceHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefResourceHandlerCToCpp,
-                                   CefResourceHandler,
-                                   cef_resource_handler_t>::kWrapperType =
-    WT_RESOURCE_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefResourceHandler_0_CToCpp, CefResourceHandler, cef_resource_handler_0_t>::kWrapperType = WT_RESOURCE_HANDLER;
+
+

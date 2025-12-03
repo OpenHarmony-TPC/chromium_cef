@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=cd520ee608556118330cb515932c7598228fc31c$
+// $hash=8097f8f9576d870ca90fced556dcdb2d57301fa3$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_auth_callback_capi.h"
 #include "include/capi/cef_base_capi.h"
@@ -55,8 +59,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure used to select a client certificate for authentication.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_select_client_certificate_callback_t {
   ///
@@ -68,14 +75,15 @@ typedef struct _cef_select_client_certificate_callback_t {
   /// Chooses the specified certificate for client certificate authentication.
   /// NULL value means that no client certificate should be used.
   ///
-  void(CEF_CALLBACK* select)(
-      struct _cef_select_client_certificate_callback_t* self,
-      struct _cef_x509certificate_t* cert);
+  void (CEF_CALLBACK *select)(struct _cef_select_client_certificate_callback_t* self, struct _cef_x509_certificate_t* cert);
 } cef_select_client_certificate_callback_t;
+
 
 ///
 /// Implement this structure to handle events related to browser requests. The
 /// functions of this structure will be called on the thread indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_request_handler_t {
   ///
@@ -96,12 +104,7 @@ typedef struct _cef_request_handler_t {
   /// link) or false (0) if it navigated automatically (e.g. via the
   /// DomContentLoaded event).
   ///
-  int(CEF_CALLBACK* on_before_browse)(struct _cef_request_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      struct _cef_frame_t* frame,
-                                      struct _cef_request_t* request,
-                                      int user_gesture,
-                                      int is_redirect);
+  int (CEF_CALLBACK *on_before_browse)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, int user_gesture, int is_redirect);
 
   ///
   /// Called on the UI thread before OnBeforeBrowse in certain limited cases
@@ -119,13 +122,7 @@ typedef struct _cef_request_handler_t {
   /// true (1) to cancel the navigation or false (0) to allow the navigation to
   /// proceed in the source browser's top-level frame.
   ///
-  int(CEF_CALLBACK* on_open_urlfrom_tab)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_string_t* target_url,
-      cef_window_open_disposition_t target_disposition,
-      int user_gesture);
+  int (CEF_CALLBACK *on_open_urlfrom_tab)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, const cef_string_t* target_url, cef_window_open_disposition_t target_disposition, int user_gesture);
 
   ///
   /// Called on the browser process IO thread before a resource request is
@@ -143,16 +140,7 @@ typedef struct _cef_request_handler_t {
   /// same function will be called on the associated
   /// cef_request_context_handler_t, if any.
   ///
-  struct _cef_resource_request_handler_t*(
-      CEF_CALLBACK* get_resource_request_handler)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      struct _cef_request_t* request,
-      int is_navigation,
-      int is_download,
-      const cef_string_t* request_initiator,
-      int* disable_default_handling);
+  struct _cef_resource_request_handler_t* (CEF_CALLBACK *get_resource_request_handler)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, int is_navigation, int is_download, const cef_string_t* request_initiator, int* disable_default_handling);
 
   ///
   /// Called on the IO thread when the browser needs credentials from the user.
@@ -166,16 +154,7 @@ typedef struct _cef_request_handler_t {
   /// when the authentication information is available. Return false (0) to
   /// cancel the request immediately.
   ///
-  int(CEF_CALLBACK* get_auth_credentials)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* origin_url,
-      int isProxy,
-      const cef_string_t* host,
-      int port,
-      const cef_string_t* realm,
-      const cef_string_t* scheme,
-      struct _cef_auth_callback_t* callback);
+  int (CEF_CALLBACK *get_auth_credentials)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* origin_url, int isProxy, const cef_string_t* host, int port, const cef_string_t* realm, const cef_string_t* scheme, struct _cef_auth_callback_t* callback);
 
   ///
   /// Called on the UI thread to handle requests for URLs with an invalid SSL
@@ -185,12 +164,7 @@ typedef struct _cef_request_handler_t {
   /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
   /// will be accepted without calling this function.
   ///
-  int(CEF_CALLBACK* on_certificate_error)(struct _cef_request_handler_t* self,
-                                          struct _cef_browser_t* browser,
-                                          cef_errorcode_t cert_error,
-                                          const cef_string_t* request_url,
-                                          struct _cef_sslinfo_t* ssl_info,
-                                          struct _cef_callback_t* callback);
+  int (CEF_CALLBACK *on_certificate_error)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, cef_errorcode_t cert_error, const cef_string_t* request_url, struct _cef_sslinfo_t* ssl_info, struct _cef_callback_t* callback);
 
   ///
   /// Called on the UI thread when a client certificate is being requested for
@@ -208,23 +182,14 @@ typedef struct _cef_request_handler_t {
   /// Chromium so that it only contains certificates from issuers that the
   /// server trusts.
   ///
-  int(CEF_CALLBACK* on_select_client_certificate)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      int isProxy,
-      const cef_string_t* host,
-      int port,
-      size_t certificatesCount,
-      struct _cef_x509certificate_t* const* certificates,
-      struct _cef_select_client_certificate_callback_t* callback);
+  int (CEF_CALLBACK *on_select_client_certificate)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, int isProxy, const cef_string_t* host, int port, size_t certificatesCount, struct _cef_x509_certificate_t* const* certificates, struct _cef_select_client_certificate_callback_t* callback);
 
   ///
   /// Called on the browser process UI thread when the render view associated
   /// with |browser| is ready to receive/handle IPC messages in the render
   /// process.
   ///
-  void(CEF_CALLBACK* on_render_view_ready)(struct _cef_request_handler_t* self,
-                                           struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_render_view_ready)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called on the browser process UI thread when the render process is
@@ -244,19 +209,14 @@ typedef struct _cef_request_handler_t {
   /// functionality depends on the hang monitor which can be disabled by passing
   /// the `--disable-hang-monitor` command-line flag.
   ///
-  int(CEF_CALLBACK* on_render_process_unresponsive)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_unresponsive_process_callback_t* callback);
+  int (CEF_CALLBACK *on_render_process_unresponsive)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, struct _cef_unresponsive_process_callback_t* callback);
 
   ///
   /// Called on the browser process UI thread when the render process becomes
   /// responsive after previously being unresponsive. See documentation on
   /// OnRenderProcessUnresponsive.
   ///
-  void(CEF_CALLBACK* on_render_process_responsive)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_render_process_responsive)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called on the browser process UI thread when the render process terminates
@@ -266,21 +226,15 @@ typedef struct _cef_request_handler_t {
   /// non-normal exit values and platform-specific crash values (for example, a
   /// Posix signal or Windows hardware exception).
   ///
-  void(CEF_CALLBACK* on_render_process_terminated)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      cef_termination_status_t status,
-      int error_code,
-      const cef_string_t* error_string);
+  void (CEF_CALLBACK *on_render_process_terminated)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser, cef_termination_status_t status, int error_code, const cef_string_t* error_string);
 
   ///
   /// Called on the browser process UI thread when the window.document object of
   /// the main frame has been created.
   ///
-  void(CEF_CALLBACK* on_document_available_in_main_frame)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_document_available_in_main_frame)(struct _cef_request_handler_t* self, struct _cef_browser_t* browser);
 } cef_request_handler_t;
+
 
 #ifdef __cplusplus
 }

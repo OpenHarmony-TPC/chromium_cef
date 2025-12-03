@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2cbfb7f60dffeaa6309740a3a15f2cf488e91a06$
+// $hash=a259d288c5fdf9e7578dc18bc54d463bba7899fa$
 //
 
 #include "libcef_dll/cpptoc/cookie_access_filter_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/ctocpp/request_ctocpp.h"
@@ -24,12 +23,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK
-cookie_access_filter_can_send_cookie(struct _cef_cookie_access_filter_t* self,
-                                     cef_browser_t* browser,
-                                     cef_frame_t* frame,
-                                     cef_request_t* request,
-                                     const struct _cef_cookie_t* cookie) {
+int CEF_CALLBACK cookie_access_filter_can_send_cookie(struct _cef_cookie_access_filter_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, const struct _cef_cookie_t* cookie) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -60,20 +54,16 @@ cookie_access_filter_can_send_cookie(struct _cef_cookie_access_filter_t* self,
 
   // Execute
   bool _retval = CefCookieAccessFilterCppToC::Get(self)->CanSendCookie(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefRequestCToCpp::Wrap(request), cookieObj);
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefRequestCToCpp_Wrap(request),
+      cookieObj);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-cookie_access_filter_can_save_cookie(struct _cef_cookie_access_filter_t* self,
-                                     cef_browser_t* browser,
-                                     cef_frame_t* frame,
-                                     cef_request_t* request,
-                                     struct _cef_response_t* response,
-                                     const struct _cef_cookie_t* cookie) {
+int CEF_CALLBACK cookie_access_filter_can_save_cookie(struct _cef_cookie_access_filter_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, struct _cef_response_t* response, const struct _cef_cookie_t* cookie) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -109,8 +99,10 @@ cookie_access_filter_can_save_cookie(struct _cef_cookie_access_filter_t* self,
 
   // Execute
   bool _retval = CefCookieAccessFilterCppToC::Get(self)->CanSaveCookie(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefRequestCToCpp::Wrap(request), CefResponseCToCpp::Wrap(response),
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefRequestCToCpp_Wrap(request),
+      CefResponseCToCpp_Wrap(response),
       cookieObj);
 
   // Return type: bool
@@ -128,20 +120,14 @@ CefCookieAccessFilterCppToC::CefCookieAccessFilterCppToC() {
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefCookieAccessFilterCppToC::~CefCookieAccessFilterCppToC() {}
+CefCookieAccessFilterCppToC::~CefCookieAccessFilterCppToC() {
+}
 
-template <>
-CefRefPtr<CefCookieAccessFilter> CefCppToCRefCounted<
-    CefCookieAccessFilterCppToC,
-    CefCookieAccessFilter,
-    cef_cookie_access_filter_t>::UnwrapDerived(CefWrapperType type,
-                                               cef_cookie_access_filter_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefCookieAccessFilter> CefCppToCRefCounted<CefCookieAccessFilterCppToC, CefCookieAccessFilter, cef_cookie_access_filter_t>::UnwrapDerived(CefWrapperType type, cef_cookie_access_filter_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefCookieAccessFilterCppToC,
-                                   CefCookieAccessFilter,
-                                   cef_cookie_access_filter_t>::kWrapperType =
-    WT_COOKIE_ACCESS_FILTER;
+template<> CefWrapperType CefCppToCRefCounted<CefCookieAccessFilterCppToC, CefCookieAccessFilter, cef_cookie_access_filter_t>::kWrapperType = WT_COOKIE_ACCESS_FILTER;
+
+

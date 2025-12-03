@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2eac50e2769279151e4d6f5b8a2222493fc81cb5$
+// $hash=ae14dbc8e5c87792d20fc56eacf22ce806ff370c$
 //
 
 #include "libcef_dll/cpptoc/views/panel_delegate_cpptoc.h"
-
 #include "libcef_dll/cpptoc/views/window_delegate_cpptoc.h"
 #include "libcef_dll/ctocpp/views/view_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -22,9 +21,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-cef_size_t CEF_CALLBACK
-panel_delegate_get_preferred_size(struct _cef_view_delegate_t* self,
-                                  cef_view_t* view) {
+cef_size_t CEF_CALLBACK panel_delegate_get_preferred_size(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -40,17 +37,14 @@ panel_delegate_get_preferred_size(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  cef_size_t _retval =
-      CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-          ->GetPreferredSize(CefViewCToCpp::Wrap(view));
+  cef_size_t _retval = CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->GetPreferredSize(
+      CefViewCToCpp_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK
-panel_delegate_get_minimum_size(struct _cef_view_delegate_t* self,
-                                cef_view_t* view) {
+cef_size_t CEF_CALLBACK panel_delegate_get_minimum_size(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -66,17 +60,14 @@ panel_delegate_get_minimum_size(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  cef_size_t _retval =
-      CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-          ->GetMinimumSize(CefViewCToCpp::Wrap(view));
+  cef_size_t _retval = CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->GetMinimumSize(
+      CefViewCToCpp_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK
-panel_delegate_get_maximum_size(struct _cef_view_delegate_t* self,
-                                cef_view_t* view) {
+cef_size_t CEF_CALLBACK panel_delegate_get_maximum_size(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -92,18 +83,14 @@ panel_delegate_get_maximum_size(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  cef_size_t _retval =
-      CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-          ->GetMaximumSize(CefViewCToCpp::Wrap(view));
+  cef_size_t _retval = CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->GetMaximumSize(
+      CefViewCToCpp_Wrap(view));
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK
-panel_delegate_get_height_for_width(struct _cef_view_delegate_t* self,
-                                    cef_view_t* view,
-                                    int width) {
+int CEF_CALLBACK panel_delegate_get_height_for_width(struct _cef_view_delegate_t* self, struct _cef_view_t* view, int width) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -119,19 +106,15 @@ panel_delegate_get_height_for_width(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  int _retval =
-      CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-          ->GetHeightForWidth(CefViewCToCpp::Wrap(view), width);
+  int _retval = CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->GetHeightForWidth(
+      CefViewCToCpp_Wrap(view),
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-panel_delegate_on_parent_view_changed(struct _cef_view_delegate_t* self,
-                                      cef_view_t* view,
-                                      int added,
-                                      cef_view_t* parent) {
+void CEF_CALLBACK panel_delegate_on_parent_view_changed(struct _cef_view_delegate_t* self, struct _cef_view_t* view, int added, struct _cef_view_t* parent) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -152,16 +135,13 @@ panel_delegate_on_parent_view_changed(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnParentViewChanged(CefViewCToCpp::Wrap(view), added ? true : false,
-                            CefViewCToCpp::Wrap(parent));
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnParentViewChanged(
+      CefViewCToCpp_Wrap(view),
+      added?true:false,
+      CefViewCToCpp_Wrap(parent));
 }
 
-void CEF_CALLBACK
-panel_delegate_on_child_view_changed(struct _cef_view_delegate_t* self,
-                                     cef_view_t* view,
-                                     int added,
-                                     cef_view_t* child) {
+void CEF_CALLBACK panel_delegate_on_child_view_changed(struct _cef_view_delegate_t* self, struct _cef_view_t* view, int added, struct _cef_view_t* child) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -182,15 +162,13 @@ panel_delegate_on_child_view_changed(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnChildViewChanged(CefViewCToCpp::Wrap(view), added ? true : false,
-                           CefViewCToCpp::Wrap(child));
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnChildViewChanged(
+      CefViewCToCpp_Wrap(view),
+      added?true:false,
+      CefViewCToCpp_Wrap(child));
 }
 
-void CEF_CALLBACK
-panel_delegate_on_window_changed(struct _cef_view_delegate_t* self,
-                                 cef_view_t* view,
-                                 int added) {
+void CEF_CALLBACK panel_delegate_on_window_changed(struct _cef_view_delegate_t* self, struct _cef_view_t* view, int added) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -206,14 +184,12 @@ panel_delegate_on_window_changed(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnWindowChanged(CefViewCToCpp::Wrap(view), added ? true : false);
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnWindowChanged(
+      CefViewCToCpp_Wrap(view),
+      added?true:false);
 }
 
-void CEF_CALLBACK
-panel_delegate_on_layout_changed(struct _cef_view_delegate_t* self,
-                                 cef_view_t* view,
-                                 const cef_rect_t* new_bounds) {
+void CEF_CALLBACK panel_delegate_on_layout_changed(struct _cef_view_delegate_t* self, struct _cef_view_t* view, const cef_rect_t* new_bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -234,15 +210,15 @@ panel_delegate_on_layout_changed(struct _cef_view_delegate_t* self,
   }
 
   // Translate param: new_bounds; type: simple_byref_const
-  CefRect new_boundsVal = new_bounds ? *new_bounds : CefRect();
+  CefRect new_boundsVal = new_bounds?*new_bounds:CefRect();
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnLayoutChanged(CefViewCToCpp::Wrap(view), new_boundsVal);
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnLayoutChanged(
+      CefViewCToCpp_Wrap(view),
+      new_boundsVal);
 }
 
-void CEF_CALLBACK panel_delegate_on_focus(struct _cef_view_delegate_t* self,
-                                          cef_view_t* view) {
+void CEF_CALLBACK panel_delegate_on_focus(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -258,12 +234,11 @@ void CEF_CALLBACK panel_delegate_on_focus(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnFocus(CefViewCToCpp::Wrap(view));
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnFocus(
+      CefViewCToCpp_Wrap(view));
 }
 
-void CEF_CALLBACK panel_delegate_on_blur(struct _cef_view_delegate_t* self,
-                                         cef_view_t* view) {
+void CEF_CALLBACK panel_delegate_on_blur(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -279,13 +254,11 @@ void CEF_CALLBACK panel_delegate_on_blur(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnBlur(CefViewCToCpp::Wrap(view));
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnBlur(
+      CefViewCToCpp_Wrap(view));
 }
 
-void CEF_CALLBACK
-panel_delegate_on_theme_changed(struct _cef_view_delegate_t* self,
-                                cef_view_t* view) {
+void CEF_CALLBACK panel_delegate_on_theme_changed(struct _cef_view_delegate_t* self, struct _cef_view_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -301,8 +274,8 @@ panel_delegate_on_theme_changed(struct _cef_view_delegate_t* self,
   }
 
   // Execute
-  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))
-      ->OnThemeChanged(CefViewCToCpp::Wrap(view));
+  CefPanelDelegateCppToC::Get(reinterpret_cast<cef_panel_delegate_t*>(self))->OnThemeChanged(
+      CefViewCToCpp_Wrap(view));
 }
 
 }  // namespace
@@ -314,10 +287,8 @@ CefPanelDelegateCppToC::CefPanelDelegateCppToC() {
   GetStruct()->base.get_minimum_size = panel_delegate_get_minimum_size;
   GetStruct()->base.get_maximum_size = panel_delegate_get_maximum_size;
   GetStruct()->base.get_height_for_width = panel_delegate_get_height_for_width;
-  GetStruct()->base.on_parent_view_changed =
-      panel_delegate_on_parent_view_changed;
-  GetStruct()->base.on_child_view_changed =
-      panel_delegate_on_child_view_changed;
+  GetStruct()->base.on_parent_view_changed = panel_delegate_on_parent_view_changed;
+  GetStruct()->base.on_child_view_changed = panel_delegate_on_child_view_changed;
   GetStruct()->base.on_window_changed = panel_delegate_on_window_changed;
   GetStruct()->base.on_layout_changed = panel_delegate_on_layout_changed;
   GetStruct()->base.on_focus = panel_delegate_on_focus;
@@ -331,22 +302,14 @@ CefPanelDelegateCppToC::~CefPanelDelegateCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPanelDelegate> CefCppToCRefCounted<
-    CefPanelDelegateCppToC,
-    CefPanelDelegate,
-    cef_panel_delegate_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_panel_delegate_t* s) {
+template<> CefRefPtr<CefPanelDelegate> CefCppToCRefCounted<CefPanelDelegateCppToC, CefPanelDelegate, cef_panel_delegate_t>::UnwrapDerived(CefWrapperType type, cef_panel_delegate_t* s) {
   if (type == WT_WINDOW_DELEGATE) {
-    return CefWindowDelegateCppToC::Unwrap(
-        reinterpret_cast<cef_window_delegate_t*>(s));
+    return CefWindowDelegateCppToC_Unwrap(reinterpret_cast<cef_window_delegate_t*>(s));
   }
-  DCHECK(false) << "Unexpected class type: " << type;
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPanelDelegateCppToC,
-                                   CefPanelDelegate,
-                                   cef_panel_delegate_t>::kWrapperType =
-    WT_PANEL_DELEGATE;
+template<> CefWrapperType CefCppToCRefCounted<CefPanelDelegateCppToC, CefPanelDelegate, cef_panel_delegate_t>::kWrapperType = WT_PANEL_DELEGATE;
+
+

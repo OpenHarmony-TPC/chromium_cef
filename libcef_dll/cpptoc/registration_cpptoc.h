@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ea2bb5a8b10e23ec0449b66001f361b48448245a$
+// $hash=4869b2518b18d548531e6c852802c0c50fd2db98$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_REGISTRATION_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_registration_capi.h"
 #include "include/cef_registration.h"
+#include "include/capi/cef_registration_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefRegistrationCppToC : public CefCppToCRefCounted<CefRegistrationCppToC,
-                                                         CefRegistration,
-                                                         cef_registration_t> {
+class CefRegistration_0_CppToC
+    : public CefCppToCRefCounted<CefRegistration_0_CppToC, CefRegistration, cef_registration_0_t> {
  public:
-  CefRegistrationCppToC();
-  virtual ~CefRegistrationCppToC();
+  CefRegistration_0_CppToC();
+  virtual ~CefRegistration_0_CppToC();
 };
+
+constexpr auto CefRegistrationCppToC_Wrap = CefRegistration_0_CppToC::Wrap;
+constexpr auto CefRegistrationCppToC_Unwrap = CefRegistration_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_REGISTRATION_CPPTOC_H_

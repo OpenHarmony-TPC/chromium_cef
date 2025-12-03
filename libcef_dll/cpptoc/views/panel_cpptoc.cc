@@ -9,16 +9,16 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9a3677c113e66050d272ce09601b8a9db02664b2$
+// $hash=308d9031dce2f41e7f4821850a0c2821abb8a20f$
 //
 
-#include "libcef_dll/cpptoc/views/panel_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/box_layout_cpptoc.h"
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
 #include "libcef_dll/cpptoc/views/fill_layout_cpptoc.h"
 #include "libcef_dll/cpptoc/views/layout_cpptoc.h"
+#include "libcef_dll/cpptoc/views/panel_cpptoc.h"
 #include "libcef_dll/cpptoc/views/scroll_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/textfield_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
@@ -29,7 +29,7 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_panel_t* cef_panel_create(cef_panel_delegate_t* delegate) {
+CEF_EXPORT cef_panel_0_t* cef_panel_create(struct _cef_panel_delegate_0_t* delegate) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -37,18 +37,18 @@ CEF_EXPORT cef_panel_t* cef_panel_create(cef_panel_delegate_t* delegate) {
   // Unverified params: delegate
 
   // Execute
-  CefRefPtr<CefPanel> _retval =
-      CefPanel::CreatePanel(CefPanelDelegateCToCpp::Wrap(delegate));
+  CefRefPtr<CefPanel> _retval = CefPanel::CreatePanel(
+      CefPanelDelegateCToCpp_Wrap(delegate));
 
   // Return type: refptr_same
-  return CefPanelCppToC::Wrap(_retval);
+  return CefPanelCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-struct _cef_window_t* CEF_CALLBACK panel_as_window(struct _cef_panel_t* self) {
+struct _cef_window_0_t* CEF_CALLBACK panel_as_window(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -59,14 +59,13 @@ struct _cef_window_t* CEF_CALLBACK panel_as_window(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval = CefPanelCppToC::Get(self)->AsWindow();
+  CefRefPtr<CefWindow> _retval = CefPanel_0_CppToC::Get(self)->AsWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-cef_fill_layout_t* CEF_CALLBACK
-panel_set_to_fill_layout(struct _cef_panel_t* self) {
+struct _cef_fill_layout_0_t* CEF_CALLBACK panel_set_to_fill_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -77,16 +76,13 @@ panel_set_to_fill_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefFillLayout> _retval =
-      CefPanelCppToC::Get(self)->SetToFillLayout();
+  CefRefPtr<CefFillLayout> _retval = CefPanel_0_CppToC::Get(self)->SetToFillLayout();
 
   // Return type: refptr_same
-  return CefFillLayoutCppToC::Wrap(_retval);
+  return CefFillLayoutCppToC_Wrap(_retval);
 }
 
-cef_box_layout_t* CEF_CALLBACK
-panel_set_to_box_layout(struct _cef_panel_t* self,
-                        const cef_box_layout_settings_t* settings) {
+struct _cef_box_layout_0_t* CEF_CALLBACK panel_set_to_box_layout(struct _cef_panel_0_t* self, const cef_box_layout_settings_t* settings) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -102,18 +98,17 @@ panel_set_to_box_layout(struct _cef_panel_t* self,
   }
 
   // Translate param: settings; type: simple_byref_const
-  CefBoxLayoutSettings settingsVal =
-      settings ? *settings : CefBoxLayoutSettings();
+  CefBoxLayoutSettings settingsVal = settings?*settings:CefBoxLayoutSettings();
 
   // Execute
-  CefRefPtr<CefBoxLayout> _retval =
-      CefPanelCppToC::Get(self)->SetToBoxLayout(settingsVal);
+  CefRefPtr<CefBoxLayout> _retval = CefPanel_0_CppToC::Get(self)->SetToBoxLayout(
+      settingsVal);
 
   // Return type: refptr_same
-  return CefBoxLayoutCppToC::Wrap(_retval);
+  return CefBoxLayoutCppToC_Wrap(_retval);
 }
 
-cef_layout_t* CEF_CALLBACK panel_get_layout(struct _cef_panel_t* self) {
+struct _cef_layout_0_t* CEF_CALLBACK panel_get_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -124,13 +119,13 @@ cef_layout_t* CEF_CALLBACK panel_get_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefLayout> _retval = CefPanelCppToC::Get(self)->GetLayout();
+  CefRefPtr<CefLayout> _retval = CefPanel_0_CppToC::Get(self)->GetLayout();
 
   // Return type: refptr_same
-  return CefLayoutCppToC::Wrap(_retval);
+  return CefLayoutCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK panel_layout(struct _cef_panel_t* self) {
+void CEF_CALLBACK panel_layout(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -141,11 +136,10 @@ void CEF_CALLBACK panel_layout(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->Layout();
+  CefPanel_0_CppToC::Get(self)->Layout();
 }
 
-void CEF_CALLBACK panel_add_child_view(struct _cef_panel_t* self,
-                                       struct _cef_view_t* view) {
+void CEF_CALLBACK panel_add_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -161,12 +155,11 @@ void CEF_CALLBACK panel_add_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->AddChildView(CefViewCppToC::Unwrap(view));
+  CefPanel_0_CppToC::Get(self)->AddChildView(
+      CefViewCppToC_Unwrap(view));
 }
 
-void CEF_CALLBACK panel_add_child_view_at(struct _cef_panel_t* self,
-                                          struct _cef_view_t* view,
-                                          int index) {
+void CEF_CALLBACK panel_add_child_view_at(struct _cef_panel_0_t* self, cef_view_0_t* view, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -187,12 +180,12 @@ void CEF_CALLBACK panel_add_child_view_at(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->AddChildViewAt(CefViewCppToC::Unwrap(view), index);
+  CefPanel_0_CppToC::Get(self)->AddChildViewAt(
+      CefViewCppToC_Unwrap(view),
+      index);
 }
 
-void CEF_CALLBACK panel_reorder_child_view(struct _cef_panel_t* self,
-                                           struct _cef_view_t* view,
-                                           int index) {
+void CEF_CALLBACK panel_reorder_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -208,12 +201,12 @@ void CEF_CALLBACK panel_reorder_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->ReorderChildView(CefViewCppToC::Unwrap(view),
-                                              index);
+  CefPanel_0_CppToC::Get(self)->ReorderChildView(
+      CefViewCppToC_Unwrap(view),
+      index);
 }
 
-void CEF_CALLBACK panel_remove_child_view(struct _cef_panel_t* self,
-                                          struct _cef_view_t* view) {
+void CEF_CALLBACK panel_remove_child_view(struct _cef_panel_0_t* self, cef_view_0_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -229,10 +222,11 @@ void CEF_CALLBACK panel_remove_child_view(struct _cef_panel_t* self,
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->RemoveChildView(CefViewCppToC::Unwrap(view));
+  CefPanel_0_CppToC::Get(self)->RemoveChildView(
+      CefViewCppToC_Unwrap(view));
 }
 
-void CEF_CALLBACK panel_remove_all_child_views(struct _cef_panel_t* self) {
+void CEF_CALLBACK panel_remove_all_child_views(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -243,10 +237,10 @@ void CEF_CALLBACK panel_remove_all_child_views(struct _cef_panel_t* self) {
   }
 
   // Execute
-  CefPanelCppToC::Get(self)->RemoveAllChildViews();
+  CefPanel_0_CppToC::Get(self)->RemoveAllChildViews();
 }
 
-size_t CEF_CALLBACK panel_get_child_view_count(struct _cef_panel_t* self) {
+size_t CEF_CALLBACK panel_get_child_view_count(struct _cef_panel_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -257,14 +251,13 @@ size_t CEF_CALLBACK panel_get_child_view_count(struct _cef_panel_t* self) {
   }
 
   // Execute
-  size_t _retval = CefPanelCppToC::Get(self)->GetChildViewCount();
+  size_t _retval = CefPanel_0_CppToC::Get(self)->GetChildViewCount();
 
   // Return type: simple
   return _retval;
 }
 
-struct _cef_view_t* CEF_CALLBACK
-panel_get_child_view_at(struct _cef_panel_t* self, int index) {
+cef_view_0_t* CEF_CALLBACK panel_get_child_view_at(struct _cef_panel_0_t* self, int index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -280,14 +273,14 @@ panel_get_child_view_at(struct _cef_panel_t* self, int index) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval = CefPanelCppToC::Get(self)->GetChildViewAt(index);
+  CefRefPtr<CefView> _retval = CefPanel_0_CppToC::Get(self)->GetChildViewAt(
+      index);
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-cef_browser_view_t* CEF_CALLBACK
-panel_as_browser_view(struct _cef_view_t* self) {
+struct _cef_browser_view_0_t* CEF_CALLBACK panel_as_browser_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -298,15 +291,13 @@ panel_as_browser_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBrowserView> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->AsBrowserView();
+  CefRefPtr<CefBrowserView> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->AsBrowserView();
 
   // Return type: refptr_same
-  return CefBrowserViewCppToC::Wrap(_retval);
+  return CefBrowserViewCppToC_Wrap(_retval);
 }
 
-cef_button_t* CEF_CALLBACK panel_as_button(struct _cef_view_t* self) {
+struct _cef_button_0_t* CEF_CALLBACK panel_as_button(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -317,14 +308,13 @@ cef_button_t* CEF_CALLBACK panel_as_button(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefButton> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->AsButton();
+  CefRefPtr<CefButton> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->AsButton();
 
   // Return type: refptr_same
-  return CefButtonCppToC::Wrap(_retval);
+  return CefButtonCppToC_Wrap(_retval);
 }
 
-cef_panel_t* CEF_CALLBACK panel_as_panel(struct _cef_view_t* self) {
+cef_panel_0_t* CEF_CALLBACK panel_as_panel(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -335,14 +325,13 @@ cef_panel_t* CEF_CALLBACK panel_as_panel(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefPanel> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->AsPanel();
+  CefRefPtr<CefPanel> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->AsPanel();
 
   // Return type: refptr_same
-  return CefPanelCppToC::Wrap(_retval);
+  return CefPanelCppToC_Wrap(_retval);
 }
 
-cef_scroll_view_t* CEF_CALLBACK panel_as_scroll_view(struct _cef_view_t* self) {
+struct _cef_scroll_view_0_t* CEF_CALLBACK panel_as_scroll_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -353,14 +342,13 @@ cef_scroll_view_t* CEF_CALLBACK panel_as_scroll_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefScrollView> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->AsScrollView();
+  CefRefPtr<CefScrollView> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->AsScrollView();
 
   // Return type: refptr_same
-  return CefScrollViewCppToC::Wrap(_retval);
+  return CefScrollViewCppToC_Wrap(_retval);
 }
 
-cef_textfield_t* CEF_CALLBACK panel_as_textfield(struct _cef_view_t* self) {
+struct _cef_textfield_0_t* CEF_CALLBACK panel_as_textfield(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -371,15 +359,13 @@ cef_textfield_t* CEF_CALLBACK panel_as_textfield(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefTextfield> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->AsTextfield();
+  CefRefPtr<CefTextfield> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->AsTextfield();
 
   // Return type: refptr_same
-  return CefTextfieldCppToC::Wrap(_retval);
+  return CefTextfieldCppToC_Wrap(_retval);
 }
 
-cef_string_userfree_t CEF_CALLBACK
-panel_get_type_string(struct _cef_view_t* self) {
+cef_string_userfree_t CEF_CALLBACK panel_get_type_string(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -390,15 +376,13 @@ panel_get_type_string(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefString _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                          ->GetTypeString();
+  CefString _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetTypeString();
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK panel_to_string(struct _cef_view_t* self,
-                                                   int include_children) {
+cef_string_userfree_t CEF_CALLBACK panel_to_string(struct _cef_view_0_t* self, int include_children) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -409,14 +393,14 @@ cef_string_userfree_t CEF_CALLBACK panel_to_string(struct _cef_view_t* self,
   }
 
   // Execute
-  CefString _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                          ->ToString(include_children ? true : false);
+  CefString _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ToString(
+      include_children?true:false);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-int CEF_CALLBACK panel_is_valid(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_valid(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -427,14 +411,13 @@ int CEF_CALLBACK panel_is_valid(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsValid();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK panel_is_attached(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_attached(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -445,15 +428,13 @@ int CEF_CALLBACK panel_is_attached(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsAttached();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsAttached();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK panel_is_same(struct _cef_view_t* self,
-                               struct _cef_view_t* that) {
+int CEF_CALLBACK panel_is_same(struct _cef_view_0_t* self, cef_view_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -469,15 +450,14 @@ int CEF_CALLBACK panel_is_same(struct _cef_view_t* self,
   }
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->IsSame(CefViewCppToC::Unwrap(that));
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsSame(
+      CefViewCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_view_delegate_t* CEF_CALLBACK
-panel_get_delegate(struct _cef_view_t* self) {
+struct _cef_view_delegate_0_t* CEF_CALLBACK panel_get_delegate(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -488,14 +468,13 @@ panel_get_delegate(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefViewDelegate> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetDelegate();
+  CefRefPtr<CefViewDelegate> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetDelegate();
 
   // Return type: refptr_diff
-  return CefViewDelegateCToCpp::Unwrap(_retval);
+  return CefViewDelegateCToCpp_Unwrap(_retval);
 }
 
-struct _cef_window_t* CEF_CALLBACK panel_get_window(struct _cef_view_t* self) {
+struct _cef_window_0_t* CEF_CALLBACK panel_get_window(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -506,14 +485,13 @@ struct _cef_window_t* CEF_CALLBACK panel_get_window(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefWindow> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetWindow();
+  CefRefPtr<CefWindow> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetWindow();
 
   // Return type: refptr_same
-  return CefWindowCppToC::Wrap(_retval);
+  return CefWindowCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK panel_get_id(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_get_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -524,14 +502,13 @@ int CEF_CALLBACK panel_get_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetID();
+  int _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_id(struct _cef_view_t* self, int id) {
+void CEF_CALLBACK panel_set_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -542,10 +519,11 @@ void CEF_CALLBACK panel_set_id(struct _cef_view_t* self, int id) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->SetID(id);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetID(
+      id);
 }
 
-int CEF_CALLBACK panel_get_group_id(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_get_group_id(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -556,14 +534,13 @@ int CEF_CALLBACK panel_get_group_id(struct _cef_view_t* self) {
   }
 
   // Execute
-  int _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetGroupID();
+  int _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetGroupID();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_group_id(struct _cef_view_t* self, int group_id) {
+void CEF_CALLBACK panel_set_group_id(struct _cef_view_0_t* self, int group_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -574,12 +551,11 @@ void CEF_CALLBACK panel_set_group_id(struct _cef_view_t* self, int group_id) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetGroupID(group_id);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetGroupID(
+      group_id);
 }
 
-struct _cef_view_t* CEF_CALLBACK
-panel_get_parent_view(struct _cef_view_t* self) {
+cef_view_0_t* CEF_CALLBACK panel_get_parent_view(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -590,16 +566,13 @@ panel_get_parent_view(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->GetParentView();
+  CefRefPtr<CefView> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetParentView();
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-struct _cef_view_t* CEF_CALLBACK panel_get_view_for_id(struct _cef_view_t* self,
-                                                       int id) {
+cef_view_0_t* CEF_CALLBACK panel_get_view_for_id(struct _cef_view_0_t* self, int id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -610,16 +583,14 @@ struct _cef_view_t* CEF_CALLBACK panel_get_view_for_id(struct _cef_view_t* self,
   }
 
   // Execute
-  CefRefPtr<CefView> _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->GetViewForID(id);
+  CefRefPtr<CefView> _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetViewForID(
+      id);
 
   // Return type: refptr_same
-  return CefViewCppToC::Wrap(_retval);
+  return CefViewCppToC_Wrap(_retval);
 }
 
-void CEF_CALLBACK panel_set_bounds(struct _cef_view_t* self,
-                                   const cef_rect_t* bounds) {
+void CEF_CALLBACK panel_set_bounds(struct _cef_view_0_t* self, const cef_rect_t* bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -635,14 +606,14 @@ void CEF_CALLBACK panel_set_bounds(struct _cef_view_t* self,
   }
 
   // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
+  CefRect boundsVal = bounds?*bounds:CefRect();
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetBounds(boundsVal);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetBounds(
+      boundsVal);
 }
 
-cef_rect_t CEF_CALLBACK panel_get_bounds(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK panel_get_bounds(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -653,14 +624,13 @@ cef_rect_t CEF_CALLBACK panel_get_bounds(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetBounds();
+  cef_rect_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetBounds();
 
   // Return type: simple
   return _retval;
 }
 
-cef_rect_t CEF_CALLBACK panel_get_bounds_in_screen(struct _cef_view_t* self) {
+cef_rect_t CEF_CALLBACK panel_get_bounds_in_screen(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -671,15 +641,13 @@ cef_rect_t CEF_CALLBACK panel_get_bounds_in_screen(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_rect_t _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                           ->GetBoundsInScreen();
+  cef_rect_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetBoundsInScreen();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_size(struct _cef_view_t* self,
-                                 const cef_size_t* size) {
+void CEF_CALLBACK panel_set_size(struct _cef_view_0_t* self, const cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -695,13 +663,14 @@ void CEF_CALLBACK panel_set_size(struct _cef_view_t* self,
   }
 
   // Translate param: size; type: simple_byref_const
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->SetSize(sizeVal);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetSize(
+      sizeVal);
 }
 
-cef_size_t CEF_CALLBACK panel_get_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK panel_get_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -712,15 +681,13 @@ cef_size_t CEF_CALLBACK panel_get_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetSize();
+  cef_size_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_position(struct _cef_view_t* self,
-                                     const cef_point_t* position) {
+void CEF_CALLBACK panel_set_position(struct _cef_view_0_t* self, const cef_point_t* position) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -736,14 +703,14 @@ void CEF_CALLBACK panel_set_position(struct _cef_view_t* self,
   }
 
   // Translate param: position; type: simple_byref_const
-  CefPoint positionVal = position ? *position : CefPoint();
+  CefPoint positionVal = position?*position:CefPoint();
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetPosition(positionVal);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetPosition(
+      positionVal);
 }
 
-cef_point_t CEF_CALLBACK panel_get_position(struct _cef_view_t* self) {
+cef_point_t CEF_CALLBACK panel_get_position(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -754,15 +721,13 @@ cef_point_t CEF_CALLBACK panel_get_position(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_point_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetPosition();
+  cef_point_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetPosition();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_insets(struct _cef_view_t* self,
-                                   const cef_insets_t* insets) {
+void CEF_CALLBACK panel_set_insets(struct _cef_view_0_t* self, const cef_insets_t* insets) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -778,14 +743,14 @@ void CEF_CALLBACK panel_set_insets(struct _cef_view_t* self,
   }
 
   // Translate param: insets; type: simple_byref_const
-  CefInsets insetsVal = insets ? *insets : CefInsets();
+  CefInsets insetsVal = insets?*insets:CefInsets();
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetInsets(insetsVal);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetInsets(
+      insetsVal);
 }
 
-cef_insets_t CEF_CALLBACK panel_get_insets(struct _cef_view_t* self) {
+cef_insets_t CEF_CALLBACK panel_get_insets(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -796,14 +761,13 @@ cef_insets_t CEF_CALLBACK panel_get_insets(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_insets_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->GetInsets();
+  cef_insets_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetInsets();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK panel_get_preferred_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK panel_get_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -814,14 +778,13 @@ cef_size_t CEF_CALLBACK panel_get_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                           ->GetPreferredSize();
+  cef_size_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetPreferredSize();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_size_to_preferred_size(struct _cef_view_t* self) {
+void CEF_CALLBACK panel_size_to_preferred_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -832,11 +795,10 @@ void CEF_CALLBACK panel_size_to_preferred_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SizeToPreferredSize();
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SizeToPreferredSize();
 }
 
-cef_size_t CEF_CALLBACK panel_get_minimum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK panel_get_minimum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -847,14 +809,13 @@ cef_size_t CEF_CALLBACK panel_get_minimum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                           ->GetMinimumSize();
+  cef_size_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetMinimumSize();
 
   // Return type: simple
   return _retval;
 }
 
-cef_size_t CEF_CALLBACK panel_get_maximum_size(struct _cef_view_t* self) {
+cef_size_t CEF_CALLBACK panel_get_maximum_size(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -865,15 +826,13 @@ cef_size_t CEF_CALLBACK panel_get_maximum_size(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_size_t _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                           ->GetMaximumSize();
+  cef_size_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetMaximumSize();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK panel_get_height_for_width(struct _cef_view_t* self,
-                                            int width) {
+int CEF_CALLBACK panel_get_height_for_width(struct _cef_view_0_t* self, int width) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -884,14 +843,14 @@ int CEF_CALLBACK panel_get_height_for_width(struct _cef_view_t* self,
   }
 
   // Execute
-  int _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                    ->GetHeightForWidth(width);
+  int _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetHeightForWidth(
+      width);
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK panel_invalidate_layout(struct _cef_view_t* self) {
+void CEF_CALLBACK panel_invalidate_layout(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -902,10 +861,10 @@ void CEF_CALLBACK panel_invalidate_layout(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->InvalidateLayout();
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->InvalidateLayout();
 }
 
-void CEF_CALLBACK panel_set_visible(struct _cef_view_t* self, int visible) {
+void CEF_CALLBACK panel_set_visible(struct _cef_view_0_t* self, int visible) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -916,11 +875,11 @@ void CEF_CALLBACK panel_set_visible(struct _cef_view_t* self, int visible) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetVisible(visible ? true : false);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetVisible(
+      visible?true:false);
 }
 
-int CEF_CALLBACK panel_is_visible(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_visible(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -931,14 +890,13 @@ int CEF_CALLBACK panel_is_visible(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsVisible();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsVisible();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK panel_is_drawn(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_drawn(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -949,14 +907,13 @@ int CEF_CALLBACK panel_is_drawn(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsDrawn();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsDrawn();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_enabled(struct _cef_view_t* self, int enabled) {
+void CEF_CALLBACK panel_set_enabled(struct _cef_view_0_t* self, int enabled) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -967,11 +924,11 @@ void CEF_CALLBACK panel_set_enabled(struct _cef_view_t* self, int enabled) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetEnabled(enabled ? true : false);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetEnabled(
+      enabled?true:false);
 }
 
-int CEF_CALLBACK panel_is_enabled(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_enabled(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -982,14 +939,13 @@ int CEF_CALLBACK panel_is_enabled(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsEnabled();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsEnabled();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK panel_set_focusable(struct _cef_view_t* self, int focusable) {
+void CEF_CALLBACK panel_set_focusable(struct _cef_view_0_t* self, int focusable) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1000,11 +956,11 @@ void CEF_CALLBACK panel_set_focusable(struct _cef_view_t* self, int focusable) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetFocusable(focusable ? true : false);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetFocusable(
+      focusable?true:false);
 }
 
-int CEF_CALLBACK panel_is_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1015,14 +971,13 @@ int CEF_CALLBACK panel_is_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->IsFocusable();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK panel_is_accessibility_focusable(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_is_accessibility_focusable(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1033,14 +988,13 @@ int CEF_CALLBACK panel_is_accessibility_focusable(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->IsAccessibilityFocusable();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->IsAccessibilityFocusable();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK panel_has_focus(struct _cef_view_t* self) {
+int CEF_CALLBACK panel_has_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1051,14 +1005,13 @@ int CEF_CALLBACK panel_has_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->HasFocus();
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->HasFocus();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK panel_request_focus(struct _cef_view_t* self) {
+void CEF_CALLBACK panel_request_focus(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1069,11 +1022,10 @@ void CEF_CALLBACK panel_request_focus(struct _cef_view_t* self) {
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->RequestFocus();
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->RequestFocus();
 }
 
-void CEF_CALLBACK panel_set_background_color(struct _cef_view_t* self,
-                                             cef_color_t color) {
+void CEF_CALLBACK panel_set_background_color(struct _cef_view_0_t* self, cef_color_t color) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1084,11 +1036,11 @@ void CEF_CALLBACK panel_set_background_color(struct _cef_view_t* self,
   }
 
   // Execute
-  CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-      ->SetBackgroundColor(color);
+  CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->SetBackgroundColor(
+      color);
 }
 
-cef_color_t CEF_CALLBACK panel_get_background_color(struct _cef_view_t* self) {
+cef_color_t CEF_CALLBACK panel_get_background_color(struct _cef_view_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1099,16 +1051,13 @@ cef_color_t CEF_CALLBACK panel_get_background_color(struct _cef_view_t* self) {
   }
 
   // Execute
-  cef_color_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->GetBackgroundColor();
+  cef_color_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetBackgroundColor();
 
   // Return type: simple
   return _retval;
 }
 
-cef_color_t CEF_CALLBACK panel_get_theme_color(struct _cef_view_t* self,
-                                               int color_id) {
+cef_color_t CEF_CALLBACK panel_get_theme_color(struct _cef_view_0_t* self, int color_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1119,16 +1068,14 @@ cef_color_t CEF_CALLBACK panel_get_theme_color(struct _cef_view_t* self,
   }
 
   // Execute
-  cef_color_t _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->GetThemeColor(color_id);
+  cef_color_t _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->GetThemeColor(
+      color_id);
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_to_screen(struct _cef_view_t* self,
-                                               cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_to_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1144,11 +1091,11 @@ int CEF_CALLBACK panel_convert_point_to_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->ConvertPointToScreen(pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointToScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1159,8 +1106,7 @@ int CEF_CALLBACK panel_convert_point_to_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_from_screen(struct _cef_view_t* self,
-                                                 cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_from_screen(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1176,11 +1122,11 @@ int CEF_CALLBACK panel_convert_point_from_screen(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->ConvertPointFromScreen(pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointFromScreen(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1191,8 +1137,7 @@ int CEF_CALLBACK panel_convert_point_from_screen(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_to_window(struct _cef_view_t* self,
-                                               cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_to_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1208,11 +1153,11 @@ int CEF_CALLBACK panel_convert_point_to_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->ConvertPointToWindow(pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointToWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1223,8 +1168,7 @@ int CEF_CALLBACK panel_convert_point_to_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_from_window(struct _cef_view_t* self,
-                                                 cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_from_window(struct _cef_view_0_t* self, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1240,11 +1184,11 @@ int CEF_CALLBACK panel_convert_point_from_window(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval = CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-                     ->ConvertPointFromWindow(pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointFromWindow(
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1255,9 +1199,7 @@ int CEF_CALLBACK panel_convert_point_from_window(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_to_view(struct _cef_view_t* self,
-                                             struct _cef_view_t* view,
-                                             cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_to_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1278,12 +1220,12 @@ int CEF_CALLBACK panel_convert_point_to_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->ConvertPointToView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointToView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1294,9 +1236,7 @@ int CEF_CALLBACK panel_convert_point_to_view(struct _cef_view_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK panel_convert_point_from_view(struct _cef_view_t* self,
-                                               struct _cef_view_t* view,
-                                               cef_point_t* point) {
+int CEF_CALLBACK panel_convert_point_from_view(struct _cef_view_0_t* self, cef_view_0_t* view, cef_point_t* point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1317,12 +1257,12 @@ int CEF_CALLBACK panel_convert_point_from_view(struct _cef_view_t* self,
   }
 
   // Translate param: point; type: simple_byref
-  CefPoint pointVal = point ? *point : CefPoint();
+  CefPoint pointVal = point?*point:CefPoint();
 
   // Execute
-  bool _retval =
-      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
-          ->ConvertPointFromView(CefViewCppToC::Unwrap(view), pointVal);
+  bool _retval = CefPanel_0_CppToC::Get(reinterpret_cast<cef_panel_0_t*>(self))->ConvertPointFromView(
+      CefViewCppToC_Unwrap(view),
+      pointVal);
 
   // Restore param: point; type: simple_byref
   if (point) {
@@ -1335,9 +1275,12 @@ int CEF_CALLBACK panel_convert_point_from_view(struct _cef_view_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPanelCppToC::CefPanelCppToC() {
+CefPanel_0_CppToC::CefPanel_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->as_window = panel_as_window;
   GetStruct()->set_to_fill_layout = panel_set_to_fill_layout;
   GetStruct()->set_to_box_layout = panel_set_to_box_layout;
@@ -1390,8 +1333,7 @@ CefPanelCppToC::CefPanelCppToC() {
   GetStruct()->base.is_enabled = panel_is_enabled;
   GetStruct()->base.set_focusable = panel_set_focusable;
   GetStruct()->base.is_focusable = panel_is_focusable;
-  GetStruct()->base.is_accessibility_focusable =
-      panel_is_accessibility_focusable;
+  GetStruct()->base.is_accessibility_focusable = panel_is_accessibility_focusable;
   GetStruct()->base.has_focus = panel_has_focus;
   GetStruct()->base.request_focus = panel_request_focus;
   GetStruct()->base.set_background_color = panel_set_background_color;
@@ -1405,25 +1347,19 @@ CefPanelCppToC::CefPanelCppToC() {
   GetStruct()->base.convert_point_from_view = panel_convert_point_from_view;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPanelCppToC::~CefPanelCppToC() {
+CefPanel_0_CppToC::~CefPanel_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPanel>
-CefCppToCRefCounted<CefPanelCppToC, CefPanel, cef_panel_t>::UnwrapDerived(
-    CefWrapperType type,
-    cef_panel_t* s) {
+template<> CefRefPtr<CefPanel> CefCppToCRefCounted<CefPanel_0_CppToC, CefPanel, cef_panel_0_t>::UnwrapDerived(CefWrapperType type, cef_panel_0_t* s) {
   if (type == WT_WINDOW) {
-    return CefWindowCppToC::Unwrap(reinterpret_cast<cef_window_t*>(s));
+    return CefWindowCppToC_Unwrap(reinterpret_cast<cef_window_0_t*>(s));
   }
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefPanelCppToC, CefPanel, cef_panel_t>::kWrapperType =
-        WT_PANEL;
+template<> CefWrapperType CefCppToCRefCounted<CefPanel_0_CppToC, CefPanel, cef_panel_0_t>::kWrapperType = WT_PANEL;
+
+

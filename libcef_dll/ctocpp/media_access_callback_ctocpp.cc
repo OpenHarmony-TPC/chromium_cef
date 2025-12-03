@@ -9,35 +9,35 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8bc9b987ae81be952f615dccc5caf65d9c38340d$
+// $hash=dd51c6575bb9f80f3003cdc691f5cafcf283d5ca$
 //
 
 #include "libcef_dll/ctocpp/media_access_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefMediaAccessCallbackCToCpp::Continue(uint32_t allowed_permissions) {
+NO_SANITIZE("cfi-icall") void CefMediaAccessCallbackCToCpp::Continue(uint32_t allowed_permissions) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_access_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->cont(_struct, allowed_permissions);
+  _struct->cont(_struct,
+      allowed_permissions);
 }
 
 NO_SANITIZE("cfi-icall") void CefMediaAccessCallbackCToCpp::Cancel() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_access_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cancel)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cancel) {
     return;
   }
 
@@ -49,7 +49,8 @@ NO_SANITIZE("cfi-icall") void CefMediaAccessCallbackCToCpp::Cancel() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefMediaAccessCallbackCToCpp::CefMediaAccessCallbackCToCpp() {}
+CefMediaAccessCallbackCToCpp::CefMediaAccessCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -57,18 +58,11 @@ CefMediaAccessCallbackCToCpp::~CefMediaAccessCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_media_access_callback_t* CefCToCppRefCounted<
-    CefMediaAccessCallbackCToCpp,
-    CefMediaAccessCallback,
-    cef_media_access_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                CefMediaAccessCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_media_access_callback_t* CefCToCppRefCounted<CefMediaAccessCallbackCToCpp, CefMediaAccessCallback, cef_media_access_callback_t>::UnwrapDerived(CefWrapperType type, CefMediaAccessCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefMediaAccessCallbackCToCpp,
-                                   CefMediaAccessCallback,
-                                   cef_media_access_callback_t>::kWrapperType =
-    WT_MEDIA_ACCESS_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefMediaAccessCallbackCToCpp, CefMediaAccessCallback, cef_media_access_callback_t>::kWrapperType = WT_MEDIA_ACCESS_CALLBACK;
+
+

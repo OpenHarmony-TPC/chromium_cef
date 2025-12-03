@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3a40404f5775df12652e0a4f1ec4ef87a925b7c0$
+// $hash=4b16c5ea8df62793af5bbcc9d8a82a354b4c4e51$
 //
 
 #include "libcef_dll/cpptoc/frame_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -22,10 +21,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-frame_handler_on_frame_created(struct _cef_frame_handler_t* self,
-                               cef_browser_t* browser,
-                               cef_frame_t* frame) {
+void CEF_CALLBACK frame_handler_on_frame_created(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -47,13 +43,11 @@ frame_handler_on_frame_created(struct _cef_frame_handler_t* self,
 
   // Execute
   CefFrameHandlerCppToC::Get(self)->OnFrameCreated(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame));
 }
 
-void CEF_CALLBACK
-frame_handler_on_frame_destroyed(struct _cef_frame_handler_t* self,
-                                 cef_browser_t* browser,
-                                 cef_frame_t* frame) {
+void CEF_CALLBACK frame_handler_on_frame_destroyed(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -75,14 +69,11 @@ frame_handler_on_frame_destroyed(struct _cef_frame_handler_t* self,
 
   // Execute
   CefFrameHandlerCppToC::Get(self)->OnFrameDestroyed(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame));
 }
 
-void CEF_CALLBACK
-frame_handler_on_frame_attached(struct _cef_frame_handler_t* self,
-                                cef_browser_t* browser,
-                                cef_frame_t* frame,
-                                int reattached) {
+void CEF_CALLBACK frame_handler_on_frame_attached(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int reattached) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -104,14 +95,12 @@ frame_handler_on_frame_attached(struct _cef_frame_handler_t* self,
 
   // Execute
   CefFrameHandlerCppToC::Get(self)->OnFrameAttached(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      reattached ? true : false);
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      reattached?true:false);
 }
 
-void CEF_CALLBACK
-frame_handler_on_frame_detached(struct _cef_frame_handler_t* self,
-                                cef_browser_t* browser,
-                                cef_frame_t* frame) {
+void CEF_CALLBACK frame_handler_on_frame_detached(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -133,14 +122,11 @@ frame_handler_on_frame_detached(struct _cef_frame_handler_t* self,
 
   // Execute
   CefFrameHandlerCppToC::Get(self)->OnFrameDetached(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame));
 }
 
-void CEF_CALLBACK
-frame_handler_on_main_frame_changed(struct _cef_frame_handler_t* self,
-                                    cef_browser_t* browser,
-                                    cef_frame_t* old_frame,
-                                    cef_frame_t* new_frame) {
+void CEF_CALLBACK frame_handler_on_main_frame_changed(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* old_frame, struct _cef_frame_t* new_frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -158,8 +144,9 @@ frame_handler_on_main_frame_changed(struct _cef_frame_handler_t* self,
 
   // Execute
   CefFrameHandlerCppToC::Get(self)->OnMainFrameChanged(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(old_frame),
-      CefFrameCToCpp::Wrap(new_frame));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(old_frame),
+      CefFrameCToCpp_Wrap(new_frame));
 }
 
 }  // namespace
@@ -180,18 +167,11 @@ CefFrameHandlerCppToC::~CefFrameHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefFrameHandler> CefCppToCRefCounted<
-    CefFrameHandlerCppToC,
-    CefFrameHandler,
-    cef_frame_handler_t>::UnwrapDerived(CefWrapperType type,
-                                        cef_frame_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefFrameHandler> CefCppToCRefCounted<CefFrameHandlerCppToC, CefFrameHandler, cef_frame_handler_t>::UnwrapDerived(CefWrapperType type, cef_frame_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefFrameHandlerCppToC,
-                                   CefFrameHandler,
-                                   cef_frame_handler_t>::kWrapperType =
-    WT_FRAME_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefFrameHandlerCppToC, CefFrameHandler, cef_frame_handler_t>::kWrapperType = WT_FRAME_HANDLER;
+
+
