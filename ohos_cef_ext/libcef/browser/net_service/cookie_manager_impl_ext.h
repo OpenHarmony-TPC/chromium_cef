@@ -210,9 +210,9 @@ void UpdateHostContentSettingsMap();
   base::Thread cookie_store_backend_thread_;
   mutable bool remote_network_cookie_manager_inited_{false};
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
-  base::Time end_time_;
   bool cmd_value_ = false;
-  bool is_set_qos_ = false;
+  int set_qos_times_ = 0;
+  static int network_set_times_;
 #endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   HostContentSettingsMap* host_content_settings_map_ = nullptr;
