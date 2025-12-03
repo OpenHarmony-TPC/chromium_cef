@@ -328,7 +328,6 @@ void CefCookieManagerImplExt::StartSetQos() {
 }
 
 void CefCookieManagerImplExt::FinishSetQos() {
-  end_time_ = base::Time::Now();
   content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE,
     base::BindOnce(&CefCookieManagerImplExt::FinishCookieTaskSync, weak_ptr_factory_.GetWeakPtr()),
     base::Milliseconds(sync_close_delay_time));
