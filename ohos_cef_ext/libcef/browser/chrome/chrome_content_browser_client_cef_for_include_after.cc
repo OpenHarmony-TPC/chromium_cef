@@ -250,6 +250,7 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
     const GURL& target_url,
     WindowOpenDisposition disposition,
     bool user_gesture,
+    const gfx::Rect& window_features,
     content::mojom::FrameHost::GetCreateNewWindowCallback callback) {
   CEF_REQUIRE_UIT();
   content::WebContents* web_contents =
@@ -296,7 +297,8 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
   auto arkweb_browser_info_manager_utils =
       CefBrowserInfoManager::GetInstance()->GetUtils();
   bool result = arkweb_browser_info_manager_utils->CanCreateWindow(
-      opener, target_url, disposition, user_gesture, callbackImpl);
+      opener, target_url, disposition, user_gesture, window_features,
+      callbackImpl);
   return result;
 }
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)

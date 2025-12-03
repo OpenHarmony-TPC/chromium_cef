@@ -290,6 +290,7 @@ class CefLifeSpanHandler : public virtual CefBaseRefCounted {
                                 const CefString& target_url,
                                 WindowOpenDisposition target_disposition,
                                 bool user_gesture,
+                                const CefRect& window_features,
                                 CefRefPtr<CefCallback> callback) {
     return true;
   }

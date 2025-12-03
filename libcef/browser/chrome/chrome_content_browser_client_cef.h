@@ -61,6 +61,7 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
       const GURL& target_url,
       WindowOpenDisposition disposition,
       bool user_gesture,
+      const gfx::Rect& window_features,
       content::mojom::FrameHost::GetCreateNewWindowCallback callback) override;
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
   bool CanCreateWindow(content::RenderFrameHost* opener,
