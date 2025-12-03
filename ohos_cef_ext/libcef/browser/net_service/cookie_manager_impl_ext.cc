@@ -212,6 +212,10 @@ void SetCanonicalCookieCallback(SaveCookiesProgress* progress,
 
 }  // namespace
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+int CefCookieManagerImplExt::network_set_times_ = 0;
+#endif
+
 // Do not keep a reference to the object returned by this method.
 CookieManager* GetCookieManager(CefBrowserContext* browser_context) {
   CEF_REQUIRE_UIT();
@@ -290,24 +294,35 @@ int CefCookieManagerImplExt::StartCookieTaskSync() {
 }
 
 void CefCookieManagerImplExt::FinishCookieTaskSync() {
-  base::TimeDelta duration_time = base::Time::Now() - end_time_;
-  if (duration_time.InMilliseconds() >= sync_close_delay_time) {
+  set_qos_times_--;
+  if (set_qos_times_ <= 0) {
     TRACE_EVENT0("cef", "CefCookieManagerImplExt::FinishCookieTaskSync");
-    is_set_qos_ = false;
+    set_qos_times_ = 0;
     cookie_store_task_runner_->PostTask(FROM_HERE,
-        base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS)));
+        base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS))); 
+  }
+  network_set_times_--;
+  if (network_set_times_ <= 0) {
+    TRACE_EVENT0("cef", "CefCookieManagerImplExt::FinishNetworkTaskSync");
+    network_set_times_ = 0;
     content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
         base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS)));
   }
 }
 
 void CefCookieManagerImplExt::StartSetQos() {
-  if (is_set_qos_ == true) {
+  if (set_qos_times_ > 0) {
+    set_qos_times_++;
+    network_set_times_++;
     return;
   }
-  is_set_qos_ = true;
+  set_qos_times_++;
   cookie_store_task_runner_->PostTask(FROM_HERE,
       base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
+  if (network_set_times_ > 0) {
+    network_set_times_++;
+    return;
+  }
   content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
       base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
 }
@@ -923,6 +938,12 @@ void CefCookieManagerImplExt::FlushStoreInternalCookieTask(
     return;
   }
   cookie_manager->FlushCookieStore(std::move(complete));
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    content::GetUIThreadTaskRunner({})->PostTask(FROM_HERE,
+      base::BindOnce(&CefCookieManagerImplExt::FinishSetQos, weak_ptr_factory_.GetWeakPtr()));
+  }
+#endif
 }
 
 bool CefCookieManagerImplExt::FlushStore(
@@ -941,6 +962,11 @@ bool CefCookieManagerImplExt::FlushStore(
 
 bool CefCookieManagerImplExt::FlushStoreInternal(
     CefRefPtr<CefCompletionCallback> callback) {
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    StartSetQos();
+  }
+#endif
   RunCookieTaskAsync(base::BindOnce(
       &CefCookieManagerImplExt::FlushStoreInternalCookieTask,
       base::Unretained(this),
