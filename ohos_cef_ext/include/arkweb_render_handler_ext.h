@@ -386,6 +386,16 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
                                      int32_t detectedContentfulNodesCount) {}
 #endif
 
+#if BUILDFLAG(ARKWEB_FIRST_SCREEN_PAINT)
+  ///
+  /// Called when the first screen is painted.
+  ///
+  /*--cef()--*/
+  virtual void OnFirstScreenPaint(const std::string& url,
+                                  int64_t navigationStartTime,
+                                  int64_t firstScreenPaintTime) {}
+#endif
+
   ///
   /// Called when scroll.
   ///
