@@ -20,7 +20,6 @@
 #include "base/observer_list.h"
 #include "base/path_service.h"
 #include "base/strings/string_number_conversions.h"
-#include "chrome/common/chrome_paths.h"
 #include "components/subresource_filter/core/browser/subresource_filter_constants.h"
 #include "components/subresource_filter/core/browser/user_subresource_filter_constants.h"
 #include "components/subresource_filter/core/common/indexed_ruleset.h"
