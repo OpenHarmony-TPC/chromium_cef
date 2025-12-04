@@ -33,8 +33,6 @@ class UserAdblockRulesetManager
  public:
   static UserAdblockRulesetManager* GetInstance();
 
-  base::FilePath GetOhosAdblockEasylistFilePath();
-
   void UserEasyListFileUpdated(const std::vector<base::FilePath>& easylists);
 
   // implement RulesetServiceclient interface
@@ -45,6 +43,7 @@ class UserAdblockRulesetManager
   ~UserAdblockRulesetManager() override;
   friend struct base::DefaultSingletonTraits<UserAdblockRulesetManager>;
 
+  std::vector<base::FilePath> last_user_easylist_;
   scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
       base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()});
 };
