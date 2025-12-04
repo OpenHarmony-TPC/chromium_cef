@@ -1374,6 +1374,9 @@ ExecuteCodeFunction::InitResult ExecuteCodeInTabFunction::Init() {
   // currently active tab's ID.
   if (tab_id == -1) {
     tab_id = GetCurrentWebContents(this);
+    if (tab_id < 0) {
+      return set_init_result_error(tabs_constants::kNoTabInBrowserWindowError);
+    }
   }
 
   execute_tab_id_ = tab_id;
