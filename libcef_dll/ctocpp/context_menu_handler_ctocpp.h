@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dfb5ed505950e98cef811b7449be590ae292d160$
+// $hash=9e6126fe2e7640fb335c6e11e051c0f5fbbeb9bc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -20,49 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_context_menu_handler_capi.h"
 #include "include/cef_context_menu_handler.h"
+#include "include/capi/cef_context_menu_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefContextMenuHandlerCToCpp
-    : public CefCToCppRefCounted<CefContextMenuHandlerCToCpp,
-                                 CefContextMenuHandler,
-                                 cef_context_menu_handler_t> {
+class CefContextMenuHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefContextMenuHandler_0_CToCpp, CefContextMenuHandler, cef_context_menu_handler_0_t> {
  public:
-  CefContextMenuHandlerCToCpp();
-  virtual ~CefContextMenuHandlerCToCpp();
+  CefContextMenuHandler_0_CToCpp();
+  virtual ~CefContextMenuHandler_0_CToCpp();
 
   // CefContextMenuHandler methods.
-  void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame,
-                           CefRefPtr<CefContextMenuParams> params,
-                           CefRefPtr<CefMenuModel> model) override;
-  bool RunContextMenu(CefRefPtr<CefBrowser> browser,
-                      CefRefPtr<CefFrame> frame,
-                      CefRefPtr<CefContextMenuParams> params,
-                      CefRefPtr<CefMenuModel> model,
-                      CefRefPtr<CefRunContextMenuCallback> callback) override;
-  bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            CefRefPtr<CefContextMenuParams> params,
-                            int command_id,
-                            EventFlags event_flags) override;
-  void OnContextMenuDismissed(CefRefPtr<CefBrowser> browser,
-                              CefRefPtr<CefFrame> frame) override;
-  bool RunQuickMenu(CefRefPtr<CefBrowser> browser,
-                    CefRefPtr<CefFrame> frame,
-                    const CefPoint& location,
-                    const CefSize& size,
-                    QuickMenuEditStateFlags edit_state_flags,
-                    CefRefPtr<CefRunQuickMenuCallback> callback) override;
-  bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,
-                          CefRefPtr<CefFrame> frame,
-                          int command_id,
-                          EventFlags event_flags) override;
-  void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame) override;
+  void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) override;
+  bool RunContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model, CefRefPtr<CefRunContextMenuCallback> callback) override;
+  bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) override;
+  void OnContextMenuDismissed(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) override;
+  bool RunQuickMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefPoint& location, const CefSize& size, QuickMenuEditStateFlags edit_state_flags, CefRefPtr<CefRunQuickMenuCallback> callback) override;
+  bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int command_id, EventFlags event_flags) override;
+  void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) override;
 };
+
+constexpr auto CefContextMenuHandlerCToCpp_Wrap = CefContextMenuHandler_0_CToCpp::Wrap;
+constexpr auto CefContextMenuHandlerCToCpp_Unwrap = CefContextMenuHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_

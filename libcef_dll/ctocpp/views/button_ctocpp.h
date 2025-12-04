@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5188cdec31eacbc63c89fbe341f089a5d1dd0f7a$
+// $hash=1cc5282903a82e73cde2e2d5119b3f5e2bed2371$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_CTOCPP_H_
@@ -20,10 +20,10 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_button_capi.h"
-#include "include/capi/views/cef_label_button_capi.h"
 #include "include/views/cef_button.h"
+#include "include/capi/views/cef_button_capi.h"
 #include "include/views/cef_label_button.h"
+#include "include/capi/views/cef_label_button_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -96,5 +96,8 @@ class CefButtonCToCpp
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefButtonCToCpp_Wrap = CefButtonCToCpp::Wrap;
+constexpr auto CefButtonCToCpp_Unwrap = CefButtonCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_CTOCPP_H_

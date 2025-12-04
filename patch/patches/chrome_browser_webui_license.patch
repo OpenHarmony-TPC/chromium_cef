@@ -1,10 +1,10 @@
 diff --git chrome/browser/ui/webui/about/about_ui.cc chrome/browser/ui/webui/about/about_ui.cc
-index e28af86de9298..fb182fa3f7c32 100644
+index b706f12d1b945f2e7aa6f0d5385e79461232d6ad..cd7ef560047ee88531bbb793810f30fd8fe87eb2 100644
 --- chrome/browser/ui/webui/about/about_ui.cc
 +++ chrome/browser/ui/webui/about/about_ui.cc
-@@ -89,6 +89,10 @@
- #include "chrome/common/webui_url_constants.h"
- #endif  // BUILDFLAG(IS_CHROMEOS)
+@@ -86,6 +86,10 @@
+ #include "third_party/zlib/google/compression_utils.h"
+ #endif
  
 +#if BUILDFLAG(ENABLE_CEF)
 +#include "cef/grit/cef_resources.h"
@@ -13,7 +13,7 @@ index e28af86de9298..fb182fa3f7c32 100644
  using content::BrowserThread;
  
  namespace {
-@@ -620,6 +624,11 @@ ChromeURLsUIConfig::ChromeURLsUIConfig()
+@@ -441,6 +445,11 @@ AboutUIConfigBase::AboutUIConfigBase(std::string_view host)
  CreditsUIConfig::CreditsUIConfig()
      : AboutUIConfigBase(chrome::kChromeUICreditsHost) {}
  
@@ -25,7 +25,7 @@ index e28af86de9298..fb182fa3f7c32 100644
  #if !BUILDFLAG(IS_ANDROID)
  TermsUIConfig::TermsUIConfig()
      : AboutUIConfigBase(chrome::kChromeUITermsHost) {}
-@@ -721,6 +730,16 @@ void AboutUIHTMLSource::StartDataRequest(
+@@ -540,6 +549,16 @@ void AboutUIHTMLSource::StartDataRequest(
              IDS_TERMS_HTML);
  #endif
    }
@@ -43,7 +43,7 @@ index e28af86de9298..fb182fa3f7c32 100644
    FinishDataRequest(response, std::move(callback));
  }
 diff --git chrome/browser/ui/webui/about/about_ui.h chrome/browser/ui/webui/about/about_ui.h
-index 6548d519c3da9..645163f69f822 100644
+index f633265e3d207d2802e1faf60abcf83f39cdf104..7d759d855922211aacb200bc1194a42bd38dc5b9 100644
 --- chrome/browser/ui/webui/about/about_ui.h
 +++ chrome/browser/ui/webui/about/about_ui.h
 @@ -11,6 +11,7 @@
@@ -54,7 +54,7 @@ index 6548d519c3da9..645163f69f822 100644
  #include "content/public/browser/url_data_source.h"
  #include "content/public/browser/web_ui_controller.h"
  #include "content/public/browser/webui_config.h"
-@@ -42,6 +43,13 @@ class CreditsUIConfig : public AboutUIConfigBase {
+@@ -35,6 +36,13 @@ class CreditsUIConfig : public AboutUIConfigBase {
    CreditsUIConfig();
  };
  
@@ -69,54 +69,32 @@ index 6548d519c3da9..645163f69f822 100644
  // chrome://terms
  class TermsUIConfig : public AboutUIConfigBase {
 diff --git chrome/browser/ui/webui/chrome_web_ui_configs.cc chrome/browser/ui/webui/chrome_web_ui_configs.cc
-index 8b877339c4179..dcb347ef1878f 100644
+index f740a1880ae9ff72a00383ca56e6997d5ed60aa3..738d461125bfca70b1cea44358beca3fee2509be 100644
 --- chrome/browser/ui/webui/chrome_web_ui_configs.cc
 +++ chrome/browser/ui/webui/chrome_web_ui_configs.cc
 @@ -6,6 +6,7 @@
  
+ #include "build/android_buildflags.h"
  #include "build/build_config.h"
- #include "build/chromeos_buildflags.h"
 +#include "cef/libcef/features/features.h"
  #include "chrome/browser/optimization_guide/optimization_guide_internals_ui.h"
  #include "chrome/browser/ui/webui/about/about_ui.h"
  #include "chrome/browser/ui/webui/accessibility/accessibility_ui.h"
-@@ -215,6 +216,9 @@ void RegisterChromeWebUIConfigs() {
+@@ -222,6 +223,9 @@ void RegisterChromeWebUIConfigs() {
    map.AddWebUIConfig(std::make_unique<BluetoothInternalsUIConfig>());
    map.AddWebUIConfig(std::make_unique<BrowsingTopicsInternalsUIConfig>());
    map.AddWebUIConfig(std::make_unique<chromeos::DeviceLogUIConfig>());
 +#if BUILDFLAG(ENABLE_CEF)
 +  map.AddWebUIConfig(std::make_unique<ChromeUILicenseConfig>());
 +#endif
-   map.AddWebUIConfig(std::make_unique<ChromeURLsUIConfig>());
+   map.AddWebUIConfig(std::make_unique<chrome_urls::ChromeUrlsUIConfig>());
    map.AddWebUIConfig(std::make_unique<CrashesUIConfig>());
    map.AddWebUIConfig(std::make_unique<commerce::CommerceInternalsUIConfig>());
-diff --git chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc
-index f9ca5f61c9c1f..a99993720a7ea 100644
---- chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc
-+++ chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc
-@@ -18,6 +18,7 @@
- #include "build/branding_buildflags.h"
- #include "build/build_config.h"
- #include "build/chromeos_buildflags.h"
-+#include "cef/libcef/features/features.h"
- #include "chrome/browser/about_flags.h"
- #include "chrome/browser/buildflags.h"
- #include "chrome/browser/devtools/devtools_ui_bindings.h"
-@@ -485,6 +486,9 @@ ChromeWebUIControllerFactory::GetListOfAcceptableURLs() {
-     GURL(chrome::kChromeUIGpuURL),
-     GURL(chrome::kChromeUIHistogramsURL),
-     GURL(chrome::kChromeUIInspectURL),
-+#if BUILDFLAG(ENABLE_CEF)
-+    GURL(chrome::kChromeUILicenseURL),
-+#endif
-     GURL(chrome::kChromeUIManagementURL),
-     GURL(chrome::kChromeUINetExportURL),
-     GURL(chrome::kChromeUIPrefsInternalsURL),
 diff --git chrome/common/webui_url_constants.cc chrome/common/webui_url_constants.cc
-index 47932e80c59ea..805a9e8e3c3e6 100644
+index e5e724a22d015235b3f8dcbe7eed56c272e6c471..fcb15d234483f5f1cfe464fcc60dde55f0517f0e 100644
 --- chrome/common/webui_url_constants.cc
 +++ chrome/common/webui_url_constants.cc
-@@ -99,6 +99,9 @@ base::span<const base::cstring_view> ChromeURLHosts() {
+@@ -96,6 +96,9 @@ base::span<const base::cstring_view> ChromeURLHosts() {
        kChromeUIHistoryHost,
        history_clusters_internals::kChromeUIHistoryClustersInternalsHost,
        kChromeUIInterstitialHost,
@@ -127,25 +105,25 @@ index 47932e80c59ea..805a9e8e3c3e6 100644
  #if !BUILDFLAG(IS_ANDROID)
        kChromeUIManagementHost,
 diff --git chrome/common/webui_url_constants.h chrome/common/webui_url_constants.h
-index 9fa26adc16d4f..32635f37b8846 100644
+index c35d5252a52eefcd6f429b305f48225d000eab56..b505fc38a2c53d955c7fd8a8729ca3e45972c7c1 100644
 --- chrome/common/webui_url_constants.h
 +++ chrome/common/webui_url_constants.h
 @@ -18,6 +18,7 @@
+ #include "build/android_buildflags.h"
  #include "build/branding_buildflags.h"
  #include "build/build_config.h"
- #include "build/chromeos_buildflags.h"
 +#include "cef/libcef/features/features.h"
  #include "chrome/common/buildflags.h"
- #include "components/lens/buildflags.h"
  #include "components/signin/public/base/signin_buildflags.h"
-@@ -157,6 +158,10 @@ inline constexpr char kChromeUILauncherInternalsURL[] =
- inline constexpr char kChromeUILensSearchBubbleHost[] = "lens-search-bubble";
- inline constexpr char kChromeUILensSearchBubbleURL[] =
-     "chrome://lens-search-bubble/";
+ #include "content/public/common/url_constants.h"
+@@ -162,6 +163,10 @@ inline constexpr char kChromeUIInterstitialHost[] = "interstitials";
+ inline constexpr char kChromeUIInterstitialURL[] = "chrome://interstitials/";
+ inline constexpr char kChromeUIKillHost[] = "kill";
+ inline constexpr char kChromeUILauncherInternalsHost[] = "launcher-internals";
 +#if BUILDFLAG(ENABLE_CEF)
 +inline constexpr char kChromeUILicenseHost[] = "license";
 +inline constexpr char kChromeUILicenseURL[] = "chrome://license/";
 +#endif
  inline constexpr char kChromeUILocalStateHost[] = "local-state";
+ inline constexpr char kChromeUILocalStateURL[] = "chrome://local-state";
  inline constexpr char kChromeUILocationInternalsHost[] = "location-internals";
- inline constexpr char kChromeUIManagementHost[] = "management";

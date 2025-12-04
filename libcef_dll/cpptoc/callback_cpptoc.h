@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9c5e616a7b33bb49adf5e13eb98f9d496cbe1b2d$
+// $hash=f27575a8fd2968ebede10e7648543568e1bd141f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_CALLBACK_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_callback_capi.h"
 #include "include/cef_callback.h"
+#include "include/capi/cef_callback_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCallbackCppToC : public CefCppToCRefCounted<CefCallbackCppToC,
-                                                     CefCallback,
-                                                     cef_callback_t> {
+class CefCallback_0_CppToC
+    : public CefCppToCRefCounted<CefCallback_0_CppToC, CefCallback, cef_callback_0_t> {
  public:
-  CefCallbackCppToC();
-  virtual ~CefCallbackCppToC();
+  CefCallback_0_CppToC();
+  virtual ~CefCallback_0_CppToC();
 };
+
+constexpr auto CefCallbackCppToC_Wrap = CefCallback_0_CppToC::Wrap;
+constexpr auto CefCallbackCppToC_Unwrap = CefCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_CALLBACK_CPPTOC_H_

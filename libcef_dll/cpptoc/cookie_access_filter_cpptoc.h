@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=06fecf03c315d5e24573be05888653ff15c8614b$
+// $hash=2b86ba119653f1cd20a2181f9a0493cdfe8b0ee7$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_COOKIE_ACCESS_FILTER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_resource_request_handler_capi.h"
 #include "include/cef_resource_request_handler.h"
+#include "include/capi/cef_resource_request_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieAccessFilterCppToC
-    : public CefCppToCRefCounted<CefCookieAccessFilterCppToC,
-                                 CefCookieAccessFilter,
-                                 cef_cookie_access_filter_t> {
+    : public CefCppToCRefCounted<CefCookieAccessFilterCppToC, CefCookieAccessFilter, cef_cookie_access_filter_t> {
  public:
   CefCookieAccessFilterCppToC();
   virtual ~CefCookieAccessFilterCppToC();
 };
+
+constexpr auto CefCookieAccessFilterCppToC_Wrap = CefCookieAccessFilterCppToC::Wrap;
+constexpr auto CefCookieAccessFilterCppToC_Unwrap = CefCookieAccessFilterCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_COOKIE_ACCESS_FILTER_CPPTOC_H_

@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c29a3e8416b26075388b14dd26b177116daaac71$
+// $hash=45e9a1e157949f3469eab87c7b6166a94155b834$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_OVERLAY_CONTROLLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_OVERLAY_CONTROLLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -56,6 +60,8 @@ struct _cef_window_t;
 /// View unless otherwise indicated. Methods must be called on the browser
 /// process UI thread unless otherwise indicated.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_overlay_controller_t {
   ///
   /// Base structure.
@@ -65,37 +71,33 @@ typedef struct _cef_overlay_controller_t {
   ///
   /// Returns true (1) if this object is valid.
   ///
-  int(CEF_CALLBACK* is_valid)(struct _cef_overlay_controller_t* self);
+  int (CEF_CALLBACK *is_valid)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Returns true (1) if this object is the same as |that| object.
   ///
-  int(CEF_CALLBACK* is_same)(struct _cef_overlay_controller_t* self,
-                             struct _cef_overlay_controller_t* that);
+  int (CEF_CALLBACK *is_same)(struct _cef_overlay_controller_t* self, struct _cef_overlay_controller_t* that);
 
   ///
   /// Returns the contents View for this overlay.
   ///
-  struct _cef_view_t*(CEF_CALLBACK* get_contents_view)(
-      struct _cef_overlay_controller_t* self);
+  struct _cef_view_t* (CEF_CALLBACK *get_contents_view)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Returns the top-level Window hosting this overlay. Use this function
   /// instead of calling get_window() on the contents View.
   ///
-  struct _cef_window_t*(CEF_CALLBACK* get_window)(
-      struct _cef_overlay_controller_t* self);
+  struct _cef_window_t* (CEF_CALLBACK *get_window)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Returns the docking mode for this overlay.
   ///
-  cef_docking_mode_t(CEF_CALLBACK* get_docking_mode)(
-      struct _cef_overlay_controller_t* self);
+  cef_docking_mode_t (CEF_CALLBACK *get_docking_mode)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Destroy this overlay.
   ///
-  void(CEF_CALLBACK* destroy)(struct _cef_overlay_controller_t* self);
+  void (CEF_CALLBACK *destroy)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Sets the bounds (size and position) of this overlay. This will set the
@@ -107,21 +109,19 @@ typedef struct _cef_overlay_controller_t {
   /// call size_to_preferred_size() instead to calculate the new size and re-
   /// position the overlay if necessary.
   ///
-  void(CEF_CALLBACK* set_bounds)(struct _cef_overlay_controller_t* self,
-                                 const cef_rect_t* bounds);
+  void (CEF_CALLBACK *set_bounds)(struct _cef_overlay_controller_t* self, const cef_rect_t* bounds);
 
   ///
   /// Returns the bounds (size and position) of this overlay in parent
   /// coordinates.
   ///
-  cef_rect_t(CEF_CALLBACK* get_bounds)(struct _cef_overlay_controller_t* self);
+  cef_rect_t (CEF_CALLBACK *get_bounds)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Returns the bounds (size and position) of this overlay in DIP screen
   /// coordinates.
   ///
-  cef_rect_t(CEF_CALLBACK* get_bounds_in_screen)(
-      struct _cef_overlay_controller_t* self);
+  cef_rect_t (CEF_CALLBACK *get_bounds_in_screen)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Sets the size of this overlay without changing the position. This will set
@@ -133,13 +133,12 @@ typedef struct _cef_overlay_controller_t {
   /// and call size_to_preferred_size() instead to calculate the new size and
   /// re-position the overlay if necessary.
   ///
-  void(CEF_CALLBACK* set_size)(struct _cef_overlay_controller_t* self,
-                               const cef_size_t* size);
+  void (CEF_CALLBACK *set_size)(struct _cef_overlay_controller_t* self, const cef_size_t* size);
 
   ///
   /// Returns the size of this overlay in parent coordinates.
   ///
-  cef_size_t(CEF_CALLBACK* get_size)(struct _cef_overlay_controller_t* self);
+  cef_size_t (CEF_CALLBACK *get_size)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Sets the position of this overlay without changing the size. |position| is
@@ -150,28 +149,24 @@ typedef struct _cef_overlay_controller_t {
   /// size_to_preferred_size() instead to calculate the new size and re-position
   /// the overlay if necessary.
   ///
-  void(CEF_CALLBACK* set_position)(struct _cef_overlay_controller_t* self,
-                                   const cef_point_t* position);
+  void (CEF_CALLBACK *set_position)(struct _cef_overlay_controller_t* self, const cef_point_t* position);
 
   ///
   /// Returns the position of this overlay in parent coordinates.
   ///
-  cef_point_t(CEF_CALLBACK* get_position)(
-      struct _cef_overlay_controller_t* self);
+  cef_point_t (CEF_CALLBACK *get_position)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Sets the insets for this overlay. |insets| is in parent coordinates. Use
   /// this function only for overlays created with a docking mode value other
   /// than CEF_DOCKING_MODE_CUSTOM.
   ///
-  void(CEF_CALLBACK* set_insets)(struct _cef_overlay_controller_t* self,
-                                 const cef_insets_t* insets);
+  void (CEF_CALLBACK *set_insets)(struct _cef_overlay_controller_t* self, const cef_insets_t* insets);
 
   ///
   /// Returns the insets for this overlay in parent coordinates.
   ///
-  cef_insets_t(CEF_CALLBACK* get_insets)(
-      struct _cef_overlay_controller_t* self);
+  cef_insets_t (CEF_CALLBACK *get_insets)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Size this overlay to its preferred size and trigger a re-layout if
@@ -181,8 +176,7 @@ typedef struct _cef_overlay_controller_t {
   /// necessary to accommodate the new size and any insets configured on the
   /// contents View.
   ///
-  void(CEF_CALLBACK* size_to_preferred_size)(
-      struct _cef_overlay_controller_t* self);
+  void (CEF_CALLBACK *size_to_preferred_size)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Sets whether this overlay is visible. Overlays are hidden by default. If
@@ -190,8 +184,7 @@ typedef struct _cef_overlay_controller_t {
   /// if any of those Views currently have focus, then focus will also be
   /// cleared. Painting is scheduled as needed.
   ///
-  void(CEF_CALLBACK* set_visible)(struct _cef_overlay_controller_t* self,
-                                  int visible);
+  void (CEF_CALLBACK *set_visible)(struct _cef_overlay_controller_t* self, int visible);
 
   ///
   /// Returns whether this overlay is visible. A View may be visible but still
@@ -199,7 +192,7 @@ typedef struct _cef_overlay_controller_t {
   /// determine whether this overlay and all parent Views are visible and will
   /// be drawn.
   ///
-  int(CEF_CALLBACK* is_visible)(struct _cef_overlay_controller_t* self);
+  int (CEF_CALLBACK *is_visible)(struct _cef_overlay_controller_t* self);
 
   ///
   /// Returns whether this overlay is visible and drawn in a Window. A View is
@@ -207,8 +200,9 @@ typedef struct _cef_overlay_controller_t {
   /// containing Window is visible to the user on-screen call is_visible() on
   /// the Window.
   ///
-  int(CEF_CALLBACK* is_drawn)(struct _cef_overlay_controller_t* self);
+  int (CEF_CALLBACK *is_drawn)(struct _cef_overlay_controller_t* self);
 } cef_overlay_controller_t;
+
 
 #ifdef __cplusplus
 }

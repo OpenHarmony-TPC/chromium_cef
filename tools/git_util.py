@@ -8,10 +8,12 @@ import os
 import sys
 
 if sys.platform == 'win32':
-  # Force use of the git version bundled with depot_tools.
-  git_exe = 'git.bat'
+  # Force use of the system installed Git version.
+  git_exe = 'git.exe'
+  patch_exe = 'patch.exe'
 else:
   git_exe = 'git'
+  patch_exe = 'patch'
 
 
 def is_checkout(path):
@@ -26,85 +28,89 @@ def is_ancestor(path='.', commit1='HEAD', commit2='master'):
   return result['ret'] == 0
 
 
+def exec_git_cmd(args, path='.', quiet=False):
+  """ Executes a git command with the specified |args|. """
+  cmd = "%s %s" % (git_exe, args)
+  result = exec_cmd(cmd, path)
+  if result['ret'] != 0 and not quiet:
+    sys.stderr.write('Command \"%s\" exited with retval %d\n' % (cmd,
+                                                                 result['ret']))
+    if result['err'] != '':
+      err = result['err'].strip()
+      if sys.platform == 'win32':
+        # Convert to Unix line endings.
+        err = err.replace('\r\n', '\n')
+      sys.stderr.write(err + '\n')
+  if result['out'] != '':
+    out = result['out'].strip()
+    if sys.platform == 'win32':
+      # Convert to Unix line endings.
+      out = out.replace('\r\n', '\n')
+    return out
+  return None
+
+
 def get_hash(path='.', branch='HEAD'):
   """ Returns the git hash for the specified branch/tag/hash. """
-  cmd = "%s rev-parse %s" % (git_exe, branch)
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    return result['out'].strip()
-  return 'Unknown'
+  cmd = "rev-parse %s" % branch
+  result = exec_git_cmd(cmd, path)
+  return 'Unknown' if result is None else result
 
 
 def get_branch_name(path='.', branch='HEAD'):
   """ Returns the branch name for the specified branch/tag/hash. """
   # Returns the branch name if not in detached HEAD state, else an empty string
   # or "HEAD".
-  cmd = "%s rev-parse --abbrev-ref %s" % (git_exe, branch)
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    name = result['out'].strip()
-    if len(name) > 0 and name != 'HEAD':
-      return name
+  cmd = "rev-parse --abbrev-ref %s" % branch
+  result = exec_git_cmd(cmd, path)
+  if result is None:
+    return 'Unknown'
+  if result != 'HEAD':
+    return result
 
-    # Returns a value like "(HEAD, origin/3729, 3729)".
-    # Ubuntu 14.04 uses Git version 1.9.1 which does not support %D (which
-    # provides the same output but without the parentheses).
-    cmd = "%s log -n 1 --pretty=%%d %s" % (git_exe, branch)
-    result = exec_cmd(cmd, path)
-    if result['out'] != '':
-      return result['out'].strip()[1:-1].split(', ')[-1]
-  return 'Unknown'
+  # Returns a value like "(HEAD, origin/3729, 3729)".
+  # Ubuntu 14.04 uses Git version 1.9.1 which does not support %D (which
+  # provides the same output but without the parentheses).
+  cmd = "log -n 1 --pretty=%%d %s" % branch
+  result = exec_git_cmd(cmd, path)
+  return 'Unknown' if result is None else result[1:-1].split(', ')[-1]
 
 
 def get_url(path='.'):
   """ Returns the origin url for the specified path. """
-  cmd = "%s config --get remote.origin.url" % git_exe
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    return result['out'].strip()
-  return 'Unknown'
+  cmd = "config --get remote.origin.url"
+  result = exec_git_cmd(cmd, path)
+  return 'Unknown' if result is None else result
 
 
 def get_commit_number(path='.', branch='HEAD'):
   """ Returns the number of commits in the specified branch/tag/hash. """
-  cmd = "%s rev-list --count %s" % (git_exe, branch)
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    return result['out'].strip()
-  return '0'
+  cmd = "rev-list --count %s" % (branch)
+  result = exec_git_cmd(cmd, path)
+  return '0' if result is None else result
 
 
 def get_changed_files(path, hash):
   """ Retrieves the list of changed files. """
   if hash == 'unstaged':
-    cmd = "%s diff --name-only" % git_exe
+    cmd = "diff --name-only"
   elif hash == 'staged':
-    cmd = "%s diff --name-only --cached" % git_exe
+    cmd = "diff --name-only --cached"
   else:
-    cmd = "%s diff-tree --no-commit-id --name-only -r %s" % (git_exe, hash)
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    files = result['out']
-    if sys.platform == 'win32':
-      # Convert to Unix line endings.
-      files = files.replace('\r\n', '\n')
-    return files.strip().split("\n")
-  return []
+    cmd = "diff-tree --no-commit-id --name-only -r %s" % hash
+  result = exec_git_cmd(cmd, path, quiet=True)
+  return [] if result is None else result.split("\n")
 
 
 def get_branch_hashes(path='.', branch='HEAD', ref='origin/master'):
   """ Returns an ordered list of hashes for commits that have been applied since
       branching from ref. """
-  cmd = "%s cherry %s %s" % (git_exe, ref, branch)
-  result = exec_cmd(cmd, path)
-  if result['out'] != '':
-    hashes = result['out']
-    if sys.platform == 'win32':
-      # Convert to Unix line endings.
-      hashes = hashes.replace('\r\n', '\n')
-    # Remove the "+ " or "- " prefix.
-    return [line[2:] for line in hashes.strip().split('\n')]
-  return []
+  cmd = "cherry %s %s" % (ref, branch)
+  result = exec_git_cmd(cmd, path)
+  if result is None:
+    return []
+  # Remove the "+ " or "- " prefix.
+  return [line[2:] for line in result.split('\n')]
 
 
 def write_indented_output(output):
@@ -118,17 +124,37 @@ def write_indented_output(output):
     sys.stdout.write('\t%s\n' % line)
 
 
+def _patch_apply_patch_string(patch_dir, patch_string):
+  """ Fallback to using the patch tool. """
+  config = '-p0 --ignore-whitespace --force'
+
+  # Reverse check to see if the patch has already been applied.
+  cmd = '%s %s --reverse --dry-run' % (patch_exe, config)
+  result = exec_cmd(cmd, patch_dir, patch_string)
+  if result['ret'] == 0:
+    sys.stdout.write('... already applied (skipping).\n')
+    return 'skip'
+
+  # Apply the patch file.
+  cmd = '%s %s' % (patch_exe, config)
+  result = exec_cmd(cmd, patch_dir, patch_string)
+  write_indented_output(result['out'])
+  if result['ret'] == 0:
+    sys.stdout.write('... successfully applied.\n')
+    return 'apply'
+  sys.stdout.write('... failed to apply:\n')
+  write_indented_output(result['err'])
+  return 'fail'
+
+
 def git_apply_patch_file(patch_path, patch_dir):
   """ Apply |patch_path| to files in |patch_dir|. """
   patch_name = os.path.basename(patch_path)
-  sys.stdout.write('\nApply11 %s in %s\n' % (patch_name, patch_dir))
+  sys.stdout.write('\nApply %s in %s\n' % (patch_name, patch_dir))
 
   if not os.path.isfile(patch_path):
     sys.stdout.write('... patch file does not exist.\n')
     return 'fail'
-
-  os.system("cd ../; patch -p0 < " + patch_path + "; cd ./cef;")
-  return 'apply'
 
   patch_string = open(patch_path, 'rb').read()
   if sys.platform == 'win32':
@@ -137,9 +163,9 @@ def git_apply_patch_file(patch_path, patch_dir):
     patch_string = patch_string.replace(b'\r\n', b'\n')
 
   # Git apply fails silently if not run relative to a respository root.
-  #if not is_checkout(patch_dir):
-  #  sys.stdout.write('... patch directory is not a repository root.\n')
-  #  return 'fail'
+  # Fallback to using the patch tool in that case.
+  if not is_checkout(patch_dir):
+    return _patch_apply_patch_string(patch_dir, patch_string)
 
   config = '-p0 --ignore-whitespace'
 

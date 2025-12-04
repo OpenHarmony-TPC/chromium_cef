@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5f3a9bd809317535ade33582030eea24f72bee5c$
+// $hash=1b2ae1f2618332a128e4c9a60afdaf88e92c7d4b$
 //
 
 #include "libcef_dll/cpptoc/audio_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -21,10 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK
-audio_handler_get_audio_parameters(struct _cef_audio_handler_t* self,
-                                   struct _cef_browser_t* browser,
-                                   cef_audio_parameters_t* params) {
+int CEF_CALLBACK audio_handler_get_audio_parameters(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, cef_audio_parameters_t* params) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -45,11 +41,12 @@ audio_handler_get_audio_parameters(struct _cef_audio_handler_t* self,
   }
 
   // Translate param: params; type: simple_byref
-  CefAudioParameters paramsVal = params ? *params : CefAudioParameters();
+  CefAudioParameters paramsVal = params?*params:CefAudioParameters();
 
   // Execute
   bool _retval = CefAudioHandlerCppToC::Get(self)->GetAudioParameters(
-      CefBrowserCToCpp::Wrap(browser), paramsVal);
+      CefBrowserCToCpp_Wrap(browser),
+      paramsVal);
 
   // Restore param: params; type: simple_byref
   if (params) {
@@ -60,11 +57,7 @@ audio_handler_get_audio_parameters(struct _cef_audio_handler_t* self,
   return _retval;
 }
 
-void CEF_CALLBACK
-audio_handler_on_audio_stream_started(struct _cef_audio_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      const cef_audio_parameters_t* params,
-                                      int channels) {
+void CEF_CALLBACK audio_handler_on_audio_stream_started(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const cef_audio_parameters_t* params, int channels) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -85,19 +78,16 @@ audio_handler_on_audio_stream_started(struct _cef_audio_handler_t* self,
   }
 
   // Translate param: params; type: simple_byref_const
-  CefAudioParameters paramsVal = params ? *params : CefAudioParameters();
+  CefAudioParameters paramsVal = params?*params:CefAudioParameters();
 
   // Execute
   CefAudioHandlerCppToC::Get(self)->OnAudioStreamStarted(
-      CefBrowserCToCpp::Wrap(browser), paramsVal, channels);
+      CefBrowserCToCpp_Wrap(browser),
+      paramsVal,
+      channels);
 }
 
-void CEF_CALLBACK
-audio_handler_on_audio_stream_packet(struct _cef_audio_handler_t* self,
-                                     struct _cef_browser_t* browser,
-                                     const float** data,
-                                     int frames,
-                                     int64_t pts) {
+void CEF_CALLBACK audio_handler_on_audio_stream_packet(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const float** data, int frames, int64_t pts) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -119,12 +109,13 @@ audio_handler_on_audio_stream_packet(struct _cef_audio_handler_t* self,
 
   // Execute
   CefAudioHandlerCppToC::Get(self)->OnAudioStreamPacket(
-      CefBrowserCToCpp::Wrap(browser), data, frames, pts);
+      CefBrowserCToCpp_Wrap(browser),
+      data,
+      frames,
+      pts);
 }
 
-void CEF_CALLBACK
-audio_handler_on_audio_stream_stopped(struct _cef_audio_handler_t* self,
-                                      struct _cef_browser_t* browser) {
+void CEF_CALLBACK audio_handler_on_audio_stream_stopped(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -141,13 +132,10 @@ audio_handler_on_audio_stream_stopped(struct _cef_audio_handler_t* self,
 
   // Execute
   CefAudioHandlerCppToC::Get(self)->OnAudioStreamStopped(
-      CefBrowserCToCpp::Wrap(browser));
+      CefBrowserCToCpp_Wrap(browser));
 }
 
-void CEF_CALLBACK
-audio_handler_on_audio_stream_error(struct _cef_audio_handler_t* self,
-                                    struct _cef_browser_t* browser,
-                                    const cef_string_t* message) {
+void CEF_CALLBACK audio_handler_on_audio_stream_error(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* message) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -169,7 +157,8 @@ audio_handler_on_audio_stream_error(struct _cef_audio_handler_t* self,
 
   // Execute
   CefAudioHandlerCppToC::Get(self)->OnAudioStreamError(
-      CefBrowserCToCpp::Wrap(browser), CefString(message));
+      CefBrowserCToCpp_Wrap(browser),
+      CefString(message));
 }
 
 }  // namespace
@@ -190,18 +179,11 @@ CefAudioHandlerCppToC::~CefAudioHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefAudioHandler> CefCppToCRefCounted<
-    CefAudioHandlerCppToC,
-    CefAudioHandler,
-    cef_audio_handler_t>::UnwrapDerived(CefWrapperType type,
-                                        cef_audio_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefAudioHandler> CefCppToCRefCounted<CefAudioHandlerCppToC, CefAudioHandler, cef_audio_handler_t>::UnwrapDerived(CefWrapperType type, cef_audio_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefAudioHandlerCppToC,
-                                   CefAudioHandler,
-                                   cef_audio_handler_t>::kWrapperType =
-    WT_AUDIO_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefAudioHandlerCppToC, CefAudioHandler, cef_audio_handler_t>::kWrapperType = WT_AUDIO_HANDLER;
+
+

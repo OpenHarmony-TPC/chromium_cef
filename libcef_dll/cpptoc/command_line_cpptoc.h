@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c12d0fbe68d5a91da078283630004272b9e59d29$
+// $hash=ef1eb8d9c20185fe6422433168c63aae98d41182$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_COMMAND_LINE_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_command_line_capi.h"
 #include "include/cef_command_line.h"
+#include "include/capi/cef_command_line_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCommandLineCppToC : public CefCppToCRefCounted<CefCommandLineCppToC,
-                                                        CefCommandLine,
-                                                        cef_command_line_t> {
+class CefCommandLine_0_CppToC
+    : public CefCppToCRefCounted<CefCommandLine_0_CppToC, CefCommandLine, cef_command_line_0_t> {
  public:
-  CefCommandLineCppToC();
-  virtual ~CefCommandLineCppToC();
+  CefCommandLine_0_CppToC();
+  virtual ~CefCommandLine_0_CppToC();
 };
+
+constexpr auto CefCommandLineCppToC_Wrap = CefCommandLine_0_CppToC::Wrap;
+constexpr auto CefCommandLineCppToC_Unwrap = CefCommandLine_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_COMMAND_LINE_CPPTOC_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ab716a13b567baf82b1597e91486ae8db208afee$
+// $hash=f92706c639a92a1800109f9ee5b2af21ff9ee4d3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SCHEME_REGISTRAR_CPPTOC_H_
@@ -20,19 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_scoped.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSchemeRegistrarCppToC
-    : public CefCppToCScoped<CefSchemeRegistrarCppToC,
-                             CefSchemeRegistrar,
-                             cef_scheme_registrar_t> {
+class CefSchemeRegistrar_0_CppToC
+    : public CefCppToCScoped<CefSchemeRegistrar_0_CppToC, CefSchemeRegistrar, cef_scheme_registrar_0_t> {
  public:
-  CefSchemeRegistrarCppToC();
-  virtual ~CefSchemeRegistrarCppToC();
+  CefSchemeRegistrar_0_CppToC();
+  virtual ~CefSchemeRegistrar_0_CppToC();
 };
+
+constexpr auto CefSchemeRegistrarCppToC_WrapOwn = CefSchemeRegistrar_0_CppToC::WrapOwn;
+constexpr auto CefSchemeRegistrarCppToC_WrapRaw = CefSchemeRegistrar_0_CppToC::WrapRaw;
+constexpr auto CefSchemeRegistrarCppToC_UnwrapOwn = CefSchemeRegistrar_0_CppToC::UnwrapOwn;
+constexpr auto CefSchemeRegistrarCppToC_UnwrapRaw = CefSchemeRegistrar_0_CppToC::UnwrapRaw;
+constexpr auto CefSchemeRegistrarCppToC_GetWrapper = CefSchemeRegistrar_0_CppToC::GetWrapper;
+
+inline cef_scheme_registrar_0_t* CefSchemeRegistrarCppToC_WrapRawAndRelease(CefRawPtr<CefSchemeRegistrar> c) {
+  auto [ownerPtr, structPtr] = CefSchemeRegistrarCppToC_WrapRaw(c);
+  ownerPtr.release();
+  return structPtr;
+}
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SCHEME_REGISTRAR_CPPTOC_H_

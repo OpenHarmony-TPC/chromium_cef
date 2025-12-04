@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=55577838291aa28571e45290f2bd37ebc5b1829a$
+// $hash=62bd30748efbde80387fc38b84a7c199879666aa$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_LIST_VALUE_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_values_capi.h"
 #include "include/cef_values.h"
+#include "include/capi/cef_values_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefListValueCppToC : public CefCppToCRefCounted<CefListValueCppToC,
-                                                      CefListValue,
-                                                      cef_list_value_t> {
+class CefListValue_0_CppToC
+    : public CefCppToCRefCounted<CefListValue_0_CppToC, CefListValue, cef_list_value_0_t> {
  public:
-  CefListValueCppToC();
-  virtual ~CefListValueCppToC();
+  CefListValue_0_CppToC();
+  virtual ~CefListValue_0_CppToC();
 };
+
+constexpr auto CefListValueCppToC_Wrap = CefListValue_0_CppToC::Wrap;
+constexpr auto CefListValueCppToC_Unwrap = CefListValue_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_LIST_VALUE_CPPTOC_H_

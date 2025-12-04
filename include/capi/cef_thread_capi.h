@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=ec0182481b148d1d1759559798bfac2b06f69f67$
+// $hash=cfb6c14f5002cca121bef52933749d37097a244e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_THREAD_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_THREAD_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_task_capi.h"
 #include "include/internal/cef_thread_internal.h"
@@ -46,6 +50,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// A simple thread abstraction that establishes a message loop on a new thread.
@@ -58,6 +63,8 @@ extern "C" {
 /// thread. In most cases you can post tasks to an existing CEF thread instead
 /// of creating a new one; see cef_task.h for details.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_thread_t {
   ///
   /// Base structure.
@@ -68,29 +75,28 @@ typedef struct _cef_thread_t {
   /// Returns the cef_task_runner_t that will execute code on this thread's
   /// message loop. This function is safe to call from any thread.
   ///
-  struct _cef_task_runner_t*(CEF_CALLBACK* get_task_runner)(
-      struct _cef_thread_t* self);
+  struct _cef_task_runner_t* (CEF_CALLBACK *get_task_runner)(struct _cef_thread_t* self);
 
   ///
   /// Returns the platform thread ID. It will return the same value after stop()
   /// is called. This function is safe to call from any thread.
   ///
-  cef_platform_thread_id_t(CEF_CALLBACK* get_platform_thread_id)(
-      struct _cef_thread_t* self);
+  cef_platform_thread_id_t (CEF_CALLBACK *get_platform_thread_id)(struct _cef_thread_t* self);
 
   ///
   /// Stop and join the thread. This function must be called from the same
   /// thread that called cef_thread_create(). Do not call this function if
   /// cef_thread_create() was called with a |stoppable| value of false (0).
   ///
-  void(CEF_CALLBACK* stop)(struct _cef_thread_t* self);
+  void (CEF_CALLBACK *stop)(struct _cef_thread_t* self);
 
   ///
   /// Returns true (1) if the thread is currently running. This function must be
   /// called from the same thread that called cef_thread_create().
   ///
-  int(CEF_CALLBACK* is_running)(struct _cef_thread_t* self);
+  int (CEF_CALLBACK *is_running)(struct _cef_thread_t* self);
 } cef_thread_t;
+
 
 ///
 /// Create and start a new thread. This function does not block waiting for the
@@ -103,12 +109,8 @@ typedef struct _cef_thread_t {
 /// specifies how COM will be initialized for the thread. If |com_init_mode| is
 /// set to COM_INIT_MODE_STA then |message_loop_type| must be set to ML_TYPE_UI.
 ///
-CEF_EXPORT cef_thread_t* cef_thread_create(
-    const cef_string_t* display_name,
-    cef_thread_priority_t priority,
-    cef_message_loop_type_t message_loop_type,
-    int stoppable,
-    cef_com_init_mode_t com_init_mode);
+CEF_EXPORT cef_thread_t* cef_thread_create(const cef_string_t* display_name, cef_thread_priority_t priority, cef_message_loop_type_t message_loop_type, int stoppable, cef_com_init_mode_t com_init_mode);
+
 
 #ifdef __cplusplus
 }

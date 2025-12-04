@@ -73,7 +73,7 @@ CefRect GetScreenFrameRectFromDIPContentRect(HWND window,
   // Convert from DIP using a method that can handle multiple displays with
   // different DPI. If |window| is nullptr the closest display will be used.
   const auto screen_rect =
-      display::win::ScreenWin::DIPToScreenRect(window, dip_rect);
+      display::win::GetScreenWin()->DIPToScreenRect(window, dip_rect);
 
   RECT rect = {screen_rect.x(), screen_rect.y(),
                screen_rect.x() + screen_rect.width(),
@@ -109,7 +109,7 @@ CefRect GetAdjustedScreenFrameRect(CefRect screen_rect,
 
   // Convert to DIP using a method that can handle multiple displays with
   // different DPI.
-  const auto dip_rect = display::win::ScreenWin::ScreenToDIPRect(
+  const auto dip_rect = display::win::GetScreenWin()->ScreenToDIPRect(
       nullptr, gfx::Rect(screen_rect.x, screen_rect.y, screen_rect.width,
                          screen_rect.height));
   const auto visible_dip_rect = MakeVisibleOnScreenRect(
@@ -173,10 +173,11 @@ bool CefBrowserPlatformDelegateNativeWin::CreateHostWindow() {
                  window_info_.parent_window, window_info_.menu,
                  ::GetModuleHandle(nullptr), this);
 
-  // It's possible for CreateWindowEx to fail if the parent window was
-  // destroyed between the call to CreateBrowser and the above one.
-  DCHECK(window_info_.window);
-  if (!window_info_.window) {
+  // It's possible for CreateWindowEx to fail if the parent window was destroyed
+  // between the call to CreateBrowser and the above one. It's also possible
+  // that |browser_| will be nullptr if BrowserDestroyed() was called during
+  // this time.
+  if (!window_info_.window || !browser_) {
     return false;
   }
 
@@ -205,7 +206,7 @@ bool CefBrowserPlatformDelegateNativeWin::CreateHostWindow() {
 
   // Convert to DIP using a method that can handle multiple displays with
   // different DPI. Client coordinates always have origin (0,0).
-  const gfx::Rect dip_rect = display::win::ScreenWin::ScreenToDIPRect(
+  const gfx::Rect dip_rect = display::win::GetScreenWin()->ScreenToDIPRect(
       window_info_.window, gfx::Rect(0, 0, cr.right, cr.bottom));
 
   // Stay on top if top-most window hosting the web view is topmost.
@@ -426,6 +427,27 @@ CefEventHandle CefBrowserPlatformDelegateNativeWin::GetEventHandle(
       const_cast<CHROME_MSG*>(&event.os_event->native_event()));
 }
 
+std::optional<gfx::Rect>
+CefBrowserPlatformDelegateNativeWin::GetRootWindowBounds() {
+  if (window_widget_) {
+    if (HWND hwnd = GetHostWindowHandle()) {
+      if (HWND root_hwnd = ::GetAncestor(hwnd, GA_ROOT)) {
+        RECT root_rect = {};
+        if (::GetWindowRect(root_hwnd, &root_rect)) {
+          auto* top_level =
+              window_widget_->GetNativeWindow()->GetToplevelWindow();
+          gfx::Rect bounds(root_rect);
+          bounds = display::Screen::GetScreen()->ScreenToDIPRectInWindow(
+              top_level, bounds);
+          return bounds;
+        }
+      }
+    }
+  }
+
+  return std::nullopt;
+}
+
 ui::KeyEvent CefBrowserPlatformDelegateNativeWin::TranslateUiKeyEvent(
     const CefKeyEvent& key_event) const {
   int flags = TranslateUiEventModifiers(key_event.modifiers);
@@ -569,10 +591,14 @@ LRESULT CALLBACK CefBrowserPlatformDelegateNativeWin::WndProc(HWND hwnd,
         // Clear the user data pointer.
         gfx::SetWindowUserData(hwnd, nullptr);
 
-        // Force the browser to be destroyed. This will result in a call to
-        // BrowserDestroyed() that will release the reference added in
-        // CreateHostWindow().
-        AlloyBrowserHostImpl::FromBaseChecked(browser)->WindowDestroyed();
+        // |browser| may be nullptr if the window was destroyed during browser
+        // creation (e.g. CreateHostWindow() returned false).
+        if (browser) {
+          // Force the browser to be destroyed. This will result in a call to
+          // BrowserDestroyed() that will release the reference added in
+          // CreateHostWindow().
+          AlloyBrowserHostImpl::FromBaseChecked(browser)->WindowDestroyed();
+        }
       }
       break;
 
@@ -591,8 +617,8 @@ LRESULT CALLBACK CefBrowserPlatformDelegateNativeWin::WndProc(HWND hwnd,
 
     case WM_MOVING:
     case WM_MOVE:
-      if (browser) {
-        browser->NotifyMoveOrResizeStarted();
+      if (platform_delegate) {
+        platform_delegate->NotifyMoveOrResizeStarted();
       }
       return 0;
 

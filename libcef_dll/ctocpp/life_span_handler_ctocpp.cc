@@ -9,38 +9,25 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=484e7f1bdd5a565231cea72bb04e7a267fc58ca9$
+// $hash=2a43a93f75596b1c9175a70ee4b33722dfa584a1$
 //
 
-#include "libcef_dll/ctocpp/life_span_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
+#include "libcef_dll/ctocpp/life_span_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefLifeSpanHandlerCToCpp::OnBeforePopup(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    int popup_id,
-    const CefString& target_url,
-    const CefString& target_frame_name,
-    WindowOpenDisposition target_disposition,
-    bool user_gesture,
-    const CefPopupFeatures& popupFeatures,
-    CefWindowInfo& windowInfo,
-    CefRefPtr<CefClient>& client,
-    CefBrowserSettings& settings,
-    CefRefPtr<CefDictionaryValue>& extra_info,
-    bool* no_javascript_access) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefLifeSpanHandler_0_CToCpp::OnBeforePopup(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int popup_id, const CefString& target_url, const CefString& target_frame_name, WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures& popupFeatures, CefWindowInfo& windowInfo, CefRefPtr<CefClient>& client, CefBrowserSettings& settings, CefRefPtr<CefDictionaryValue>& extra_info, bool* no_javascript_access) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_popup)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_popup) {
     return false;
   }
 
@@ -64,32 +51,40 @@ bool CefLifeSpanHandlerCToCpp::OnBeforePopup(
   // Unverified params: target_url, target_frame_name
 
   // Translate param: client; type: refptr_same_byref
-  cef_client_t* clientStruct = NULL;
+  cef_client_0_t* clientStruct = NULL;
   if (client.get()) {
-    clientStruct = CefClientCToCpp::Unwrap(client);
+    clientStruct = CefClientCToCpp_Unwrap(client);
   }
-  cef_client_t* clientOrig = clientStruct;
+  auto* clientOrig = clientStruct;
   // Translate param: extra_info; type: refptr_diff_byref
-  cef_dictionary_value_t* extra_infoStruct = NULL;
+  cef_dictionary_value_0_t* extra_infoStruct = NULL;
   if (extra_info.get()) {
-    extra_infoStruct = CefDictionaryValueCppToC::Wrap(extra_info);
+    extra_infoStruct = CefDictionaryValueCppToC_Wrap(extra_info);
   }
-  cef_dictionary_value_t* extra_infoOrig = extra_infoStruct;
+  auto* extra_infoOrig = extra_infoStruct;
   // Translate param: no_javascript_access; type: bool_byaddr
-  int no_javascript_accessInt =
-      no_javascript_access ? *no_javascript_access : 0;
+  int no_javascript_accessInt = no_javascript_access?*no_javascript_access:0;
 
   // Execute
-  int _retval = _struct->on_before_popup(
-      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      popup_id, target_url.GetStruct(), target_frame_name.GetStruct(),
-      target_disposition, user_gesture, &popupFeatures, &windowInfo,
-      &clientStruct, &settings, &extra_infoStruct, &no_javascript_accessInt);
+  int _retval = _struct->on_before_popup(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      popup_id,
+      target_url.GetStruct(),
+      target_frame_name.GetStruct(),
+      target_disposition,
+      user_gesture,
+      &popupFeatures,
+      &windowInfo,
+      &clientStruct,
+      &settings,
+      &extra_infoStruct,
+      &no_javascript_accessInt);
 
   // Restore param:client; type: refptr_same_byref
   if (clientStruct) {
     if (clientStruct != clientOrig) {
-      client = CefClientCToCpp::Wrap(clientStruct);
+      client = CefClientCToCpp_Wrap(clientStruct);
     }
   } else {
     client = nullptr;
@@ -97,28 +92,25 @@ bool CefLifeSpanHandlerCToCpp::OnBeforePopup(
   // Restore param:extra_info; type: refptr_diff_byref
   if (extra_infoStruct) {
     if (extra_infoStruct != extra_infoOrig) {
-      extra_info = CefDictionaryValueCppToC::Unwrap(extra_infoStruct);
+      extra_info = CefDictionaryValueCppToC_Unwrap(extra_infoStruct);
     }
   } else {
     extra_info = nullptr;
   }
   // Restore param:no_javascript_access; type: bool_byaddr
   if (no_javascript_access) {
-    *no_javascript_access = no_javascript_accessInt ? true : false;
+    *no_javascript_access = no_javascript_accessInt?true:false;
   }
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefLifeSpanHandlerCToCpp::OnBeforePopupAborted(
-    CefRefPtr<CefBrowser> browser,
-    int popup_id) {
+NO_SANITIZE("cfi-icall") void CefLifeSpanHandler_0_CToCpp::OnBeforePopupAborted(CefRefPtr<CefBrowser> browser, int popup_id) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_popup_aborted)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_popup_aborted) {
     return;
   }
 
@@ -131,22 +123,16 @@ void CefLifeSpanHandlerCToCpp::OnBeforePopupAborted(
   }
 
   // Execute
-  _struct->on_before_popup_aborted(_struct, CefBrowserCppToC::Wrap(browser),
-                                   popup_id);
+  _struct->on_before_popup_aborted(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      popup_id);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefLifeSpanHandlerCToCpp::OnBeforeDevToolsPopup(
-    CefRefPtr<CefBrowser> browser,
-    CefWindowInfo& windowInfo,
-    CefRefPtr<CefClient>& client,
-    CefBrowserSettings& settings,
-    CefRefPtr<CefDictionaryValue>& extra_info,
-    bool* use_default_window) {
+NO_SANITIZE("cfi-icall") void CefLifeSpanHandler_0_CToCpp::OnBeforeDevToolsPopup(CefRefPtr<CefBrowser> browser, CefWindowInfo& windowInfo, CefRefPtr<CefClient>& client, CefBrowserSettings& settings, CefRefPtr<CefDictionaryValue>& extra_info, bool* use_default_window) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_dev_tools_popup)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_dev_tools_popup) {
     return;
   }
 
@@ -164,29 +150,33 @@ void CefLifeSpanHandlerCToCpp::OnBeforeDevToolsPopup(
   }
 
   // Translate param: client; type: refptr_same_byref
-  cef_client_t* clientStruct = NULL;
+  cef_client_0_t* clientStruct = NULL;
   if (client.get()) {
-    clientStruct = CefClientCToCpp::Unwrap(client);
+    clientStruct = CefClientCToCpp_Unwrap(client);
   }
-  cef_client_t* clientOrig = clientStruct;
+  auto* clientOrig = clientStruct;
   // Translate param: extra_info; type: refptr_diff_byref
-  cef_dictionary_value_t* extra_infoStruct = NULL;
+  cef_dictionary_value_0_t* extra_infoStruct = NULL;
   if (extra_info.get()) {
-    extra_infoStruct = CefDictionaryValueCppToC::Wrap(extra_info);
+    extra_infoStruct = CefDictionaryValueCppToC_Wrap(extra_info);
   }
-  cef_dictionary_value_t* extra_infoOrig = extra_infoStruct;
+  auto* extra_infoOrig = extra_infoStruct;
   // Translate param: use_default_window; type: bool_byaddr
-  int use_default_windowInt = use_default_window ? *use_default_window : 0;
+  int use_default_windowInt = use_default_window?*use_default_window:0;
 
   // Execute
-  _struct->on_before_dev_tools_popup(_struct, CefBrowserCppToC::Wrap(browser),
-                                     &windowInfo, &clientStruct, &settings,
-                                     &extra_infoStruct, &use_default_windowInt);
+  _struct->on_before_dev_tools_popup(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      &windowInfo,
+      &clientStruct,
+      &settings,
+      &extra_infoStruct,
+      &use_default_windowInt);
 
   // Restore param:client; type: refptr_same_byref
   if (clientStruct) {
     if (clientStruct != clientOrig) {
-      client = CefClientCToCpp::Wrap(clientStruct);
+      client = CefClientCToCpp_Wrap(clientStruct);
     }
   } else {
     client = nullptr;
@@ -194,23 +184,22 @@ void CefLifeSpanHandlerCToCpp::OnBeforeDevToolsPopup(
   // Restore param:extra_info; type: refptr_diff_byref
   if (extra_infoStruct) {
     if (extra_infoStruct != extra_infoOrig) {
-      extra_info = CefDictionaryValueCppToC::Unwrap(extra_infoStruct);
+      extra_info = CefDictionaryValueCppToC_Unwrap(extra_infoStruct);
     }
   } else {
     extra_info = nullptr;
   }
   // Restore param:use_default_window; type: bool_byaddr
   if (use_default_window) {
-    *use_default_window = use_default_windowInt ? true : false;
+    *use_default_window = use_default_windowInt?true:false;
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefLifeSpanHandlerCToCpp::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefLifeSpanHandler_0_CToCpp::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_after_created)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_after_created) {
     return;
   }
 
@@ -223,15 +212,15 @@ void CefLifeSpanHandlerCToCpp::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_after_created(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_after_created(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefLifeSpanHandlerCToCpp::DoClose(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") bool CefLifeSpanHandler_0_CToCpp::DoClose(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, do_close)) {
+  auto* _struct = GetStruct();
+  if (!_struct->do_close) {
     return false;
   }
 
@@ -244,18 +233,18 @@ bool CefLifeSpanHandlerCToCpp::DoClose(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  int _retval = _struct->do_close(_struct, CefBrowserCppToC::Wrap(browser));
+  int _retval = _struct->do_close(_struct,
+      CefBrowserCppToC_Wrap(browser));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefLifeSpanHandlerCToCpp::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefLifeSpanHandler_0_CToCpp::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_life_span_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_before_close)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_before_close) {
     return;
   }
 
@@ -268,31 +257,27 @@ void CefLifeSpanHandlerCToCpp::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 
   // Execute
-  _struct->on_before_close(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_before_close(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefLifeSpanHandlerCToCpp::CefLifeSpanHandlerCToCpp() {}
+CefLifeSpanHandler_0_CToCpp::CefLifeSpanHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefLifeSpanHandlerCToCpp::~CefLifeSpanHandlerCToCpp() {
+CefLifeSpanHandler_0_CToCpp::~CefLifeSpanHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_life_span_handler_t* CefCToCppRefCounted<
-    CefLifeSpanHandlerCToCpp,
-    CefLifeSpanHandler,
-    cef_life_span_handler_t>::UnwrapDerived(CefWrapperType type,
-                                            CefLifeSpanHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_life_span_handler_0_t* CefCToCppRefCounted<CefLifeSpanHandler_0_CToCpp, CefLifeSpanHandler, cef_life_span_handler_0_t>::UnwrapDerived(CefWrapperType type, CefLifeSpanHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefLifeSpanHandlerCToCpp,
-                                   CefLifeSpanHandler,
-                                   cef_life_span_handler_t>::kWrapperType =
-    WT_LIFE_SPAN_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefLifeSpanHandler_0_CToCpp, CefLifeSpanHandler, cef_life_span_handler_0_t>::kWrapperType = WT_LIFE_SPAN_HANDLER;
+
+

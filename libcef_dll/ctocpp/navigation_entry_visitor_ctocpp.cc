@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=689a9f3d32c462222302ad46577bf3a5fc4afa23$
+// $hash=006371d3f5fb13196e8fcb593003f3944d0e1ba5$
 //
 
-#include "libcef_dll/ctocpp/navigation_entry_visitor_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/navigation_entry_cpptoc.h"
+#include "libcef_dll/ctocpp/navigation_entry_visitor_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefNavigationEntryVisitorCToCpp::Visit(CefRefPtr<CefNavigationEntry> entry,
-                                            bool current,
-                                            int index,
-                                            int total) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefNavigationEntryVisitor_0_CToCpp::Visit(CefRefPtr<CefNavigationEntry> entry, bool current, int index, int total) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_navigation_entry_visitor_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit)) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit) {
     return false;
   }
 
@@ -40,37 +37,33 @@ bool CefNavigationEntryVisitorCToCpp::Visit(CefRefPtr<CefNavigationEntry> entry,
   }
 
   // Execute
-  int _retval = _struct->visit(_struct, CefNavigationEntryCppToC::Wrap(entry),
-                               current, index, total);
+  int _retval = _struct->visit(_struct,
+      CefNavigationEntryCppToC_Wrap(entry),
+      current,
+      index,
+      total);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefNavigationEntryVisitorCToCpp::CefNavigationEntryVisitorCToCpp() {}
+CefNavigationEntryVisitor_0_CToCpp::CefNavigationEntryVisitor_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefNavigationEntryVisitorCToCpp::~CefNavigationEntryVisitorCToCpp() {
+CefNavigationEntryVisitor_0_CToCpp::~CefNavigationEntryVisitor_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_navigation_entry_visitor_t* CefCToCppRefCounted<
-    CefNavigationEntryVisitorCToCpp,
-    CefNavigationEntryVisitor,
-    cef_navigation_entry_visitor_t>::UnwrapDerived(CefWrapperType type,
-                                                   CefNavigationEntryVisitor*
-                                                       c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_navigation_entry_visitor_0_t* CefCToCppRefCounted<CefNavigationEntryVisitor_0_CToCpp, CefNavigationEntryVisitor, cef_navigation_entry_visitor_0_t>::UnwrapDerived(CefWrapperType type, CefNavigationEntryVisitor* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefNavigationEntryVisitorCToCpp,
-                        CefNavigationEntryVisitor,
-                        cef_navigation_entry_visitor_t>::kWrapperType =
-        WT_NAVIGATION_ENTRY_VISITOR;
+template<> CefWrapperType CefCToCppRefCounted<CefNavigationEntryVisitor_0_CToCpp, CefNavigationEntryVisitor, cef_navigation_entry_visitor_0_t>::kWrapperType = WT_NAVIGATION_ENTRY_VISITOR;
+
+

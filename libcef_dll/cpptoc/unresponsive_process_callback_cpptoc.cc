@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=46be494e5d5cff799d8db0d6c32d765d7a80990c$
+// $hash=aa1e67462b014b021a0a8c9f8969b18422de274a$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/unresponsive_process_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK unresponsive_process_callback_wait(
-    struct _cef_unresponsive_process_callback_t* self) {
+void CEF_CALLBACK unresponsive_process_callback_wait(struct _cef_unresponsive_process_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,11 +31,10 @@ void CEF_CALLBACK unresponsive_process_callback_wait(
   }
 
   // Execute
-  CefUnresponsiveProcessCallbackCppToC::Get(self)->Wait();
+  CefUnresponsiveProcessCallback_0_CppToC::Get(self)->Wait();
 }
 
-void CEF_CALLBACK unresponsive_process_callback_terminate(
-    struct _cef_unresponsive_process_callback_t* self) {
+void CEF_CALLBACK unresponsive_process_callback_terminate(struct _cef_unresponsive_process_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -47,37 +45,31 @@ void CEF_CALLBACK unresponsive_process_callback_terminate(
   }
 
   // Execute
-  CefUnresponsiveProcessCallbackCppToC::Get(self)->Terminate();
+  CefUnresponsiveProcessCallback_0_CppToC::Get(self)->Terminate();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefUnresponsiveProcessCallbackCppToC::CefUnresponsiveProcessCallbackCppToC() {
+CefUnresponsiveProcessCallback_0_CppToC::CefUnresponsiveProcessCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->wait = unresponsive_process_callback_wait;
   GetStruct()->terminate = unresponsive_process_callback_terminate;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefUnresponsiveProcessCallbackCppToC::~CefUnresponsiveProcessCallbackCppToC() {
+CefUnresponsiveProcessCallback_0_CppToC::~CefUnresponsiveProcessCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefUnresponsiveProcessCallback>
-CefCppToCRefCounted<CefUnresponsiveProcessCallbackCppToC,
-                    CefUnresponsiveProcessCallback,
-                    cef_unresponsive_process_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_unresponsive_process_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefUnresponsiveProcessCallback> CefCppToCRefCounted<CefUnresponsiveProcessCallback_0_CppToC, CefUnresponsiveProcessCallback, cef_unresponsive_process_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_unresponsive_process_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefUnresponsiveProcessCallbackCppToC,
-                        CefUnresponsiveProcessCallback,
-                        cef_unresponsive_process_callback_t>::kWrapperType =
-        WT_UNRESPONSIVE_PROCESS_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefUnresponsiveProcessCallback_0_CppToC, CefUnresponsiveProcessCallback, cef_unresponsive_process_callback_0_t>::kWrapperType = WT_UNRESPONSIVE_PROCESS_CALLBACK;
+
+

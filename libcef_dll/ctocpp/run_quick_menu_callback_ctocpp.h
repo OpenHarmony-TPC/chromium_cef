@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b8441d40db12ea746f214facb1a5ddbf5037232b$
+// $hash=dc91c62660c1ef79d952837270f1f33adf3004fa$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RUN_QUICK_MENU_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_context_menu_handler_capi.h"
 #include "include/cef_context_menu_handler.h"
+#include "include/capi/cef_context_menu_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefRunQuickMenuCallbackCToCpp
-    : public CefCToCppRefCounted<CefRunQuickMenuCallbackCToCpp,
-                                 CefRunQuickMenuCallback,
-                                 cef_run_quick_menu_callback_t> {
+    : public CefCToCppRefCounted<CefRunQuickMenuCallbackCToCpp, CefRunQuickMenuCallback, cef_run_quick_menu_callback_t> {
  public:
   CefRunQuickMenuCallbackCToCpp();
   virtual ~CefRunQuickMenuCallbackCToCpp();
@@ -38,5 +36,8 @@ class CefRunQuickMenuCallbackCToCpp
   void Continue(int command_id, cef_event_flags_t event_flags) override;
   void Cancel() override;
 };
+
+constexpr auto CefRunQuickMenuCallbackCToCpp_Wrap = CefRunQuickMenuCallbackCToCpp::Wrap;
+constexpr auto CefRunQuickMenuCallbackCToCpp_Unwrap = CefRunQuickMenuCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RUN_QUICK_MENU_CALLBACK_CTOCPP_H_

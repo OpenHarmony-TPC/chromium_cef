@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=73de4f04be93938a21496893c6233dc658665e4f$
+// $hash=483101fcbb737201b399bc20ef0a3c544609dd69$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_URLREQUEST_CLIENT_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_urlrequest_capi.h"
 #include "include/cef_urlrequest.h"
+#include "include/capi/cef_urlrequest_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefURLRequestClientCppToC
-    : public CefCppToCRefCounted<CefURLRequestClientCppToC,
-                                 CefURLRequestClient,
-                                 cef_urlrequest_client_t> {
+    : public CefCppToCRefCounted<CefURLRequestClientCppToC, CefURLRequestClient, cef_urlrequest_client_t> {
  public:
   CefURLRequestClientCppToC();
   virtual ~CefURLRequestClientCppToC();
 };
+
+constexpr auto CefURLRequestClientCppToC_Wrap = CefURLRequestClientCppToC::Wrap;
+constexpr auto CefURLRequestClientCppToC_Unwrap = CefURLRequestClientCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_URLREQUEST_CLIENT_CPPTOC_H_

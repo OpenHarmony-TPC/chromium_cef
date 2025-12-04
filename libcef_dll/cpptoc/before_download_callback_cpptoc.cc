@@ -9,21 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=38b279b5207a0916526468e638bfe7b61c27fb5c$
+// $hash=77ca22737dfa5581b1bc5c7a16189d566322d63c$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/before_download_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-before_download_callback_cont(struct _cef_before_download_callback_t* self,
-                              const cef_string_t* download_path,
-                              int show_dialog) {
+void CEF_CALLBACK before_download_callback_cont(struct _cef_before_download_callback_0_t* self, const cef_string_t* download_path, int show_dialog) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -35,37 +32,32 @@ before_download_callback_cont(struct _cef_before_download_callback_t* self,
   // Unverified params: download_path
 
   // Execute
-  CefBeforeDownloadCallbackCppToC::Get(self)->Continue(
-      CefString(download_path), show_dialog ? true : false);
+  CefBeforeDownloadCallback_0_CppToC::Get(self)->Continue(
+      CefString(download_path),
+      show_dialog?true:false);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBeforeDownloadCallbackCppToC::CefBeforeDownloadCallbackCppToC() {
+CefBeforeDownloadCallback_0_CppToC::CefBeforeDownloadCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = before_download_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBeforeDownloadCallbackCppToC::~CefBeforeDownloadCallbackCppToC() {
+CefBeforeDownloadCallback_0_CppToC::~CefBeforeDownloadCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefBeforeDownloadCallback>
-CefCppToCRefCounted<CefBeforeDownloadCallbackCppToC,
-                    CefBeforeDownloadCallback,
-                    cef_before_download_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_before_download_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefBeforeDownloadCallback> CefCppToCRefCounted<CefBeforeDownloadCallback_0_CppToC, CefBeforeDownloadCallback, cef_before_download_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_before_download_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefBeforeDownloadCallbackCppToC,
-                        CefBeforeDownloadCallback,
-                        cef_before_download_callback_t>::kWrapperType =
-        WT_BEFORE_DOWNLOAD_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefBeforeDownloadCallback_0_CppToC, CefBeforeDownloadCallback, cef_before_download_callback_0_t>::kWrapperType = WT_BEFORE_DOWNLOAD_CALLBACK;
+
+

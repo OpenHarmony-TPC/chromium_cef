@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=19515a294a0bbade3c74549e6f78f9ec71ad11d4$
+// $hash=4db383161e0e430537599d4b46c2ee03aa7f3083$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESOLVE_CALLBACK_CTOCPP_H_
@@ -21,28 +21,27 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_request_context_capi.h"
-#include "include/capi/cef_request_context_handler_capi.h"
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_request_context.h"
+#include "include/capi/cef_request_context_capi_versions.h"
 #include "include/cef_request_context_handler.h"
+#include "include/capi/cef_request_context_handler_capi_versions.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResolveCallbackCToCpp
-    : public CefCToCppRefCounted<CefResolveCallbackCToCpp,
-                                 CefResolveCallback,
-                                 cef_resolve_callback_t> {
+class CefResolveCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefResolveCallback_0_CToCpp, CefResolveCallback, cef_resolve_callback_0_t> {
  public:
-  CefResolveCallbackCToCpp();
-  virtual ~CefResolveCallbackCToCpp();
+  CefResolveCallback_0_CToCpp();
+  virtual ~CefResolveCallback_0_CToCpp();
 
   // CefResolveCallback methods.
-  void OnResolveCompleted(cef_errorcode_t result,
-                          const std::vector<CefString>& resolved_ips) override;
+  void OnResolveCompleted(cef_errorcode_t result, const std::vector<CefString>& resolved_ips) override;
 };
+
+constexpr auto CefResolveCallbackCToCpp_Wrap = CefResolveCallback_0_CToCpp::Wrap;
+constexpr auto CefResolveCallbackCToCpp_Unwrap = CefResolveCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESOLVE_CALLBACK_CTOCPP_H_

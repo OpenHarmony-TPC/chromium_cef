@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=81908a070f4c9dac455a38a14e7b524a119e307d$
+// $hash=5e961bec40c2a8602d6625af303791e33aa16f8d$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_TRACE_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_TRACE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_callback_capi.h"
@@ -47,10 +51,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to receive notification when tracing has completed.
 /// The functions of this structure will be called on the browser process UI
 /// thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_end_tracing_callback_t {
   ///
@@ -63,10 +70,9 @@ typedef struct _cef_end_tracing_callback_t {
   /// the path at which tracing data was written. The client is responsible for
   /// deleting |tracing_file|.
   ///
-  void(CEF_CALLBACK* on_end_tracing_complete)(
-      struct _cef_end_tracing_callback_t* self,
-      const cef_string_t* tracing_file);
+  void (CEF_CALLBACK *on_end_tracing_complete)(struct _cef_end_tracing_callback_t* self, const cef_string_t* tracing_file);
 } cef_end_tracing_callback_t;
+
 
 ///
 /// Start tracing events on all processes. Tracing is initialized asynchronously
@@ -87,8 +93,7 @@ typedef struct _cef_end_tracing_callback_t {
 ///
 /// This function must be called on the browser process UI thread.
 ///
-CEF_EXPORT int cef_begin_tracing(const cef_string_t* categories,
-                                 struct _cef_completion_callback_t* callback);
+CEF_EXPORT int cef_begin_tracing(const cef_string_t* categories, struct _cef_completion_callback_t* callback);
 
 ///
 /// Stop tracing events on all processes.
@@ -103,8 +108,7 @@ CEF_EXPORT int cef_begin_tracing(const cef_string_t* categories,
 ///
 /// This function must be called on the browser process UI thread.
 ///
-CEF_EXPORT int cef_end_tracing(const cef_string_t* tracing_file,
-                               cef_end_tracing_callback_t* callback);
+CEF_EXPORT int cef_end_tracing(const cef_string_t* tracing_file, cef_end_tracing_callback_t* callback);
 
 ///
 /// Returns the current system trace time or, if none is defined, the current

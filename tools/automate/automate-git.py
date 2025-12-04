@@ -16,13 +16,11 @@ import sys
 import tempfile
 import zipfile
 
-is_python2 = sys.version_info.major == 2
+if sys.version_info.major != 3:
+  sys.stderr.write('Python3 is required!')
+  sys.exit(1)
 
-if is_python2:
-  from urllib import FancyURLopener
-  from urllib2 import urlopen
-else:
-  from urllib.request import FancyURLopener, urlopen
+from urllib.request import FancyURLopener, urlopen
 
 ##
 # Default URLs.
@@ -218,19 +216,12 @@ def read_file(path):
     raise Exception("Path does not exist: %s" % (path))
 
 
-def write_fp(fp, data):
-  if is_python2:
-    fp.write(data.decode('utf-8'))
-  else:
-    fp.write(data)
-
-
 def write_file(path, data):
   """ Write a file. """
   msg('Writing %s' % path)
   if not options.dryrun:
     with open(path, 'w', encoding='utf-8') as fp:
-      write_fp(fp, data)
+      fp.write(data)
 
 
 def read_config_file(path):
@@ -446,21 +437,20 @@ def check_pattern_matches(output_file=None):
           if not skip:
             if write_msg:
               if has_output:
-                write_fp(fp, '\n')
-              write_fp(fp,
-                       '!!!! WARNING: FOUND PATTERN: %s\n' % entry['pattern'])
+                fp.write('\n')
+              fp.write('!!!! WARNING: FOUND PATTERN: %s\n' % entry['pattern'])
               if 'message' in entry:
-                write_fp(fp, entry['message'] + '\n')
-              write_fp(fp, '\n')
+                fp.write(entry['message'] + '\n')
+              fp.write('\n')
               write_msg = False
-            write_fp(fp, line + '\n')
+            fp.write(line + '\n')
             has_output = True
 
     if not output_file is None:
       if has_output:
         msg('ERROR Matches found. See %s for output.' % out_file)
       else:
-        write_fp(fp, 'Good news! No matches.\n')
+        fp.write('Good news! No matches.\n')
       fp.close()
 
     if has_output:
@@ -767,13 +757,13 @@ parser.add_option(
     action='store_true',
     dest='sandboxdistrib',
     default=False,
-    help='Create a cef_sandbox static library distribution.')
+    help='Create a sandbox distribution.')
 parser.add_option(
     '--sandbox-distrib-only',
     action='store_true',
     dest='sandboxdistribonly',
     default=False,
-    help='Create a cef_sandbox static library distribution only.')
+    help='Create a sandbox distribution only.')
 parser.add_option(
     '--tools-distrib',
     action='store_true',
@@ -901,27 +891,13 @@ if not branch_is_master:
     sys.exit(1)
 
   # Verify the minimum supported branch number.
-  if int(cef_branch) < 3071:
+  if int(cef_branch) < 5060:
     print('The requested branch (%s) is too old to build using this tool. ' +
-          'The minimum supported branch is 3071.' % cef_branch)
+          'The minimum supported branch is 5060.' % cef_branch)
     sys.exit(1)
 
-# True if the requested branch is 3538 or newer.
-branch_is_3538_or_newer = (branch_is_master or int(cef_branch) >= 3538)
-
-# True if the requested branch is 3945 or newer.
-branch_is_3945_or_newer = (branch_is_master or int(cef_branch) >= 3945)
-
-# Enable Python 3 usage in Chromium for branches 3945 and newer.
-if branch_is_3945_or_newer and not is_python2 and \
-    not 'GCLIENT_PY3' in os.environ.keys():
-  os.environ['GCLIENT_PY3'] = '1'
-
-if not branch_is_3945_or_newer and \
-  (not is_python2 or bool(int(os.environ.get('GCLIENT_PY3', '0')))):
-  print('Python 3 is not supported with branch 3904 and older ' +
-        '(set GCLIENT_PY3=0 and run with Python 2 executable).')
-  sys.exit(1)
+# True if the requested branch is 7151 or older.
+branch_is_7151_or_older = not branch_is_master and int(cef_branch) <= 7151
 
 if options.armbuild:
   if platform != 'linux':
@@ -935,13 +911,25 @@ if platform == 'mac' and not (options.x64build or options.arm64build):
         'Add --x64-build or --arm64-build flag to generate a 64-bit build.')
   sys.exit(1)
 
-# Platforms that build a cef_sandbox library.
-sandbox_lib_platforms = ['windows']
-if branch_is_3538_or_newer:
-  sandbox_lib_platforms.append('mac')
+# Platforms that build a cef_sandbox static library in a separate output directory.
+sandbox_static_platforms = []
 
-if not platform in sandbox_lib_platforms and (options.sandboxdistrib or
-                                              options.sandboxdistribonly):
+# Platforms that build a cef_sandbox shared library in the same output directory.
+sandbox_shared_platforms = []
+
+# Platforms that build a bootstrap executable in the same output directory.
+bootstrap_exe_platforms = []
+
+if branch_is_7151_or_older:
+  sandbox_static_platforms.extend(['windows', 'mac'])
+else:
+  bootstrap_exe_platforms.append('windows')
+  sandbox_shared_platforms.append('mac')
+
+if not platform in sandbox_static_platforms and \
+   not platform in sandbox_shared_platforms and \
+   not platform in bootstrap_exe_platforms and \
+   (options.sandboxdistrib or options.sandboxdistribonly):
   print('The sandbox distribution is not supported on this platform.')
   sys.exit(1)
 
@@ -1020,15 +1008,15 @@ if not options.nodepottoolsupdate:
 
 # Determine the executables to use.
 if platform == 'windows':
-  # Force use of the version bundled with depot_tools.
-  git_exe = os.path.join(depot_tools_dir, 'git.bat')
-  python_bat = 'python.bat' if is_python2 else 'python3.bat'
+  # Force use of the system installed Git version.
+  git_exe = 'git.exe'
+  # Force use of the Python version bundled with depot_tools.
+  python_bat = 'python3.bat'
   python_exe = os.path.join(depot_tools_dir, python_bat)
-  if options.dryrun and not os.path.exists(git_exe):
+  if options.dryrun and not os.path.exists(python_exe):
     sys.stdout.write("WARNING: --dry-run assumes that depot_tools" \
                      " is already in your PATH. If it isn't\nplease" \
                      " specify a --depot-tools-dir value.\n")
-    git_exe = 'git.bat'
     python_exe = python_bat
 else:
   git_exe = 'git'
@@ -1180,7 +1168,7 @@ if not os.path.exists(gclient_file) or options.forceconfig:
   msg('Writing %s' % gclient_file)
   if not options.dryrun:
     with open(gclient_file, 'w', encoding='utf-8') as fp:
-      write_fp(fp, gclient_spec)
+      fp.write(gclient_spec)
 
 # Initial Chromium checkout.
 if not options.nochromiumupdate and not os.path.exists(chromium_src_dir):
@@ -1366,6 +1354,8 @@ if not options.nobuild and (chromium_checkout_changed or \
     target += ' ' + options.testtarget
   if platform == 'linux':
     target += ' chrome_sandbox'
+  if platform in bootstrap_exe_platforms:
+    target += ' bootstrap bootstrapc'
 
   # Make a CEF Debug build.
   if not options.nodebugbuild:
@@ -1377,7 +1367,7 @@ if not options.nobuild and (chromium_checkout_changed or \
         os.path.join(download_dir, 'build-%s-debug.log' % (cef_branch)) \
           if options.buildlogfile else None)
 
-    if platform in sandbox_lib_platforms:
+    if platform in sandbox_static_platforms:
       # Make the separate cef_sandbox build when GN is_official_build=true.
       build_path += '_sandbox'
       if os.path.exists(os.path.join(chromium_src_dir, build_path)):
@@ -1398,7 +1388,7 @@ if not options.nobuild and (chromium_checkout_changed or \
         os.path.join(download_dir, 'build-%s-release.log' % (cef_branch)) \
           if options.buildlogfile else None)
 
-    if platform in sandbox_lib_platforms:
+    if platform in sandbox_static_platforms:
       # Make the separate cef_sandbox build when GN is_official_build=true.
       build_path += '_sandbox'
       if os.path.exists(os.path.join(chromium_src_dir, build_path)):

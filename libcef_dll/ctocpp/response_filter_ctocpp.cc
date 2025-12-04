@@ -9,20 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5885130dc7ddd1676f3ce112689bf2146a525911$
+// $hash=86b14486caa00056b9d04566ed502ee76aea53ff$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/response_filter_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall") bool CefResponseFilterCToCpp::InitFilter() {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefResponseFilter_0_CToCpp::InitFilter() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_response_filter_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, init_filter)) {
+  auto* _struct = GetStruct();
+  if (!_struct->init_filter) {
     return false;
   }
 
@@ -32,21 +33,14 @@ NO_SANITIZE("cfi-icall") bool CefResponseFilterCToCpp::InitFilter() {
   int _retval = _struct->init_filter(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefResponseFilter::FilterStatus CefResponseFilterCToCpp::Filter(
-    void* data_in,
-    size_t data_in_size,
-    size_t& data_in_read,
-    void* data_out,
-    size_t data_out_size,
-    size_t& data_out_written) {
+NO_SANITIZE("cfi-icall") CefResponseFilter::FilterStatus CefResponseFilter_0_CToCpp::Filter(void* data_in, size_t data_in_size, size_t& data_in_read, void* data_out, size_t data_out_size, size_t& data_out_written) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_response_filter_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, filter)) {
+  auto* _struct = GetStruct();
+  if (!_struct->filter) {
     return RESPONSE_FILTER_ERROR;
   }
 
@@ -60,36 +54,35 @@ CefResponseFilter::FilterStatus CefResponseFilterCToCpp::Filter(
   // Unverified params: data_in
 
   // Execute
-  cef_response_filter_status_t _retval =
-      _struct->filter(_struct, data_in, data_in_size, &data_in_read, data_out,
-                      data_out_size, &data_out_written);
+  cef_response_filter_status_t _retval = _struct->filter(_struct,
+      data_in,
+      data_in_size,
+      &data_in_read,
+      data_out,
+      data_out_size,
+      &data_out_written);
 
   // Return type: simple
   return _retval;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResponseFilterCToCpp::CefResponseFilterCToCpp() {}
+CefResponseFilter_0_CToCpp::CefResponseFilter_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResponseFilterCToCpp::~CefResponseFilterCToCpp() {
+CefResponseFilter_0_CToCpp::~CefResponseFilter_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_response_filter_t* CefCToCppRefCounted<
-    CefResponseFilterCToCpp,
-    CefResponseFilter,
-    cef_response_filter_t>::UnwrapDerived(CefWrapperType type,
-                                          CefResponseFilter* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_response_filter_0_t* CefCToCppRefCounted<CefResponseFilter_0_CToCpp, CefResponseFilter, cef_response_filter_0_t>::UnwrapDerived(CefWrapperType type, CefResponseFilter* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefResponseFilterCToCpp,
-                                   CefResponseFilter,
-                                   cef_response_filter_t>::kWrapperType =
-    WT_RESPONSE_FILTER;
+template<> CefWrapperType CefCToCppRefCounted<CefResponseFilter_0_CToCpp, CefResponseFilter, cef_response_filter_0_t>::kWrapperType = WT_RESPONSE_FILTER;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f04d3515d40b21519228ac2ed1c58948ded9968e$
+// $hash=5e157bd86ba33852c38104f2a33f999ca93ef287$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CPPTOC_H_
@@ -20,19 +20,29 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_scoped.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefTranslatorTestScopedClientCppToC
-    : public CefCppToCScoped<CefTranslatorTestScopedClientCppToC,
-                             CefTranslatorTestScopedClient,
-                             cef_translator_test_scoped_client_t> {
+    : public CefCppToCScoped<CefTranslatorTestScopedClientCppToC, CefTranslatorTestScopedClient, cef_translator_test_scoped_client_t> {
  public:
   CefTranslatorTestScopedClientCppToC();
   virtual ~CefTranslatorTestScopedClientCppToC();
 };
+
+constexpr auto CefTranslatorTestScopedClientCppToC_WrapOwn = CefTranslatorTestScopedClientCppToC::WrapOwn;
+constexpr auto CefTranslatorTestScopedClientCppToC_WrapRaw = CefTranslatorTestScopedClientCppToC::WrapRaw;
+constexpr auto CefTranslatorTestScopedClientCppToC_UnwrapOwn = CefTranslatorTestScopedClientCppToC::UnwrapOwn;
+constexpr auto CefTranslatorTestScopedClientCppToC_UnwrapRaw = CefTranslatorTestScopedClientCppToC::UnwrapRaw;
+constexpr auto CefTranslatorTestScopedClientCppToC_GetWrapper = CefTranslatorTestScopedClientCppToC::GetWrapper;
+
+inline cef_translator_test_scoped_client_t* CefTranslatorTestScopedClientCppToC_WrapRawAndRelease(CefRawPtr<CefTranslatorTestScopedClient> c) {
+  auto [ownerPtr, structPtr] = CefTranslatorTestScopedClientCppToC_WrapRaw(c);
+  ownerPtr.release();
+  return structPtr;
+}
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CPPTOC_H_

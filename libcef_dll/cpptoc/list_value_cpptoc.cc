@@ -9,19 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f80f75d07d153e1077bdcbaa3ede6b3ccc43496d$
+// $hash=706f24b85699c38035b76b45d27644381fb5657c$
 //
 
-#include "libcef_dll/cpptoc/list_value_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
+#include "libcef_dll/cpptoc/list_value_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_list_value_t* cef_list_value_create() {
+CEF_EXPORT cef_list_value_0_t* cef_list_value_create() {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -30,14 +30,14 @@ CEF_EXPORT cef_list_value_t* cef_list_value_create() {
   CefRefPtr<CefListValue> _retval = CefListValue::Create();
 
   // Return type: refptr_same
-  return CefListValueCppToC::Wrap(_retval);
+  return CefListValueCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK list_value_is_valid(struct _cef_list_value_t* self) {
+int CEF_CALLBACK list_value_is_valid(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -48,13 +48,13 @@ int CEF_CALLBACK list_value_is_valid(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->IsValid();
+  bool _retval = CefListValue_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_is_owned(struct _cef_list_value_t* self) {
+int CEF_CALLBACK list_value_is_owned(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -65,13 +65,13 @@ int CEF_CALLBACK list_value_is_owned(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->IsOwned();
+  bool _retval = CefListValue_0_CppToC::Get(self)->IsOwned();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_is_read_only(struct _cef_list_value_t* self) {
+int CEF_CALLBACK list_value_is_read_only(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -82,38 +82,13 @@ int CEF_CALLBACK list_value_is_read_only(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->IsReadOnly();
+  bool _retval = CefListValue_0_CppToC::Get(self)->IsReadOnly();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_is_same(struct _cef_list_value_t* self,
-                                    struct _cef_list_value_t* that) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: that; type: refptr_same
-  DCHECK(that);
-  if (!that) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval =
-      CefListValueCppToC::Get(self)->IsSame(CefListValueCppToC::Unwrap(that));
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK list_value_is_equal(struct _cef_list_value_t* self,
-                                     struct _cef_list_value_t* that) {
+int CEF_CALLBACK list_value_is_same(struct _cef_list_value_0_t* self, cef_list_value_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -129,15 +104,37 @@ int CEF_CALLBACK list_value_is_equal(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefListValueCppToC::Get(self)->IsEqual(CefListValueCppToC::Unwrap(that));
+  bool _retval = CefListValue_0_CppToC::Get(self)->IsSame(
+      CefListValueCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_list_value_t* CEF_CALLBACK
-list_value_copy(struct _cef_list_value_t* self) {
+int CEF_CALLBACK list_value_is_equal(struct _cef_list_value_0_t* self, cef_list_value_0_t* that) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: that; type: refptr_same
+  DCHECK(that);
+  if (!that) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefListValue_0_CppToC::Get(self)->IsEqual(
+      CefListValueCppToC_Unwrap(that));
+
+  // Return type: bool
+  return _retval;
+}
+
+cef_list_value_0_t* CEF_CALLBACK list_value_copy(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -148,14 +145,13 @@ list_value_copy(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefListValue> _retval = CefListValueCppToC::Get(self)->Copy();
+  CefRefPtr<CefListValue> _retval = CefListValue_0_CppToC::Get(self)->Copy();
 
   // Return type: refptr_same
-  return CefListValueCppToC::Wrap(_retval);
+  return CefListValueCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK list_value_set_size(struct _cef_list_value_t* self,
-                                     size_t size) {
+int CEF_CALLBACK list_value_set_size(struct _cef_list_value_0_t* self, size_t size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -166,13 +162,14 @@ int CEF_CALLBACK list_value_set_size(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetSize(size);
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetSize(
+      size);
 
   // Return type: bool
   return _retval;
 }
 
-size_t CEF_CALLBACK list_value_get_size(struct _cef_list_value_t* self) {
+size_t CEF_CALLBACK list_value_get_size(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -183,13 +180,13 @@ size_t CEF_CALLBACK list_value_get_size(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  size_t _retval = CefListValueCppToC::Get(self)->GetSize();
+  size_t _retval = CefListValue_0_CppToC::Get(self)->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK list_value_clear(struct _cef_list_value_t* self) {
+int CEF_CALLBACK list_value_clear(struct _cef_list_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -200,14 +197,13 @@ int CEF_CALLBACK list_value_clear(struct _cef_list_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->Clear();
+  bool _retval = CefListValue_0_CppToC::Get(self)->Clear();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_remove(struct _cef_list_value_t* self,
-                                   size_t index) {
+int CEF_CALLBACK list_value_remove(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -218,14 +214,14 @@ int CEF_CALLBACK list_value_remove(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->Remove(index);
+  bool _retval = CefListValue_0_CppToC::Get(self)->Remove(
+      index);
 
   // Return type: bool
   return _retval;
 }
 
-cef_value_type_t CEF_CALLBACK
-list_value_get_type(struct _cef_list_value_t* self, size_t index) {
+cef_value_type_t CEF_CALLBACK list_value_get_type(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -236,14 +232,14 @@ list_value_get_type(struct _cef_list_value_t* self, size_t index) {
   }
 
   // Execute
-  cef_value_type_t _retval = CefListValueCppToC::Get(self)->GetType(index);
+  cef_value_type_t _retval = CefListValue_0_CppToC::Get(self)->GetType(
+      index);
 
   // Return type: simple
   return _retval;
 }
 
-cef_value_t* CEF_CALLBACK list_value_get_value(struct _cef_list_value_t* self,
-                                               size_t index) {
+struct _cef_value_0_t* CEF_CALLBACK list_value_get_value(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -254,14 +250,14 @@ cef_value_t* CEF_CALLBACK list_value_get_value(struct _cef_list_value_t* self,
   }
 
   // Execute
-  CefRefPtr<CefValue> _retval = CefListValueCppToC::Get(self)->GetValue(index);
+  CefRefPtr<CefValue> _retval = CefListValue_0_CppToC::Get(self)->GetValue(
+      index);
 
   // Return type: refptr_same
-  return CefValueCppToC::Wrap(_retval);
+  return CefValueCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK list_value_get_bool(struct _cef_list_value_t* self,
-                                     size_t index) {
+int CEF_CALLBACK list_value_get_bool(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -272,14 +268,14 @@ int CEF_CALLBACK list_value_get_bool(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->GetBool(index);
+  bool _retval = CefListValue_0_CppToC::Get(self)->GetBool(
+      index);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_get_int(struct _cef_list_value_t* self,
-                                    size_t index) {
+int CEF_CALLBACK list_value_get_int(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -290,14 +286,14 @@ int CEF_CALLBACK list_value_get_int(struct _cef_list_value_t* self,
   }
 
   // Execute
-  int _retval = CefListValueCppToC::Get(self)->GetInt(index);
+  int _retval = CefListValue_0_CppToC::Get(self)->GetInt(
+      index);
 
   // Return type: simple
   return _retval;
 }
 
-double CEF_CALLBACK list_value_get_double(struct _cef_list_value_t* self,
-                                          size_t index) {
+double CEF_CALLBACK list_value_get_double(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -308,14 +304,14 @@ double CEF_CALLBACK list_value_get_double(struct _cef_list_value_t* self,
   }
 
   // Execute
-  double _retval = CefListValueCppToC::Get(self)->GetDouble(index);
+  double _retval = CefListValue_0_CppToC::Get(self)->GetDouble(
+      index);
 
   // Return type: simple
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
-list_value_get_string(struct _cef_list_value_t* self, size_t index) {
+cef_string_userfree_t CEF_CALLBACK list_value_get_string(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -326,14 +322,14 @@ list_value_get_string(struct _cef_list_value_t* self, size_t index) {
   }
 
   // Execute
-  CefString _retval = CefListValueCppToC::Get(self)->GetString(index);
+  CefString _retval = CefListValue_0_CppToC::Get(self)->GetString(
+      index);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-cef_binary_value_t* CEF_CALLBACK
-list_value_get_binary(struct _cef_list_value_t* self, size_t index) {
+struct _cef_binary_value_0_t* CEF_CALLBACK list_value_get_binary(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -344,15 +340,14 @@ list_value_get_binary(struct _cef_list_value_t* self, size_t index) {
   }
 
   // Execute
-  CefRefPtr<CefBinaryValue> _retval =
-      CefListValueCppToC::Get(self)->GetBinary(index);
+  CefRefPtr<CefBinaryValue> _retval = CefListValue_0_CppToC::Get(self)->GetBinary(
+      index);
 
   // Return type: refptr_same
-  return CefBinaryValueCppToC::Wrap(_retval);
+  return CefBinaryValueCppToC_Wrap(_retval);
 }
 
-cef_dictionary_value_t* CEF_CALLBACK
-list_value_get_dictionary(struct _cef_list_value_t* self, size_t index) {
+struct _cef_dictionary_value_0_t* CEF_CALLBACK list_value_get_dictionary(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -363,15 +358,14 @@ list_value_get_dictionary(struct _cef_list_value_t* self, size_t index) {
   }
 
   // Execute
-  CefRefPtr<CefDictionaryValue> _retval =
-      CefListValueCppToC::Get(self)->GetDictionary(index);
+  CefRefPtr<CefDictionaryValue> _retval = CefListValue_0_CppToC::Get(self)->GetDictionary(
+      index);
 
   // Return type: refptr_same
-  return CefDictionaryValueCppToC::Wrap(_retval);
+  return CefDictionaryValueCppToC_Wrap(_retval);
 }
 
-struct _cef_list_value_t* CEF_CALLBACK
-list_value_get_list(struct _cef_list_value_t* self, size_t index) {
+cef_list_value_0_t* CEF_CALLBACK list_value_get_list(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -382,16 +376,14 @@ list_value_get_list(struct _cef_list_value_t* self, size_t index) {
   }
 
   // Execute
-  CefRefPtr<CefListValue> _retval =
-      CefListValueCppToC::Get(self)->GetList(index);
+  CefRefPtr<CefListValue> _retval = CefListValue_0_CppToC::Get(self)->GetList(
+      index);
 
   // Return type: refptr_same
-  return CefListValueCppToC::Wrap(_retval);
+  return CefListValueCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK list_value_set_value(struct _cef_list_value_t* self,
-                                      size_t index,
-                                      cef_value_t* value) {
+int CEF_CALLBACK list_value_set_value(struct _cef_list_value_0_t* self, size_t index, struct _cef_value_0_t* value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -407,15 +399,15 @@ int CEF_CALLBACK list_value_set_value(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetValue(
-      index, CefValueCppToC::Unwrap(value));
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetValue(
+      index,
+      CefValueCppToC_Unwrap(value));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_null(struct _cef_list_value_t* self,
-                                     size_t index) {
+int CEF_CALLBACK list_value_set_null(struct _cef_list_value_0_t* self, size_t index) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -426,15 +418,14 @@ int CEF_CALLBACK list_value_set_null(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetNull(index);
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetNull(
+      index);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_bool(struct _cef_list_value_t* self,
-                                     size_t index,
-                                     int value) {
+int CEF_CALLBACK list_value_set_bool(struct _cef_list_value_0_t* self, size_t index, int value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -445,16 +436,15 @@ int CEF_CALLBACK list_value_set_bool(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval =
-      CefListValueCppToC::Get(self)->SetBool(index, value ? true : false);
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetBool(
+      index,
+      value?true:false);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_int(struct _cef_list_value_t* self,
-                                    size_t index,
-                                    int value) {
+int CEF_CALLBACK list_value_set_int(struct _cef_list_value_0_t* self, size_t index, int value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -465,15 +455,15 @@ int CEF_CALLBACK list_value_set_int(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetInt(index, value);
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetInt(
+      index,
+      value);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_double(struct _cef_list_value_t* self,
-                                       size_t index,
-                                       double value) {
+int CEF_CALLBACK list_value_set_double(struct _cef_list_value_0_t* self, size_t index, double value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -484,15 +474,15 @@ int CEF_CALLBACK list_value_set_double(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetDouble(index, value);
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetDouble(
+      index,
+      value);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_string(struct _cef_list_value_t* self,
-                                       size_t index,
-                                       const cef_string_t* value) {
+int CEF_CALLBACK list_value_set_string(struct _cef_list_value_0_t* self, size_t index, const cef_string_t* value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -504,16 +494,15 @@ int CEF_CALLBACK list_value_set_string(struct _cef_list_value_t* self,
   // Unverified params: value
 
   // Execute
-  bool _retval =
-      CefListValueCppToC::Get(self)->SetString(index, CefString(value));
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetString(
+      index,
+      CefString(value));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_binary(struct _cef_list_value_t* self,
-                                       size_t index,
-                                       cef_binary_value_t* value) {
+int CEF_CALLBACK list_value_set_binary(struct _cef_list_value_0_t* self, size_t index, struct _cef_binary_value_0_t* value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -529,16 +518,15 @@ int CEF_CALLBACK list_value_set_binary(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetBinary(
-      index, CefBinaryValueCppToC::Unwrap(value));
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetBinary(
+      index,
+      CefBinaryValueCppToC_Unwrap(value));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_dictionary(struct _cef_list_value_t* self,
-                                           size_t index,
-                                           cef_dictionary_value_t* value) {
+int CEF_CALLBACK list_value_set_dictionary(struct _cef_list_value_0_t* self, size_t index, struct _cef_dictionary_value_0_t* value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -554,16 +542,15 @@ int CEF_CALLBACK list_value_set_dictionary(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetDictionary(
-      index, CefDictionaryValueCppToC::Unwrap(value));
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetDictionary(
+      index,
+      CefDictionaryValueCppToC_Unwrap(value));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK list_value_set_list(struct _cef_list_value_t* self,
-                                     size_t index,
-                                     struct _cef_list_value_t* value) {
+int CEF_CALLBACK list_value_set_list(struct _cef_list_value_0_t* self, size_t index, cef_list_value_0_t* value) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -579,8 +566,9 @@ int CEF_CALLBACK list_value_set_list(struct _cef_list_value_t* self,
   }
 
   // Execute
-  bool _retval = CefListValueCppToC::Get(self)->SetList(
-      index, CefListValueCppToC::Unwrap(value));
+  bool _retval = CefListValue_0_CppToC::Get(self)->SetList(
+      index,
+      CefListValueCppToC_Unwrap(value));
 
   // Return type: bool
   return _retval;
@@ -588,9 +576,12 @@ int CEF_CALLBACK list_value_set_list(struct _cef_list_value_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefListValueCppToC::CefListValueCppToC() {
+CefListValue_0_CppToC::CefListValue_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = list_value_is_valid;
   GetStruct()->is_owned = list_value_is_owned;
   GetStruct()->is_read_only = list_value_is_read_only;
@@ -621,22 +612,16 @@ CefListValueCppToC::CefListValueCppToC() {
   GetStruct()->set_list = list_value_set_list;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefListValueCppToC::~CefListValueCppToC() {
+CefListValue_0_CppToC::~CefListValue_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefListValue>
-CefCppToCRefCounted<CefListValueCppToC, CefListValue, cef_list_value_t>::
-    UnwrapDerived(CefWrapperType type, cef_list_value_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefListValue> CefCppToCRefCounted<CefListValue_0_CppToC, CefListValue, cef_list_value_0_t>::UnwrapDerived(CefWrapperType type, cef_list_value_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefListValueCppToC,
-                                   CefListValue,
-                                   cef_list_value_t>::kWrapperType =
-    WT_LIST_VALUE;
+template<> CefWrapperType CefCppToCRefCounted<CefListValue_0_CppToC, CefListValue, cef_list_value_0_t>::kWrapperType = WT_LIST_VALUE;
+
+

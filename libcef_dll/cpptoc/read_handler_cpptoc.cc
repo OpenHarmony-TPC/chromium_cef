@@ -9,21 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5ea67013bce0ef35678d00da342fa834327b8fa1$
+// $hash=b0a045358d00bcab88b8fb28445e32ddc9815008$
 //
 
 #include "libcef_dll/cpptoc/read_handler_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-size_t CEF_CALLBACK read_handler_read(struct _cef_read_handler_t* self,
-                                      void* ptr,
-                                      size_t size,
-                                      size_t n) {
+size_t CEF_CALLBACK read_handler_read(struct _cef_read_handler_t* self, void* ptr, size_t size, size_t n) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -39,15 +35,16 @@ size_t CEF_CALLBACK read_handler_read(struct _cef_read_handler_t* self,
   }
 
   // Execute
-  size_t _retval = CefReadHandlerCppToC::Get(self)->Read(ptr, size, n);
+  size_t _retval = CefReadHandlerCppToC::Get(self)->Read(
+      ptr,
+      size,
+      n);
 
   // Return type: simple
   return _retval;
 }
 
-int CEF_CALLBACK read_handler_seek(struct _cef_read_handler_t* self,
-                                   int64_t offset,
-                                   int whence) {
+int CEF_CALLBACK read_handler_seek(struct _cef_read_handler_t* self, int64_t offset, int whence) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -58,7 +55,9 @@ int CEF_CALLBACK read_handler_seek(struct _cef_read_handler_t* self,
   }
 
   // Execute
-  int _retval = CefReadHandlerCppToC::Get(self)->Seek(offset, whence);
+  int _retval = CefReadHandlerCppToC::Get(self)->Seek(
+      offset,
+      whence);
 
   // Return type: simple
   return _retval;
@@ -133,16 +132,11 @@ CefReadHandlerCppToC::~CefReadHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefReadHandler>
-CefCppToCRefCounted<CefReadHandlerCppToC, CefReadHandler, cef_read_handler_t>::
-    UnwrapDerived(CefWrapperType type, cef_read_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefReadHandler> CefCppToCRefCounted<CefReadHandlerCppToC, CefReadHandler, cef_read_handler_t>::UnwrapDerived(CefWrapperType type, cef_read_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefReadHandlerCppToC,
-                                   CefReadHandler,
-                                   cef_read_handler_t>::kWrapperType =
-    WT_READ_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefReadHandlerCppToC, CefReadHandler, cef_read_handler_t>::kWrapperType = WT_READ_HANDLER;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=052c0da77ee494bb344c18e2fedf12578619055d$
+// $hash=e68fd0a4f5b8173941645e8a5b6eb87517fc8ba8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PERMISSION_PROMPT_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_permission_handler_capi.h"
 #include "include/cef_permission_handler.h"
+#include "include/capi/cef_permission_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPermissionPromptCallbackCppToC
-    : public CefCppToCRefCounted<CefPermissionPromptCallbackCppToC,
-                                 CefPermissionPromptCallback,
-                                 cef_permission_prompt_callback_t> {
+class CefPermissionPromptCallback_0_CppToC
+    : public CefCppToCRefCounted<CefPermissionPromptCallback_0_CppToC, CefPermissionPromptCallback, cef_permission_prompt_callback_0_t> {
  public:
-  CefPermissionPromptCallbackCppToC();
-  virtual ~CefPermissionPromptCallbackCppToC();
+  CefPermissionPromptCallback_0_CppToC();
+  virtual ~CefPermissionPromptCallback_0_CppToC();
 };
+
+constexpr auto CefPermissionPromptCallbackCppToC_Wrap = CefPermissionPromptCallback_0_CppToC::Wrap;
+constexpr auto CefPermissionPromptCallbackCppToC_Unwrap = CefPermissionPromptCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PERMISSION_PROMPT_CALLBACK_CPPTOC_H_

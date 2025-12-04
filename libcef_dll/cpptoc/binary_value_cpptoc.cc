@@ -9,17 +9,16 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8aae483c95ab1df394a94a4e68e1612d505afc60$
+// $hash=0f3e0fee3b06456db5bacd59f7e6ca949ffb994d$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_binary_value_t* cef_binary_value_create(const void* data,
-                                                       size_t data_size) {
+CEF_EXPORT cef_binary_value_0_t* cef_binary_value_create(const void* data, size_t data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -31,17 +30,19 @@ CEF_EXPORT cef_binary_value_t* cef_binary_value_create(const void* data,
   }
 
   // Execute
-  CefRefPtr<CefBinaryValue> _retval = CefBinaryValue::Create(data, data_size);
+  CefRefPtr<CefBinaryValue> _retval = CefBinaryValue::Create(
+      data,
+      data_size);
 
   // Return type: refptr_same
-  return CefBinaryValueCppToC::Wrap(_retval);
+  return CefBinaryValueCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK binary_value_is_valid(struct _cef_binary_value_t* self) {
+int CEF_CALLBACK binary_value_is_valid(struct _cef_binary_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -52,13 +53,13 @@ int CEF_CALLBACK binary_value_is_valid(struct _cef_binary_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefBinaryValueCppToC::Get(self)->IsValid();
+  bool _retval = CefBinaryValue_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK binary_value_is_owned(struct _cef_binary_value_t* self) {
+int CEF_CALLBACK binary_value_is_owned(struct _cef_binary_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -69,38 +70,13 @@ int CEF_CALLBACK binary_value_is_owned(struct _cef_binary_value_t* self) {
   }
 
   // Execute
-  bool _retval = CefBinaryValueCppToC::Get(self)->IsOwned();
+  bool _retval = CefBinaryValue_0_CppToC::Get(self)->IsOwned();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK binary_value_is_same(struct _cef_binary_value_t* self,
-                                      struct _cef_binary_value_t* that) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: that; type: refptr_same
-  DCHECK(that);
-  if (!that) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefBinaryValueCppToC::Get(self)->IsSame(
-      CefBinaryValueCppToC::Unwrap(that));
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK binary_value_is_equal(struct _cef_binary_value_t* self,
-                                       struct _cef_binary_value_t* that) {
+int CEF_CALLBACK binary_value_is_same(struct _cef_binary_value_0_t* self, cef_binary_value_0_t* that) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -116,15 +92,37 @@ int CEF_CALLBACK binary_value_is_equal(struct _cef_binary_value_t* self,
   }
 
   // Execute
-  bool _retval = CefBinaryValueCppToC::Get(self)->IsEqual(
-      CefBinaryValueCppToC::Unwrap(that));
+  bool _retval = CefBinaryValue_0_CppToC::Get(self)->IsSame(
+      CefBinaryValueCppToC_Unwrap(that));
 
   // Return type: bool
   return _retval;
 }
 
-struct _cef_binary_value_t* CEF_CALLBACK
-binary_value_copy(struct _cef_binary_value_t* self) {
+int CEF_CALLBACK binary_value_is_equal(struct _cef_binary_value_0_t* self, cef_binary_value_0_t* that) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: that; type: refptr_same
+  DCHECK(that);
+  if (!that) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBinaryValue_0_CppToC::Get(self)->IsEqual(
+      CefBinaryValueCppToC_Unwrap(that));
+
+  // Return type: bool
+  return _retval;
+}
+
+cef_binary_value_0_t* CEF_CALLBACK binary_value_copy(struct _cef_binary_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -135,14 +133,13 @@ binary_value_copy(struct _cef_binary_value_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBinaryValue> _retval = CefBinaryValueCppToC::Get(self)->Copy();
+  CefRefPtr<CefBinaryValue> _retval = CefBinaryValue_0_CppToC::Get(self)->Copy();
 
   // Return type: refptr_same
-  return CefBinaryValueCppToC::Wrap(_retval);
+  return CefBinaryValueCppToC_Wrap(_retval);
 }
 
-const void* CEF_CALLBACK
-binary_value_get_raw_data(struct _cef_binary_value_t* self) {
+const void* CEF_CALLBACK binary_value_get_raw_data(struct _cef_binary_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -153,13 +150,13 @@ binary_value_get_raw_data(struct _cef_binary_value_t* self) {
   }
 
   // Execute
-  const void* _retval = CefBinaryValueCppToC::Get(self)->GetRawData();
+  const void* _retval = CefBinaryValue_0_CppToC::Get(self)->GetRawData();
 
   // Return type: simple_byaddr
   return _retval;
 }
 
-size_t CEF_CALLBACK binary_value_get_size(struct _cef_binary_value_t* self) {
+size_t CEF_CALLBACK binary_value_get_size(struct _cef_binary_value_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -170,16 +167,13 @@ size_t CEF_CALLBACK binary_value_get_size(struct _cef_binary_value_t* self) {
   }
 
   // Execute
-  size_t _retval = CefBinaryValueCppToC::Get(self)->GetSize();
+  size_t _retval = CefBinaryValue_0_CppToC::Get(self)->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-size_t CEF_CALLBACK binary_value_get_data(struct _cef_binary_value_t* self,
-                                          void* buffer,
-                                          size_t buffer_size,
-                                          size_t data_offset) {
+size_t CEF_CALLBACK binary_value_get_data(struct _cef_binary_value_0_t* self, void* buffer, size_t buffer_size, size_t data_offset) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -195,8 +189,10 @@ size_t CEF_CALLBACK binary_value_get_data(struct _cef_binary_value_t* self,
   }
 
   // Execute
-  size_t _retval = CefBinaryValueCppToC::Get(self)->GetData(buffer, buffer_size,
-                                                            data_offset);
+  size_t _retval = CefBinaryValue_0_CppToC::Get(self)->GetData(
+      buffer,
+      buffer_size,
+      data_offset);
 
   // Return type: simple
   return _retval;
@@ -204,9 +200,12 @@ size_t CEF_CALLBACK binary_value_get_data(struct _cef_binary_value_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBinaryValueCppToC::CefBinaryValueCppToC() {
+CefBinaryValue_0_CppToC::CefBinaryValue_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = binary_value_is_valid;
   GetStruct()->is_owned = binary_value_is_owned;
   GetStruct()->is_same = binary_value_is_same;
@@ -217,22 +216,16 @@ CefBinaryValueCppToC::CefBinaryValueCppToC() {
   GetStruct()->get_data = binary_value_get_data;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBinaryValueCppToC::~CefBinaryValueCppToC() {
+CefBinaryValue_0_CppToC::~CefBinaryValue_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefBinaryValue>
-CefCppToCRefCounted<CefBinaryValueCppToC, CefBinaryValue, cef_binary_value_t>::
-    UnwrapDerived(CefWrapperType type, cef_binary_value_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefBinaryValue> CefCppToCRefCounted<CefBinaryValue_0_CppToC, CefBinaryValue, cef_binary_value_0_t>::UnwrapDerived(CefWrapperType type, cef_binary_value_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefBinaryValueCppToC,
-                                   CefBinaryValue,
-                                   cef_binary_value_t>::kWrapperType =
-    WT_BINARY_VALUE;
+template<> CefWrapperType CefCppToCRefCounted<CefBinaryValue_0_CppToC, CefBinaryValue, cef_binary_value_0_t>::kWrapperType = WT_BINARY_VALUE;
+
+

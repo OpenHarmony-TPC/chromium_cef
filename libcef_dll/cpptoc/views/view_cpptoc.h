@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5862450056302d88083bb63aef8f0caa910b0c56$
+// $hash=1890215426d3084742872f206eaaf18a09da1c3f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_VIEW_CPPTOC_H_
@@ -20,29 +20,32 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_browser_view_capi.h"
-#include "include/capi/views/cef_button_capi.h"
-#include "include/capi/views/cef_panel_capi.h"
-#include "include/capi/views/cef_scroll_view_capi.h"
-#include "include/capi/views/cef_textfield_capi.h"
-#include "include/capi/views/cef_view_capi.h"
-#include "include/capi/views/cef_window_capi.h"
-#include "include/views/cef_browser_view.h"
-#include "include/views/cef_button.h"
-#include "include/views/cef_panel.h"
-#include "include/views/cef_scroll_view.h"
-#include "include/views/cef_textfield.h"
 #include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi_versions.h"
+#include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi_versions.h"
+#include "include/views/cef_button.h"
+#include "include/capi/views/cef_button_capi_versions.h"
+#include "include/views/cef_panel.h"
+#include "include/capi/views/cef_panel_capi_versions.h"
+#include "include/views/cef_scroll_view.h"
+#include "include/capi/views/cef_scroll_view_capi_versions.h"
+#include "include/views/cef_textfield.h"
+#include "include/capi/views/cef_textfield_capi_versions.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefViewCppToC
-    : public CefCppToCRefCounted<CefViewCppToC, CefView, cef_view_t> {
+class CefView_0_CppToC
+    : public CefCppToCRefCounted<CefView_0_CppToC, CefView, cef_view_0_t> {
  public:
-  CefViewCppToC();
-  virtual ~CefViewCppToC();
+  CefView_0_CppToC();
+  virtual ~CefView_0_CppToC();
 };
+
+constexpr auto CefViewCppToC_Wrap = CefView_0_CppToC::Wrap;
+constexpr auto CefViewCppToC_Unwrap = CefView_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_VIEW_CPPTOC_H_

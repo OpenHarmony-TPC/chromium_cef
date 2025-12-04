@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d905efc2d067ce5544c816bb72acea082f883a9f$
+// $hash=8a2d5248d46fa5d5beab1910de63baccad83f10d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_JSDIALOG_HANDLER_CTOCPP_H_
@@ -20,34 +20,26 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_jsdialog_handler_capi.h"
 #include "include/cef_jsdialog_handler.h"
+#include "include/capi/cef_jsdialog_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefJSDialogHandlerCToCpp
-    : public CefCToCppRefCounted<CefJSDialogHandlerCToCpp,
-                                 CefJSDialogHandler,
-                                 cef_jsdialog_handler_t> {
+class CefJSDialogHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefJSDialogHandler_0_CToCpp, CefJSDialogHandler, cef_jsdialog_handler_0_t> {
  public:
-  CefJSDialogHandlerCToCpp();
-  virtual ~CefJSDialogHandlerCToCpp();
+  CefJSDialogHandler_0_CToCpp();
+  virtual ~CefJSDialogHandler_0_CToCpp();
 
   // CefJSDialogHandler methods.
-  bool OnJSDialog(CefRefPtr<CefBrowser> browser,
-                  const CefString& origin_url,
-                  JSDialogType dialog_type,
-                  const CefString& message_text,
-                  const CefString& default_prompt_text,
-                  CefRefPtr<CefJSDialogCallback> callback,
-                  bool& suppress_message) override;
-  bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
-                            const CefString& message_text,
-                            bool is_reload,
-                            CefRefPtr<CefJSDialogCallback> callback) override;
+  bool OnJSDialog(CefRefPtr<CefBrowser> browser, const CefString& origin_url, JSDialogType dialog_type, const CefString& message_text, const CefString& default_prompt_text, CefRefPtr<CefJSDialogCallback> callback, bool& suppress_message) override;
+  bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser, const CefString& message_text, bool is_reload, CefRefPtr<CefJSDialogCallback> callback) override;
   void OnResetDialogState(CefRefPtr<CefBrowser> browser) override;
   void OnDialogClosed(CefRefPtr<CefBrowser> browser) override;
 };
+
+constexpr auto CefJSDialogHandlerCToCpp_Wrap = CefJSDialogHandler_0_CToCpp::Wrap;
+constexpr auto CefJSDialogHandlerCToCpp_Unwrap = CefJSDialogHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_JSDIALOG_HANDLER_CTOCPP_H_

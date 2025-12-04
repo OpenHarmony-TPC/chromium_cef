@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=86afc685131331a655e36f5967080564b18ba806$
+// $hash=21a30b02d8664f335fd04155b0550414b99ccda9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_WRITE_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_stream_capi.h"
 #include "include/cef_stream.h"
+#include "include/capi/cef_stream_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefWriteHandlerCppToC : public CefCppToCRefCounted<CefWriteHandlerCppToC,
-                                                         CefWriteHandler,
-                                                         cef_write_handler_t> {
+class CefWriteHandlerCppToC
+    : public CefCppToCRefCounted<CefWriteHandlerCppToC, CefWriteHandler, cef_write_handler_t> {
  public:
   CefWriteHandlerCppToC();
   virtual ~CefWriteHandlerCppToC();
 };
+
+constexpr auto CefWriteHandlerCppToC_Wrap = CefWriteHandlerCppToC::Wrap;
+constexpr auto CefWriteHandlerCppToC_Unwrap = CefWriteHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_WRITE_HANDLER_CPPTOC_H_

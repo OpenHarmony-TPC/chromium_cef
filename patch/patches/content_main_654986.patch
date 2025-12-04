@@ -1,21 +1,22 @@
 diff --git base/process/set_process_title.cc base/process/set_process_title.cc
-index 79ba3ac1913f8..46bcb4366d2f8 100644
+index b6389523952a468c6eec59dcf14ee5e7542ab6c2..f9c709624cd0e26edb24945d212e73bd87bfc6ef 100644
 --- base/process/set_process_title.cc
 +++ base/process/set_process_title.cc
-@@ -54,7 +54,7 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+@@ -54,9 +54,6 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
    bool have_argv0 = false;
  
  #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
--  DCHECK_EQ(base::PlatformThread::CurrentId(), getpid());
-+  // DCHECK_EQ(base::PlatformThread::CurrentId(), getpid());
- 
-   if (main_argv)
+-  DCHECK_EQ(base::PlatformThread::CurrentId(),
+-            base::PlatformThreadId(getpid()));
+-
+   if (main_argv) {
      setproctitle_init(main_argv);
+   }
 diff --git content/app/content_main.cc content/app/content_main.cc
-index c37f18d794ae2..fd360f7698bcf 100644
+index 36248b2a3e099674467a095cb4902d89914a51d8..4dcfe54abccefa3793d500324e867643f4927cf5 100644
 --- content/app/content_main.cc
 +++ content/app/content_main.cc
-@@ -194,11 +194,8 @@ ContentMainParams::~ContentMainParams() = default;
+@@ -205,16 +205,10 @@ ContentMainParams::~ContentMainParams() = default;
  ContentMainParams::ContentMainParams(ContentMainParams&&) = default;
  ContentMainParams& ContentMainParams::operator=(ContentMainParams&&) = default;
  
@@ -27,11 +28,6 @@ index c37f18d794ae2..fd360f7698bcf 100644
 +int ContentMainInitialize(ContentMainParams params,
 +                          ContentMainRunner* content_main_runner) {
    base::FeatureList::FailOnFeatureAccessWithoutFeatureList();
- #if BUILDFLAG(IS_CHROMEOS_LACROS)
-   // Lacros is launched with inherited priority. Revert to normal priority
-@@ -206,9 +203,6 @@ NO_STACK_PROTECTOR int RunContentProcess(
-   base::PlatformThread::SetCurrentThreadType(base::ThreadType::kDefault);
- #endif
    int exit_code = -1;
 -#if BUILDFLAG(IS_MAC)
 -  base::apple::ScopedNSAutoreleasePool autorelease_pool;
@@ -39,7 +35,7 @@ index c37f18d794ae2..fd360f7698bcf 100644
  
    // A flag to indicate whether Main() has been called before. On Android, we
    // may re-run Main() without restarting the browser process. This flag
-@@ -287,7 +281,9 @@ NO_STACK_PROTECTOR int RunContentProcess(
+@@ -293,7 +287,9 @@ NO_STACK_PROTECTOR int RunContentProcess(
      // default, "C", locale.
      setlocale(LC_NUMERIC, "C");
  
@@ -50,7 +46,7 @@ index c37f18d794ae2..fd360f7698bcf 100644
  #endif
  
  #if BUILDFLAG(IS_WIN)
-@@ -295,14 +291,6 @@ NO_STACK_PROTECTOR int RunContentProcess(
+@@ -301,14 +297,6 @@ NO_STACK_PROTECTOR int RunContentProcess(
  #endif
  
  #if BUILDFLAG(IS_MAC)
@@ -65,7 +61,7 @@ index c37f18d794ae2..fd360f7698bcf 100644
      InitializeMac();
  #endif
  
-@@ -353,12 +341,44 @@ NO_STACK_PROTECTOR int RunContentProcess(
+@@ -371,12 +359,44 @@ NO_STACK_PROTECTOR int RunContentProcess(
  
    if (IsSubprocess())
      CommonSubprocessInit();
@@ -112,18 +108,18 @@ index c37f18d794ae2..fd360f7698bcf 100644
  }
  
 diff --git content/app/content_main_runner_impl.cc content/app/content_main_runner_impl.cc
-index 93957c7a15594..8e3e18a9c8992 100644
+index 48363b920c780064a6d49f4a521b476bda5ac27b..920db94bb1738a19b287aeff6d006806d3e9cae0 100644
 --- content/app/content_main_runner_impl.cc
 +++ content/app/content_main_runner_impl.cc
-@@ -52,6 +52,7 @@
+@@ -50,6 +50,7 @@
  #include "base/task/thread_pool/thread_pool_instance.h"
  #include "base/threading/hang_watcher.h"
  #include "base/threading/platform_thread.h"
 +#include "base/threading/thread_restrictions.h"
  #include "base/time/time.h"
  #include "base/trace_event/trace_event.h"
- #include "build/build_config.h"
-@@ -1349,6 +1350,11 @@ void ContentMainRunnerImpl::Shutdown() {
+ #include "build/branding_buildflags.h"
+@@ -1366,6 +1367,11 @@ void ContentMainRunnerImpl::Shutdown() {
    is_shutdown_ = true;
  }
  
@@ -136,7 +132,7 @@ index 93957c7a15594..8e3e18a9c8992 100644
  std::unique_ptr<ContentMainRunner> ContentMainRunner::Create() {
    return ContentMainRunnerImpl::Create();
 diff --git content/app/content_main_runner_impl.h content/app/content_main_runner_impl.h
-index cbbc2f3ec12fa..f097b3cdded2f 100644
+index cbbc2f3ec12fa0e65891eb76433f349992d06ca5..f097b3cdded2f03847cdb27607965b32741f5001 100644
 --- content/app/content_main_runner_impl.h
 +++ content/app/content_main_runner_impl.h
 @@ -27,7 +27,7 @@ class DiscardableSharedMemoryManager;
@@ -158,7 +154,7 @@ index cbbc2f3ec12fa..f097b3cdded2f 100644
    int RunBrowser(MainFunctionParams main_function_params,
                   bool start_minimal_browser);
 diff --git content/public/app/content_main.h content/public/app/content_main.h
-index 7f9b515297357..5606867e43780 100644
+index 7f9b51529735789778df928b06ac5e8f1c564a42..5606867e437806bc94a64aca0e61d21dfbd31a8d 100644
 --- content/public/app/content_main.h
 +++ content/public/app/content_main.h
 @@ -66,6 +66,11 @@ struct CONTENT_EXPORT ContentMainParams {

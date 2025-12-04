@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6b1e41cd37349248135f4165b60690e22856acbc$
+// $hash=904bcc0ba3103501914d71e271f43ce885e65eaf$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_LAYOUT_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_LAYOUT_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -54,6 +58,8 @@ struct _cef_fill_layout_t;
 /// implementation-specific heuristics. Methods must be called on the browser
 /// process UI thread unless otherwise indicated.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_layout_t {
   ///
   /// Base structure.
@@ -63,20 +69,19 @@ typedef struct _cef_layout_t {
   ///
   /// Returns this Layout as a BoxLayout or NULL if this is not a BoxLayout.
   ///
-  struct _cef_box_layout_t*(CEF_CALLBACK* as_box_layout)(
-      struct _cef_layout_t* self);
+  struct _cef_box_layout_t* (CEF_CALLBACK *as_box_layout)(struct _cef_layout_t* self);
 
   ///
   /// Returns this Layout as a FillLayout or NULL if this is not a FillLayout.
   ///
-  struct _cef_fill_layout_t*(CEF_CALLBACK* as_fill_layout)(
-      struct _cef_layout_t* self);
+  struct _cef_fill_layout_t* (CEF_CALLBACK *as_fill_layout)(struct _cef_layout_t* self);
 
   ///
   /// Returns true (1) if this Layout is valid.
   ///
-  int(CEF_CALLBACK* is_valid)(struct _cef_layout_t* self);
+  int (CEF_CALLBACK *is_valid)(struct _cef_layout_t* self);
 } cef_layout_t;
+
 
 #ifdef __cplusplus
 }

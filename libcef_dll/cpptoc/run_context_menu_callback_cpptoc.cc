@@ -9,21 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0314d452ef7bf40ff38dc9a7ab9ffe6bd4a93601$
+// $hash=9565dcd65c1649e9b09451de1e9ddd2dc4ef8fce$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/run_context_menu_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-run_context_menu_callback_cont(struct _cef_run_context_menu_callback_t* self,
-                               int command_id,
-                               cef_event_flags_t event_flags) {
+void CEF_CALLBACK run_context_menu_callback_cont(struct _cef_run_context_menu_callback_0_t* self, int command_id, cef_event_flags_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -34,11 +31,12 @@ run_context_menu_callback_cont(struct _cef_run_context_menu_callback_t* self,
   }
 
   // Execute
-  CefRunContextMenuCallbackCppToC::Get(self)->Continue(command_id, event_flags);
+  CefRunContextMenuCallback_0_CppToC::Get(self)->Continue(
+      command_id,
+      event_flags);
 }
 
-void CEF_CALLBACK run_context_menu_callback_cancel(
-    struct _cef_run_context_menu_callback_t* self) {
+void CEF_CALLBACK run_context_menu_callback_cancel(struct _cef_run_context_menu_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -49,37 +47,31 @@ void CEF_CALLBACK run_context_menu_callback_cancel(
   }
 
   // Execute
-  CefRunContextMenuCallbackCppToC::Get(self)->Cancel();
+  CefRunContextMenuCallback_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRunContextMenuCallbackCppToC::CefRunContextMenuCallbackCppToC() {
+CefRunContextMenuCallback_0_CppToC::CefRunContextMenuCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = run_context_menu_callback_cont;
   GetStruct()->cancel = run_context_menu_callback_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefRunContextMenuCallbackCppToC::~CefRunContextMenuCallbackCppToC() {
+CefRunContextMenuCallback_0_CppToC::~CefRunContextMenuCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefRunContextMenuCallback>
-CefCppToCRefCounted<CefRunContextMenuCallbackCppToC,
-                    CefRunContextMenuCallback,
-                    cef_run_context_menu_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_run_context_menu_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefRunContextMenuCallback> CefCppToCRefCounted<CefRunContextMenuCallback_0_CppToC, CefRunContextMenuCallback, cef_run_context_menu_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_run_context_menu_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefRunContextMenuCallbackCppToC,
-                        CefRunContextMenuCallback,
-                        cef_run_context_menu_callback_t>::kWrapperType =
-        WT_RUN_CONTEXT_MENU_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefRunContextMenuCallback_0_CppToC, CefRunContextMenuCallback, cef_run_context_menu_callback_0_t>::kWrapperType = WT_RUN_CONTEXT_MENU_CALLBACK;
+
+

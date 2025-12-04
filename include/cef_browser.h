@@ -249,7 +249,7 @@ class CefPdfPrintCallback : public virtual CefBaseRefCounted {
   /// is the output path. |ok| will be true if the printing completed
   /// successfully or false otherwise.
   ///
-  /*--cef()--*/
+  /*--cef(optional_param=path)--*/
   virtual void OnPdfPrintFinished(const CefString& path, bool ok) = 0;
 };
 
@@ -707,12 +707,24 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void WasHidden(bool hidden) = 0;
 
   ///
-  /// Send a notification to the browser that the screen info has changed. The
-  /// browser will then call CefRenderHandler::GetScreenInfo to update the
-  /// screen information with the new values. This simulates moving the webview
-  /// window from one display to another, or changing the properties of the
-  /// current display. This method is only used when window rendering is
-  /// disabled.
+  /// Notify the browser that screen information has changed. Updated
+  /// information will be sent to the renderer process to configure screen size
+  /// and position values used by CSS and JavaScript (window.deviceScaleFactor,
+  /// window.screenX/Y, window.outerWidth/Height, etc.). For background see
+  /// https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage.md#markdown-header-coordinate-systems
+  ///
+  /// This method is used with (a) windowless rendering and (b) windowed
+  /// rendering with external (client-provided) root window.
+  ///
+  /// With windowless rendering the browser will call
+  /// CefRenderHandler::GetScreenInfo, CefRenderHandler::GetRootScreenRect and
+  /// CefRenderHandler::GetViewRect. This simulates moving or resizing the root
+  /// window in the current display, moving the root window from one display to
+  /// another, or changing the properties of the current display.
+  ///
+  /// With windowed rendering the browser will call
+  /// CefDisplayHandler::GetRootWindowScreenRect and use the associated
+  /// display properties.
   ///
   /*--cef()--*/
   virtual void NotifyScreenInfoChanged() = 0;
@@ -1022,17 +1034,21 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void ExitFullscreen(bool will_cause_resize) = 0;
 
   ///
-  /// Returns true if a Chrome command is supported and enabled. Values for
-  /// |command_id| can be found in the cef_command_ids.h file. This method can
-  /// only be called on the UI thread. Only used with Chrome style.
+  /// Returns true if a Chrome command is supported and enabled. Use the
+  /// cef_id_for_command_id_name() function for version-safe mapping of command
+  /// IDC names from cef_command_ids.h to version-specific numerical
+  /// |command_id| values. This method can only be called on the UI thread. Only
+  /// used with Chrome style.
   ///
   /*--cef()--*/
   virtual bool CanExecuteChromeCommand(int command_id) = 0;
 
   ///
-  /// Execute a Chrome command. Values for |command_id| can be found in the
-  /// cef_command_ids.h file. |disposition| provides information about the
-  /// intended command target. Only used with Chrome style.
+  /// Execute a Chrome command. Use the cef_id_for_command_id_name()
+  /// function for version-safe mapping of command IDC names from
+  /// cef_command_ids.h to version-specific numerical |command_id| values.
+  /// |disposition| provides information about the intended command target. Only
+  /// used with Chrome style.
   ///
   /*--cef()--*/
   virtual void ExecuteChromeCommand(

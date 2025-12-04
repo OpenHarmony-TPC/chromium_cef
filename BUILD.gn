@@ -321,6 +321,16 @@ group("cef") {
     ":libcef_static_unittests",
   ]
 
+  if (is_win) {
+    deps += [
+      ":bootstrap",
+      ":bootstrapc",
+      ":cefclient_dll",
+      ":cefsimple_dll",
+      ":ceftests_dll",
+    ]
+  }
+
   if (!is_linux || ozone_platform_x11) {
     deps += [ ":cefclient" ]
   }
@@ -342,7 +352,7 @@ if (is_win) {
       # to maintain.
       "//chrome/common/crash_keys.cc",
       "//chrome/common/chrome_switches.cc",
-      "//components/flags_ui/flags_ui_switches.cc",
+      "//components/webui/flags/flags_ui_switches.cc",
       "//content/public/common/content_switches.cc",
     ]
 
@@ -362,6 +372,8 @@ if (is_win) {
     }
 
     deps = [
+      ":make_version_header",
+
       "//components/crash/core/common",  # crash_keys
 
       # Required by chrome_switches.cc
@@ -372,6 +384,10 @@ if (is_win) {
 
       # Required by content_switches.cc
       "//media:media_buildflags",
+
+      # Required by crash_keys.cc
+      "//content/public/common:buildflags",
+      "//tools/v8_context_snapshot:buildflags",
 
       # Required by crash_keys.cc (from base/stl_util.h)
       "//third_party/abseil-cpp:absl",
@@ -443,6 +459,7 @@ source_set("libcef_test_support") {
     "libcef/browser/test/test_helpers_impl.cc",
     "libcef/browser/test/test_server_impl.cc",
     "libcef/browser/test/test_server_impl.h",
+    "libcef/common/test/api_version_test_impl.cc",
     "libcef/common/test/translator_test_impl.cc",
   ]
 
@@ -452,6 +469,10 @@ source_set("libcef_test_support") {
 
     # Support for UI input events.
     "//ui/views:test_support",
+  ]
+
+  configs += [
+    ":libcef_includes_config",
   ]
 }
 
@@ -543,6 +564,8 @@ source_set("libcef_static") {
     "libcef/browser/context.h",
     "libcef/browser/context_menu_params_impl.cc",
     "libcef/browser/context_menu_params_impl.h",
+    "libcef/browser/crashpad_runner.cc",
+    "libcef/browser/crashpad_runner.h",
     "libcef/browser/devtools/devtools_controller.cc",
     "libcef/browser/devtools/devtools_controller.h",
     "libcef/browser/devtools/devtools_protocol_manager.cc",
@@ -672,6 +695,8 @@ source_set("libcef_static") {
     "libcef/browser/scheme_impl.cc",
     "libcef/browser/server_impl.cc",
     "libcef/browser/server_impl.h",
+    "libcef/browser/setting_helper.cc",
+    "libcef/browser/setting_helper.h",
     "libcef/browser/simple_menu_model_impl.cc",
     "libcef/browser/simple_menu_model_impl.h",
     "libcef/browser/ssl_info_impl.cc",
@@ -760,6 +785,7 @@ source_set("libcef_static") {
     "libcef/browser/xml_reader_impl.h",
     "libcef/browser/zip_reader_impl.cc",
     "libcef/browser/zip_reader_impl.h",
+    "libcef/common/api_version_util.h",
     "libcef/common/app_manager.cc",
     "libcef/common/app_manager.h",
     "libcef/common/base_impl.cc",
@@ -831,6 +857,7 @@ source_set("libcef_static") {
     "libcef/common/values_impl.h",
     "libcef/common/waitable_event_impl.cc",
     "libcef/common/waitable_event_impl.h",
+    "libcef/renderer/browser_config.h",
     "libcef/renderer/browser_impl.cc",
     "libcef/renderer/browser_impl.h",
     "libcef/renderer/chrome/chrome_content_renderer_client_cef.cc",
@@ -872,7 +899,7 @@ source_set("libcef_static") {
 
   public_deps = [
     # Bring in feature flag defines.
-    "//cef/libcef/features",
+    "//cef/libcef/features:buildflags",
     # Support relative include paths.
     "//base",
     "//third_party/abseil-cpp:absl",
@@ -893,7 +920,6 @@ source_set("libcef_static") {
     "//chrome:strings",
     "//chrome/common:buildflags",
     "//chrome/services/printing:lib",
-    "//components/cdm/renderer",
     "//components/certificate_transparency",
     "//components/component_updater",
     "//components/content_settings/core/browser",
@@ -984,6 +1010,9 @@ source_set("libcef_static") {
       "libcef/browser/native/browser_platform_delegate_native_win.h",
       "libcef/browser/osr/browser_platform_delegate_osr_win.cc",
       "libcef/browser/osr/browser_platform_delegate_osr_win.h",
+      "libcef/browser/preferred_stack_size_win.inc",
+      "libcef_dll/bootstrap/bootstrap_util_win.cc",
+      "libcef_dll/bootstrap/bootstrap_util_win.h",
     ]
 
     deps += [
@@ -1056,8 +1085,6 @@ source_set("libcef_static") {
       deps += [ 
         "//chrome/browser/media:mojo_bindings",
         "//chrome/common:mojo_bindings",
-        "//components/cdm/renderer",
-        "//components/cdm/browser",
         "//components/crash/ohos:crash_features",
         "//components/visitedlink/common",
         "//media/mojo:buildflags",
@@ -1160,7 +1187,7 @@ config("libcef_includes_config") {
     # CEF generated header files that also need to be discoverable.
     # These #includes from client-side code will not be prefixed with cef/.
     # They will be copied to the include/ directory in the binary distribution.
-    "$root_out_dir/includes/cef",
+    "$root_gen_dir/cef",
   ]
 }
 
@@ -1185,6 +1212,9 @@ config("libcef_dll_wrapper_config") {
       # Increase the initial stack size to 8MiB from the default 1MiB.
       ldflags = [ "/STACK:0x800000" ]
     }
+
+    # Required to support CefScopedLibraryLoader.
+    ldflags += [ "/DELAYLOAD:libcef.dll" ]
   }
 
   # Build using the minimum C++ version supported by the CEF binary distribution.
@@ -1198,6 +1228,10 @@ config("libcef_dll_wrapper_config") {
   }
   if (is_mac) {
     cflags_objcc = [ "-std=c++17" ]
+  }
+
+  if (cef_api_version != "") {
+    defines = [ "CEF_API_VERSION=$cef_api_version" ]
   }
 }
 
@@ -1214,6 +1248,14 @@ static_library("libcef_dll_wrapper") {
 
   if (is_mac) {
     sources += gypi_paths2.libcef_dll_wrapper_sources_mac
+  }
+
+  if (is_win) {
+    sources += gypi_paths2.libcef_dll_wrapper_sources_win
+    libs = [
+      "crypt32.lib",
+      "wintrust.lib",
+    ]
   }
 
   defines = [ "WRAPPING_CEF_SHARED" ]
@@ -1243,20 +1285,110 @@ if (is_win) {
     configs += [ ":libcef_includes_config" ]
     deps = [
       ":make_config_header",
-      "libcef/features",
       "//sandbox",
     ]
   }
 }
 
 if (is_mac) {
-  static_library("cef_sandbox") {
+  shared_library("cef_sandbox") {
     sources = [ "libcef_dll/sandbox/sandbox_mac.mm" ]
     configs += [ ":libcef_includes_config" ]
     deps = [
       ":make_config_header",
       "//build/config:executable_deps",
       "//sandbox/mac:seatbelt",
+    ]
+  }
+}
+
+#
+# bootstrap target.
+#
+
+if (is_win) {
+  bootstrap_sources = includes_common +
+                      includes_win + [
+    "include/wrapper/cef_certificate_util_win.h",
+    "include/wrapper/cef_util_win.h",
+    "libcef_dll/bootstrap/bootstrap_util_win.cc",
+    "libcef_dll/bootstrap/bootstrap_util_win.h",
+    "libcef_dll/bootstrap/bootstrap_win.cc",
+    "libcef_dll/bootstrap/win/bootstrap.rc",
+    "libcef_dll/bootstrap/win/resource.h",
+    "libcef_dll/wrapper/cef_certificate_util_win.cc",
+    "libcef_dll/wrapper/cef_util_win.cc",
+    "libcef/browser/crashpad_runner.cc",
+    "libcef/browser/crashpad_runner.h",
+    "libcef/browser/preferred_stack_size_win.inc",
+    "//chrome/app/delay_load_failure_hook_win.cc",
+    "//chrome/app/delay_load_failure_hook_win.h",
+    "//chrome/common/win/delay_load_failure_support.cc",
+    "//chrome/common/win/delay_load_failure_support.h",
+    "//content/app/sandbox_helper_win.cc",
+    "//content/public/app/sandbox_helper_win.h",
+  ]
+
+  bootstrap_deps = [
+    ":make_api_versions_header",
+    ":make_config_header",
+    ":make_version_header",
+    "//base",
+    "//build/win:default_exe_manifest",
+    "//chrome/install_static:secondary_module",
+    "//chrome/chrome_elf",
+    "//sandbox",
+    "//sandbox/policy",
+    "//third_party/crashpad/crashpad/handler",
+  ]
+
+  bootstrap_libs = [
+    "crypt32.lib",
+    "wintrust.lib",
+  ]
+
+  bootstrap_configs = [
+    ":libcef_includes_config",
+
+    # Delay-load as many DLLs as possible for sandbox and startup perf
+    # improvements.
+    "//build/config/win:delayloads",
+    "//build/config/win:delayloads_not_for_child_dll",
+  ]
+
+  # Windows application that initializes the sandbox and then passes
+  # execution to a client-provided DLL.
+  executable("bootstrap") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = bootstrap_sources
+    deps = bootstrap_deps
+    libs = bootstrap_libs
+    configs += bootstrap_configs
+
+    # Set /SUBSYSTEM:WINDOWS.
+    configs -= [ "//build/config/win:console" ]
+    configs += [ "//build/config/win:windowed" ]
+
+    defines = [
+      "CEF_BUILD_BOOTSTRAP",
+    ]
+  }
+
+  # Like "bootstrap", but as a console application.
+  executable("bootstrapc") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = bootstrap_sources
+    deps = bootstrap_deps
+    libs = bootstrap_libs
+    configs += bootstrap_configs
+
+    defines = [
+      "CEF_BUILD_BOOTSTRAP",
+      "CEF_BUILD_BOOTSTRAP_CONSOLE",
     ]
   }
 }
@@ -1293,16 +1425,16 @@ grit("cef_resources") {
 # Helper for generating pack header files.
 template("make_pack_header") {
   assert(defined(invoker.header))
+  assert(defined(invoker.inc))
   assert(defined(invoker.inputs))
 
   action("make_pack_header_${target_name}") {
     script = "tools/make_pack_header.py"
 
     inputs = invoker.inputs
-    outputs = [ invoker.header ]
+    outputs = [ invoker.header, invoker.inc ]
 
-    args = rebase_path(outputs, root_build_dir) +
-           rebase_path(inputs, root_build_dir)
+    args = rebase_path(outputs + inputs, root_build_dir)
 
     if (defined(invoker.deps)) {
       deps = invoker.deps
@@ -1312,14 +1444,14 @@ template("make_pack_header") {
 
 # Generate cef_pack_resources.h.
 make_pack_header("resources") {
-  header = "$root_out_dir/includes/cef/include/cef_pack_resources.h"
+  header = "$root_gen_dir/cef/include/cef_pack_resources.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_pack_resources.inc"
   inputs = [
     "$root_gen_dir/base/tracing/protos/grit/tracing_proto_resources.h",
     "$root_gen_dir/cef/grit/cef_resources.h",
     "$root_gen_dir/chrome/grit/browser_resources.h",
     "$root_gen_dir/chrome/grit/common_resources.h",
     "$root_gen_dir/chrome/grit/component_extension_resources.h",
-    "$root_gen_dir/chrome/grit/dev_ui_browser_resources.h",
     "$root_gen_dir/chrome/grit/pdf_resources.h",
     "$root_gen_dir/chrome/grit/renderer_resources.h",
     "$root_gen_dir/components/grit/components_resources.h",
@@ -1340,14 +1472,13 @@ make_pack_header("resources") {
     "$root_gen_dir/third_party/blink/public/resources/grit/blink_image_resources.h",
     "$root_gen_dir/third_party/blink/public/resources/grit/blink_resources.h",
     "$root_gen_dir/ui/resources/grit/ui_resources.h",
-    "$root_gen_dir/ui/resources/grit/webui_resources.h",
     "$root_gen_dir/ui/views/resources/grit/views_resources.h",
+    "$root_gen_dir/ui/webui/resources/grit/webui_resources.h",
   ]
 
   deps = [
     ":cef_resources",
     "//base/tracing/protos:chrome_track_event_resources",
-    "//chrome/browser:dev_ui_browser_resources",
     "//chrome/browser:resources",
     "//chrome/browser/resources:component_extension_resources",
     "//chrome/browser/resources/pdf:resources",
@@ -1371,14 +1502,15 @@ make_pack_header("resources") {
     "//third_party/blink/public:image_resources",
     "//third_party/blink/public:resources",
     "//ui/resources:ui_resources_grd",
-    "//ui/resources:webui_resources_grd",
     "//ui/views/resources:resources_grd",
+    "//ui/webui/resources:resources_grit",
   ]
 }
 
 # Generate cef_pack_strings.h.
 make_pack_header("strings") {
-  header = "$root_out_dir/includes/cef/include/cef_pack_strings.h"
+  header = "$root_gen_dir/cef/include/cef_pack_strings.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_pack_strings.inc"
   inputs = [
     "$root_gen_dir/cef/grit/cef_strings.h",
     "$root_gen_dir/chrome/grit/branded_strings.h",
@@ -1391,6 +1523,7 @@ make_pack_header("strings") {
     "$root_gen_dir/extensions/strings/grit/extensions_strings.h",
     "$root_gen_dir/services/strings/grit/services_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_strings.h",
+    "$root_gen_dir/third_party/blink/public/strings/grit/permission_element_generated_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/permission_element_strings.h",
     "$root_gen_dir/ui/strings/grit/app_locale_settings.h",
     "$root_gen_dir/ui/strings/grit/auto_image_annotation_strings.h",
@@ -1410,6 +1543,7 @@ make_pack_header("strings") {
     "//extensions/strings",
     "//services/strings",
     "//third_party/blink/public/strings",
+    "//third_party/blink/public/strings:permission_element_generated_strings",
     "//third_party/blink/public/strings:permission_element_strings",
     "//ui/strings:app_locale_settings",
     "//ui/strings:auto_image_annotation_strings",
@@ -1419,28 +1553,40 @@ make_pack_header("strings") {
 
 # Generate cef_command_ids.h.
 make_pack_header("command_ids") {
-  header = "$root_out_dir/includes/cef/include/cef_command_ids.h"
+  header = "$root_gen_dir/cef/include/cef_command_ids.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_command_ids.inc"
   inputs = [
     "//chrome/app/chrome_command_ids.h",
   ]
 }
 
-# Generate cef_api_hash.h.
-action("make_api_hash_header") {
-  script = "tools/make_api_hash_header.py"
+# Generate cef_api_versions.h.
+action("make_api_versions_header") {
+  script = "tools/make_api_versions_header.py"
 
-  # List of all C API files that will be checked for changes by cef_api_hash.py.
-  inputs = gypi_paths2.includes_common_capi +
-           gypi_paths2.includes_linux_capi +
-           gypi_paths2.includes_ohos_capi +
-           gypi_paths2.includes_mac_capi +
-           gypi_paths2.includes_win_capi +
-           gypi_paths2.includes_capi +
-           gypi_paths.autogen_capi_includes
-  include_dir = [ "include" ]
-  outputs = [ "$root_out_dir/includes/cef/include/cef_api_hash.h" ]
+  inputs = [
+    "cef_api_versions.json",
+    "cef_api_untracked.json",
+  ]
+  outputs = [
+    "$root_gen_dir/cef/include/cef_api_versions.h",
+    "$root_gen_dir/cef/libcef_dll/cef_api_versions.inc",
+  ]
 
-  args = rebase_path(outputs + include_dir, root_build_dir)
+  args = rebase_path(outputs + inputs, root_build_dir)
+}
+
+# Generate cef_version.h.
+action("make_version_header") {
+  script = "tools/make_version_header.py"
+
+  inputs = [
+    "VERSION.stamp",
+    "//chrome/VERSION",
+  ]
+  outputs = [ "$root_gen_dir/cef/include/cef_version.h" ]
+
+  args = rebase_path(outputs, root_build_dir)
 }
 
 # This no-op action lists args.gn as an output, allowing it to be referenced as
@@ -1458,7 +1604,7 @@ action("make_config_header") {
   deps = [ ":args_gn_source" ]
 
   inputs = [ "$root_out_dir/args.gn" ]
-  outputs = [ "$root_out_dir/includes/cef/include/cef_config.h" ]
+  outputs = [ "$root_gen_dir/cef/include/cef_config.h" ]
 
   args = rebase_path(outputs + inputs, root_build_dir)
 }
@@ -1472,7 +1618,7 @@ action("make_colorids_header") {
     "//components/color/color_id.h",
     "//chrome/browser/ui/color/chrome_color_id.h",
   ]
-  outputs = [ "$root_out_dir/includes/cef/include/cef_color_ids.h" ]
+  outputs = [ "$root_gen_dir/cef/include/cef_color_ids.h" ]
 
   args = rebase_path(outputs + inputs, root_build_dir)
 }
@@ -1483,7 +1629,8 @@ group("cef_make_headers") {
     ":make_pack_header_resources",
     ":make_pack_header_strings",
     ":make_pack_header_command_ids",
-    ":make_api_hash_header",
+    ":make_api_versions_header",
+    ":make_version_header",
     ":make_config_header",
     ":make_colorids_header",
   ]
@@ -1493,6 +1640,28 @@ group("cef_make_headers") {
 #
 # libcef dll/framework target.
 #
+
+libcef_sources_common = includes_common +
+                        gypi_paths.autogen_cpp_includes +
+                        gypi_paths2.includes_capi +
+                        gypi_paths.autogen_capi_includes +
+                        gypi_paths.autogen_capi_versions_includes +
+                        gypi_paths2.libcef_sources_common +
+                        gypi_paths.autogen_library_side + [
+  "$root_gen_dir/cef/libcef_dll/cef_pack_resources.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_pack_strings.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_command_ids.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_api_versions.inc",
+]
+
+libcef_deps_common = [
+  ":libcef_static",
+  ":libcef_test_support",
+  ":make_pack_header_resources",
+  ":make_pack_header_strings",
+  ":make_pack_header_command_ids",
+  ":make_api_versions_header",
+]
 
 if (is_mac) {
   cef_framework_name = "Chromium Embedded Framework"
@@ -1522,13 +1691,13 @@ if (is_mac) {
     sources += [ "//ui/gl/resources/angle-metal/gpu_shader_cache.bin" ]
 
     if (v8_use_external_startup_data) {
-      sources += [
-        "$root_out_dir/snapshot_blob.bin",
-      ]
       public_deps += [ "//v8" ]
       if (use_v8_context_snapshot) {
-        sources += [ "$root_out_dir/$v8_context_snapshot_filename" ]
+        sources += [ "$root_build_dir/$v8_context_snapshot_filename" ]
         public_deps += [ "//tools/v8_context_snapshot" ]
+      }
+      if (!use_v8_context_snapshot || include_both_v8_snapshots) {
+        sources += [ "$root_build_dir/snapshot_blob.bin" ]
       }
     }
 
@@ -1537,17 +1706,46 @@ if (is_mac) {
     ]
   }
 
-  # Add the ANGLE .dylibs in the MODULE_DIR of the Framework app bundle.
-  bundle_data("cef_framework_angle_binaries") {
+  if (!use_static_angle) {
+    # Add the ANGLE .dylibs in the MODULE_DIR of the Framework app bundle.
+    bundle_data("cef_framework_angle_binaries") {
+      sources = [
+        "$root_out_dir/egl_intermediates/libEGL.dylib",
+        "$root_out_dir/egl_intermediates/libGLESv2.dylib",
+      ]
+      outputs = [
+        "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
+      ]
+      public_deps = [
+        "//ui/gl:angle_library_copy",
+      ]
+    }
+  }
+
+  # We need to copy the CEF libraries so that the bundle_data dependencies have
+  # a "copy" target type. Otherwise for "shared_library" target types it will
+  # try to link things into the CEF Framework when we want to keep the libraries
+  # separate instead.
+  copy("cef_library_copy") {
     sources = [
-      "$root_out_dir/egl_intermediates/libEGL.dylib",
-      "$root_out_dir/egl_intermediates/libGLESv2.dylib",
+      "$root_out_dir/libcef_sandbox.dylib",
+    ]
+    outputs = [ "$root_out_dir/cef_intermediates/{{source_file_part}}" ]
+    deps = [
+      ":cef_sandbox",
+    ]
+  }
+
+  # Add the CEF .dylibs in the MODULE_DIR of the Framework app bundle.
+  bundle_data("cef_framework_cef_binaries") {
+    sources = [
+      "$root_out_dir/cef_intermediates/libcef_sandbox.dylib",
     ]
     outputs = [
       "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
     ]
     public_deps = [
-      "//ui/gl:angle_library_copy",
+      ":cef_library_copy",
     ]
   }
 
@@ -1577,24 +1775,21 @@ if (is_mac) {
       "Resources",
     ]
 
-    sources = includes_common +
-              includes_mac +
-              gypi_paths.autogen_cpp_includes +
-              gypi_paths2.includes_capi +
-              gypi_paths.autogen_capi_includes +
-              gypi_paths2.libcef_sources_common +
-              gypi_paths.autogen_library_side
+    sources = libcef_sources_common + includes_mac
 
-    deps = [
-      ":cef_framework_angle_binaries",
+    deps = libcef_deps_common + [
+      ":cef_framework_cef_binaries",
       ":cef_framework_resources",
       ":cef_framework_swiftshader_binaries",
-      ":libcef_static",
-      ":libcef_test_support",
     ]
+
+    if (!use_static_angle) {
+      deps += [ ":cef_framework_angle_binaries" ]
+    }
 
     configs += [
       ":libcef_autogen_config",
+      ":libcef_includes_config",
     ]
 
     # We don't link the framework so just use the path from the main executable.
@@ -1633,20 +1828,21 @@ if (is_mac) {
     # Necessary because the libcef_test_support target is testonly.
     testonly = true
 
-    sources = includes_common +
-              gypi_paths.autogen_cpp_includes +
-              gypi_paths2.includes_capi +
-              gypi_paths.autogen_capi_includes +
-              gypi_paths2.libcef_sources_common +
-              gypi_paths.autogen_library_side
+    sources = libcef_sources_common
 
-    deps = [
-      ":libcef_static",
-      ":libcef_test_support",
-    ]
+    deps = libcef_deps_common
+
+    if (is_ohos) {
+      deps += ["//ohos/adapter:adapter"]
+      sources += [
+        "//ohos/adapter/common/shared_library.cc",
+        "//ohos/adapter/common/shared_library.h",
+      ]
+    }
 
     configs += [
       ":libcef_autogen_config",
+      ":libcef_includes_config",
       ":pdb_larger_than_4gb",
     ]
 
@@ -1663,7 +1859,8 @@ if (is_mac) {
       ]
 
       # Delay-load as many DLLs as possible for sandbox and startup perf
-      # improvements.
+      # improvements. Don't use "delayloads_not_for_child_dll" here because
+      # we need some DLLs loaded in child processes before sandbox lockdown.
       configs += [ "//build/config/win:delayloads" ]
 
       libs = [
@@ -1759,7 +1956,6 @@ if (is_mac) {
 
         deps = [
           ":cef_make_headers",
-          ":cef_sandbox",
           ":libcef_dll_wrapper",
         ]
         if (defined(invoker.helper_deps)) {
@@ -2231,6 +2427,11 @@ if (is_mac) {
       "native_window",
       "native_drawing"
     ]
+
+    if (!is_component_build) {
+      # Set rpath to find our own libfreetype even in a non-component build.
+      configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+    }
   }
 } else {
   #
@@ -2291,6 +2492,7 @@ if (is_mac) {
 
     if (is_win) {
       sources += includes_win +
+                 gypi_paths2.includes_wrapper_win +
                  gypi_paths2.shared_sources_win +
                  gypi_paths2.cefclient_sources_win +
                  gypi_paths2.cefclient_sources_resources_win_rc
@@ -2301,7 +2503,10 @@ if (is_mac) {
 
       # Delay-load as many DLLs as possible for sandbox and startup perf
       # improvements.
-      configs += [ "//build/config/win:delayloads" ]
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
 
       defines += [
         "CEF_USE_ATL",
@@ -2365,6 +2570,70 @@ if (is_mac) {
     }
   }
 
+  if (is_win) {
+    # Like the "cefclient" executable target, but building a DLL to be loaded by
+    # bootstrap.exe.
+    shared_library("cefclient_dll") {
+      # Necessary because the libcef target is testonly.
+      testonly = true
+
+      output_name = "cefclient"
+
+      sources = includes_common +
+                includes_win +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.shared_sources_browser +
+                gypi_paths2.shared_sources_common +
+                gypi_paths2.shared_sources_renderer +
+                gypi_paths2.shared_sources_win +
+                gypi_paths2.cefclient_sources_browser +
+                gypi_paths2.cefclient_sources_common +
+                gypi_paths2.cefclient_sources_renderer +
+                gypi_paths2.cefclient_sources_win +
+                gypi_paths2.cefclient_sources_resources_win_rc
+
+      deps = [
+        ":bootstrap",
+        ":libcef",
+        ":libcef_dll_wrapper",
+      ]
+
+      defines = [
+        "CEF_USE_ATL",
+        "CEF_USE_BOOTSTRAP",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "d3d11.lib",
+        "imm32.lib",
+        "oleacc.lib",
+        "rpcrt4.lib",
+        "shlwapi.lib",
+      ]
+
+      if (target_cpu != "arm64") {
+        libs += [
+          "glu32.lib",
+          "opengl32.lib",
+        ]
+        ldflags = [
+          "/DELAYLOAD:glu32.dll",
+          "/DELAYLOAD:oleaut32.dll",
+          "/DELAYLOAD:opengl32.dll",
+        ]
+      }
+    }
+  }
+
 
   #
   # cefsimple targets.
@@ -2389,6 +2658,7 @@ if (is_mac) {
 
     if (is_win) {
       sources += includes_win +
+                 gypi_paths2.includes_wrapper_win +
                  gypi_paths2.cefsimple_sources_win +
                  gypi_paths2.cefsimple_sources_resources_win_rc
 
@@ -2398,7 +2668,10 @@ if (is_mac) {
 
       # Delay-load as many DLLs as possible for sandbox and startup perf
       # improvements.
-      configs += [ "//build/config/win:delayloads" ]
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
 
       deps += [
         ":cef_sandbox",
@@ -2426,6 +2699,48 @@ if (is_mac) {
         # Set rpath to find our own libfreetype even in a non-component build.
         configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
       }
+    }
+  }
+
+  if (is_win) {
+    # Like the "cefsimple" executable target, but building a DLL to be loaded by
+    # bootstrap.exe.
+    shared_library("cefsimple_dll") {
+      # Necessary because the libcef target is testonly.
+      testonly = true
+
+      output_name = "cefsimple"
+
+      sources = includes_common +
+                includes_win +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.cefsimple_sources_common +
+                gypi_paths2.cefsimple_sources_win +
+                gypi_paths2.cefsimple_sources_resources_win_rc
+
+      deps = [
+        ":bootstrap",
+        ":libcef",
+        ":libcef_dll_wrapper",
+      ]
+
+      defines = [
+        "CEF_USE_BOOTSTRAP",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "shlwapi.lib",
+        "rpcrt4.lib",
+      ]
     }
   }
 
@@ -2464,13 +2779,17 @@ if (is_mac) {
     ]
 
     if (is_win) {
-      sources += gypi_paths2.shared_sources_win +
+      sources += gypi_paths2.includes_wrapper_win +
+                 gypi_paths2.shared_sources_win +
                  gypi_paths2.ceftests_sources_win +
                  gypi_paths2.ceftests_sources_resources_win_rc
 
       # Delay-load as many DLLs as possible for sandbox and startup perf
       # improvements.
-      configs += [ "//build/config/win:delayloads" ]
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
 
       deps += [
         ":cef_sandbox",
@@ -2500,6 +2819,47 @@ if (is_mac) {
     if (is_linux && !is_component_build) {
       # Set rpath to find our own libfreetype even in a non-component build.
       configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+    }
+  }
+
+  if (is_win) {
+    # Like the "ceftests" executable target, but building a DLL to be loaded by
+    # bootstrapc.exe.
+    shared_library("ceftests_dll") {
+      testonly = true
+
+      output_name = "ceftests"
+
+      sources = includes_common +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.shared_sources_browser +
+                gypi_paths2.shared_sources_common +
+                gypi_paths2.shared_sources_renderer +
+                gypi_paths2.shared_sources_win +
+                gypi_paths2.ceftests_sources_common +
+                gypi_paths2.ceftests_sources_win +
+                gypi_paths2.ceftests_sources_resources_win_rc
+
+      deps = [
+        ":bootstrapc",
+        ":libcef",
+        ":libcef_dll_wrapper",
+        ":gtest_teamcity",
+        "//testing/gtest",
+      ]
+
+      defines = [
+        "CEF_USE_BOOTSTRAP",
+        "CEF_TESTS_IN_SRC_DIRECTORY",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
     }
   }
 }

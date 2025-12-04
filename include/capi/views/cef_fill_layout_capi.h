@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=2b922f0c7b3585b27d40b9f5eb81f2f398dbfe1a$
+// $hash=4f8a367cfabb6dbca323a2ce70747502aa1901d7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_FILL_LAYOUT_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_FILL_LAYOUT_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_layout_capi.h"
 
@@ -46,10 +50,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// A simple Layout that causes the associated Panel's one child to be sized to
 /// match the bounds of its parent. Methods must be called on the browser
 /// process UI thread unless otherwise indicated.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_fill_layout_t {
   ///
@@ -57,6 +64,7 @@ typedef struct _cef_fill_layout_t {
   ///
   cef_layout_t base;
 } cef_fill_layout_t;
+
 
 #ifdef __cplusplus
 }

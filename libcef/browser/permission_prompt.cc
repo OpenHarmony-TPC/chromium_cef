@@ -9,6 +9,7 @@
 #include "base/notreached.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "chrome/browser/ui/permission_bubble/permission_prompt.h"
+#include "components/permissions/permission_request.h"
 
 namespace permission_prompt {
 
@@ -154,6 +155,9 @@ class CefPermissionPrompt : public permissions::PermissionPrompt {
       case CEF_PERMISSION_RESULT_IGNORE:
         delegate_->Ignore();
         break;
+      case CEF_PERMISSION_RESULT_NUM_VALUES:
+        DCHECK(false);
+        return;
     }
   }
 
@@ -242,6 +246,8 @@ cef_permission_request_types_t GetCefRequestType(
       return CEF_PERMISSION_TYPE_WINDOW_MANAGEMENT;
     case permissions::RequestType::kFileSystemAccess:
       return CEF_PERMISSION_TYPE_FILE_SYSTEM_ACCESS;
+    case permissions::RequestType::kLocalNetworkAccess:
+      return CEF_PERMISSION_TYPE_LOCAL_NETWORK_ACCESS;
   }
 
   DCHECK(false);

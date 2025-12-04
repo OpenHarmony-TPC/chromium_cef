@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=714d1591eb68cf37a26b6a4a1c30255ff52d3bf9$
+// $hash=fad288280a2788728e9f475029f5319641ab1a6a$
 //
 
 #include "libcef_dll/cpptoc/request_context_handler_cpptoc.h"
-
 #include "libcef_dll/cpptoc/resource_request_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -24,9 +23,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK request_context_handler_on_request_context_initialized(
-    struct _cef_request_context_handler_t* self,
-    cef_request_context_t* request_context) {
+void CEF_CALLBACK request_context_handler_on_request_context_initialized(struct _cef_request_context_handler_t* self, struct _cef_request_context_t* request_context) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -41,19 +38,10 @@ void CEF_CALLBACK request_context_handler_on_request_context_initialized(
 
   // Execute
   CefRequestContextHandlerCppToC::Get(self)->OnRequestContextInitialized(
-      CefRequestContextCToCpp::Wrap(request_context));
+      CefRequestContextCToCpp_Wrap(request_context));
 }
 
-struct _cef_resource_request_handler_t* CEF_CALLBACK
-request_context_handler_get_resource_request_handler(
-    struct _cef_request_context_handler_t* self,
-    cef_browser_t* browser,
-    cef_frame_t* frame,
-    cef_request_t* request,
-    int is_navigation,
-    int is_download,
-    const cef_string_t* request_initiator,
-    int* disable_default_handling) {
+struct _cef_resource_request_handler_t* CEF_CALLBACK request_context_handler_get_resource_request_handler(struct _cef_request_context_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, int is_navigation, int is_download, const cef_string_t* request_initiator, int* disable_default_handling) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -73,24 +61,25 @@ request_context_handler_get_resource_request_handler(
   // Unverified params: browser, frame, request_initiator
 
   // Translate param: disable_default_handling; type: bool_byref
-  bool disable_default_handlingBool =
-      (disable_default_handling && *disable_default_handling) ? true : false;
+  bool disable_default_handlingBool = (disable_default_handling && *disable_default_handling)?true:false;
 
   // Execute
-  CefRefPtr<CefResourceRequestHandler> _retval =
-      CefRequestContextHandlerCppToC::Get(self)->GetResourceRequestHandler(
-          CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-          CefRequestCToCpp::Wrap(request), is_navigation ? true : false,
-          is_download ? true : false, CefString(request_initiator),
-          disable_default_handlingBool);
+  CefRefPtr<CefResourceRequestHandler> _retval = CefRequestContextHandlerCppToC::Get(self)->GetResourceRequestHandler(
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      CefRequestCToCpp_Wrap(request),
+      is_navigation?true:false,
+      is_download?true:false,
+      CefString(request_initiator),
+      disable_default_handlingBool);
 
   // Restore param: disable_default_handling; type: bool_byref
   if (disable_default_handling) {
-    *disable_default_handling = disable_default_handlingBool ? true : false;
+    *disable_default_handling = disable_default_handlingBool?true:false;
   }
 
   // Return type: refptr_same
-  return CefResourceRequestHandlerCppToC::Wrap(_retval);
+  return CefResourceRequestHandlerCppToC_Wrap(_retval);
 }
 
 }  // namespace
@@ -98,30 +87,20 @@ request_context_handler_get_resource_request_handler(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRequestContextHandlerCppToC::CefRequestContextHandlerCppToC() {
-  GetStruct()->on_request_context_initialized =
-      request_context_handler_on_request_context_initialized;
-  GetStruct()->get_resource_request_handler =
-      request_context_handler_get_resource_request_handler;
+  GetStruct()->on_request_context_initialized = request_context_handler_on_request_context_initialized;
+  GetStruct()->get_resource_request_handler = request_context_handler_get_resource_request_handler;
 }
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefRequestContextHandlerCppToC::~CefRequestContextHandlerCppToC() {}
+CefRequestContextHandlerCppToC::~CefRequestContextHandlerCppToC() {
+}
 
-template <>
-CefRefPtr<CefRequestContextHandler> CefCppToCRefCounted<
-    CefRequestContextHandlerCppToC,
-    CefRequestContextHandler,
-    cef_request_context_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                  cef_request_context_handler_t*
-                                                      s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefRequestContextHandler> CefCppToCRefCounted<CefRequestContextHandlerCppToC, CefRequestContextHandler, cef_request_context_handler_t>::UnwrapDerived(CefWrapperType type, cef_request_context_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefRequestContextHandlerCppToC,
-                        CefRequestContextHandler,
-                        cef_request_context_handler_t>::kWrapperType =
-        WT_REQUEST_CONTEXT_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefRequestContextHandlerCppToC, CefRequestContextHandler, cef_request_context_handler_t>::kWrapperType = WT_REQUEST_CONTEXT_HANDLER;
+
+

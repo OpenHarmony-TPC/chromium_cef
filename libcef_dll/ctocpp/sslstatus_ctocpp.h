@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c3323a231ac5e9ea1520bc0f49541a1fb851020b$
+// $hash=6d012fb834c6500416aae0444ee68946d7d57b19$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SSLSTATUS_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_ssl_status_capi.h"
 #include "include/cef_ssl_status.h"
+#include "include/capi/cef_ssl_status_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefSSLStatusCToCpp : public CefCToCppRefCounted<CefSSLStatusCToCpp,
-                                                      CefSSLStatus,
-                                                      cef_sslstatus_t> {
+class CefSSLStatusCToCpp
+    : public CefCToCppRefCounted<CefSSLStatusCToCpp, CefSSLStatus, cef_sslstatus_t> {
  public:
   CefSSLStatusCToCpp();
   virtual ~CefSSLStatusCToCpp();
@@ -40,5 +39,8 @@ class CefSSLStatusCToCpp : public CefCToCppRefCounted<CefSSLStatusCToCpp,
   cef_ssl_content_status_t GetContentStatus() override;
   CefRefPtr<CefX509Certificate> GetX509Certificate() override;
 };
+
+constexpr auto CefSSLStatusCToCpp_Wrap = CefSSLStatusCToCpp::Wrap;
+constexpr auto CefSSLStatusCToCpp_Unwrap = CefSSLStatusCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SSLSTATUS_CTOCPP_H_

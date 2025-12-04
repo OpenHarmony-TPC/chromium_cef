@@ -75,7 +75,7 @@ cd "$CHROMIUM_SRC_PATH" || exit 1
 
 for patch in "${PATCH_FILES[@]}"; do
     echo "Applying $patch..."
-    if ! patch -p1 < "$patch"; then
+    if ! patch -p2 < "$patch"; then
         echo "Error: Failed to apply patch $patch"
         exit 1
     fi

@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=0ddf52d0eb7668a0634c741f80a2d833e88ab4e3$
+// $hash=78ec82513b2dec15aba3847cdbbec6a551c20464$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SCHEME_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_SCHEME_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -56,6 +60,8 @@ struct _cef_scheme_handler_factory_t;
 ///
 /// Structure that manages custom scheme registrations.
 ///
+/// NOTE: This struct is allocated DLL-side.
+///
 typedef struct _cef_scheme_registrar_t {
   ///
   /// Base structure.
@@ -72,15 +78,16 @@ typedef struct _cef_scheme_registrar_t {
   /// per unique |scheme_name| value. If |scheme_name| is already registered or
   /// if an error occurs this function will return false (0).
   ///
-  int(CEF_CALLBACK* add_custom_scheme)(struct _cef_scheme_registrar_t* self,
-                                       const cef_string_t* scheme_name,
-                                       int options);
+  int (CEF_CALLBACK *add_custom_scheme)(struct _cef_scheme_registrar_t* self, const cef_string_t* scheme_name, int options);
 } cef_scheme_registrar_t;
+
 
 ///
 /// Structure that creates cef_resource_handler_t instances for handling scheme
 /// requests. The functions of this structure will always be called on the IO
 /// thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_scheme_handler_factory_t {
   ///
@@ -96,13 +103,9 @@ typedef struct _cef_scheme_handler_factory_t {
   /// (for example, if the request came from cef_urlrequest_t). The |request|
   /// object passed to this function cannot be modified.
   ///
-  struct _cef_resource_handler_t*(CEF_CALLBACK* create)(
-      struct _cef_scheme_handler_factory_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_string_t* scheme_name,
-      struct _cef_request_t* request);
+  struct _cef_resource_handler_t* (CEF_CALLBACK *create)(struct _cef_scheme_handler_factory_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, const cef_string_t* scheme_name, struct _cef_request_t* request);
 } cef_scheme_handler_factory_t;
+
 
 ///
 /// Register a scheme handler factory with the global request context. An NULL
@@ -119,15 +122,12 @@ typedef struct _cef_scheme_handler_factory_t {
 /// t_context_t::cef_request_context_get_global_context()-
 /// >register_scheme_handler_factory().
 ///
-CEF_EXPORT int cef_register_scheme_handler_factory(
-    const cef_string_t* scheme_name,
-    const cef_string_t* domain_name,
-    cef_scheme_handler_factory_t* factory);
+CEF_EXPORT int cef_register_scheme_handler_factory(const cef_string_t* scheme_name, const cef_string_t* domain_name, cef_scheme_handler_factory_t* factory);
 
 ///
 /// Clear all scheme handler factories registered with the global request
 /// context. Returns false (0) on error. This function may be called on any
-/// thread in the browser process. Using this function is equivalent to calling
+/// thread in the browser process. Using this function is equivalent to calling 
 /// cef_request_context_t::cef_request_context_get_global_context()-
 /// >clear_scheme_handler_factories().
 ///

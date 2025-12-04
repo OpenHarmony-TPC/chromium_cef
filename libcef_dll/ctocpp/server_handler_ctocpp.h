@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=86f77b6630e838131b7479b2ec0836a2d4b8fcc0$
+// $hash=613cbe9efe1f65e66748ec19bd30f965076bf42b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SERVER_HANDLER_CTOCPP_H_
@@ -20,42 +20,30 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_server_capi.h"
 #include "include/cef_server.h"
+#include "include/capi/cef_server_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefServerHandlerCToCpp
-    : public CefCToCppRefCounted<CefServerHandlerCToCpp,
-                                 CefServerHandler,
-                                 cef_server_handler_t> {
+class CefServerHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefServerHandler_0_CToCpp, CefServerHandler, cef_server_handler_0_t> {
  public:
-  CefServerHandlerCToCpp();
-  virtual ~CefServerHandlerCToCpp();
+  CefServerHandler_0_CToCpp();
+  virtual ~CefServerHandler_0_CToCpp();
 
   // CefServerHandler methods.
   void OnServerCreated(CefRefPtr<CefServer> server) override;
   void OnServerDestroyed(CefRefPtr<CefServer> server) override;
-  void OnClientConnected(CefRefPtr<CefServer> server,
-                         int connection_id) override;
-  void OnClientDisconnected(CefRefPtr<CefServer> server,
-                            int connection_id) override;
-  void OnHttpRequest(CefRefPtr<CefServer> server,
-                     int connection_id,
-                     const CefString& client_address,
-                     CefRefPtr<CefRequest> request) override;
-  void OnWebSocketRequest(CefRefPtr<CefServer> server,
-                          int connection_id,
-                          const CefString& client_address,
-                          CefRefPtr<CefRequest> request,
-                          CefRefPtr<CefCallback> callback) override;
-  void OnWebSocketConnected(CefRefPtr<CefServer> server,
-                            int connection_id) override;
-  void OnWebSocketMessage(CefRefPtr<CefServer> server,
-                          int connection_id,
-                          const void* data,
-                          size_t data_size) override;
+  void OnClientConnected(CefRefPtr<CefServer> server, int connection_id) override;
+  void OnClientDisconnected(CefRefPtr<CefServer> server, int connection_id) override;
+  void OnHttpRequest(CefRefPtr<CefServer> server, int connection_id, const CefString& client_address, CefRefPtr<CefRequest> request) override;
+  void OnWebSocketRequest(CefRefPtr<CefServer> server, int connection_id, const CefString& client_address, CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) override;
+  void OnWebSocketConnected(CefRefPtr<CefServer> server, int connection_id) override;
+  void OnWebSocketMessage(CefRefPtr<CefServer> server, int connection_id, const void* data, size_t data_size) override;
 };
+
+constexpr auto CefServerHandlerCToCpp_Wrap = CefServerHandler_0_CToCpp::Wrap;
+constexpr auto CefServerHandlerCToCpp_Unwrap = CefServerHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SERVER_HANDLER_CTOCPP_H_

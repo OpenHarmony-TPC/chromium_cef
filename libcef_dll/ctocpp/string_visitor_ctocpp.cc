@@ -9,21 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=81aef0946734fe7c2eeb97feee11a31223ad0230$
+// $hash=33ef1fc1d09261e15906b19f0bc138a1e07b2820$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/string_visitor_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefStringVisitorCToCpp::Visit(const CefString& string) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefStringVisitor_0_CToCpp::Visit(const CefString& string) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_string_visitor_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit)) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit) {
     return;
   }
 
@@ -32,31 +32,27 @@ void CefStringVisitorCToCpp::Visit(const CefString& string) {
   // Unverified params: string
 
   // Execute
-  _struct->visit(_struct, string.GetStruct());
+  _struct->visit(_struct,
+      string.GetStruct());
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefStringVisitorCToCpp::CefStringVisitorCToCpp() {}
+CefStringVisitor_0_CToCpp::CefStringVisitor_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefStringVisitorCToCpp::~CefStringVisitorCToCpp() {
+CefStringVisitor_0_CToCpp::~CefStringVisitor_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_string_visitor_t*
-CefCToCppRefCounted<CefStringVisitorCToCpp,
-                    CefStringVisitor,
-                    cef_string_visitor_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefStringVisitor* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_string_visitor_0_t* CefCToCppRefCounted<CefStringVisitor_0_CToCpp, CefStringVisitor, cef_string_visitor_0_t>::UnwrapDerived(CefWrapperType type, CefStringVisitor* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefStringVisitorCToCpp,
-                                   CefStringVisitor,
-                                   cef_string_visitor_t>::kWrapperType =
-    WT_STRING_VISITOR;
+template<> CefWrapperType CefCToCppRefCounted<CefStringVisitor_0_CToCpp, CefStringVisitor, cef_string_visitor_0_t>::kWrapperType = WT_STRING_VISITOR;
+
+

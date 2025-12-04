@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "include/base/cef_build.h"
+#include "include/views/cef_display.h"
 #include "tests/cefclient/browser/main_context.h"
 #include "tests/cefclient/browser/osr_accessibility_helper.h"
 #include "tests/cefclient/browser/osr_accessibility_node.h"
@@ -29,20 +30,6 @@ namespace client {
 namespace {
 
 const wchar_t kWndClass[] = L"Client_OsrWindow";
-
-// Helper funtion to check if it is Windows8 or greater.
-// https://msdn.microsoft.com/en-us/library/ms724833(v=vs.85).aspx
-inline BOOL IsWindows_8_Or_Newer() {
-  OSVERSIONINFOEX osvi = {0};
-  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  osvi.dwMajorVersion = 6;
-  osvi.dwMinorVersion = 2;
-  DWORDLONG dwlConditionMask = 0;
-  VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-  VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
-  return ::VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION,
-                             dwlConditionMask);
-}
 
 // Helper function to detect mouse messages coming from emulation of touch
 // events. These should be ignored.
@@ -92,7 +79,7 @@ OsrWindowWin::OsrWindowWin(Delegate* delegate,
       last_mouse_pos_(),
       current_mouse_pos_() {
   DCHECK(delegate_);
-  client_rect_ = {0};
+  client_rect_ = {};
 }
 
 OsrWindowWin::~OsrWindowWin() {
@@ -274,7 +261,7 @@ void OsrWindowWin::Create(HWND parent_hwnd, const RECT& rect) {
   DCHECK(parent_hwnd);
   DCHECK(!::IsRectEmpty(&rect));
 
-  HINSTANCE hInst = ::GetModuleHandle(nullptr);
+  HINSTANCE hInst = GetCodeModuleHandle();
 
   const cef_color_t background_color = MainContext::Get()->GetBackgroundColor();
   const HBRUSH background_brush = CreateSolidBrush(
@@ -743,6 +730,8 @@ void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
 
         ScreenToClient(hwnd_, &screen_point);
         int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+        int deltaX = IsKeyDown(VK_SHIFT) ? delta : 0;
+        int deltaY = !IsKeyDown(VK_SHIFT) ? delta : 0;
 
         CefMouseEvent mouse_event;
         mouse_event.x = screen_point.x;
@@ -750,9 +739,17 @@ void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
         ApplyPopupOffset(mouse_event.x, mouse_event.y);
         DeviceToLogical(mouse_event, device_scale_factor_);
         mouse_event.modifiers = GetCefMouseModifiers(wParam);
-        browser_host->SendMouseWheelEvent(mouse_event,
-                                          IsKeyDown(VK_SHIFT) ? delta : 0,
-                                          !IsKeyDown(VK_SHIFT) ? delta : 0);
+
+        UINT sys_info_lines;
+        if (SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &sys_info_lines,
+                                 0) &&
+            sys_info_lines == WHEEL_PAGESCROLL) {
+          mouse_event.modifiers |= EVENTFLAG_SCROLL_BY_PAGE;
+          deltaX = 0;
+          deltaY = (delta > 0) ? 1 : -1;
+        }
+
+        browser_host->SendMouseWheelEvent(mouse_event, deltaX, deltaY);
       }
       break;
   }
@@ -860,17 +857,6 @@ bool OsrWindowWin::OnTouchEvent(UINT message, WPARAM wParam, LPARAM lParam) {
       point.x = TOUCH_COORD_TO_PIXEL(input[i].x);
       point.y = TOUCH_COORD_TO_PIXEL(input[i].y);
 
-      if (!IsWindows_8_Or_Newer()) {
-        // Windows 7 sends touch events for touches in the non-client area,
-        // whereas Windows 8 does not. In order to unify the behaviour, always
-        // ignore touch events in the non-client area.
-        LPARAM l_param_ht = MAKELPARAM(point.x, point.y);
-        LRESULT hittest = SendMessage(hwnd_, WM_NCHITTEST, 0, l_param_ht);
-        if (hittest != HTCLIENT) {
-          return false;
-        }
-      }
-
       ScreenToClient(hwnd_, &point);
       touch_event.x = DeviceToLogical(point.x, device_scale_factor_);
       touch_event.y = DeviceToLogical(point.y, device_scale_factor_);
@@ -959,23 +945,51 @@ void OsrWindowWin::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 bool OsrWindowWin::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
                                      CefRect& rect) {
   CEF_REQUIRE_UI_THREAD();
-  return false;
+  DCHECK_GT(device_scale_factor_, 0);
+
+  if (!settings_.real_screen_bounds) {
+    return false;
+  }
+
+  HWND root_hwnd = ::GetAncestor(hwnd_, GA_ROOT);
+  DCHECK(root_hwnd);
+  RECT root_rect = {};
+  ::GetWindowRect(root_hwnd, &root_rect);
+
+  // Convert to DIP coordinates.
+  rect = DeviceToLogical(
+      {root_rect.left, root_rect.top, root_rect.right - root_rect.left,
+       root_rect.bottom - root_rect.top},
+      device_scale_factor_);
+  if (rect.width == 0) {
+    rect.width = 1;
+  }
+  if (rect.height == 0) {
+    rect.height = 1;
+  }
+  return true;
 }
 
 void OsrWindowWin::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
   CEF_REQUIRE_UI_THREAD();
   DCHECK_GT(device_scale_factor_, 0);
 
-  rect.x = rect.y = 0;
-  rect.width = DeviceToLogical(client_rect_.right - client_rect_.left,
-                               device_scale_factor_);
+  RECT window_rect = {};
+  ::GetWindowRect(hwnd_, &window_rect);
+
+  // Convert to DIP coordinates.
+  rect = DeviceToLogical(
+      {window_rect.left, window_rect.top, window_rect.right - window_rect.left,
+       window_rect.bottom - window_rect.top},
+      device_scale_factor_);
   if (rect.width == 0) {
     rect.width = 1;
   }
-  rect.height = DeviceToLogical(client_rect_.bottom - client_rect_.top,
-                                device_scale_factor_);
   if (rect.height == 0) {
     rect.height = 1;
+  }
+  if (!settings_.real_screen_bounds) {
+    rect.x = rect.y = 0;
   }
 }
 
@@ -1009,15 +1023,24 @@ bool OsrWindowWin::GetScreenInfo(CefRefPtr<CefBrowser> browser,
     return false;
   }
 
-  CefRect view_rect;
-  GetViewRect(browser, view_rect);
-
   screen_info.device_scale_factor = device_scale_factor_;
 
-  // The screen info rectangles are used by the renderer to create and position
-  // popups. Keep popups inside the view rectangle.
-  screen_info.rect = view_rect;
-  screen_info.available_rect = view_rect;
+  if (settings_.real_screen_bounds) {
+    CefRect root_rect;
+    GetRootScreenRect(browser, root_rect);
+
+    auto display = CefDisplay::GetDisplayMatchingBounds(
+        root_rect, /*input_pixel_coords=*/false);
+    screen_info.rect = display->GetBounds();
+    screen_info.available_rect = display->GetWorkArea();
+  } else {
+    CefRect view_rect;
+    GetViewRect(browser, view_rect);
+
+    // Keep HTML select popups inside the view rectangle.
+    screen_info.rect = view_rect;
+    screen_info.available_rect = view_rect;
+  }
   return true;
 }
 

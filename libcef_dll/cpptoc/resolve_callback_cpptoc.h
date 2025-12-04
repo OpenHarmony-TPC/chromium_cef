@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=735ca1743c64b6b36bf892bf6a346c3295252f9a$
+// $hash=35a830e36d25a880d40a06568c071fe0685af135$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESOLVE_CALLBACK_CPPTOC_H_
@@ -20,23 +20,24 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_context_capi.h"
-#include "include/capi/cef_request_context_handler_capi.h"
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_request_context.h"
+#include "include/capi/cef_request_context_capi.h"
 #include "include/cef_request_context_handler.h"
+#include "include/capi/cef_request_context_handler_capi.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResolveCallbackCppToC
-    : public CefCppToCRefCounted<CefResolveCallbackCppToC,
-                                 CefResolveCallback,
-                                 cef_resolve_callback_t> {
+    : public CefCppToCRefCounted<CefResolveCallbackCppToC, CefResolveCallback, cef_resolve_callback_t> {
  public:
   CefResolveCallbackCppToC();
   virtual ~CefResolveCallbackCppToC();
 };
+
+constexpr auto CefResolveCallbackCppToC_Wrap = CefResolveCallbackCppToC::Wrap;
+constexpr auto CefResolveCallbackCppToC_Unwrap = CefResolveCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESOLVE_CALLBACK_CPPTOC_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da50981b4d7f04fc5ae4a8f445fafdaaf0993650$
+// $hash=1010b5eaa1ac77f9bd7f8a4682963539c2963811$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_JSDIALOG_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_jsdialog_handler_capi.h"
 #include "include/cef_jsdialog_handler.h"
+#include "include/capi/cef_jsdialog_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefJSDialogHandlerCppToC
-    : public CefCppToCRefCounted<CefJSDialogHandlerCppToC,
-                                 CefJSDialogHandler,
-                                 cef_jsdialog_handler_t> {
+    : public CefCppToCRefCounted<CefJSDialogHandlerCppToC, CefJSDialogHandler, cef_jsdialog_handler_t> {
  public:
   CefJSDialogHandlerCppToC();
   virtual ~CefJSDialogHandlerCppToC();
 };
+
+constexpr auto CefJSDialogHandlerCppToC_Wrap = CefJSDialogHandlerCppToC::Wrap;
+constexpr auto CefJSDialogHandlerCppToC_Unwrap = CefJSDialogHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_JSDIALOG_HANDLER_CPPTOC_H_

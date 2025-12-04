@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b68077d68d43cdcaebc763633de40ec807556459$
+// $hash=2a26f4a662c5938d3bd3eda2afbbf2d81a1aa73e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SSLINFO_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_ssl_info_capi.h"
 #include "include/cef_ssl_info.h"
+#include "include/capi/cef_ssl_info_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -36,5 +36,8 @@ class CefSSLInfoCToCpp
   cef_cert_status_t GetCertStatus() override;
   CefRefPtr<CefX509Certificate> GetX509Certificate() override;
 };
+
+constexpr auto CefSSLInfoCToCpp_Wrap = CefSSLInfoCToCpp::Wrap;
+constexpr auto CefSSLInfoCToCpp_Unwrap = CefSSLInfoCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SSLINFO_CTOCPP_H_

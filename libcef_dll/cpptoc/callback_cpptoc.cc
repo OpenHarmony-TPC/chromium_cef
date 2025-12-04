@@ -9,18 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0cd1039467399c03a6d93469b4814cf2566078f7$
+// $hash=bb40fd9129e2b4e304fcb462f462b2606913c7a8$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK callback_cont(struct _cef_callback_t* self) {
+void CEF_CALLBACK callback_cont(struct _cef_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -31,10 +31,10 @@ void CEF_CALLBACK callback_cont(struct _cef_callback_t* self) {
   }
 
   // Execute
-  CefCallbackCppToC::Get(self)->Continue();
+  CefCallback_0_CppToC::Get(self)->Continue();
 }
 
-void CEF_CALLBACK callback_cancel(struct _cef_callback_t* self) {
+void CEF_CALLBACK callback_cancel(struct _cef_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -45,33 +45,31 @@ void CEF_CALLBACK callback_cancel(struct _cef_callback_t* self) {
   }
 
   // Execute
-  CefCallbackCppToC::Get(self)->Cancel();
+  CefCallback_0_CppToC::Get(self)->Cancel();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCallbackCppToC::CefCallbackCppToC() {
+CefCallback_0_CppToC::CefCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = callback_cont;
   GetStruct()->cancel = callback_cancel;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCallbackCppToC::~CefCallbackCppToC() {
+CefCallback_0_CppToC::~CefCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefCallback>
-CefCppToCRefCounted<CefCallbackCppToC, CefCallback, cef_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefCallback> CefCppToCRefCounted<CefCallback_0_CppToC, CefCallback, cef_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefCallbackCppToC,
-                                   CefCallback,
-                                   cef_callback_t>::kWrapperType = WT_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefCallback_0_CppToC, CefCallback, cef_callback_0_t>::kWrapperType = WT_CALLBACK;
+
+

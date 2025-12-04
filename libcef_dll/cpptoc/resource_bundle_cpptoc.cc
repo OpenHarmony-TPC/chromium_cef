@@ -9,32 +9,30 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cad500a7e9f4a6fef9a219d41d5aa0e519d18d62$
+// $hash=d82d3bd41650339c560e8d0abcc271efce951bec$
 //
 
-#include "libcef_dll/cpptoc/resource_bundle_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
+#include "libcef_dll/cpptoc/resource_bundle_cpptoc.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_resource_bundle_t* cef_resource_bundle_get_global() {
+CEF_EXPORT cef_resource_bundle_0_t* cef_resource_bundle_get_global() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
   CefRefPtr<CefResourceBundle> _retval = CefResourceBundle::GetGlobal();
 
   // Return type: refptr_same
-  return CefResourceBundleCppToC::Wrap(_retval);
+  return CefResourceBundleCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-cef_string_userfree_t CEF_CALLBACK
-resource_bundle_get_localized_string(struct _cef_resource_bundle_t* self,
-                                     int string_id) {
+cef_string_userfree_t CEF_CALLBACK resource_bundle_get_localized_string(struct _cef_resource_bundle_0_t* self, int string_id) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -43,16 +41,14 @@ resource_bundle_get_localized_string(struct _cef_resource_bundle_t* self,
   }
 
   // Execute
-  CefString _retval =
-      CefResourceBundleCppToC::Get(self)->GetLocalizedString(string_id);
+  CefString _retval = CefResourceBundle_0_CppToC::Get(self)->GetLocalizedString(
+      string_id);
 
   // Return type: string
   return _retval.DetachToUserFree();
 }
 
-struct _cef_binary_value_t* CEF_CALLBACK
-resource_bundle_get_data_resource(struct _cef_resource_bundle_t* self,
-                                  int resource_id) {
+struct _cef_binary_value_0_t* CEF_CALLBACK resource_bundle_get_data_resource(struct _cef_resource_bundle_0_t* self, int resource_id) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -61,17 +57,14 @@ resource_bundle_get_data_resource(struct _cef_resource_bundle_t* self,
   }
 
   // Execute
-  CefRefPtr<CefBinaryValue> _retval =
-      CefResourceBundleCppToC::Get(self)->GetDataResource(resource_id);
+  CefRefPtr<CefBinaryValue> _retval = CefResourceBundle_0_CppToC::Get(self)->GetDataResource(
+      resource_id);
 
   // Return type: refptr_same
-  return CefBinaryValueCppToC::Wrap(_retval);
+  return CefBinaryValueCppToC_Wrap(_retval);
 }
 
-struct _cef_binary_value_t* CEF_CALLBACK
-resource_bundle_get_data_resource_for_scale(struct _cef_resource_bundle_t* self,
-                                            int resource_id,
-                                            cef_scale_factor_t scale_factor) {
+struct _cef_binary_value_0_t* CEF_CALLBACK resource_bundle_get_data_resource_for_scale(struct _cef_resource_bundle_0_t* self, int resource_id, cef_scale_factor_t scale_factor) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -80,41 +73,36 @@ resource_bundle_get_data_resource_for_scale(struct _cef_resource_bundle_t* self,
   }
 
   // Execute
-  CefRefPtr<CefBinaryValue> _retval =
-      CefResourceBundleCppToC::Get(self)->GetDataResourceForScale(resource_id,
-                                                                  scale_factor);
+  CefRefPtr<CefBinaryValue> _retval = CefResourceBundle_0_CppToC::Get(self)->GetDataResourceForScale(
+      resource_id,
+      scale_factor);
 
   // Return type: refptr_same
-  return CefBinaryValueCppToC::Wrap(_retval);
+  return CefBinaryValueCppToC_Wrap(_retval);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceBundleCppToC::CefResourceBundleCppToC() {
+CefResourceBundle_0_CppToC::CefResourceBundle_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->get_localized_string = resource_bundle_get_localized_string;
   GetStruct()->get_data_resource = resource_bundle_get_data_resource;
-  GetStruct()->get_data_resource_for_scale =
-      resource_bundle_get_data_resource_for_scale;
+  GetStruct()->get_data_resource_for_scale = resource_bundle_get_data_resource_for_scale;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceBundleCppToC::~CefResourceBundleCppToC() {}
-
-template <>
-CefRefPtr<CefResourceBundle> CefCppToCRefCounted<
-    CefResourceBundleCppToC,
-    CefResourceBundle,
-    cef_resource_bundle_t>::UnwrapDerived(CefWrapperType type,
-                                          cef_resource_bundle_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefResourceBundle_0_CppToC::~CefResourceBundle_0_CppToC() {
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefResourceBundleCppToC,
-                                   CefResourceBundle,
-                                   cef_resource_bundle_t>::kWrapperType =
-    WT_RESOURCE_BUNDLE;
+template<> CefRefPtr<CefResourceBundle> CefCppToCRefCounted<CefResourceBundle_0_CppToC, CefResourceBundle, cef_resource_bundle_0_t>::UnwrapDerived(CefWrapperType type, cef_resource_bundle_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefResourceBundle_0_CppToC, CefResourceBundle, cef_resource_bundle_0_t>::kWrapperType = WT_RESOURCE_BUNDLE;
+
+

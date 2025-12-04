@@ -250,10 +250,6 @@ void ChromeBrowserHostImpl::WasHidden(bool hidden) {
   NOTIMPLEMENTED();
 }
 
-void ChromeBrowserHostImpl::NotifyScreenInfoChanged() {
-  NOTIMPLEMENTED();
-}
-
 void ChromeBrowserHostImpl::Invalidate(PaintElementType type) {
   NOTIMPLEMENTED();
 }
@@ -325,15 +321,6 @@ void ChromeBrowserHostImpl::DragSourceEndedAt(int x,
                                               int y,
                                               DragOperationsMask op) {
   NOTIMPLEMENTED();
-}
-
-void ChromeBrowserHostImpl::SetAudioMuted(bool mute) {
-  NOTIMPLEMENTED();
-}
-
-bool ChromeBrowserHostImpl::IsAudioMuted() {
-  NOTIMPLEMENTED();
-  return false;
 }
 
 void ChromeBrowserHostImpl::SetAutoResizeEnabled(bool enabled,
@@ -509,8 +496,7 @@ void ChromeBrowserHostImpl::Attach(content::WebContents* web_contents,
         is_devtools_popup);
   }
 
-  platform_delegate_->WebContentsCreated(web_contents,
-                                         /*own_web_contents=*/false);
+  platform_delegate_->WebContentsCreated(web_contents, /*owned=*/false);
   contents_delegate_.ObserveWebContents(web_contents);
 
   // Associate the platform delegate with this browser.

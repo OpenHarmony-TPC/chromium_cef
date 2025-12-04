@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=121ca7f356da80295e8ae487e3c1990ca2ec1384$
+// $hash=d62c74a8e7cc93c4fe3018ac8f43be8285036a1f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -20,35 +20,26 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_load_handler_capi.h"
 #include "include/cef_load_handler.h"
+#include "include/capi/cef_load_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
-                                                        CefLoadHandler,
-                                                        cef_load_handler_t> {
+class CefLoadHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefLoadHandler_0_CToCpp, CefLoadHandler, cef_load_handler_0_t> {
  public:
-  CefLoadHandlerCToCpp();
-  virtual ~CefLoadHandlerCToCpp();
+  CefLoadHandler_0_CToCpp();
+  virtual ~CefLoadHandler_0_CToCpp();
 
   // CefLoadHandler methods.
-  void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
-                            bool isLoading,
-                            bool canGoBack,
-                            bool canGoForward) override;
-  void OnLoadStart(CefRefPtr<CefBrowser> browser,
-                   CefRefPtr<CefFrame> frame,
-                   TransitionType transition_type) override;
-  void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                 CefRefPtr<CefFrame> frame,
-                 int httpStatusCode) override;
-  void OnLoadError(CefRefPtr<CefBrowser> browser,
-                   CefRefPtr<CefFrame> frame,
-                   ErrorCode errorCode,
-                   const CefString& errorText,
-                   const CefString& failedUrl) override;
+  void OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) override;
+  void OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type) override;
+  void OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) override;
+  void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) override;
 };
+
+constexpr auto CefLoadHandlerCToCpp_Wrap = CefLoadHandler_0_CToCpp::Wrap;
+constexpr auto CefLoadHandlerCToCpp_Unwrap = CefLoadHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

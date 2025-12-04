@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=784c55be621ff383ce35bddff3f814a63da4455e$
+// $hash=af507482d4a050836117e6a54e927b81d3f62f23$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DELETE_COOKIES_CALLBACK_CTOCPP_H_
@@ -20,22 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDeleteCookiesCallbackCToCpp
-    : public CefCToCppRefCounted<CefDeleteCookiesCallbackCToCpp,
-                                 CefDeleteCookiesCallback,
-                                 cef_delete_cookies_callback_t> {
+class CefDeleteCookiesCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefDeleteCookiesCallback_0_CToCpp, CefDeleteCookiesCallback, cef_delete_cookies_callback_0_t> {
  public:
-  CefDeleteCookiesCallbackCToCpp();
-  virtual ~CefDeleteCookiesCallbackCToCpp();
+  CefDeleteCookiesCallback_0_CToCpp();
+  virtual ~CefDeleteCookiesCallback_0_CToCpp();
 
   // CefDeleteCookiesCallback methods.
   void OnComplete(int num_deleted) override;
 };
+
+constexpr auto CefDeleteCookiesCallbackCToCpp_Wrap = CefDeleteCookiesCallback_0_CToCpp::Wrap;
+constexpr auto CefDeleteCookiesCallbackCToCpp_Unwrap = CefDeleteCookiesCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DELETE_COOKIES_CALLBACK_CTOCPP_H_

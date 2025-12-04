@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6b75203509734d486c63b7da949f455414f34d51$
+// $hash=632e34c7096521cf38092ce47bd6c27544c5f173$
 //
 
-#include "libcef_dll/ctocpp/menu_model_delegate_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/menu_model_cpptoc.h"
+#include "libcef_dll/ctocpp/menu_model_delegate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::ExecuteCommand(
-    CefRefPtr<CefMenuModel> menu_model,
-    int command_id,
-    cef_event_flags_t event_flags) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::ExecuteCommand(CefRefPtr<CefMenuModel> menu_model, int command_id, cef_event_flags_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, execute_command)) {
+  auto* _struct = GetStruct();
+  if (!_struct->execute_command) {
     return;
   }
 
@@ -40,18 +37,17 @@ void CefMenuModelDelegateCToCpp::ExecuteCommand(
   }
 
   // Execute
-  _struct->execute_command(_struct, CefMenuModelCppToC::Wrap(menu_model),
-                           command_id, event_flags);
+  _struct->execute_command(_struct,
+      CefMenuModelCppToC_Wrap(menu_model),
+      command_id,
+      event_flags);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::MouseOutsideMenu(
-    CefRefPtr<CefMenuModel> menu_model,
-    const CefPoint& screen_point) {
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::MouseOutsideMenu(CefRefPtr<CefMenuModel> menu_model, const CefPoint& screen_point) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, mouse_outside_menu)) {
+  auto* _struct = GetStruct();
+  if (!_struct->mouse_outside_menu) {
     return;
   }
 
@@ -64,18 +60,16 @@ void CefMenuModelDelegateCToCpp::MouseOutsideMenu(
   }
 
   // Execute
-  _struct->mouse_outside_menu(_struct, CefMenuModelCppToC::Wrap(menu_model),
-                              &screen_point);
+  _struct->mouse_outside_menu(_struct,
+      CefMenuModelCppToC_Wrap(menu_model),
+      &screen_point);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::UnhandledOpenSubmenu(
-    CefRefPtr<CefMenuModel> menu_model,
-    bool is_rtl) {
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::UnhandledOpenSubmenu(CefRefPtr<CefMenuModel> menu_model, bool is_rtl) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, unhandled_open_submenu)) {
+  auto* _struct = GetStruct();
+  if (!_struct->unhandled_open_submenu) {
     return;
   }
 
@@ -88,18 +82,16 @@ void CefMenuModelDelegateCToCpp::UnhandledOpenSubmenu(
   }
 
   // Execute
-  _struct->unhandled_open_submenu(_struct, CefMenuModelCppToC::Wrap(menu_model),
-                                  is_rtl);
+  _struct->unhandled_open_submenu(_struct,
+      CefMenuModelCppToC_Wrap(menu_model),
+      is_rtl);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::UnhandledCloseSubmenu(
-    CefRefPtr<CefMenuModel> menu_model,
-    bool is_rtl) {
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::UnhandledCloseSubmenu(CefRefPtr<CefMenuModel> menu_model, bool is_rtl) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, unhandled_close_submenu)) {
+  auto* _struct = GetStruct();
+  if (!_struct->unhandled_close_submenu) {
     return;
   }
 
@@ -112,17 +104,16 @@ void CefMenuModelDelegateCToCpp::UnhandledCloseSubmenu(
   }
 
   // Execute
-  _struct->unhandled_close_submenu(
-      _struct, CefMenuModelCppToC::Wrap(menu_model), is_rtl);
+  _struct->unhandled_close_submenu(_struct,
+      CefMenuModelCppToC_Wrap(menu_model),
+      is_rtl);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::MenuWillShow(
-    CefRefPtr<CefMenuModel> menu_model) {
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::MenuWillShow(CefRefPtr<CefMenuModel> menu_model) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, menu_will_show)) {
+  auto* _struct = GetStruct();
+  if (!_struct->menu_will_show) {
     return;
   }
 
@@ -135,16 +126,15 @@ void CefMenuModelDelegateCToCpp::MenuWillShow(
   }
 
   // Execute
-  _struct->menu_will_show(_struct, CefMenuModelCppToC::Wrap(menu_model));
+  _struct->menu_will_show(_struct,
+      CefMenuModelCppToC_Wrap(menu_model));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMenuModelDelegateCToCpp::MenuClosed(
-    CefRefPtr<CefMenuModel> menu_model) {
+NO_SANITIZE("cfi-icall") void CefMenuModelDelegate_0_CToCpp::MenuClosed(CefRefPtr<CefMenuModel> menu_model) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, menu_closed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->menu_closed) {
     return;
   }
 
@@ -157,16 +147,15 @@ void CefMenuModelDelegateCToCpp::MenuClosed(
   }
 
   // Execute
-  _struct->menu_closed(_struct, CefMenuModelCppToC::Wrap(menu_model));
+  _struct->menu_closed(_struct,
+      CefMenuModelCppToC_Wrap(menu_model));
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefMenuModelDelegateCToCpp::FormatLabel(CefRefPtr<CefMenuModel> menu_model,
-                                             CefString& label) {
+NO_SANITIZE("cfi-icall") bool CefMenuModelDelegate_0_CToCpp::FormatLabel(CefRefPtr<CefMenuModel> menu_model, CefString& label) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_menu_model_delegate_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, format_label)) {
+  auto* _struct = GetStruct();
+  if (!_struct->format_label) {
     return false;
   }
 
@@ -179,35 +168,31 @@ bool CefMenuModelDelegateCToCpp::FormatLabel(CefRefPtr<CefMenuModel> menu_model,
   }
 
   // Execute
-  int _retval = _struct->format_label(
-      _struct, CefMenuModelCppToC::Wrap(menu_model), label.GetWritableStruct());
+  int _retval = _struct->format_label(_struct,
+      CefMenuModelCppToC_Wrap(menu_model),
+      label.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMenuModelDelegateCToCpp::CefMenuModelDelegateCToCpp() {}
+CefMenuModelDelegate_0_CToCpp::CefMenuModelDelegate_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMenuModelDelegateCToCpp::~CefMenuModelDelegateCToCpp() {
+CefMenuModelDelegate_0_CToCpp::~CefMenuModelDelegate_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_menu_model_delegate_t* CefCToCppRefCounted<
-    CefMenuModelDelegateCToCpp,
-    CefMenuModelDelegate,
-    cef_menu_model_delegate_t>::UnwrapDerived(CefWrapperType type,
-                                              CefMenuModelDelegate* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_menu_model_delegate_0_t* CefCToCppRefCounted<CefMenuModelDelegate_0_CToCpp, CefMenuModelDelegate, cef_menu_model_delegate_0_t>::UnwrapDerived(CefWrapperType type, CefMenuModelDelegate* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefMenuModelDelegateCToCpp,
-                                   CefMenuModelDelegate,
-                                   cef_menu_model_delegate_t>::kWrapperType =
-    WT_MENU_MODEL_DELEGATE;
+template<> CefWrapperType CefCToCppRefCounted<CefMenuModelDelegate_0_CToCpp, CefMenuModelDelegate, cef_menu_model_delegate_0_t>::kWrapperType = WT_MENU_MODEL_DELEGATE;
+
+

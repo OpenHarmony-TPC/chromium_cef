@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=2130ee468c9742d5be99d622703829adff83145f$
+// $hash=75439e8ba353162c029448b1f7ed536e3d20598a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_client_capi.h"
@@ -51,10 +55,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure used to implement browser process callbacks. The functions of this
 /// structure will be called on the browser process main thread unless otherwise
 /// indicated.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_browser_process_handler_t {
   ///
@@ -83,17 +90,13 @@ typedef struct _cef_browser_process_handler_t {
   /// Do not keep a reference to the |registrar| object. This function is called
   /// on the browser process UI thread.
   ///
-  void(CEF_CALLBACK* on_register_custom_preferences)(
-      struct _cef_browser_process_handler_t* self,
-      cef_preferences_type_t type,
-      struct _cef_preference_registrar_t* registrar);
+  void (CEF_CALLBACK *on_register_custom_preferences)(struct _cef_browser_process_handler_t* self, cef_preferences_type_t type, struct _cef_preference_registrar_t* registrar);
 
   ///
   /// Called on the browser process UI thread immediately after the CEF context
   /// has been initialized.
   ///
-  void(CEF_CALLBACK* on_context_initialized)(
-      struct _cef_browser_process_handler_t* self);
+  void (CEF_CALLBACK *on_context_initialized)(struct _cef_browser_process_handler_t* self);
 
   ///
   /// Called before a child process is launched. Will be called on the browser
@@ -102,9 +105,7 @@ typedef struct _cef_browser_process_handler_t {
   /// modify the child process command line. Do not keep a reference to
   /// |command_line| outside of this function.
   ///
-  void(CEF_CALLBACK* on_before_child_process_launch)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_command_line_t* command_line);
+  void (CEF_CALLBACK *on_before_child_process_launch)(struct _cef_browser_process_handler_t* self, struct _cef_command_line_t* command_line);
 
   ///
   /// Implement this function to provide app-specific behavior when an already
@@ -124,10 +125,7 @@ typedef struct _cef_browser_process_handler_t {
   ///
   /// This function will be called on the browser process UI thread.
   ///
-  int(CEF_CALLBACK* on_already_running_app_relaunch)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_command_line_t* command_line,
-      const cef_string_t* current_directory);
+  int (CEF_CALLBACK *on_already_running_app_relaunch)(struct _cef_browser_process_handler_t* self, struct _cef_command_line_t* command_line, const cef_string_t* current_directory);
 
   ///
   /// Called from any thread when work has been scheduled for the browser
@@ -142,9 +140,7 @@ typedef struct _cef_browser_process_handler_t {
   /// call should be scheduled to happen after the specified delay and any
   /// currently pending scheduled call should be cancelled.
   ///
-  void(CEF_CALLBACK* on_schedule_message_pump_work)(
-      struct _cef_browser_process_handler_t* self,
-      int64_t delay_ms);
+  void (CEF_CALLBACK *on_schedule_message_pump_work)(struct _cef_browser_process_handler_t* self, int64_t delay_ms);
 
   ///
   /// Return the default client for use with a newly created browser window
@@ -154,8 +150,7 @@ typedef struct _cef_browser_process_handler_t {
   /// manually. This function is currently only used with Chrome style when
   /// creating new browser windows via Chrome UI.
   ///
-  struct _cef_client_t*(CEF_CALLBACK* get_default_client)(
-      struct _cef_browser_process_handler_t* self);
+  struct _cef_client_t* (CEF_CALLBACK *get_default_client)(struct _cef_browser_process_handler_t* self);
 
   ///
   /// Return the default handler for use with a new user or incognito profile
@@ -164,10 +159,9 @@ typedef struct _cef_browser_process_handler_t {
   /// that cef_request_context_t). This function is currently only used with
   /// Chrome style when creating new browser windows via Chrome UI.
   ///
-  struct _cef_request_context_handler_t*(
-      CEF_CALLBACK* get_default_request_context_handler)(
-      struct _cef_browser_process_handler_t* self);
+  struct _cef_request_context_handler_t* (CEF_CALLBACK *get_default_request_context_handler)(struct _cef_browser_process_handler_t* self);
 } cef_browser_process_handler_t;
+
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 diff --git third_party/crashpad/crashpad/client/prune_crash_reports.cc third_party/crashpad/crashpad/client/prune_crash_reports.cc
-index 927ed6010f36e..1a36ae5d41d1f 100644
+index 927ed6010f36e61abaaad3c32f37bf3a94b0cb0b..1a36ae5d41d1fc7192168bfcbd9d2c7ee224b2e0 100644
 --- third_party/crashpad/crashpad/client/prune_crash_reports.cc
 +++ third_party/crashpad/crashpad/client/prune_crash_reports.cc
 @@ -75,13 +75,19 @@ size_t PruneCrashReportDatabase(CrashReportDatabase* database,
@@ -26,7 +26,7 @@ index 927ed6010f36e..1a36ae5d41d1f 100644
  
  static const time_t kSecondsInDay = 60 * 60 * 24;
 diff --git third_party/crashpad/crashpad/client/prune_crash_reports.h third_party/crashpad/crashpad/client/prune_crash_reports.h
-index b362e0aadbadd..1588232a6e4d4 100644
+index b362e0aadbadd8d0f812d86cd5024c3ea9cf7dda..1588232a6e4d418d4f338d64a3bdf6da565f4533 100644
 --- third_party/crashpad/crashpad/client/prune_crash_reports.h
 +++ third_party/crashpad/crashpad/client/prune_crash_reports.h
 @@ -58,7 +58,8 @@ class PruneCondition {
@@ -40,7 +40,7 @@ index b362e0aadbadd..1588232a6e4d4 100644
    virtual ~PruneCondition() {}
  
 diff --git third_party/crashpad/crashpad/client/settings.cc third_party/crashpad/crashpad/client/settings.cc
-index 76d77c86072d5..9cb6be87eb46f 100644
+index 76d77c86072d5eca43f492cdf2ea2fbca069f0dd..9cb6be87eb46f8c289d85a448de4eb0d9ae6bdf4 100644
 --- third_party/crashpad/crashpad/client/settings.cc
 +++ third_party/crashpad/crashpad/client/settings.cc
 @@ -122,7 +122,7 @@ struct Settings::Data {
@@ -130,7 +130,7 @@ index 76d77c86072d5..9cb6be87eb46f 100644
  Settings::ScopedLockedFileHandle Settings::MakeScopedLockedFileHandle(
      const internal::MakeScopedLockedFileHandleOptions& options,
 diff --git third_party/crashpad/crashpad/client/settings.h third_party/crashpad/crashpad/client/settings.h
-index 39b2de869d225..5a4e621c650ee 100644
+index 39b2de869d225877b9582400dfeab64318a3f9b5..5a4e621c650eeb0b89533707ef507a83387ed2e8 100644
 --- third_party/crashpad/crashpad/client/settings.h
 +++ third_party/crashpad/crashpad/client/settings.h
 @@ -156,6 +156,11 @@ class Settings {
@@ -146,7 +146,7 @@ index 39b2de869d225..5a4e621c650ee 100644
    struct Data;
  
 diff --git third_party/crashpad/crashpad/handler/BUILD.gn third_party/crashpad/crashpad/handler/BUILD.gn
-index 104e8502908e2..45b0a92bb9d80 100644
+index 99f4701555ae9cbd979b71659c29b669e4badf8f..446c77758540b6a30900d43a160e2427d9b231a5 100644
 --- third_party/crashpad/crashpad/handler/BUILD.gn
 +++ third_party/crashpad/crashpad/handler/BUILD.gn
 @@ -12,6 +12,7 @@
@@ -157,10 +157,17 @@ index 104e8502908e2..45b0a92bb9d80 100644
  import("../build/crashpad_buildconfig.gni")
  
  static_library("handler") {
-@@ -61,6 +62,17 @@ static_library("handler") {
-     ]
-   }
+@@ -73,11 +74,23 @@ static_library("handler") {
+     "../minidump",
+     "../snapshot",
+     "../tools:tool_support",
++    "//cef/libcef/features:buildflags",
+   ]
  
+   if (crashpad_is_win) {
+     cflags = [ "/wd4201" ]  # nonstandard extension used : nameless struct/union
+   }
++
 +  if (enable_cef) {
 +    sources += [
 +      "//cef/libcef/common/cef_crash_report_upload_thread.cc",
@@ -171,20 +178,11 @@ index 104e8502908e2..45b0a92bb9d80 100644
 +
 +    configs += [ "//cef/libcef/features:config" ]
 +  }
-+
-   public_configs = [ "..:crashpad_config" ]
+ }
  
-   public_deps = [
-@@ -76,6 +88,7 @@ static_library("handler") {
-     "../snapshot",
-     "../third_party/mini_chromium:chromeos_buildflags",
-     "../tools:tool_support",
-+    "//cef/libcef/features",
-   ]
- 
-   if (crashpad_is_win) {
+ if (crashpad_is_android) {
 diff --git third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
-index 8350d0761ac18..9fc26214c4c0a 100644
+index 8350d0761ac186eb725c153dc9abe903267e1031..9fc26214c4c0a5967eae24a719098029f9a4ab45 100644
 --- third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
 +++ third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
 @@ -296,6 +296,8 @@ CrashReportUploadThread::UploadResult CrashReportUploadThread::UploadReport(
@@ -197,7 +195,7 @@ index 8350d0761ac18..9fc26214c4c0a 100644
  
    if (!reader->SeekSet(start_offset)) {
 diff --git third_party/crashpad/crashpad/handler/crash_report_upload_thread.h third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
-index 22bb26e31893b..87c80604e5f7a 100644
+index 22bb26e31893b167a27edc23c7c6ae5a10164bf8..87c80604e5f7a78b5e134c3073f107fa0d60e887 100644
 --- third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
 +++ third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
 @@ -16,6 +16,7 @@
@@ -248,18 +246,18 @@ index 22bb26e31893b..87c80604e5f7a 100644
    //! \brief Calls ProcessPendingReports() in response to ReportPending() having
    //!     been called on any thread, as well as periodically on a timer.
 diff --git third_party/crashpad/crashpad/handler/handler_main.cc third_party/crashpad/crashpad/handler/handler_main.cc
-index 7e908c0a305be..e35414a131f07 100644
+index 6eca8415eb10ed7d318eba4b1b7b7ca8c653613c..346836adb4477e1b2e59e992c0b65850496a730c 100644
 --- third_party/crashpad/crashpad/handler/handler_main.cc
 +++ third_party/crashpad/crashpad/handler/handler_main.cc
-@@ -39,6 +39,7 @@
+@@ -38,6 +38,7 @@
+ #include "base/strings/stringprintf.h"
  #include "base/strings/utf_string_conversions.h"
  #include "build/build_config.h"
- #include "build/chromeos_buildflags.h"
 +#include "cef/libcef/features/features.h"
  #include "client/crash_report_database.h"
  #include "client/crashpad_client.h"
  #include "client/crashpad_info.h"
-@@ -89,6 +90,10 @@
+@@ -88,6 +89,10 @@
  #include "util/win/session_end_watcher.h"
  #endif  // BUILDFLAG(IS_APPLE)
  
@@ -270,27 +268,27 @@ index 7e908c0a305be..e35414a131f07 100644
  namespace crashpad {
  
  namespace {
-@@ -248,6 +253,9 @@ struct Options {
+@@ -247,6 +252,9 @@ struct Options {
    bool periodic_tasks;
    bool rate_limit;
    bool upload_gzip;
 +  int max_uploads;
 +  int max_database_size;
 +  int max_database_age;
- #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+ #if BUILDFLAG(IS_CHROMEOS)
    bool use_cros_crash_reporter = false;
    base::FilePath minidump_dir_for_tests;
-@@ -622,6 +630,9 @@ int HandlerMain(int argc,
+@@ -621,6 +629,9 @@ int HandlerMain(int argc,
      kOptionTraceParentWithException,
  #endif
      kOptionURL,
 +    kOptionMaxUploads,
 +    kOptionMaxDatabaseSize,
 +    kOptionMaxDatabaseAge,
- #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+ #if BUILDFLAG(IS_CHROMEOS)
      kOptionUseCrosCrashReporter,
      kOptionMinidumpDirForTests,
-@@ -722,6 +733,9 @@ int HandlerMain(int argc,
+@@ -721,6 +732,9 @@ int HandlerMain(int argc,
  #endif  // BUILDFLAG(IS_ANDROID)
      {"help", no_argument, nullptr, kOptionHelp},
      {"version", no_argument, nullptr, kOptionVersion},
@@ -300,7 +298,7 @@ index 7e908c0a305be..e35414a131f07 100644
      {nullptr, 0, nullptr, 0},
    };
  
-@@ -879,6 +893,27 @@ int HandlerMain(int argc,
+@@ -878,6 +892,27 @@ int HandlerMain(int argc,
          options.url = optarg;
          break;
        }
@@ -325,10 +323,10 @@ index 7e908c0a305be..e35414a131f07 100644
 +        }
 +        break;
 +      }
- #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+ #if BUILDFLAG(IS_CHROMEOS)
        case kOptionUseCrosCrashReporter: {
          options.use_cros_crash_reporter = true;
-@@ -1028,11 +1063,20 @@ int HandlerMain(int argc,
+@@ -1027,11 +1062,20 @@ int HandlerMain(int argc,
      upload_thread_options.upload_gzip = options.upload_gzip;
      upload_thread_options.watch_pending_reports = options.periodic_tasks;
  
@@ -349,7 +347,7 @@ index 7e908c0a305be..e35414a131f07 100644
      upload_thread.Get()->Start();
    }
  
-@@ -1103,7 +1147,8 @@ int HandlerMain(int argc,
+@@ -1102,7 +1146,8 @@ int HandlerMain(int argc,
    ScopedStoppable prune_thread;
    if (options.periodic_tasks) {
      prune_thread.Reset(new PruneCrashReportThread(

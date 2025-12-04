@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0db16e1dc7ed2ed9ab3210514f4ee43169b2b321$
+// $hash=73a4721b713a900af4af62c04fadebc73eb505ec$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_SCROLL_VIEW_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_scroll_view_capi.h"
 #include "include/views/cef_scroll_view.h"
+#include "include/capi/views/cef_scroll_view_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefScrollViewCppToC : public CefCppToCRefCounted<CefScrollViewCppToC,
-                                                       CefScrollView,
-                                                       cef_scroll_view_t> {
+class CefScrollView_0_CppToC
+    : public CefCppToCRefCounted<CefScrollView_0_CppToC, CefScrollView, cef_scroll_view_0_t> {
  public:
-  CefScrollViewCppToC();
-  virtual ~CefScrollViewCppToC();
+  CefScrollView_0_CppToC();
+  virtual ~CefScrollView_0_CppToC();
 };
+
+constexpr auto CefScrollViewCppToC_Wrap = CefScrollView_0_CppToC::Wrap;
+constexpr auto CefScrollViewCppToC_Unwrap = CefScrollView_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_SCROLL_VIEW_CPPTOC_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b9a4dc290390c5b2562098f83fc1c9537943a2e8$
+// $hash=36ad853b121b3bd7a914f5b270923084bdb0fe5e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaRouteCToCpp : public CefCToCppRefCounted<CefMediaRouteCToCpp,
-                                                       CefMediaRoute,
-                                                       cef_media_route_t> {
+class CefMediaRouteCToCpp
+    : public CefCToCppRefCounted<CefMediaRouteCToCpp, CefMediaRoute, cef_media_route_t> {
  public:
   CefMediaRouteCToCpp();
   virtual ~CefMediaRouteCToCpp();
@@ -40,5 +39,8 @@ class CefMediaRouteCToCpp : public CefCToCppRefCounted<CefMediaRouteCToCpp,
   void SendRouteMessage(const void* message, size_t message_size) override;
   void Terminate() override;
 };
+
+constexpr auto CefMediaRouteCToCpp_Wrap = CefMediaRouteCToCpp::Wrap;
+constexpr auto CefMediaRouteCToCpp_Unwrap = CefMediaRouteCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CTOCPP_H_

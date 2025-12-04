@@ -1,0 +1,37 @@
+From c420f4dd42099ab15d4222f4d789465ebcaa844a Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Wed, 3 Dec 2025 09:50:11 +0800
+Subject: [PATCH] add cef_patch_third_party_depot_tools.aptch
+
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+Change-Id: I9efb3f319ab7b0535e3ca1978cf20482762c8412
+---
+ gclient.py | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/third_party/depot_tools/gclient.py b/src/third_party/depot_tools/gclient.py
+index 0fc2fa6..35d5be0 100755
+--- a/src/third_party/depot_tools/gclient.py
++++ b/src/third_party/depot_tools/gclient.py
+@@ -1001,7 +1001,8 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
+         if self.git_dependencies_state == gclient_eval.SUBMODULES:
+             deps.update(self.ParseGitSubmodules())
+ 
+-        if self.git_dependencies_state != gclient_eval.DEPS:
++        if not self.get_vars().get('source_tarball', False) and \
++           self.git_dependencies_state != gclient_eval.DEPS:
+             # Git submodules are used - get their state.
+             self._known_dependency_diff = self.CreateSCM().GetSubmoduleDiff()
+             self._dependency_index_state = self.CreateSCM(
+@@ -1219,7 +1220,7 @@ class Dependency(gclient_utils.WorkItem, DependencySettings):
+             self.FuzzyMatchUrl(revision_overrides), None)
+         if not revision_override and not self.managed:
+             revision_override = 'unmanaged'
+-        if run_scm and self.url:
++        if not self.get_vars().get('source_tarball', False) and run_scm and self.url:
+             # Create a shallow copy to mutate revision.
+             options = copy.copy(options)
+             options.revision = revision_override
+-- 
+2.34.1
+

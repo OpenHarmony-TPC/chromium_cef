@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e88119ab6febfa028a69cf38b9805332893b1778$
+// $hash=af7671bdcdee012ea5d7598854301f01ddbb7bc9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_FIND_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_find_handler_capi.h"
 #include "include/cef_find_handler.h"
+#include "include/capi/cef_find_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefFindHandlerCppToC : public CefCppToCRefCounted<CefFindHandlerCppToC,
-                                                        CefFindHandler,
-                                                        cef_find_handler_t> {
+class CefFindHandlerCppToC
+    : public CefCppToCRefCounted<CefFindHandlerCppToC, CefFindHandler, cef_find_handler_t> {
  public:
   CefFindHandlerCppToC();
   virtual ~CefFindHandlerCppToC();
 };
+
+constexpr auto CefFindHandlerCppToC_Wrap = CefFindHandlerCppToC::Wrap;
+constexpr auto CefFindHandlerCppToC_Unwrap = CefFindHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_FIND_HANDLER_CPPTOC_H_

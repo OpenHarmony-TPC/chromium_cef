@@ -103,8 +103,8 @@ class ResourceContextData : public base::SupportsUserData::Data {
     // Maybe the browser was destroyed while AddProxyOnUIThread was pending.
     if (!web_contents) {
       // Delete on the IO thread as expected by mojo bindings.
-      content::BrowserThread::DeleteSoon(content::BrowserThread::IO, FROM_HERE,
-                                         proxy);
+      content::BrowserThread::GetTaskRunnerForThread(CEF_IOT)->DeleteSoon(
+          FROM_HERE, proxy);
       return;
     }
 
@@ -263,8 +263,6 @@ class InterceptedRequest : public network::mojom::URLLoader,
       const std::optional<GURL>& new_url) override;
   void SetPriority(net::RequestPriority priority,
                    int32_t intra_priority_value) override;
-  void PauseReadingBodyFromNet() override;
-  void ResumeReadingBodyFromNet() override;
 
   int32_t id() const { return id_; }
 
@@ -343,6 +341,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   network::URLLoaderCompletionStatus status_;
   bool got_loader_error_ = false;
+  bool completed_ = false;
 
   // Used for rate limiting OnUploadProgress callbacks.
   bool waiting_for_upload_progress_ack_ = false;
@@ -764,18 +763,6 @@ void InterceptedRequest::SetPriority(net::RequestPriority priority,
   }
 }
 
-void InterceptedRequest::PauseReadingBodyFromNet() {
-  if (target_loader_) {
-    target_loader_->PauseReadingBodyFromNet();
-  }
-}
-
-void InterceptedRequest::ResumeReadingBodyFromNet() {
-  if (target_loader_) {
-    target_loader_->ResumeReadingBodyFromNet();
-  }
-}
-
 // Helper methods.
 
 void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
@@ -1155,7 +1142,17 @@ void InterceptedRequest::OnDestroy() {
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
-  factory_->request_handler_->OnRequestComplete(id_, request_, status_);
+  bool handled_externally = false;
+  factory_->request_handler_->OnRequestComplete(id_, request_, status_,
+                                                handled_externally);
+
+  // Don't call OnComplete() if an unhandled request might be handled
+  // externally. The request will instead be canceled implicitly with
+  // ERR_ABORTED.
+  if (!handled_externally && target_client_ && !completed_) {
+    target_client_->OnComplete(status_);
+    completed_ = true;
+  }
 
   // Destroys |this|.
   factory_->RemoveRequest(this);
@@ -1207,6 +1204,7 @@ void InterceptedRequest::CallOnComplete(
 
   if (target_client_) {
     target_client_->OnComplete(status);
+    completed_ = true;
   }
 
   if (proxied_loader_receiver_.is_bound() &&
@@ -1241,7 +1239,6 @@ void InterceptedRequest::SendErrorStatusAndCompleteImmediately(
     const network::URLLoaderCompletionStatus& status) {
   status_ = status;
   SendErrorCallback(status_.error_code, false);
-  target_client_->OnComplete(status_);
   OnDestroy();
 }
 

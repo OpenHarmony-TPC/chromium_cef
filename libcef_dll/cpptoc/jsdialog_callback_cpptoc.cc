@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c269dd5a7391d133cddd373b2b8f820d49c2cac5$
+// $hash=e7c1f139efe314a5601202370597ce215b57fe9e$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/jsdialog_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK jsdialog_callback_cont(struct _cef_jsdialog_callback_t* self,
-                                         int success,
-                                         const cef_string_t* user_input) {
+void CEF_CALLBACK jsdialog_callback_cont(struct _cef_jsdialog_callback_0_t* self, int success, const cef_string_t* user_input) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -34,36 +32,32 @@ void CEF_CALLBACK jsdialog_callback_cont(struct _cef_jsdialog_callback_t* self,
   // Unverified params: user_input
 
   // Execute
-  CefJSDialogCallbackCppToC::Get(self)->Continue(success ? true : false,
-                                                 CefString(user_input));
+  CefJSDialogCallback_0_CppToC::Get(self)->Continue(
+      success?true:false,
+      CefString(user_input));
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefJSDialogCallbackCppToC::CefJSDialogCallbackCppToC() {
+CefJSDialogCallback_0_CppToC::CefJSDialogCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = jsdialog_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefJSDialogCallbackCppToC::~CefJSDialogCallbackCppToC() {
+CefJSDialogCallback_0_CppToC::~CefJSDialogCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefJSDialogCallback> CefCppToCRefCounted<
-    CefJSDialogCallbackCppToC,
-    CefJSDialogCallback,
-    cef_jsdialog_callback_t>::UnwrapDerived(CefWrapperType type,
-                                            cef_jsdialog_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefJSDialogCallback> CefCppToCRefCounted<CefJSDialogCallback_0_CppToC, CefJSDialogCallback, cef_jsdialog_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_jsdialog_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefJSDialogCallbackCppToC,
-                                   CefJSDialogCallback,
-                                   cef_jsdialog_callback_t>::kWrapperType =
-    WT_JSDIALOG_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefJSDialogCallback_0_CppToC, CefJSDialogCallback, cef_jsdialog_callback_0_t>::kWrapperType = WT_JSDIALOG_CALLBACK;
+
+

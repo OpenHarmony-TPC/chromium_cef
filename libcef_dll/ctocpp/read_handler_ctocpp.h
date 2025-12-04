@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=593003fb3b9d67e2d9a37d66b64b6cfb68b6dc97$
+// $hash=b3cfa171e32c20f5843787c6e5376308e407b406$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_READ_HANDLER_CTOCPP_H_
@@ -20,18 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_stream_capi.h"
 #include "include/cef_stream.h"
+#include "include/capi/cef_stream_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefReadHandlerCToCpp : public CefCToCppRefCounted<CefReadHandlerCToCpp,
-                                                        CefReadHandler,
-                                                        cef_read_handler_t> {
+class CefReadHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefReadHandler_0_CToCpp, CefReadHandler, cef_read_handler_0_t> {
  public:
-  CefReadHandlerCToCpp();
-  virtual ~CefReadHandlerCToCpp();
+  CefReadHandler_0_CToCpp();
+  virtual ~CefReadHandler_0_CToCpp();
 
   // CefReadHandler methods.
   size_t Read(void* ptr, size_t size, size_t n) override;
@@ -40,5 +39,8 @@ class CefReadHandlerCToCpp : public CefCToCppRefCounted<CefReadHandlerCToCpp,
   int Eof() override;
   bool MayBlock() override;
 };
+
+constexpr auto CefReadHandlerCToCpp_Wrap = CefReadHandler_0_CToCpp::Wrap;
+constexpr auto CefReadHandlerCToCpp_Unwrap = CefReadHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_READ_HANDLER_CTOCPP_H_

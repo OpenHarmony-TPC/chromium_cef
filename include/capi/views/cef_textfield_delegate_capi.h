@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6ec4be7ca547e4b3626796effa4d74f509a76173$
+// $hash=a4de43a3cd95bac44f409ccac8043afafdf1f9eb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_TEXTFIELD_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_TEXTFIELD_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_view_delegate_capi.h"
 
@@ -53,6 +57,8 @@ struct _cef_textfield_t;
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
 ///
+/// NOTE: This struct is allocated client-side.
+///
 typedef struct _cef_textfield_delegate_t {
   ///
   /// Base structure.
@@ -64,17 +70,14 @@ typedef struct _cef_textfield_delegate_t {
   /// information about the keyboard event. Return true (1) if the keyboard
   /// event was handled or false (0) otherwise for default handling.
   ///
-  int(CEF_CALLBACK* on_key_event)(struct _cef_textfield_delegate_t* self,
-                                  struct _cef_textfield_t* textfield,
-                                  const cef_key_event_t* event);
+  int (CEF_CALLBACK *on_key_event)(struct _cef_textfield_delegate_t* self, struct _cef_textfield_t* textfield, const cef_key_event_t* event);
 
   ///
   /// Called after performing a user action that may change |textfield|.
   ///
-  void(CEF_CALLBACK* on_after_user_action)(
-      struct _cef_textfield_delegate_t* self,
-      struct _cef_textfield_t* textfield);
+  void (CEF_CALLBACK *on_after_user_action)(struct _cef_textfield_delegate_t* self, struct _cef_textfield_t* textfield);
 } cef_textfield_delegate_t;
+
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 diff --git base/win/dark_mode_support.cc base/win/dark_mode_support.cc
-index 73d6ad5e9bb36..6c450e79c0f94 100644
+index daecebb5070705c1eb5281a3a7df4ace6b89c119..aed51c2e6b06e3527bd6c2003e4b6a82ee4469e5 100644
 --- base/win/dark_mode_support.cc
 +++ base/win/dark_mode_support.cc
 @@ -7,6 +7,7 @@
@@ -10,7 +10,7 @@ index 73d6ad5e9bb36..6c450e79c0f94 100644
  #include "base/native_library.h"
  #include "base/win/win_util.h"
  #include "base/win/windows_version.h"
-@@ -89,11 +90,20 @@ const DarkModeSupport& GetDarkModeSupport() {
+@@ -85,11 +86,20 @@ const DarkModeSupport& GetDarkModeSupport() {
    return dark_mode_support;
  }
  
@@ -32,13 +32,13 @@ index 73d6ad5e9bb36..6c450e79c0f94 100644
    return (dark_mode_support.allow_dark_mode_for_app ||
            dark_mode_support.set_preferred_app_mode) &&
 diff --git chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc
-index a4fc1857349e4..65f620ac8e289 100644
+index 8eca0f15ad724bfe7b3f83b361984f581f79c347..214eb82df050d5b41efffb8aef44d8ba71e785ae 100644
 --- chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc
 +++ chrome/browser/ui/views/chrome_browser_main_extra_parts_views_linux.cc
-@@ -56,7 +56,10 @@ void ChromeBrowserMainExtraPartsViewsLinux::ToolkitInitialized() {
+@@ -58,7 +58,10 @@ void ChromeBrowserMainExtraPartsViewsLinux::ToolkitInitialized() {
      ui::CursorFactory::GetInstance()->ObserveThemeChanges();
    }
- #if defined(USE_DBUS)
+ #if BUILDFLAG(USE_DBUS)
 -  dark_mode_manager_ = std::make_unique<ui::DarkModeManagerLinux>();
 +  if (!ui::NativeTheme::IsForcedDarkMode() &&
 +      !ui::NativeTheme::IsForcedLightMode()) {
@@ -48,10 +48,10 @@ index a4fc1857349e4..65f620ac8e289 100644
  }
  
 diff --git ui/gtk/native_theme_gtk.cc ui/gtk/native_theme_gtk.cc
-index 184939bdb8b3d..bb13d7c74e20b 100644
+index a28c128deecd39585b9e54552ffd8986da0df554..e8c8a9825b0feda16b4f36df9590ffe105da2fdf 100644
 --- ui/gtk/native_theme_gtk.cc
 +++ ui/gtk/native_theme_gtk.cc
-@@ -156,9 +156,11 @@ void NativeThemeGtk::OnThemeChanged(GtkSettings* settings,
+@@ -157,9 +157,11 @@ void NativeThemeGtk::OnThemeChanged(GtkSettings* settings,
    // have a light variant and aren't affected by the setting.  Because of this,
    // experimentally check if the theme is dark by checking if the window
    // background color is dark.
@@ -67,7 +67,7 @@ index 184939bdb8b3d..bb13d7c74e20b 100644
  
    // GTK doesn't have a native high contrast setting.  Rather, it's implied by
 diff --git ui/native_theme/native_theme.cc ui/native_theme/native_theme.cc
-index 728069cfdba9a..3561f49631e5c 100644
+index 3f8801c6042ef2b20635838e4d4c572d89b94601..c1bcab30a63aae47ffa1dcbfa31b379412911085 100644
 --- ui/native_theme/native_theme.cc
 +++ ui/native_theme/native_theme.cc
 @@ -146,6 +146,7 @@ void NativeTheme::NotifyOnNativeThemeUpdated() {
@@ -78,7 +78,7 @@ index 728069cfdba9a..3561f49631e5c 100644
  
    RecordNumColorProvidersInitializedDuringOnNativeThemeUpdated(
        color_provider_manager.num_providers_initialized() -
-@@ -288,6 +289,13 @@ bool NativeTheme::IsForcedDarkMode() {
+@@ -293,6 +294,13 @@ bool NativeTheme::IsForcedDarkMode() {
    return kIsForcedDarkMode;
  }
  
@@ -93,10 +93,10 @@ index 728069cfdba9a..3561f49631e5c 100644
    static bool kIsForcedHighContrast =
        base::CommandLine::ForCurrentProcess()->HasSwitch(
 diff --git ui/native_theme/native_theme.h ui/native_theme/native_theme.h
-index b2a7455c7e005..77170b90189c8 100644
+index 97cceb20da0fccf0603cf2d4b1c8985314b1e850..7c2282840ff56239f80c33b86f6a4bff55db409a 100644
 --- ui/native_theme/native_theme.h
 +++ ui/native_theme/native_theme.h
-@@ -610,6 +610,9 @@ class NATIVE_THEME_EXPORT NativeTheme {
+@@ -636,6 +636,9 @@ class COMPONENT_EXPORT(NATIVE_THEME) NativeTheme {
    // Calculates and returns the use overlay scrollbar setting.
    static bool CalculateUseOverlayScrollbar();
  
@@ -107,10 +107,10 @@ index b2a7455c7e005..77170b90189c8 100644
    explicit NativeTheme(
        bool should_only_use_dark_colors,
 diff --git ui/native_theme/native_theme_mac.mm ui/native_theme/native_theme_mac.mm
-index dc1224ca2fa27..b2a0ce01b4611 100644
+index e41728dd8166362be0d2af7cd3df46a0c7384f12..a6396a778cae60f2b5d324fa7ef1b81973cf1130 100644
 --- ui/native_theme/native_theme_mac.mm
 +++ ui/native_theme/native_theme_mac.mm
-@@ -585,11 +585,15 @@ void NativeThemeMac::PaintSelectedMenuItem(
+@@ -632,11 +632,15 @@ void NativeThemeMac::PaintSelectedMenuItem(
  
  void NativeThemeMac::InitializeDarkModeStateAndObserver() {
    __block auto theme = this;
@@ -129,36 +129,39 @@ index dc1224ca2fa27..b2a0ce01b4611 100644
          theme->NotifyOnNativeThemeUpdated();
        }];
 diff --git ui/native_theme/native_theme_win.cc ui/native_theme/native_theme_win.cc
-index 1b098cbb291fe..fc8f22b7db5a3 100644
+index 0c6d689295a03fc088b57487037d85f4d634a5f4..dd63350a153c5c5fa75313120bc6460292e8e825 100644
 --- ui/native_theme/native_theme_win.cc
 +++ ui/native_theme/native_theme_win.cc
-@@ -676,14 +676,17 @@ bool NativeThemeWin::ShouldUseDarkColors() const {
+@@ -694,7 +694,10 @@ bool NativeThemeWin::ShouldUseDarkColors() const {
    // Windows high contrast modes are entirely different themes,
    // so let them take priority over dark mode.
    // ...unless --force-dark-mode was specified in which case caveat emptor.
--  if (InForcedColorsMode() && !IsForcedDarkMode())
+-  if (InForcedColorsMode() && !IsForcedDarkMode()) {
 +  if (supports_windows_dark_mode_ && IsForcedDarkMode()) {
 +    return true;
 +  }
-+  if (InForcedColorsMode())
++  if (InForcedColorsMode()) {
      return false;
+   }
    return NativeTheme::ShouldUseDarkColors();
- }
+@@ -702,7 +705,7 @@ bool NativeThemeWin::ShouldUseDarkColors() const {
  
  NativeTheme::PreferredColorScheme
  NativeThemeWin::CalculatePreferredColorScheme() const {
--  if (!InForcedColorsMode())
-+  if (!InForcedColorsMode() || !supports_windows_dark_mode_)
+-  if (!InForcedColorsMode()) {
++  if (!InForcedColorsMode() || !supports_windows_dark_mode_) {
      return NativeTheme::CalculatePreferredColorScheme();
+   }
  
-   // According to the spec, the preferred color scheme for web content is 'dark'
-@@ -1653,8 +1656,9 @@ void NativeThemeWin::RegisterColorFilteringRegkeyObserver() {
+@@ -1688,9 +1691,10 @@ void NativeThemeWin::RegisterColorFilteringRegkeyObserver() {
  }
  
  void NativeThemeWin::UpdateDarkModeStatus() {
 -  bool dark_mode_enabled = false;
+-  bool system_dark_mode_enabled = false;
 -  if (hkcu_themes_regkey_.Valid()) {
 +  bool dark_mode_enabled = ShouldUseDarkColors();
++  bool system_dark_mode_enabled = ShouldUseDarkColors();
 +  if (supports_windows_dark_mode_ && !IsForcedDarkMode() &&
 +      hkcu_themes_regkey_.Valid()) {
      DWORD apps_use_light_theme = 1;

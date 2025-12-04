@@ -9,19 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=666401db90c739ab1d006b31ace3a0fda72d4077$
+// $hash=2ef5f02a401874f7bc2acaed7eae5e05db8911a0$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/download_item_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-download_item_callback_cancel(struct _cef_download_item_callback_t* self) {
+void CEF_CALLBACK download_item_callback_cancel(struct _cef_download_item_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,11 +31,10 @@ download_item_callback_cancel(struct _cef_download_item_callback_t* self) {
   }
 
   // Execute
-  CefDownloadItemCallbackCppToC::Get(self)->Cancel();
+  CefDownloadItemCallback_0_CppToC::Get(self)->Cancel();
 }
 
-void CEF_CALLBACK
-download_item_callback_pause(struct _cef_download_item_callback_t* self) {
+void CEF_CALLBACK download_item_callback_pause(struct _cef_download_item_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -47,11 +45,10 @@ download_item_callback_pause(struct _cef_download_item_callback_t* self) {
   }
 
   // Execute
-  CefDownloadItemCallbackCppToC::Get(self)->Pause();
+  CefDownloadItemCallback_0_CppToC::Get(self)->Pause();
 }
 
-void CEF_CALLBACK
-download_item_callback_resume(struct _cef_download_item_callback_t* self) {
+void CEF_CALLBACK download_item_callback_resume(struct _cef_download_item_callback_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -62,38 +59,32 @@ download_item_callback_resume(struct _cef_download_item_callback_t* self) {
   }
 
   // Execute
-  CefDownloadItemCallbackCppToC::Get(self)->Resume();
+  CefDownloadItemCallback_0_CppToC::Get(self)->Resume();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadItemCallbackCppToC::CefDownloadItemCallbackCppToC() {
+CefDownloadItemCallback_0_CppToC::CefDownloadItemCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cancel = download_item_callback_cancel;
   GetStruct()->pause = download_item_callback_pause;
   GetStruct()->resume = download_item_callback_resume;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDownloadItemCallbackCppToC::~CefDownloadItemCallbackCppToC() {
+CefDownloadItemCallback_0_CppToC::~CefDownloadItemCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefDownloadItemCallback> CefCppToCRefCounted<
-    CefDownloadItemCallbackCppToC,
-    CefDownloadItemCallback,
-    cef_download_item_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                 cef_download_item_callback_t*
-                                                     s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefDownloadItemCallback> CefCppToCRefCounted<CefDownloadItemCallback_0_CppToC, CefDownloadItemCallback, cef_download_item_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_download_item_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefDownloadItemCallbackCppToC,
-                                   CefDownloadItemCallback,
-                                   cef_download_item_callback_t>::kWrapperType =
-    WT_DOWNLOAD_ITEM_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefDownloadItemCallback_0_CppToC, CefDownloadItemCallback, cef_download_item_callback_0_t>::kWrapperType = WT_DOWNLOAD_ITEM_CALLBACK;
+
+

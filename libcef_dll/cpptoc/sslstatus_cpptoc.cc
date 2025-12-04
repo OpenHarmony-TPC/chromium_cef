@@ -9,19 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6752c88f5df830c1ebc786153b9a77fa46e3cc8a$
+// $hash=316c2f8b2686f8aa42b13e4d167a12e1424e9faf$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/sslstatus_cpptoc.h"
-
-#include "libcef_dll/cpptoc/x509certificate_cpptoc.h"
+#include "libcef_dll/cpptoc/x509_certificate_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK sslstatus_is_secure_connection(struct _cef_sslstatus_t* self) {
+int CEF_CALLBACK sslstatus_is_secure_connection(struct _cef_sslstatus_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,14 +32,13 @@ int CEF_CALLBACK sslstatus_is_secure_connection(struct _cef_sslstatus_t* self) {
   }
 
   // Execute
-  bool _retval = CefSSLStatusCppToC::Get(self)->IsSecureConnection();
+  bool _retval = CefSSLStatus_0_CppToC::Get(self)->IsSecureConnection();
 
   // Return type: bool
   return _retval;
 }
 
-cef_cert_status_t CEF_CALLBACK
-sslstatus_get_cert_status(struct _cef_sslstatus_t* self) {
+cef_cert_status_t CEF_CALLBACK sslstatus_get_cert_status(struct _cef_sslstatus_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -50,14 +49,13 @@ sslstatus_get_cert_status(struct _cef_sslstatus_t* self) {
   }
 
   // Execute
-  cef_cert_status_t _retval = CefSSLStatusCppToC::Get(self)->GetCertStatus();
+  cef_cert_status_t _retval = CefSSLStatus_0_CppToC::Get(self)->GetCertStatus();
 
   // Return type: simple
   return _retval;
 }
 
-cef_ssl_version_t CEF_CALLBACK
-sslstatus_get_sslversion(struct _cef_sslstatus_t* self) {
+cef_ssl_version_t CEF_CALLBACK sslstatus_get_sslversion(struct _cef_sslstatus_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -68,14 +66,13 @@ sslstatus_get_sslversion(struct _cef_sslstatus_t* self) {
   }
 
   // Execute
-  cef_ssl_version_t _retval = CefSSLStatusCppToC::Get(self)->GetSSLVersion();
+  cef_ssl_version_t _retval = CefSSLStatus_0_CppToC::Get(self)->GetSSLVersion();
 
   // Return type: simple
   return _retval;
 }
 
-cef_ssl_content_status_t CEF_CALLBACK
-sslstatus_get_content_status(struct _cef_sslstatus_t* self) {
+cef_ssl_content_status_t CEF_CALLBACK sslstatus_get_content_status(struct _cef_sslstatus_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -86,15 +83,13 @@ sslstatus_get_content_status(struct _cef_sslstatus_t* self) {
   }
 
   // Execute
-  cef_ssl_content_status_t _retval =
-      CefSSLStatusCppToC::Get(self)->GetContentStatus();
+  cef_ssl_content_status_t _retval = CefSSLStatus_0_CppToC::Get(self)->GetContentStatus();
 
   // Return type: simple
   return _retval;
 }
 
-struct _cef_x509certificate_t* CEF_CALLBACK
-sslstatus_get_x509certificate(struct _cef_sslstatus_t* self) {
+struct _cef_x509_certificate_0_t* CEF_CALLBACK sslstatus_get_x509_certificate(struct _cef_sslstatus_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -105,41 +100,37 @@ sslstatus_get_x509certificate(struct _cef_sslstatus_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefX509Certificate> _retval =
-      CefSSLStatusCppToC::Get(self)->GetX509Certificate();
+  CefRefPtr<CefX509Certificate> _retval = CefSSLStatus_0_CppToC::Get(self)->GetX509Certificate();
 
   // Return type: refptr_same
-  return CefX509CertificateCppToC::Wrap(_retval);
+  return CefX509CertificateCppToC_Wrap(_retval);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSSLStatusCppToC::CefSSLStatusCppToC() {
+CefSSLStatus_0_CppToC::CefSSLStatus_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_secure_connection = sslstatus_is_secure_connection;
   GetStruct()->get_cert_status = sslstatus_get_cert_status;
   GetStruct()->get_sslversion = sslstatus_get_sslversion;
   GetStruct()->get_content_status = sslstatus_get_content_status;
-  GetStruct()->get_x509certificate = sslstatus_get_x509certificate;
+  GetStruct()->get_x509_certificate = sslstatus_get_x509_certificate;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSSLStatusCppToC::~CefSSLStatusCppToC() {
+CefSSLStatus_0_CppToC::~CefSSLStatus_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefSSLStatus>
-CefCppToCRefCounted<CefSSLStatusCppToC, CefSSLStatus, cef_sslstatus_t>::
-    UnwrapDerived(CefWrapperType type, cef_sslstatus_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefSSLStatus> CefCppToCRefCounted<CefSSLStatus_0_CppToC, CefSSLStatus, cef_sslstatus_0_t>::UnwrapDerived(CefWrapperType type, cef_sslstatus_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefSSLStatusCppToC,
-                                   CefSSLStatus,
-                                   cef_sslstatus_t>::kWrapperType =
-    WT_SSLSTATUS;
+template<> CefWrapperType CefCppToCRefCounted<CefSSLStatus_0_CppToC, CefSSLStatus, cef_sslstatus_0_t>::kWrapperType = WT_SSLSTATUS;
+
+

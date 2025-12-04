@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef51427a9ecf160c719f863dbc939bcd9d1c5969$
+// $hash=9d47ffe9a557f6771c162611d375397a48b727b1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SERVER_CPPTOC_H_
@@ -20,17 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_server_capi.h"
 #include "include/cef_server.h"
+#include "include/capi/cef_server_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefServerCppToC
-    : public CefCppToCRefCounted<CefServerCppToC, CefServer, cef_server_t> {
+class CefServer_0_CppToC
+    : public CefCppToCRefCounted<CefServer_0_CppToC, CefServer, cef_server_0_t> {
  public:
-  CefServerCppToC();
-  virtual ~CefServerCppToC();
+  CefServer_0_CppToC();
+  virtual ~CefServer_0_CppToC();
 };
+
+constexpr auto CefServerCppToC_Wrap = CefServer_0_CppToC::Wrap;
+constexpr auto CefServerCppToC_Unwrap = CefServer_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SERVER_CPPTOC_H_

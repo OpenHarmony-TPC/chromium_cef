@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f883715592aad460fbe1b29d9faff1b16d36697e$
+// $hash=99272ca9b4c3fdc748a57d8b259503c723dd09ce$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_JSDIALOG_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_JSDIALOG_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,9 +51,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure used for asynchronous continuation of JavaScript dialog
 /// requests.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_jsdialog_callback_t {
   ///
@@ -62,14 +69,15 @@ typedef struct _cef_jsdialog_callback_t {
   /// was pressed. The |user_input| value should be specified for prompt
   /// dialogs.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_jsdialog_callback_t* self,
-                           int success,
-                           const cef_string_t* user_input);
+  void (CEF_CALLBACK *cont)(struct _cef_jsdialog_callback_t* self, int success, const cef_string_t* user_input);
 } cef_jsdialog_callback_t;
+
 
 ///
 /// Implement this structure to handle events related to JavaScript dialogs. The
 /// functions of this structure will be called on the UI thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_jsdialog_handler_t {
   ///
@@ -94,14 +102,7 @@ typedef struct _cef_jsdialog_handler_t {
   /// dialog is used the application must execute |callback| once the custom
   /// dialog is dismissed.
   ///
-  int(CEF_CALLBACK* on_jsdialog)(struct _cef_jsdialog_handler_t* self,
-                                 struct _cef_browser_t* browser,
-                                 const cef_string_t* origin_url,
-                                 cef_jsdialog_type_t dialog_type,
-                                 const cef_string_t* message_text,
-                                 const cef_string_t* default_prompt_text,
-                                 struct _cef_jsdialog_callback_t* callback,
-                                 int* suppress_message);
+  int (CEF_CALLBACK *on_jsdialog)(struct _cef_jsdialog_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* origin_url, cef_jsdialog_type_t dialog_type, const cef_string_t* message_text, const cef_string_t* default_prompt_text, struct _cef_jsdialog_callback_t* callback, int* suppress_message);
 
   ///
   /// Called to run a dialog asking the user if they want to leave a page.
@@ -111,28 +112,21 @@ typedef struct _cef_jsdialog_handler_t {
   /// custom dialog is used the application must execute |callback| once the
   /// custom dialog is dismissed.
   ///
-  int(CEF_CALLBACK* on_before_unload_dialog)(
-      struct _cef_jsdialog_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* message_text,
-      int is_reload,
-      struct _cef_jsdialog_callback_t* callback);
+  int (CEF_CALLBACK *on_before_unload_dialog)(struct _cef_jsdialog_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* message_text, int is_reload, struct _cef_jsdialog_callback_t* callback);
 
   ///
   /// Called to cancel any pending dialogs and reset any saved dialog state.
   /// Will be called due to events like page navigation irregardless of whether
   /// any dialogs are currently pending.
   ///
-  void(CEF_CALLBACK* on_reset_dialog_state)(
-      struct _cef_jsdialog_handler_t* self,
-      struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_reset_dialog_state)(struct _cef_jsdialog_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called when the dialog is closed.
   ///
-  void(CEF_CALLBACK* on_dialog_closed)(struct _cef_jsdialog_handler_t* self,
-                                       struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_dialog_closed)(struct _cef_jsdialog_handler_t* self, struct _cef_browser_t* browser);
 } cef_jsdialog_handler_t;
+
 
 #ifdef __cplusplus
 }

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=20edca42c574c000af56718cbccc54d96058ce27$
+// $hash=c9958226c446565bba04921ac4d103dcf0185422$
 //
 
 #include "libcef_dll/cpptoc/domvisitor_cpptoc.h"
-
 #include "libcef_dll/ctocpp/domdocument_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -21,8 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK domvisitor_visit(struct _cef_domvisitor_t* self,
-                                   struct _cef_domdocument_t* document) {
+void CEF_CALLBACK domvisitor_visit(struct _cef_domvisitor_t* self, struct _cef_domdocument_t* document) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -38,7 +36,8 @@ void CEF_CALLBACK domvisitor_visit(struct _cef_domvisitor_t* self,
   }
 
   // Execute
-  CefDOMVisitorCppToC::Get(self)->Visit(CefDOMDocumentCToCpp::Wrap(document));
+  CefDOMVisitorCppToC::Get(self)->Visit(
+      CefDOMDocumentCToCpp_Wrap(document));
 }
 
 }  // namespace
@@ -55,16 +54,11 @@ CefDOMVisitorCppToC::~CefDOMVisitorCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefDOMVisitor>
-CefCppToCRefCounted<CefDOMVisitorCppToC, CefDOMVisitor, cef_domvisitor_t>::
-    UnwrapDerived(CefWrapperType type, cef_domvisitor_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefDOMVisitor> CefCppToCRefCounted<CefDOMVisitorCppToC, CefDOMVisitor, cef_domvisitor_t>::UnwrapDerived(CefWrapperType type, cef_domvisitor_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefDOMVisitorCppToC,
-                                   CefDOMVisitor,
-                                   cef_domvisitor_t>::kWrapperType =
-    WT_DOMVISITOR;
+template<> CefWrapperType CefCppToCRefCounted<CefDOMVisitorCppToC, CefDOMVisitor, cef_domvisitor_t>::kWrapperType = WT_DOMVISITOR;
+
+

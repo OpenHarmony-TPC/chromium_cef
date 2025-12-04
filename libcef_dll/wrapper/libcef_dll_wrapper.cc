@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e805217d71e21a32778150aa65e1a9a7b5ff86c6$
+// $hash=0a3dae00f9cb4824eea61dca1884cf74a6009c23$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -46,7 +46,7 @@
 #include "libcef_dll/cpptoc/end_tracing_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
-#include "libcef_dll/cpptoc/v8handler_cpptoc.h"
+#include "libcef_dll/cpptoc/v8_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/binary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/command_line_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -57,42 +57,32 @@
 // Define used to facilitate parsing.
 #define CEF_GLOBAL
 
+
 // GLOBAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL int CefExecuteProcess(const CefMainArgs& args,
-                                 CefRefPtr<CefApp> application,
-                                 void* windows_sandbox_info) {
-  const char* api_hash = cef_api_hash(0);
-  if (strcmp(api_hash, CEF_API_HASH_PLATFORM)) {
-    // The libcef API hash does not match the current header API hash.
-    DCHECK(false);
-    return 0;
-  }
+NO_SANITIZE("cfi-icall") NO_STACK_PROTECTOR CEF_GLOBAL int CefExecuteProcess(const CefMainArgs& args, CefRefPtr<CefApp> application, void* windows_sandbox_info) {
+  const char* api_hash = cef_api_hash(CEF_API_VERSION, 0);
+  CHECK(!strcmp(api_hash, CEF_API_HASH_PLATFORM)) <<
+      "API hashes for libcef and libcef_dll_wrapper do not match.";
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: application, windows_sandbox_info
 
   // Execute
-  int _retval = cef_execute_process(&args, CefAppCppToC::Wrap(application),
-                                    windows_sandbox_info);
+  int _retval = cef_execute_process(
+      &args,
+      CefAppCppToC_Wrap(application),
+      windows_sandbox_info);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefInitialize(const CefMainArgs& args,
-                              const CefSettings& settings,
-                              CefRefPtr<CefApp> application,
-                              void* windows_sandbox_info) {
-  const char* api_hash = cef_api_hash(0);
-  if (strcmp(api_hash, CEF_API_HASH_PLATFORM)) {
-    // The libcef API hash does not match the current header API hash.
-    DCHECK(false);
-    return false;
-  }
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefInitialize(const CefMainArgs& args, const CefSettings& settings, CefRefPtr<CefApp> application, void* windows_sandbox_info) {
+  const char* api_hash = cef_api_hash(CEF_API_VERSION, 0);
+  CHECK(!strcmp(api_hash, CEF_API_HASH_PLATFORM)) <<
+      "API hashes for libcef and libcef_dll_wrapper do not match.";
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -100,10 +90,13 @@ CEF_GLOBAL bool CefInitialize(const CefMainArgs& args,
 
   // Execute
   int _retval = cef_initialize(
-      &args, &settings, CefAppCppToC::Wrap(application), windows_sandbox_info);
+      &args,
+      &settings,
+      CefAppCppToC_Wrap(application),
+      windows_sandbox_info);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL int CefGetExitCode() {
@@ -121,6 +114,7 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefShutdown() {
 
   // Execute
   cef_shutdown();
+
 
 #if DCHECK_IS_ON()
   shutdown_checker::SetIsShutdown();
@@ -155,12 +149,10 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCrashReportingEnabled() {
   int _retval = cef_crash_reporting_enabled();
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL
-void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: key; type: string_byref_const
@@ -171,11 +163,12 @@ void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
   // Unverified params: value
 
   // Execute
-  cef_set_crash_key_value(key.GetStruct(), value.GetStruct());
+  cef_set_crash_key_value(
+      key.GetStruct(),
+      value.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefCreateDirectory(const CefString& full_path) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCreateDirectory(const CefString& full_path) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: full_path; type: string_byref_const
@@ -185,42 +178,39 @@ CEF_GLOBAL bool CefCreateDirectory(const CefString& full_path) {
   }
 
   // Execute
-  int _retval = cef_create_directory(full_path.GetStruct());
+  int _retval = cef_create_directory(
+      full_path.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefGetTempDirectory(CefString& temp_dir) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefGetTempDirectory(CefString& temp_dir) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = cef_get_temp_directory(temp_dir.GetWritableStruct());
+  int _retval = cef_get_temp_directory(
+      temp_dir.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefCreateNewTempDirectory(const CefString& prefix,
-                                          CefString& new_temp_path) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCreateNewTempDirectory(const CefString& prefix, CefString& new_temp_path) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: prefix
 
   // Execute
   int _retval = cef_create_new_temp_directory(
-      prefix.GetStruct(), new_temp_path.GetWritableStruct());
+      prefix.GetStruct(),
+      new_temp_path.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefCreateTempDirectoryInDirectory(const CefString& base_dir,
-                                                  const CefString& prefix,
-                                                  CefString& new_dir) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCreateTempDirectoryInDirectory(const CefString& base_dir, const CefString& prefix, CefString& new_dir) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: base_dir; type: string_byref_const
@@ -232,14 +222,15 @@ CEF_GLOBAL bool CefCreateTempDirectoryInDirectory(const CefString& base_dir,
 
   // Execute
   int _retval = cef_create_temp_directory_in_directory(
-      base_dir.GetStruct(), prefix.GetStruct(), new_dir.GetWritableStruct());
+      base_dir.GetStruct(),
+      prefix.GetStruct(),
+      new_dir.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefDirectoryExists(const CefString& path) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefDirectoryExists(const CefString& path) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: path; type: string_byref_const
@@ -249,14 +240,14 @@ CEF_GLOBAL bool CefDirectoryExists(const CefString& path) {
   }
 
   // Execute
-  int _retval = cef_directory_exists(path.GetStruct());
+  int _retval = cef_directory_exists(
+      path.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefDeleteFile(const CefString& path, bool recursive) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefDeleteFile(const CefString& path, bool recursive) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: path; type: string_byref_const
@@ -266,16 +257,15 @@ CEF_GLOBAL bool CefDeleteFile(const CefString& path, bool recursive) {
   }
 
   // Execute
-  int _retval = cef_delete_file(path.GetStruct(), recursive);
+  int _retval = cef_delete_file(
+      path.GetStruct(),
+      recursive);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefZipDirectory(const CefString& src_dir,
-                                const CefString& dest_file,
-                                bool include_hidden_files) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefZipDirectory(const CefString& src_dir, const CefString& dest_file, bool include_hidden_files) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: src_dir; type: string_byref_const
@@ -290,15 +280,16 @@ CEF_GLOBAL bool CefZipDirectory(const CefString& src_dir,
   }
 
   // Execute
-  int _retval = cef_zip_directory(src_dir.GetStruct(), dest_file.GetStruct(),
-                                  include_hidden_files);
+  int _retval = cef_zip_directory(
+      src_dir.GetStruct(),
+      dest_file.GetStruct(),
+      include_hidden_files);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefLoadCRLSetsFile(const CefString& path) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefLoadCRLSetsFile(const CefString& path) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: path; type: string_byref_const
@@ -308,7 +299,8 @@ CEF_GLOBAL void CefLoadCRLSetsFile(const CefString& path) {
   }
 
   // Execute
-  cef_load_crlsets_file(path.GetStruct());
+  cef_load_crlsets_file(
+      path.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefIsRTL() {
@@ -318,15 +310,10 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefIsRTL() {
   int _retval = cef_is_rtl();
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL
-bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
-                                     const CefString& target_protocol,
-                                     const CefString& target_domain,
-                                     bool allow_target_subdomains) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin, const CefString& target_protocol, const CefString& target_domain, bool allow_target_subdomains) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: source_origin; type: string_byref_const
@@ -343,19 +330,16 @@ bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
 
   // Execute
   int _retval = cef_add_cross_origin_whitelist_entry(
-      source_origin.GetStruct(), target_protocol.GetStruct(),
-      target_domain.GetStruct(), allow_target_subdomains);
+      source_origin.GetStruct(),
+      target_protocol.GetStruct(),
+      target_domain.GetStruct(),
+      allow_target_subdomains);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL
-bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
-                                        const CefString& target_protocol,
-                                        const CefString& target_domain,
-                                        bool allow_target_subdomains) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin, const CefString& target_protocol, const CefString& target_domain, bool allow_target_subdomains) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: source_origin; type: string_byref_const
@@ -372,11 +356,13 @@ bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
 
   // Execute
   int _retval = cef_remove_cross_origin_whitelist_entry(
-      source_origin.GetStruct(), target_protocol.GetStruct(),
-      target_domain.GetStruct(), allow_target_subdomains);
+      source_origin.GetStruct(),
+      target_protocol.GetStruct(),
+      target_domain.GetStruct(),
+      allow_target_subdomains);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefClearCrossOriginWhitelist() {
@@ -386,13 +372,10 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefClearCrossOriginWhitelist() {
   int _retval = cef_clear_cross_origin_whitelist();
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefResolveURL(const CefString& base_url,
-                              const CefString& relative_url,
-                              CefString& resolved_url) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefResolveURL(const CefString& base_url, const CefString& relative_url, CefString& resolved_url) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: base_url; type: string_byref_const
@@ -407,15 +390,16 @@ CEF_GLOBAL bool CefResolveURL(const CefString& base_url,
   }
 
   // Execute
-  int _retval = cef_resolve_url(base_url.GetStruct(), relative_url.GetStruct(),
-                                resolved_url.GetWritableStruct());
+  int _retval = cef_resolve_url(
+      base_url.GetStruct(),
+      relative_url.GetStruct(),
+      resolved_url.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefParseURL(const CefString& url, CefURLParts& parts) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefParseURL(const CefString& url, CefURLParts& parts) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: url; type: string_byref_const
@@ -425,26 +409,27 @@ CEF_GLOBAL bool CefParseURL(const CefString& url, CefURLParts& parts) {
   }
 
   // Execute
-  int _retval = cef_parse_url(url.GetStruct(), &parts);
+  int _retval = cef_parse_url(
+      url.GetStruct(),
+      &parts);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefCreateURL(const CefURLParts& parts, CefString& url) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCreateURL(const CefURLParts& parts, CefString& url) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = cef_create_url(&parts, url.GetWritableStruct());
+  int _retval = cef_create_url(
+      &parts,
+      url.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString
-CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: origin_url; type: string_byref_const
@@ -454,8 +439,8 @@ CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
   }
 
   // Execute
-  cef_string_userfree_t _retval =
-      cef_format_url_for_security_display(origin_url.GetStruct());
+  cef_string_userfree_t _retval = cef_format_url_for_security_display(
+      origin_url.GetStruct());
 
   // Return type: string
   CefString _retvalStr;
@@ -463,8 +448,7 @@ CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefGetMimeType(const CefString& extension) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefGetMimeType(const CefString& extension) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: extension; type: string_byref_const
@@ -474,7 +458,8 @@ CEF_GLOBAL CefString CefGetMimeType(const CefString& extension) {
   }
 
   // Execute
-  cef_string_userfree_t _retval = cef_get_mime_type(extension.GetStruct());
+  cef_string_userfree_t _retval = cef_get_mime_type(
+      extension.GetStruct());
 
   // Return type: string
   CefString _retvalStr;
@@ -482,10 +467,7 @@ CEF_GLOBAL CefString CefGetMimeType(const CefString& extension) {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL
-void CefGetExtensionsForMimeType(const CefString& mime_type,
-                                 std::vector<CefString>& extensions) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefGetExtensionsForMimeType(const CefString& mime_type, std::vector<CefString>& extensions) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: mime_type; type: string_byref_const
@@ -502,7 +484,9 @@ void CefGetExtensionsForMimeType(const CefString& mime_type,
   }
 
   // Execute
-  cef_get_extensions_for_mime_type(mime_type.GetStruct(), extensionsList);
+  cef_get_extensions_for_mime_type(
+      mime_type.GetStruct(),
+      extensionsList);
 
   // Restore param:extensions; type: string_vec_byref
   if (extensionsList) {
@@ -512,8 +496,7 @@ void CefGetExtensionsForMimeType(const CefString& mime_type,
   }
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefBase64Encode(const void* data, size_t data_size) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefBase64Encode(const void* data, size_t data_size) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: data; type: simple_byaddr
@@ -523,7 +506,9 @@ CEF_GLOBAL CefString CefBase64Encode(const void* data, size_t data_size) {
   }
 
   // Execute
-  cef_string_userfree_t _retval = cef_base64encode(data, data_size);
+  cef_string_userfree_t _retval = cef_base64_encode(
+      data,
+      data_size);
 
   // Return type: string
   CefString _retvalStr;
@@ -531,8 +516,7 @@ CEF_GLOBAL CefString CefBase64Encode(const void* data, size_t data_size) {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: data; type: string_byref_const
@@ -542,14 +526,14 @@ CEF_GLOBAL CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data) {
   }
 
   // Execute
-  cef_binary_value_t* _retval = cef_base64decode(data.GetStruct());
+  auto* _retval = cef_base64_decode(
+      data.GetStruct());
 
   // Return type: refptr_same
-  return CefBinaryValueCToCpp::Wrap(_retval);
+  return CefBinaryValueCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefURIEncode(const CefString& text, bool use_plus) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefURIEncode(const CefString& text, bool use_plus) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: text; type: string_byref_const
@@ -559,7 +543,9 @@ CEF_GLOBAL CefString CefURIEncode(const CefString& text, bool use_plus) {
   }
 
   // Execute
-  cef_string_userfree_t _retval = cef_uriencode(text.GetStruct(), use_plus);
+  cef_string_userfree_t _retval = cef_uriencode(
+      text.GetStruct(),
+      use_plus);
 
   // Return type: string
   CefString _retvalStr;
@@ -567,10 +553,7 @@ CEF_GLOBAL CefString CefURIEncode(const CefString& text, bool use_plus) {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefURIDecode(const CefString& text,
-                                  bool convert_to_utf8,
-                                  cef_uri_unescape_rule_t unescape_rule) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefURIDecode(const CefString& text, bool convert_to_utf8, cef_uri_unescape_rule_t unescape_rule) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: text; type: string_byref_const
@@ -580,8 +563,10 @@ CEF_GLOBAL CefString CefURIDecode(const CefString& text,
   }
 
   // Execute
-  cef_string_userfree_t _retval =
-      cef_uridecode(text.GetStruct(), convert_to_utf8, unescape_rule);
+  cef_string_userfree_t _retval = cef_uridecode(
+      text.GetStruct(),
+      convert_to_utf8,
+      unescape_rule);
 
   // Return type: string
   CefString _retvalStr;
@@ -589,9 +574,7 @@ CEF_GLOBAL CefString CefURIDecode(const CefString& text,
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const CefString& json_string,
-                                            cef_json_parser_options_t options) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const CefString& json_string, cef_json_parser_options_t options) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: json_string; type: string_byref_const
@@ -601,16 +584,15 @@ CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const CefString& json_string,
   }
 
   // Execute
-  cef_value_t* _retval = cef_parse_json(json_string.GetStruct(), options);
+  auto* _retval = cef_parse_json(
+      json_string.GetStruct(),
+      options);
 
   // Return type: refptr_same
-  return CefValueCToCpp::Wrap(_retval);
+  return CefValueCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const void* json,
-                                            size_t json_size,
-                                            cef_json_parser_options_t options) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const void* json, size_t json_size, cef_json_parser_options_t options) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: json; type: simple_byaddr
@@ -620,17 +602,16 @@ CEF_GLOBAL CefRefPtr<CefValue> CefParseJSON(const void* json,
   }
 
   // Execute
-  cef_value_t* _retval = cef_parse_json_buffer(json, json_size, options);
+  auto* _retval = cef_parse_json_buffer(
+      json,
+      json_size,
+      options);
 
   // Return type: refptr_same
-  return CefValueCToCpp::Wrap(_retval);
+  return CefValueCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefRefPtr<CefValue> CefParseJSONAndReturnError(
-    const CefString& json_string,
-    cef_json_parser_options_t options,
-    CefString& error_msg_out) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefRefPtr<CefValue> CefParseJSONAndReturnError(const CefString& json_string, cef_json_parser_options_t options, CefString& error_msg_out) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: json_string; type: string_byref_const
@@ -640,16 +621,16 @@ CEF_GLOBAL CefRefPtr<CefValue> CefParseJSONAndReturnError(
   }
 
   // Execute
-  cef_value_t* _retval = cef_parse_jsonand_return_error(
-      json_string.GetStruct(), options, error_msg_out.GetWritableStruct());
+  auto* _retval = cef_parse_jsonand_return_error(
+      json_string.GetStruct(),
+      options,
+      error_msg_out.GetWritableStruct());
 
   // Return type: refptr_same
-  return CefValueCToCpp::Wrap(_retval);
+  return CefValueCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefWriteJSON(CefRefPtr<CefValue> node,
-                                  cef_json_writer_options_t options) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL CefString CefWriteJSON(CefRefPtr<CefValue> node, cef_json_writer_options_t options) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: node; type: refptr_same
@@ -659,8 +640,9 @@ CEF_GLOBAL CefString CefWriteJSON(CefRefPtr<CefValue> node,
   }
 
   // Execute
-  cef_string_userfree_t _retval =
-      cef_write_json(CefValueCToCpp::Unwrap(node), options);
+  cef_string_userfree_t _retval = cef_write_json(
+      CefValueCToCpp_Unwrap(node),
+      options);
 
   // Return type: string
   CefString _retvalStr;
@@ -668,19 +650,19 @@ CEF_GLOBAL CefString CefWriteJSON(CefRefPtr<CefValue> node,
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefGetPath(PathKey key, CefString& path) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefGetPath(PathKey key, CefString& path) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = cef_get_path(key, path.GetWritableStruct());
+  int _retval = cef_get_path(
+      key,
+      path.GetWritableStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefLaunchProcess(CefRefPtr<CefCommandLine> command_line) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefLaunchProcess(CefRefPtr<CefCommandLine> command_line) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: command_line; type: refptr_same
@@ -690,17 +672,14 @@ CEF_GLOBAL bool CefLaunchProcess(CefRefPtr<CefCommandLine> command_line) {
   }
 
   // Execute
-  int _retval = cef_launch_process(CefCommandLineCToCpp::Unwrap(command_line));
+  int _retval = cef_launch_process(
+      CefCommandLineCToCpp_Unwrap(command_line));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefRegisterSchemeHandlerFactory(
-    const CefString& scheme_name,
-    const CefString& domain_name,
-    CefRefPtr<CefSchemeHandlerFactory> factory) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefRegisterSchemeHandlerFactory(const CefString& scheme_name, const CefString& domain_name, CefRefPtr<CefSchemeHandlerFactory> factory) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: scheme_name; type: string_byref_const
@@ -712,11 +691,12 @@ CEF_GLOBAL bool CefRegisterSchemeHandlerFactory(
 
   // Execute
   int _retval = cef_register_scheme_handler_factory(
-      scheme_name.GetStruct(), domain_name.GetStruct(),
-      CefSchemeHandlerFactoryCppToC::Wrap(factory));
+      scheme_name.GetStruct(),
+      domain_name.GetStruct(),
+      CefSchemeHandlerFactoryCppToC_Wrap(factory));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefClearSchemeHandlerFactories() {
@@ -726,32 +706,32 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefClearSchemeHandlerFactories() {
   int _retval = cef_clear_scheme_handler_factories();
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefIsCertStatusError(cef_cert_status_t status) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefIsCertStatusError(cef_cert_status_t status) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = cef_is_cert_status_error(status);
+  int _retval = cef_is_cert_status_error(
+      status);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCurrentlyOn(CefThreadId threadId) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = cef_currently_on(threadId);
+  int _retval = cef_currently_on(
+      threadId);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefPostTask(CefThreadId threadId, CefRefPtr<CefTask> task) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefPostTask(CefThreadId threadId, CefRefPtr<CefTask> task) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: task; type: refptr_diff
@@ -761,16 +741,15 @@ CEF_GLOBAL bool CefPostTask(CefThreadId threadId, CefRefPtr<CefTask> task) {
   }
 
   // Execute
-  int _retval = cef_post_task(threadId, CefTaskCppToC::Wrap(task));
+  int _retval = cef_post_task(
+      threadId,
+      CefTaskCppToC_Wrap(task));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefPostDelayedTask(CefThreadId threadId,
-                                   CefRefPtr<CefTask> task,
-                                   int64_t delay_ms) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefPostDelayedTask(CefThreadId threadId, CefRefPtr<CefTask> task, int64_t delay_ms) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: task; type: refptr_diff
@@ -780,41 +759,41 @@ CEF_GLOBAL bool CefPostDelayedTask(CefThreadId threadId,
   }
 
   // Execute
-  int _retval =
-      cef_post_delayed_task(threadId, CefTaskCppToC::Wrap(task), delay_ms);
+  int _retval = cef_post_delayed_task(
+      threadId,
+      CefTaskCppToC_Wrap(task),
+      delay_ms);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefBeginTracing(const CefString& categories,
-                                CefRefPtr<CefCompletionCallback> callback) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefBeginTracing(const CefString& categories, CefRefPtr<CefCompletionCallback> callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: categories, callback
 
   // Execute
-  int _retval = cef_begin_tracing(categories.GetStruct(),
-                                  CefCompletionCallbackCppToC::Wrap(callback));
+  int _retval = cef_begin_tracing(
+      categories.GetStruct(),
+      CefCompletionCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefEndTracing(const CefString& tracing_file,
-                              CefRefPtr<CefEndTracingCallback> callback) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefEndTracing(const CefString& tracing_file, CefRefPtr<CefEndTracingCallback> callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: tracing_file, callback
 
   // Execute
-  int _retval = cef_end_tracing(tracing_file.GetStruct(),
-                                CefEndTracingCallbackCppToC::Wrap(callback));
+  int _retval = cef_end_tracing(
+      tracing_file.GetStruct(),
+      CefEndTracingCallbackCppToC_Wrap(callback));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL int64_t CefNowFromSystemTraceTime() {
@@ -827,10 +806,7 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL int64_t CefNowFromSystemTraceTime() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefRegisterExtension(const CefString& extension_name,
-                                     const CefString& javascript_code,
-                                     CefRefPtr<CefV8Handler> handler) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefRegisterExtension(const CefString& extension_name, const CefString& javascript_code, CefRefPtr<CefV8Handler> handler) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: extension_name; type: string_byref_const
@@ -846,18 +822,16 @@ CEF_GLOBAL bool CefRegisterExtension(const CefString& extension_name,
   // Unverified params: handler
 
   // Execute
-  int _retval = cef_register_extension(extension_name.GetStruct(),
-                                       javascript_code.GetStruct(),
-                                       CefV8HandlerCppToC::Wrap(handler));
+  int _retval = cef_register_extension(
+      extension_name.GetStruct(),
+      javascript_code.GetStruct(),
+      CefV8HandlerCppToC_Wrap(handler));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefExecuteJavaScriptWithUserGestureForTests(
-    CefRefPtr<CefFrame> frame,
-    const CefString& javascript) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame, const CefString& javascript) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: frame; type: refptr_same
@@ -869,11 +843,11 @@ CEF_GLOBAL void CefExecuteJavaScriptWithUserGestureForTests(
 
   // Execute
   cef_execute_java_script_with_user_gesture_for_tests(
-      CefFrameCToCpp::Unwrap(frame), javascript.GetStruct());
+      CefFrameCToCpp_Unwrap(frame),
+      javascript.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefSetDataDirectoryForTests(const CefString& dir) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefSetDataDirectoryForTests(const CefString& dir) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: dir; type: string_byref_const
@@ -883,11 +857,11 @@ CEF_GLOBAL void CefSetDataDirectoryForTests(const CefString& dir) {
   }
 
   // Execute
-  cef_set_data_directory_for_tests(dir.GetStruct());
+  cef_set_data_directory_for_tests(
+      dir.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL bool CefIsFeatureEnabledForTests(const CefString& feature_name) {
+NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefIsFeatureEnabledForTests(const CefString& feature_name) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: feature_name; type: string_byref_const
@@ -897,8 +871,10 @@ CEF_GLOBAL bool CefIsFeatureEnabledForTests(const CefString& feature_name) {
   }
 
   // Execute
-  int _retval = cef_is_feature_enabled_for_tests(feature_name.GetStruct());
+  int _retval = cef_is_feature_enabled_for_tests(
+      feature_name.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
+

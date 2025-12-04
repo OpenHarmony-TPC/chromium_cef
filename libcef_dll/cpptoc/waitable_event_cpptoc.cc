@@ -9,35 +9,34 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0ca2feacb288e53bf012ecab4aff1d189d9b2125$
+// $hash=cd7df8389ecbae084da7bc736d16792921839ac5$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/waitable_event_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_waitable_event_t* cef_waitable_event_create(
-    int automatic_reset,
-    int initially_signaled) {
+CEF_EXPORT cef_waitable_event_0_t* cef_waitable_event_create(int automatic_reset, int initially_signaled) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
   CefRefPtr<CefWaitableEvent> _retval = CefWaitableEvent::CreateWaitableEvent(
-      automatic_reset ? true : false, initially_signaled ? true : false);
+      automatic_reset?true:false,
+      initially_signaled?true:false);
 
   // Return type: refptr_same
-  return CefWaitableEventCppToC::Wrap(_retval);
+  return CefWaitableEventCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK waitable_event_reset(struct _cef_waitable_event_t* self) {
+void CEF_CALLBACK waitable_event_reset(struct _cef_waitable_event_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -48,10 +47,10 @@ void CEF_CALLBACK waitable_event_reset(struct _cef_waitable_event_t* self) {
   }
 
   // Execute
-  CefWaitableEventCppToC::Get(self)->Reset();
+  CefWaitableEvent_0_CppToC::Get(self)->Reset();
 }
 
-void CEF_CALLBACK waitable_event_signal(struct _cef_waitable_event_t* self) {
+void CEF_CALLBACK waitable_event_signal(struct _cef_waitable_event_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -62,11 +61,10 @@ void CEF_CALLBACK waitable_event_signal(struct _cef_waitable_event_t* self) {
   }
 
   // Execute
-  CefWaitableEventCppToC::Get(self)->Signal();
+  CefWaitableEvent_0_CppToC::Get(self)->Signal();
 }
 
-int CEF_CALLBACK
-waitable_event_is_signaled(struct _cef_waitable_event_t* self) {
+int CEF_CALLBACK waitable_event_is_signaled(struct _cef_waitable_event_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -77,13 +75,13 @@ waitable_event_is_signaled(struct _cef_waitable_event_t* self) {
   }
 
   // Execute
-  bool _retval = CefWaitableEventCppToC::Get(self)->IsSignaled();
+  bool _retval = CefWaitableEvent_0_CppToC::Get(self)->IsSignaled();
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK waitable_event_wait(struct _cef_waitable_event_t* self) {
+void CEF_CALLBACK waitable_event_wait(struct _cef_waitable_event_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -94,11 +92,10 @@ void CEF_CALLBACK waitable_event_wait(struct _cef_waitable_event_t* self) {
   }
 
   // Execute
-  CefWaitableEventCppToC::Get(self)->Wait();
+  CefWaitableEvent_0_CppToC::Get(self)->Wait();
 }
 
-int CEF_CALLBACK waitable_event_timed_wait(struct _cef_waitable_event_t* self,
-                                           int64_t max_ms) {
+int CEF_CALLBACK waitable_event_timed_wait(struct _cef_waitable_event_0_t* self, int64_t max_ms) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -109,7 +106,8 @@ int CEF_CALLBACK waitable_event_timed_wait(struct _cef_waitable_event_t* self,
   }
 
   // Execute
-  bool _retval = CefWaitableEventCppToC::Get(self)->TimedWait(max_ms);
+  bool _retval = CefWaitableEvent_0_CppToC::Get(self)->TimedWait(
+      max_ms);
 
   // Return type: bool
   return _retval;
@@ -117,9 +115,12 @@ int CEF_CALLBACK waitable_event_timed_wait(struct _cef_waitable_event_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWaitableEventCppToC::CefWaitableEventCppToC() {
+CefWaitableEvent_0_CppToC::CefWaitableEvent_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->reset = waitable_event_reset;
   GetStruct()->signal = waitable_event_signal;
   GetStruct()->is_signaled = waitable_event_is_signaled;
@@ -127,24 +128,16 @@ CefWaitableEventCppToC::CefWaitableEventCppToC() {
   GetStruct()->timed_wait = waitable_event_timed_wait;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefWaitableEventCppToC::~CefWaitableEventCppToC() {
+CefWaitableEvent_0_CppToC::~CefWaitableEvent_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefWaitableEvent> CefCppToCRefCounted<
-    CefWaitableEventCppToC,
-    CefWaitableEvent,
-    cef_waitable_event_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_waitable_event_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefWaitableEvent> CefCppToCRefCounted<CefWaitableEvent_0_CppToC, CefWaitableEvent, cef_waitable_event_0_t>::UnwrapDerived(CefWrapperType type, cef_waitable_event_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefWaitableEventCppToC,
-                                   CefWaitableEvent,
-                                   cef_waitable_event_t>::kWrapperType =
-    WT_WAITABLE_EVENT;
+template<> CefWrapperType CefCppToCRefCounted<CefWaitableEvent_0_CppToC, CefWaitableEvent, cef_waitable_event_0_t>::kWrapperType = WT_WAITABLE_EVENT;
+
+

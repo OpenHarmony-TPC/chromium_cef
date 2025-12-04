@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f59926b437efd9c8694bc5cabce268d7c4241f57$
+// $hash=0ce62b0f672178e9fde70b26c2696bd918b90f69$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_IMAGE_CALLBACK_CTOCPP_H_
@@ -20,26 +20,25 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi_versions.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDownloadImageCallbackCToCpp
-    : public CefCToCppRefCounted<CefDownloadImageCallbackCToCpp,
-                                 CefDownloadImageCallback,
-                                 cef_download_image_callback_t> {
+class CefDownloadImageCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefDownloadImageCallback_0_CToCpp, CefDownloadImageCallback, cef_download_image_callback_0_t> {
  public:
-  CefDownloadImageCallbackCToCpp();
-  virtual ~CefDownloadImageCallbackCToCpp();
+  CefDownloadImageCallback_0_CToCpp();
+  virtual ~CefDownloadImageCallback_0_CToCpp();
 
   // CefDownloadImageCallback methods.
-  void OnDownloadImageFinished(const CefString& image_url,
-                               int http_status_code,
-                               CefRefPtr<CefImage> image) override;
+  void OnDownloadImageFinished(const CefString& image_url, int http_status_code, CefRefPtr<CefImage> image) override;
 };
+
+constexpr auto CefDownloadImageCallbackCToCpp_Wrap = CefDownloadImageCallback_0_CToCpp::Wrap;
+constexpr auto CefDownloadImageCallbackCToCpp_Unwrap = CefDownloadImageCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_IMAGE_CALLBACK_CTOCPP_H_

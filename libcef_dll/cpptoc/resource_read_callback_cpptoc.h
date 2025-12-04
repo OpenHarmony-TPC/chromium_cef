@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=837c402b5471be62b75cce7e95d09ea08cbde7df$
+// $hash=18b7caf5632665088a7ad8153575181718d560eb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESOURCE_READ_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_handler_capi.h"
 #include "include/cef_resource_handler.h"
+#include "include/capi/cef_resource_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResourceReadCallbackCppToC
-    : public CefCppToCRefCounted<CefResourceReadCallbackCppToC,
-                                 CefResourceReadCallback,
-                                 cef_resource_read_callback_t> {
+class CefResourceReadCallback_0_CppToC
+    : public CefCppToCRefCounted<CefResourceReadCallback_0_CppToC, CefResourceReadCallback, cef_resource_read_callback_0_t> {
  public:
-  CefResourceReadCallbackCppToC();
-  virtual ~CefResourceReadCallbackCppToC();
+  CefResourceReadCallback_0_CppToC();
+  virtual ~CefResourceReadCallback_0_CppToC();
 };
+
+constexpr auto CefResourceReadCallbackCppToC_Wrap = CefResourceReadCallback_0_CppToC::Wrap;
+constexpr auto CefResourceReadCallbackCppToC_Unwrap = CefResourceReadCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_READ_CALLBACK_CPPTOC_H_

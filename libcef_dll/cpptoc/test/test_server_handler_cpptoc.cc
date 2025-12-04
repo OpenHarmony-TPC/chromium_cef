@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c85799687fab1c98beaffc05f8f2e481d041d687$
+// $hash=d1a4aec1ec77e9b7c6acc2ddc9f8202e0bde2d59$
 //
 
 #include "libcef_dll/cpptoc/test/test_server_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/request_ctocpp.h"
 #include "libcef_dll/ctocpp/test/test_server_connection_ctocpp.h"
 #include "libcef_dll/ctocpp/test/test_server_ctocpp.h"
@@ -23,11 +22,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK test_server_handler_on_test_server_request(
-    struct _cef_test_server_handler_t* self,
-    cef_test_server_t* server,
-    cef_request_t* request,
-    struct _cef_test_server_connection_t* connection) {
+int CEF_CALLBACK test_server_handler_on_test_server_request(struct _cef_test_server_handler_t* self, struct _cef_test_server_t* server, struct _cef_request_t* request, struct _cef_test_server_connection_t* connection) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -54,8 +49,9 @@ int CEF_CALLBACK test_server_handler_on_test_server_request(
 
   // Execute
   bool _retval = CefTestServerHandlerCppToC::Get(self)->OnTestServerRequest(
-      CefTestServerCToCpp::Wrap(server), CefRequestCToCpp::Wrap(request),
-      CefTestServerConnectionCToCpp::Wrap(connection));
+      CefTestServerCToCpp_Wrap(server),
+      CefRequestCToCpp_Wrap(request),
+      CefTestServerConnectionCToCpp_Wrap(connection));
 
   // Return type: bool
   return _retval;
@@ -66,8 +62,7 @@ int CEF_CALLBACK test_server_handler_on_test_server_request(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefTestServerHandlerCppToC::CefTestServerHandlerCppToC() {
-  GetStruct()->on_test_server_request =
-      test_server_handler_on_test_server_request;
+  GetStruct()->on_test_server_request = test_server_handler_on_test_server_request;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -76,18 +71,11 @@ CefTestServerHandlerCppToC::~CefTestServerHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTestServerHandler> CefCppToCRefCounted<
-    CefTestServerHandlerCppToC,
-    CefTestServerHandler,
-    cef_test_server_handler_t>::UnwrapDerived(CefWrapperType type,
-                                              cef_test_server_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefTestServerHandler> CefCppToCRefCounted<CefTestServerHandlerCppToC, CefTestServerHandler, cef_test_server_handler_t>::UnwrapDerived(CefWrapperType type, cef_test_server_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTestServerHandlerCppToC,
-                                   CefTestServerHandler,
-                                   cef_test_server_handler_t>::kWrapperType =
-    WT_TEST_SERVER_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefTestServerHandlerCppToC, CefTestServerHandler, cef_test_server_handler_t>::kWrapperType = WT_TEST_SERVER_HANDLER;
+
+

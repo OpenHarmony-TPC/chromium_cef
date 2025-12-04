@@ -1,31 +1,6 @@
-/*
- * Copyright (c) 2023-2025 Haitai FangYuan Co., Ltd.
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of
- *    conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list
- *    of conditions and the following disclaimer in the documentation and/or other materials
- *    provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its contributors may be used
- *    to endorse or promote products derived from this software without specific prior written
- *    permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #include "tests/cefclient/browser/root_window_ohos.h"
 
@@ -138,11 +113,28 @@ void RootWindowOhos::Hide() {
   REQUIRE_MAIN_THREAD();
 }
 
-void RootWindowOhos::SetBounds(int x, int y, size_t width, size_t height) {
+void RootWindowOhos::SetBounds(int x,
+                               int y,
+                               size_t width,
+                               size_t height,
+                               bool content_bounds) {
   REQUIRE_MAIN_THREAD();
   if (!window_) {
     return;
   }
+}
+
+bool RootWindowOhos::DefaultToContentBounds() const {
+  if (!WithWindowlessRendering()) {
+    // The root HWND will be queried by default.
+    return false;
+  }
+  if (osr_settings_.real_screen_bounds) {
+    // Root HWND bounds are provided via GetRootWindowRect.
+    return false;
+  }
+  // The root HWND will not be queried by default.
+  return true;
 }
 
 void RootWindowOhos::Close(bool force) {
@@ -157,15 +149,14 @@ void RootWindowOhos::SetDeviceScaleFactor(float device_scale_factor) {
   }
 }
 
-float RootWindowOhos::GetDeviceScaleFactor() const {
+std::optional<float> RootWindowOhos::GetDeviceScaleFactor() const {
   REQUIRE_MAIN_THREAD();
 
   if (browser_window_ && with_osr_) {
     return browser_window_->GetDeviceScaleFactor();
   }
 
-  NOTREACHED();
-  return 0.0f;
+  return std::nullopt;
 }
 
 CefRefPtr<CefBrowser> RootWindowOhos::GetBrowser() const {
@@ -189,10 +180,9 @@ bool RootWindowOhos::WithWindowlessRendering() const {
 
 void RootWindowOhos::CreateBrowserWindow(const std::string& startup_url) {
   if (with_osr_) {
-    OsrRendererSettings settings = {};
-    MainContext::Get()->PopulateOsrSettings(&settings);
-    browser_window_.reset(
-        new BrowserWindowOsrOhos(this, with_controls_, startup_url, settings));
+    MainContext::Get()->PopulateOsrSettings(&osr_settings_);
+    browser_window_.reset(new BrowserWindowOsrOhos(this, with_controls_,
+                                                   startup_url, osr_settings_));
   } else {
     browser_window_.reset(
         new BrowserWindowStdOhos(this, with_controls_, startup_url));

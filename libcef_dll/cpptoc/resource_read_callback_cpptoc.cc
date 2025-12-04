@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a3c842c7669d7940d19adc4d0d0f7ec753856a70$
+// $hash=cf6097f94659547fc6791e66fe489b621e035849$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/resource_read_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-resource_read_callback_cont(struct _cef_resource_read_callback_t* self,
-                            int bytes_read) {
+void CEF_CALLBACK resource_read_callback_cont(struct _cef_resource_read_callback_0_t* self, int bytes_read) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,36 +31,31 @@ resource_read_callback_cont(struct _cef_resource_read_callback_t* self,
   }
 
   // Execute
-  CefResourceReadCallbackCppToC::Get(self)->Continue(bytes_read);
+  CefResourceReadCallback_0_CppToC::Get(self)->Continue(
+      bytes_read);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceReadCallbackCppToC::CefResourceReadCallbackCppToC() {
+CefResourceReadCallback_0_CppToC::CefResourceReadCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = resource_read_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceReadCallbackCppToC::~CefResourceReadCallbackCppToC() {
+CefResourceReadCallback_0_CppToC::~CefResourceReadCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefResourceReadCallback> CefCppToCRefCounted<
-    CefResourceReadCallbackCppToC,
-    CefResourceReadCallback,
-    cef_resource_read_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                 cef_resource_read_callback_t*
-                                                     s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefResourceReadCallback> CefCppToCRefCounted<CefResourceReadCallback_0_CppToC, CefResourceReadCallback, cef_resource_read_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_resource_read_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefResourceReadCallbackCppToC,
-                                   CefResourceReadCallback,
-                                   cef_resource_read_callback_t>::kWrapperType =
-    WT_RESOURCE_READ_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefResourceReadCallback_0_CppToC, CefResourceReadCallback, cef_resource_read_callback_0_t>::kWrapperType = WT_RESOURCE_READ_CALLBACK;
+
+

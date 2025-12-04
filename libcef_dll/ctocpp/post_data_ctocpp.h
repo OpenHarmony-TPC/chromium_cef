@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=51cb1b6d4f87fb38dedb9d7a9628e878db79aea0$
+// $hash=6ede77045e54d111ef6cc2d69c2e69266e265c85$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_POST_DATA_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_capi.h"
 #include "include/cef_request.h"
+#include "include/capi/cef_request_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefPostDataCToCpp : public CefCToCppRefCounted<CefPostDataCToCpp,
-                                                     CefPostData,
-                                                     cef_post_data_t> {
+class CefPostDataCToCpp
+    : public CefCToCppRefCounted<CefPostDataCToCpp, CefPostData, cef_post_data_t> {
  public:
   CefPostDataCToCpp();
   virtual ~CefPostDataCToCpp();
@@ -42,5 +41,8 @@ class CefPostDataCToCpp : public CefCToCppRefCounted<CefPostDataCToCpp,
   bool AddElement(CefRefPtr<CefPostDataElement> element) override;
   void RemoveElements() override;
 };
+
+constexpr auto CefPostDataCToCpp_Wrap = CefPostDataCToCpp::Wrap;
+constexpr auto CefPostDataCToCpp_Unwrap = CefPostDataCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_CTOCPP_H_

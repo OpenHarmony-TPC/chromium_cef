@@ -548,13 +548,12 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
   // Allow override of some values via environment variables.
   {
     std::unique_ptr<base::Environment> env(base::Environment::Create());
-    std::string val_str;
-
-    if (env->GetVar("CEF_CRASH_REPORTER_SERVER_URL", &val_str)) {
-      ParseURL(val_str, &server_url_);
+    if (const auto& var_str = env->GetVar("CEF_CRASH_REPORTER_SERVER_URL")) {
+      ParseURL(*var_str, &server_url_);
     }
-    if (env->GetVar("CEF_CRASH_REPORTER_RATE_LIMIT_ENABLED", &val_str)) {
-      rate_limit_ = ParseBool(val_str);
+    if (const auto& var_str =
+            env->GetVar("CEF_CRASH_REPORTER_RATE_LIMIT_ENABLED")) {
+      rate_limit_ = ParseBool(*var_str);
     }
   }
 
@@ -633,28 +632,18 @@ bool CefCrashReporterClient::GetCrashDumpLocation(std::wstring* crash_dir) {
 
 #elif BUILDFLAG(IS_POSIX)
 
-void CefCrashReporterClient::GetProductNameAndVersion(const char** product_name,
-                                                      const char** version) {
-  *product_name = product_name_.c_str();
-  *version = product_version_.c_str();
-}
-
-void CefCrashReporterClient::GetProductNameAndVersion(std::string* product_name,
-                                                      std::string* version,
-                                                      std::string* channel) {
-  *product_name = product_name_;
-  *version = product_version_;
+void CefCrashReporterClient::GetProductInfo(ProductInfo* product_info) {
+  product_info->product_name = product_name_;
+  product_info->version = product_version_;
 }
 
 bool CefCrashReporterClient::GetCrashDumpLocation(base::FilePath* crash_dir) {
   // By setting the BREAKPAD_DUMP_LOCATION environment variable, an alternate
   // location to write breakpad crash dumps can be set.
   std::unique_ptr<base::Environment> env(base::Environment::Create());
-  std::string alternate_crash_dump_location;
-  if (env->GetVar("BREAKPAD_DUMP_LOCATION", &alternate_crash_dump_location)) {
-    base::FilePath crash_dumps_dir_path =
-        base::FilePath::FromUTF8Unsafe(alternate_crash_dump_location);
-    base::PathService::Override(chrome::DIR_CRASH_DUMPS, crash_dumps_dir_path);
+  if (const auto& val = env->GetVar("BREAKPAD_DUMP_LOCATION")) {
+    base::PathService::Override(chrome::DIR_CRASH_DUMPS,
+                                base::FilePath::FromUTF8Unsafe(*val));
   }
   return base::PathService::Get(chrome::DIR_CRASH_DUMPS, crash_dir);
 }
@@ -734,8 +723,7 @@ bool CefCrashReporterClient::EnableBrowserCrashForwarding() {
 // storage for each key size and later substituting the actual key name during
 // crash dump processing.
 
-#define IDKEY(name) \
-  { name, IDKey::Tag::kArray }
+#define IDKEY(name) {name, IDKey::Tag::kArray}
 
 #define IDKEY_ENTRIES(n)                                                     \
   IDKEY(n "-A"), IDKEY(n "-B"), IDKEY(n "-C"), IDKEY(n "-D"), IDKEY(n "-E"), \

@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=def41651170c930805bd36e9640c98cb87c79529$
+// $hash=d5ffacfa715e53e29eda66ba1adbc2fe36a0f136$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_AUDIO_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_AUDIO_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,8 +51,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to handle audio events.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_audio_handler_t {
   ///
@@ -62,9 +69,7 @@ typedef struct _cef_audio_handler_t {
   /// cancel it. All members of |params| can optionally be configured here, but
   /// they are also pre-filled with some sensible defaults.
   ///
-  int(CEF_CALLBACK* get_audio_parameters)(struct _cef_audio_handler_t* self,
-                                          struct _cef_browser_t* browser,
-                                          cef_audio_parameters_t* params);
+  int (CEF_CALLBACK *get_audio_parameters)(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, cef_audio_parameters_t* params);
 
   ///
   /// Called on a browser audio capture thread when the browser starts streaming
@@ -73,11 +78,7 @@ typedef struct _cef_audio_handler_t {
   /// same browser. |params| contains the audio parameters like sample rate and
   /// channel layout. |channels| is the number of channels.
   ///
-  void(CEF_CALLBACK* on_audio_stream_started)(
-      struct _cef_audio_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_audio_parameters_t* params,
-      int channels);
+  void (CEF_CALLBACK *on_audio_stream_started)(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const cef_audio_parameters_t* params, int channels);
 
   ///
   /// Called on the audio stream thread when a PCM packet is received for the
@@ -89,19 +90,14 @@ typedef struct _cef_audio_handler_t {
   /// |channel_layout| value passed to OnAudioStreamStarted you can calculate
   /// the size of the |data| array in bytes.
   ///
-  void(CEF_CALLBACK* on_audio_stream_packet)(struct _cef_audio_handler_t* self,
-                                             struct _cef_browser_t* browser,
-                                             const float** data,
-                                             int frames,
-                                             int64_t pts);
+  void (CEF_CALLBACK *on_audio_stream_packet)(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const float** data, int frames, int64_t pts);
 
   ///
   /// Called on the UI thread when the stream has stopped. OnAudioSteamStopped
   /// will always be called after OnAudioStreamStarted; both functions may be
   /// called multiple times for the same stream.
   ///
-  void(CEF_CALLBACK* on_audio_stream_stopped)(struct _cef_audio_handler_t* self,
-                                              struct _cef_browser_t* browser);
+  void (CEF_CALLBACK *on_audio_stream_stopped)(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser);
 
   ///
   /// Called on the UI or audio stream thread when an error occurred. During the
@@ -109,10 +105,9 @@ typedef struct _cef_audio_handler_t {
   /// in the capturing phase it will be called on the audio stream thread. The
   /// stream will be stopped immediately.
   ///
-  void(CEF_CALLBACK* on_audio_stream_error)(struct _cef_audio_handler_t* self,
-                                            struct _cef_browser_t* browser,
-                                            const cef_string_t* message);
+  void (CEF_CALLBACK *on_audio_stream_error)(struct _cef_audio_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* message);
 } cef_audio_handler_t;
+
 
 #ifdef __cplusplus
 }

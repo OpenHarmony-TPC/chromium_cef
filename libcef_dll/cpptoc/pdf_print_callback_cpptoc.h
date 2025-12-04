@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=adde6a379a4b9607609894eadbbe9b023421370f$
+// $hash=9640b2235fa2d74f752372d9e285ca3e3b83e93d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PDF_PRINT_CALLBACK_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/cef_client.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPdfPrintCallbackCppToC
-    : public CefCppToCRefCounted<CefPdfPrintCallbackCppToC,
-                                 CefPdfPrintCallback,
-                                 cef_pdf_print_callback_t> {
+    : public CefCppToCRefCounted<CefPdfPrintCallbackCppToC, CefPdfPrintCallback, cef_pdf_print_callback_t> {
  public:
   CefPdfPrintCallbackCppToC();
   virtual ~CefPdfPrintCallbackCppToC();
 };
+
+constexpr auto CefPdfPrintCallbackCppToC_Wrap = CefPdfPrintCallbackCppToC::Wrap;
+constexpr auto CefPdfPrintCallbackCppToC_Unwrap = CefPdfPrintCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PDF_PRINT_CALLBACK_CPPTOC_H_

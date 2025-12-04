@@ -13,8 +13,8 @@
 
 #include "include/base/cef_callback.h"
 #include "include/cef_browser.h"
-#include "include/cef_command_ids.h"
 #include "include/cef_frame.h"
+#include "include/cef_id_mappers.h"
 #include "include/cef_parser.h"
 #include "include/cef_shared_process_message_builder.h"
 #include "include/cef_ssl_status.h"
@@ -318,6 +318,32 @@ bool IsAllowedToolbarButton(cef_chrome_toolbar_button_type_t button_type) {
 }
 
 bool IsAllowedAppMenuCommandId(int command_id) {
+  // Version-safe static declarations of IDC variables using names from
+  // cef_command_ids.h.
+  CEF_DECLARE_COMMAND_ID(IDC_NEW_WINDOW);
+  CEF_DECLARE_COMMAND_ID(IDC_NEW_INCOGNITO_WINDOW);
+  CEF_DECLARE_COMMAND_ID(IDC_ZOOM_MENU);
+  CEF_DECLARE_COMMAND_ID(IDC_ZOOM_PLUS);
+  CEF_DECLARE_COMMAND_ID(IDC_ZOOM_NORMAL);
+  CEF_DECLARE_COMMAND_ID(IDC_ZOOM_MINUS);
+  CEF_DECLARE_COMMAND_ID(IDC_FULLSCREEN);
+  CEF_DECLARE_COMMAND_ID(IDC_PRINT);
+  CEF_DECLARE_COMMAND_ID(IDC_FIND);
+  CEF_DECLARE_COMMAND_ID(IDC_FIND_NEXT);
+  CEF_DECLARE_COMMAND_ID(IDC_FIND_PREVIOUS);
+  CEF_DECLARE_COMMAND_ID(IDC_MORE_TOOLS_MENU);
+  CEF_DECLARE_COMMAND_ID(IDC_CLEAR_BROWSING_DATA);
+  CEF_DECLARE_COMMAND_ID(IDC_MANAGE_EXTENSIONS);
+  CEF_DECLARE_COMMAND_ID(IDC_PERFORMANCE);
+  CEF_DECLARE_COMMAND_ID(IDC_TASK_MANAGER);
+  CEF_DECLARE_COMMAND_ID(IDC_DEV_TOOLS);
+  CEF_DECLARE_COMMAND_ID(IDC_EDIT_MENU);
+  CEF_DECLARE_COMMAND_ID(IDC_CUT);
+  CEF_DECLARE_COMMAND_ID(IDC_COPY);
+  CEF_DECLARE_COMMAND_ID(IDC_PASTE);
+  CEF_DECLARE_COMMAND_ID(IDC_OPTIONS);
+  CEF_DECLARE_COMMAND_ID(IDC_EXIT);
+
   // Only the commands in this array will be allowed.
   static const int kAllowedCommandIds[] = {
       IDC_NEW_WINDOW,
@@ -361,6 +387,28 @@ bool IsAllowedAppMenuCommandId(int command_id) {
 }
 
 bool IsAllowedContextMenuCommandId(int command_id) {
+  // Version-safe static declarations of IDC variables using names from
+  // cef_command_ids.h.
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_CUSTOM_FIRST);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_CUSTOM_LAST);
+  CEF_DECLARE_COMMAND_ID(IDC_EXTENSIONS_CONTEXT_CUSTOM_FIRST);
+  CEF_DECLARE_COMMAND_ID(IDC_EXTENSIONS_CONTEXT_CUSTOM_LAST);
+  CEF_DECLARE_COMMAND_ID(IDC_BACK);
+  CEF_DECLARE_COMMAND_ID(IDC_FORWARD);
+  CEF_DECLARE_COMMAND_ID(IDC_RELOAD);
+  CEF_DECLARE_COMMAND_ID(IDC_RELOAD_BYPASSING_CACHE);
+  CEF_DECLARE_COMMAND_ID(IDC_RELOAD_CLEARING_CACHE);
+  CEF_DECLARE_COMMAND_ID(IDC_STOP);
+  CEF_DECLARE_COMMAND_ID(IDC_PRINT);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_CUT);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_COPY);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_PASTE);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_DELETE);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_SELECTALL);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_UNDO);
+  CEF_DECLARE_COMMAND_ID(IDC_CONTENT_CONTEXT_REDO);
+
   // Allow commands added by web content.
   if (command_id >= IDC_CONTENT_CONTEXT_CUSTOM_FIRST &&
       command_id <= IDC_CONTENT_CONTEXT_CUSTOM_LAST) {
@@ -523,12 +571,7 @@ ClientHandler::ClientHandler(Delegate* delegate,
 }
 
 void ClientHandler::DetachDelegate() {
-  if (!CURRENTLY_ON_MAIN_THREAD()) {
-    // Execute this method on the main thread.
-    MAIN_POST_CLOSURE(base::BindOnce(&ClientHandler::DetachDelegate, this));
-    return;
-  }
-
+  REQUIRE_MAIN_THREAD();
   DCHECK(delegate_);
   delegate_ = nullptr;
 }
@@ -821,6 +864,24 @@ bool ClientHandler::OnCursorChange(CefRefPtr<CefBrowser> browser,
   return mouse_cursor_change_disabled_;
 }
 
+#if CEF_API_ADDED(13700)
+bool ClientHandler::OnContentsBoundsChange(CefRefPtr<CefBrowser> browser,
+                                           const CefRect& new_bounds) {
+  CEF_REQUIRE_UI_THREAD();
+  NotifyContentsBounds(new_bounds);
+  return true;
+}
+
+bool ClientHandler::GetRootWindowScreenRect(CefRefPtr<CefBrowser> browser,
+                                            CefRect& rect) {
+  CEF_REQUIRE_UI_THREAD();
+  if (delegate_) {
+    return delegate_->GetRootWindowScreenRect(rect);
+  }
+  return false;
+}
+#endif
+
 bool ClientHandler::CanDownload(CefRefPtr<CefBrowser> browser,
                                 const CefString& url,
                                 const CefString& request_method) {
@@ -1024,28 +1085,6 @@ void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
                                           canGoForward);
 
   NotifyLoadingState(isLoading, canGoBack, canGoForward);
-}
-
-void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                ErrorCode errorCode,
-                                const CefString& errorText,
-                                const CefString& failedUrl) {
-  CEF_REQUIRE_UI_THREAD();
-
-  // Don't display an error for downloaded files.
-  if (errorCode == ERR_ABORTED) {
-    return;
-  }
-
-  // Don't display an error for external protocols that we allow the OS to
-  // handle. See OnProtocolExecution().
-  if (errorCode == ERR_UNKNOWN_URL_SCHEME) {
-    std::string urlStr = frame->GetURL();
-    if (urlStr.find("spotify:") == 0) {
-      return;
-    }
-  }
 }
 
 bool ClientHandler::OnRequestMediaAccessPermission(
@@ -1436,6 +1475,19 @@ void ClientHandler::NotifyAutoResize(const CefSize& new_size) {
 
   if (delegate_) {
     delegate_->OnAutoResize(new_size);
+  }
+}
+
+void ClientHandler::NotifyContentsBounds(const CefRect& new_bounds) {
+  if (!CURRENTLY_ON_MAIN_THREAD()) {
+    // Execute this method on the main thread.
+    MAIN_POST_CLOSURE(
+        base::BindOnce(&ClientHandler::NotifyContentsBounds, this, new_bounds));
+    return;
+  }
+
+  if (delegate_) {
+    delegate_->OnContentsBounds(new_bounds);
   }
 }
 

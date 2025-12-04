@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4fb1dc32db1fe7bca074fa4de23e891b008e2df0$
+// $hash=45c3d2339c5b88ce8b82fea429072ed52a07383f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DEV_TOOLS_MESSAGE_OBSERVER_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
+#include "include/cef_devtools_message_observer.h"
 #include "include/capi/cef_devtools_message_observer_capi.h"
 #include "include/cef_browser.h"
-#include "include/cef_devtools_message_observer.h"
+#include "include/capi/cef_browser_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDevToolsMessageObserverCppToC
-    : public CefCppToCRefCounted<CefDevToolsMessageObserverCppToC,
-                                 CefDevToolsMessageObserver,
-                                 cef_dev_tools_message_observer_t> {
+    : public CefCppToCRefCounted<CefDevToolsMessageObserverCppToC, CefDevToolsMessageObserver, cef_dev_tools_message_observer_t> {
  public:
   CefDevToolsMessageObserverCppToC();
   virtual ~CefDevToolsMessageObserverCppToC();
 };
+
+constexpr auto CefDevToolsMessageObserverCppToC_Wrap = CefDevToolsMessageObserverCppToC::Wrap;
+constexpr auto CefDevToolsMessageObserverCppToC_Unwrap = CefDevToolsMessageObserverCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DEV_TOOLS_MESSAGE_OBSERVER_CPPTOC_H_

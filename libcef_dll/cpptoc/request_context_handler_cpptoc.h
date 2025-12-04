@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e40930b486fda7a4e1434654c4742adace19533d$
+// $hash=2a681818ff8bd9b9c990e52191f71e85afba5268$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_context_handler_capi.h"
 #include "include/cef_request_context_handler.h"
+#include "include/capi/cef_request_context_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefRequestContextHandlerCppToC
-    : public CefCppToCRefCounted<CefRequestContextHandlerCppToC,
-                                 CefRequestContextHandler,
-                                 cef_request_context_handler_t> {
+    : public CefCppToCRefCounted<CefRequestContextHandlerCppToC, CefRequestContextHandler, cef_request_context_handler_t> {
  public:
   CefRequestContextHandlerCppToC();
   virtual ~CefRequestContextHandlerCppToC();
 };
+
+constexpr auto CefRequestContextHandlerCppToC_Wrap = CefRequestContextHandlerCppToC::Wrap;
+constexpr auto CefRequestContextHandlerCppToC_Unwrap = CefRequestContextHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_HANDLER_CPPTOC_H_

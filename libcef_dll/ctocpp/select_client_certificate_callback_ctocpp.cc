@@ -9,23 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0d9243babbb81df9a5f5a29ad4413197a05279fa$
+// $hash=7445695dc7c4bbc2129c9bae2657761718b3d4d4$
 //
 
 #include "libcef_dll/ctocpp/select_client_certificate_callback_ctocpp.h"
-
-#include "libcef_dll/ctocpp/x509certificate_ctocpp.h"
+#include "libcef_dll/ctocpp/x509_certificate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefSelectClientCertificateCallbackCToCpp::Select(
-    CefRefPtr<CefX509Certificate> cert) {
+NO_SANITIZE("cfi-icall") void CefSelectClientCertificateCallbackCToCpp::Select(CefRefPtr<CefX509Certificate> cert) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_select_client_certificate_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, select)) {
+  auto* _struct = GetStruct();
+  if (!_struct->select) {
     return;
   }
 
@@ -34,34 +32,26 @@ void CefSelectClientCertificateCallbackCToCpp::Select(
   // Unverified params: cert
 
   // Execute
-  _struct->select(_struct, CefX509CertificateCToCpp::Unwrap(cert));
+  _struct->select(_struct,
+      CefX509CertificateCToCpp_Unwrap(cert));
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefSelectClientCertificateCallbackCToCpp::
-    CefSelectClientCertificateCallbackCToCpp() {}
+CefSelectClientCertificateCallbackCToCpp::CefSelectClientCertificateCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefSelectClientCertificateCallbackCToCpp::
-    ~CefSelectClientCertificateCallbackCToCpp() {
+CefSelectClientCertificateCallbackCToCpp::~CefSelectClientCertificateCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_select_client_certificate_callback_t*
-CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp,
-                    CefSelectClientCertificateCallback,
-                    cef_select_client_certificate_callback_t>::
-    UnwrapDerived(CefWrapperType type, CefSelectClientCertificateCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_select_client_certificate_callback_t* CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp, CefSelectClientCertificateCallback, cef_select_client_certificate_callback_t>::UnwrapDerived(CefWrapperType type, CefSelectClientCertificateCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<
-    CefSelectClientCertificateCallbackCToCpp,
-    CefSelectClientCertificateCallback,
-    cef_select_client_certificate_callback_t>::kWrapperType =
-    WT_SELECT_CLIENT_CERTIFICATE_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp, CefSelectClientCertificateCallback, cef_select_client_certificate_callback_t>::kWrapperType = WT_SELECT_CLIENT_CERTIFICATE_CALLBACK;
+
+

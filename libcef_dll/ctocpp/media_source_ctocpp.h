@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=12ed9374d67fb5dd34c80263ac150b73bfe343b1$
+// $hash=10abdaf4280e06beb70069624f7a5320ae43daf1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_SOURCE_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaSourceCToCpp : public CefCToCppRefCounted<CefMediaSourceCToCpp,
-                                                        CefMediaSource,
-                                                        cef_media_source_t> {
+class CefMediaSourceCToCpp
+    : public CefCToCppRefCounted<CefMediaSourceCToCpp, CefMediaSource, cef_media_source_t> {
  public:
   CefMediaSourceCToCpp();
   virtual ~CefMediaSourceCToCpp();
@@ -38,5 +37,8 @@ class CefMediaSourceCToCpp : public CefCToCppRefCounted<CefMediaSourceCToCpp,
   bool IsCastSource() override;
   bool IsDialSource() override;
 };
+
+constexpr auto CefMediaSourceCToCpp_Wrap = CefMediaSourceCToCpp::Wrap;
+constexpr auto CefMediaSourceCToCpp_Unwrap = CefMediaSourceCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SOURCE_CTOCPP_H_

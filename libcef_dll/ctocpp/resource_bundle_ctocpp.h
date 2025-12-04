@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=976bdcec56874490b78893c18fc1aaefd8a0c184$
+// $hash=97c3f900e07fc0dab56f621265b5838a321188cb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_resource_bundle_capi.h"
 #include "include/cef_resource_bundle.h"
+#include "include/capi/cef_resource_bundle_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResourceBundleCToCpp
-    : public CefCToCppRefCounted<CefResourceBundleCToCpp,
-                                 CefResourceBundle,
-                                 cef_resource_bundle_t> {
+    : public CefCToCppRefCounted<CefResourceBundleCToCpp, CefResourceBundle, cef_resource_bundle_t> {
  public:
   CefResourceBundleCToCpp();
   virtual ~CefResourceBundleCToCpp();
@@ -37,9 +35,10 @@ class CefResourceBundleCToCpp
   // CefResourceBundle methods.
   CefString GetLocalizedString(int string_id) override;
   CefRefPtr<CefBinaryValue> GetDataResource(int resource_id) override;
-  CefRefPtr<CefBinaryValue> GetDataResourceForScale(
-      int resource_id,
-      ScaleFactor scale_factor) override;
+  CefRefPtr<CefBinaryValue> GetDataResourceForScale(int resource_id, ScaleFactor scale_factor) override;
 };
+
+constexpr auto CefResourceBundleCToCpp_Wrap = CefResourceBundleCToCpp::Wrap;
+constexpr auto CefResourceBundleCToCpp_Unwrap = CefResourceBundleCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cfbe396901b67e00f1afb9fe0d8c5edcffc407f1$
+// $hash=83dc06f758262bbbc68746f37ab07f64d7266b65$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESOURCE_HANDLER_CTOCPP_H_
@@ -20,41 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_handler_capi.h"
 #include "include/cef_resource_handler.h"
+#include "include/capi/cef_resource_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResourceHandlerCToCpp
-    : public CefCToCppRefCounted<CefResourceHandlerCToCpp,
-                                 CefResourceHandler,
-                                 cef_resource_handler_t> {
+class CefResourceHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefResourceHandler_0_CToCpp, CefResourceHandler, cef_resource_handler_0_t> {
  public:
-  CefResourceHandlerCToCpp();
-  virtual ~CefResourceHandlerCToCpp();
+  CefResourceHandler_0_CToCpp();
+  virtual ~CefResourceHandler_0_CToCpp();
 
   // CefResourceHandler methods.
-  bool Open(CefRefPtr<CefRequest> request,
-            bool& handle_request,
-            CefRefPtr<CefCallback> callback) override;
-  bool ProcessRequest(CefRefPtr<CefRequest> request,
-                      CefRefPtr<CefCallback> callback) override;
-  void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64_t& response_length,
-                          CefString& redirectUrl) override;
-  bool Skip(int64_t bytes_to_skip,
-            int64_t& bytes_skipped,
-            CefRefPtr<CefResourceSkipCallback> callback) override;
-  bool Read(void* data_out,
-            int bytes_to_read,
-            int& bytes_read,
-            CefRefPtr<CefResourceReadCallback> callback) override;
-  bool ReadResponse(void* data_out,
-                    int bytes_to_read,
-                    int& bytes_read,
-                    CefRefPtr<CefCallback> callback) override;
+  bool Open(CefRefPtr<CefRequest> request, bool& handle_request, CefRefPtr<CefCallback> callback) override;
+  bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) override;
+  void GetResponseHeaders(CefRefPtr<CefResponse> response, int64_t& response_length, CefString& redirectUrl) override;
+  bool Skip(int64_t bytes_to_skip, int64_t& bytes_skipped, CefRefPtr<CefResourceSkipCallback> callback) override;
+  bool Read(void* data_out, int bytes_to_read, int& bytes_read, CefRefPtr<CefResourceReadCallback> callback) override;
+  bool ReadResponse(void* data_out, int bytes_to_read, int& bytes_read, CefRefPtr<CefCallback> callback) override;
   void Cancel() override;
 };
+
+constexpr auto CefResourceHandlerCToCpp_Wrap = CefResourceHandler_0_CToCpp::Wrap;
+constexpr auto CefResourceHandlerCToCpp_Unwrap = CefResourceHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_HANDLER_CTOCPP_H_

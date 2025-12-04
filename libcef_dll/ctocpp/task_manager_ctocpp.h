@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4e6b9c9641df0c11c2472d104eba880b9e4ea2bd$
+// $hash=6bf48ec447b86faa28e840b502e1d3cd8f2d6fab$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TASK_MANAGER_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_task_manager_capi.h"
 #include "include/cef_task_manager.h"
+#include "include/capi/cef_task_manager_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTaskManagerCToCpp : public CefCToCppRefCounted<CefTaskManagerCToCpp,
-                                                        CefTaskManager,
-                                                        cef_task_manager_t> {
+class CefTaskManagerCToCpp
+    : public CefCToCppRefCounted<CefTaskManagerCToCpp, CefTaskManager, cef_task_manager_t> {
  public:
   CefTaskManagerCToCpp();
   virtual ~CefTaskManagerCToCpp();
@@ -40,5 +39,8 @@ class CefTaskManagerCToCpp : public CefCToCppRefCounted<CefTaskManagerCToCpp,
   bool KillTask(int64_t task_id) override;
   int64_t GetTaskIdForBrowserId(int browser_id) override;
 };
+
+constexpr auto CefTaskManagerCToCpp_Wrap = CefTaskManagerCToCpp::Wrap;
+constexpr auto CefTaskManagerCToCpp_Unwrap = CefTaskManagerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TASK_MANAGER_CTOCPP_H_

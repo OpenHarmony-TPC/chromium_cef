@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a61985cde54052dface338f444af2634bedeaf14$
+// $hash=e6d19214e59c15a2508e002e59a47c886cb4eb55$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESPONSE_FILTER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_response_filter_capi.h"
 #include "include/cef_response_filter.h"
+#include "include/capi/cef_response_filter_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResponseFilterCppToC
-    : public CefCppToCRefCounted<CefResponseFilterCppToC,
-                                 CefResponseFilter,
-                                 cef_response_filter_t> {
+    : public CefCppToCRefCounted<CefResponseFilterCppToC, CefResponseFilter, cef_response_filter_t> {
  public:
   CefResponseFilterCppToC();
   virtual ~CefResponseFilterCppToC();
 };
+
+constexpr auto CefResponseFilterCppToC_Wrap = CefResponseFilterCppToC::Wrap;
+constexpr auto CefResponseFilterCppToC_Unwrap = CefResponseFilterCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESPONSE_FILTER_CPPTOC_H_

@@ -8,14 +8,12 @@
 #include <utility>
 
 #include "base/memory/raw_ptr.h"
-#include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
 #include "cef/include/cef_dialog_handler.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/thread_util.h"
 #include "chrome/browser/file_select_helper.h"
-#include "chrome/common/chrome_paths.h"
 #include "content/public/browser/file_select_listener.h"
 #include "content/public/browser/render_frame_host.h"
 #include "ui/shell_dialogs/select_file_policy.h"
@@ -302,6 +300,9 @@ void CefFileDialogManager::RunFileDialog(
     case FILE_DIALOG_SAVE:
       params.mode = blink::mojom::FileChooserParams::Mode::kSave;
       break;
+    case FILE_DIALOG_NUM_VALUES:
+      DCHECK(false);
+      return;
   }
 
   params.title = title;
@@ -434,21 +435,8 @@ void CefFileDialogManager::RunSelectFile(
     dialog_->set_owning_widget(browser_->GetWindowHandle());
   }
 
-#if BUILDFLAG(IS_OHOS)
-  // Fix the download path on Ohos when dir is a dot, Due to the path will be
-  // intercepted by CefFileDialogManager::RunFileChooser.
-  base::FilePath ohos_path = default_path;
-  std::string dirName = ohos_path.DirName().value();
-  if (dirName.empty() || dirName == ".") {
-    base::PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &ohos_path);
-    ohos_path = ohos_path.Append(default_path);
-  }
-  dialog_->SelectFile(type, title, ohos_path, file_types, file_type_index,
-                      default_extension, owning_window);
-#else
   dialog_->SelectFile(type, title, default_path, file_types, file_type_index,
                       default_extension, owning_window);
-#endif
 }
 
 void CefFileDialogManager::SelectFileListenerDestroyed(

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=01cc499ce4b15fe372adf7dd668ab3e58419c4ee$
+// $hash=107e87000185753c9f64365d566b393c63cee438$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -22,12 +21,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-load_handler_on_loading_state_change(struct _cef_load_handler_t* self,
-                                     cef_browser_t* browser,
-                                     int isLoading,
-                                     int canGoBack,
-                                     int canGoForward) {
+void CEF_CALLBACK load_handler_on_loading_state_change(struct _cef_load_handler_t* self, struct _cef_browser_t* browser, int isLoading, int canGoBack, int canGoForward) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -44,15 +38,13 @@ load_handler_on_loading_state_change(struct _cef_load_handler_t* self,
 
   // Execute
   CefLoadHandlerCppToC::Get(self)->OnLoadingStateChange(
-      CefBrowserCToCpp::Wrap(browser), isLoading ? true : false,
-      canGoBack ? true : false, canGoForward ? true : false);
+      CefBrowserCToCpp_Wrap(browser),
+      isLoading?true:false,
+      canGoBack?true:false,
+      canGoForward?true:false);
 }
 
-void CEF_CALLBACK
-load_handler_on_load_start(struct _cef_load_handler_t* self,
-                           cef_browser_t* browser,
-                           cef_frame_t* frame,
-                           cef_transition_type_t transition_type) {
+void CEF_CALLBACK load_handler_on_load_start(struct _cef_load_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, cef_transition_type_t transition_type) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -73,15 +65,13 @@ load_handler_on_load_start(struct _cef_load_handler_t* self,
   }
 
   // Execute
-  CefLoadHandlerCppToC::Get(self)->OnLoadStart(CefBrowserCToCpp::Wrap(browser),
-                                               CefFrameCToCpp::Wrap(frame),
-                                               transition_type);
+  CefLoadHandlerCppToC::Get(self)->OnLoadStart(
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      transition_type);
 }
 
-void CEF_CALLBACK load_handler_on_load_end(struct _cef_load_handler_t* self,
-                                           cef_browser_t* browser,
-                                           cef_frame_t* frame,
-                                           int httpStatusCode) {
+void CEF_CALLBACK load_handler_on_load_end(struct _cef_load_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int httpStatusCode) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -102,17 +92,13 @@ void CEF_CALLBACK load_handler_on_load_end(struct _cef_load_handler_t* self,
   }
 
   // Execute
-  CefLoadHandlerCppToC::Get(self)->OnLoadEnd(CefBrowserCToCpp::Wrap(browser),
-                                             CefFrameCToCpp::Wrap(frame),
-                                             httpStatusCode);
+  CefLoadHandlerCppToC::Get(self)->OnLoadEnd(
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      httpStatusCode);
 }
 
-void CEF_CALLBACK load_handler_on_load_error(struct _cef_load_handler_t* self,
-                                             cef_browser_t* browser,
-                                             cef_frame_t* frame,
-                                             cef_errorcode_t errorCode,
-                                             const cef_string_t* errorText,
-                                             const cef_string_t* failedUrl) {
+void CEF_CALLBACK load_handler_on_load_error(struct _cef_load_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, cef_errorcode_t errorCode, const cef_string_t* errorText, const cef_string_t* failedUrl) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -140,8 +126,11 @@ void CEF_CALLBACK load_handler_on_load_error(struct _cef_load_handler_t* self,
 
   // Execute
   CefLoadHandlerCppToC::Get(self)->OnLoadError(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), errorCode,
-      CefString(errorText), CefString(failedUrl));
+      CefBrowserCToCpp_Wrap(browser),
+      CefFrameCToCpp_Wrap(frame),
+      errorCode,
+      CefString(errorText),
+      CefString(failedUrl));
 }
 
 }  // namespace
@@ -161,16 +150,11 @@ CefLoadHandlerCppToC::~CefLoadHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefLoadHandler>
-CefCppToCRefCounted<CefLoadHandlerCppToC, CefLoadHandler, cef_load_handler_t>::
-    UnwrapDerived(CefWrapperType type, cef_load_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefLoadHandler> CefCppToCRefCounted<CefLoadHandlerCppToC, CefLoadHandler, cef_load_handler_t>::UnwrapDerived(CefWrapperType type, cef_load_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefLoadHandlerCppToC,
-                                   CefLoadHandler,
-                                   cef_load_handler_t>::kWrapperType =
-    WT_LOAD_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefLoadHandlerCppToC, CefLoadHandler, cef_load_handler_t>::kWrapperType = WT_LOAD_HANDLER;
+
+

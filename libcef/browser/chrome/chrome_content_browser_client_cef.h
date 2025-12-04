@@ -65,8 +65,9 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
                        bool* no_javascript_access) override;
   void CreateWindowResult(content::RenderFrameHost* opener,
                           bool success) override;
-  void OverrideWebkitPrefs(content::WebContents* web_contents,
-                           blink::web_pref::WebPreferences* prefs) override;
+  void OverrideWebPreferences(content::WebContents* web_contents,
+                              content::SiteInstance& main_frame_site,
+                              blink::web_pref::WebPreferences* prefs) override;
   void WillCreateURLLoaderFactory(
       content::BrowserContext* browser_context,
       content::RenderFrameHost* frame,
@@ -112,9 +113,8 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
       const net::IsolationInfo& isolation_info,
       mojo::PendingRemote<network::mojom::URLLoaderFactory>* out_factory)
       override;
-  std::vector<std::unique_ptr<content::NavigationThrottle>>
-  CreateThrottlesForNavigation(
-      content::NavigationHandle* navigation_handle) override;
+  void CreateThrottlesForNavigation(
+      content::NavigationThrottleRegistry& registry) override;
   bool ConfigureNetworkContextParams(
       content::BrowserContext* context,
       bool in_memory,
@@ -132,7 +132,9 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
       const GURL& url,
       scoped_refptr<net::HttpResponseHeaders> response_headers,
       bool first_auth_attempt,
-      LoginAuthRequiredCallback auth_required_callback) override;
+      content::GuestPageHolder* guest,
+      content::LoginDelegate::LoginAuthRequiredCallback auth_required_callback)
+      override;
   void ExposeInterfacesToRenderer(
       service_manager::BinderRegistry* registry,
       blink::AssociatedInterfaceRegistry* associated_registry,

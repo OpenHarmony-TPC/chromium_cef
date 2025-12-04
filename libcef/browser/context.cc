@@ -12,17 +12,19 @@
 #include "base/task/current_thread.h"
 #include "base/threading/thread_restrictions.h"
 #include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/prefs/pref_helper.h"
 #include "cef/libcef/browser/request_context_impl.h"
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/browser/trace_subscriber.h"
 #include "cef/libcef/common/cef_switches.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "components/network_session_configurator/common/network_switches.h"
 #include "ui/base/ui_base_switches.h"
 
 #if BUILDFLAG(IS_WIN)
-#include "base/debug/alias.h"
 #include "base/strings/utf_string_conversions.h"
 #include "cef/include/internal/cef_win.h"
+#include "cef/libcef/browser/preferred_stack_size_win.inc"
 #include "chrome/chrome_elf/chrome_elf_main.h"
 #include "chrome/install_static/initialize_from_primary_module.h"
 #endif
@@ -183,112 +185,9 @@ base::FilePath NormalizeCachePathAndSet(cef_string_t& path_str,
   return path;
 }
 
-// Based on chrome/app/chrome_exe_main_win.cc.
-// In 32-bit builds, the main thread starts with the default (small) stack size.
-// The ARCH_CPU_32_BITS blocks here and below are in support of moving the main
-// thread to a fiber with a larger stack size.
-#if BUILDFLAG(IS_WIN) && defined(ARCH_CPU_32_BITS)
-// The information needed to transfer control to the large-stack fiber and later
-// pass the main routine's exit code back to the small-stack fiber prior to
-// termination.
-struct FiberState {
-  FiberState(wWinMainPtr wWinMain,
-             HINSTANCE hInstance,
-             LPWSTR lpCmdLine,
-             int nCmdShow) {
-    this->wWinMain = wWinMain;
-    this->hInstance = hInstance;
-    this->lpCmdLine = lpCmdLine;
-    this->nCmdShow = nCmdShow;
-  }
-
-  FiberState(mainPtr main, int argc, char** argv) {
-    this->main = main;
-    this->argc = argc;
-    this->argv = argv;
-  }
-
-  wWinMainPtr wWinMain = nullptr;
-  HINSTANCE hInstance;
-  LPWSTR lpCmdLine;
-  int nCmdShow;
-
-  mainPtr main = nullptr;
-  int argc;
-  char** argv;
-
-  LPVOID original_fiber;
-  int fiber_result;
-};
-
-// A PFIBER_START_ROUTINE function run on a large-stack fiber that calls the
-// main routine, stores its return value, and returns control to the small-stack
-// fiber. |params| must be a pointer to a FiberState struct.
-void WINAPI FiberBinder(void* params) {
-  auto* fiber_state = static_cast<FiberState*>(params);
-  // Call the main routine from the fiber. Reusing the entry point minimizes
-  // confusion when examining call stacks in crash reports - seeing wWinMain on
-  // the stack is a handy hint that this is the main thread of the process.
-  if (fiber_state->main) {
-    fiber_state->fiber_result =
-        fiber_state->main(fiber_state->argc, fiber_state->argv);
-  } else {
-    fiber_state->fiber_result =
-        fiber_state->wWinMain(fiber_state->hInstance, nullptr,
-                              fiber_state->lpCmdLine, fiber_state->nCmdShow);
-  }
-
-  // Switch back to the main thread to exit.
-  ::SwitchToFiber(fiber_state->original_fiber);
-}
-
-int RunMainWithPreferredStackSize(FiberState& fiber_state) {
-  enum class FiberStatus { kConvertFailed, kCreateFiberFailed, kSuccess };
-  FiberStatus fiber_status = FiberStatus::kSuccess;
-  // GetLastError result if fiber conversion failed.
-  DWORD fiber_error = ERROR_SUCCESS;
-  if (!::IsThreadAFiber()) {
-    // Make the main thread's stack size 4 MiB so that it has roughly the same
-    // effective size as the 64-bit build's 8 MiB stack.
-    constexpr size_t kStackSize = 4 * 1024 * 1024;  // 4 MiB
-    // Leak the fiber on exit.
-    LPVOID original_fiber =
-        ::ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-    if (original_fiber) {
-      fiber_state.original_fiber = original_fiber;
-      // Create a fiber with a bigger stack and switch to it. Leak the fiber on
-      // exit.
-      LPVOID big_stack_fiber = ::CreateFiberEx(
-          0, kStackSize, FIBER_FLAG_FLOAT_SWITCH, FiberBinder, &fiber_state);
-      if (big_stack_fiber) {
-        ::SwitchToFiber(big_stack_fiber);
-        // The fibers must be cleaned up to avoid obscure TLS-related shutdown
-        // crashes.
-        ::DeleteFiber(big_stack_fiber);
-        ::ConvertFiberToThread();
-        // Control returns here after CEF has finished running on FiberMain.
-        return fiber_state.fiber_result;
-      }
-      fiber_status = FiberStatus::kCreateFiberFailed;
-    } else {
-      fiber_status = FiberStatus::kConvertFailed;
-    }
-    // If we reach here then creating and switching to a fiber has failed. This
-    // probably means we are low on memory and will soon crash. Try to report
-    // this error once crash reporting is initialized.
-    fiber_error = ::GetLastError();
-    base::debug::Alias(&fiber_error);
-  }
-
-  // If we are already a fiber then continue normal execution.
-  // Intentionally crash if converting to a fiber failed.
-  CHECK_EQ(fiber_status, FiberStatus::kSuccess);
-  return -1;
-}
-#endif  // BUILDFLAG(IS_WIN) && defined(ARCH_CPU_32_BITS)
-
 }  // namespace
 
+NO_STACK_PROTECTOR
 int CefExecuteProcess(const CefMainArgs& args,
                       CefRefPtr<CefApp> application,
                       void* windows_sandbox_info) {
@@ -315,7 +214,7 @@ bool CefInitialize(const CefMainArgs& args,
     return true;
   }
 
-  if (settings.size != sizeof(cef_settings_t)) {
+  if (!CEF_MEMBER_EXISTS(&settings, disable_signal_handlers)) {
     DCHECK(false) << "invalid CefSettings structure size";
     return false;
   }
@@ -414,23 +313,6 @@ void CefQuitMessageLoop() {
 }
 
 #if BUILDFLAG(IS_WIN)
-
-#if defined(ARCH_CPU_32_BITS)
-int CefRunWinMainWithPreferredStackSize(wWinMainPtr wWinMain,
-                                        HINSTANCE hInstance,
-                                        LPWSTR lpCmdLine,
-                                        int nCmdShow) {
-  CHECK(wWinMain && hInstance);
-  FiberState fiber_state(wWinMain, hInstance, lpCmdLine, nCmdShow);
-  return RunMainWithPreferredStackSize(fiber_state);
-}
-
-int CefRunMainWithPreferredStackSize(mainPtr main, int argc, char* argv[]) {
-  CHECK(main);
-  FiberState fiber_state(main, argc, argv);
-  return RunMainWithPreferredStackSize(fiber_state);
-}
-#endif  // defined(ARCH_CPU_32_BITS)
 
 void CefSetOSModalLoop(bool osModalLoop) {
   // Verify that the context is in a valid state.
@@ -570,10 +452,22 @@ CefTraceSubscriber* CefContext::GetTraceSubscriber() {
   if (shutting_down_) {
     return nullptr;
   }
-  if (!trace_subscriber_.get()) {
+  if (!trace_subscriber_) {
     trace_subscriber_ = std::make_unique<CefTraceSubscriber>();
   }
   return trace_subscriber_.get();
+}
+
+pref_helper::Registrar* CefContext::GetPrefRegistrar() {
+  CEF_REQUIRE_UIT();
+  if (shutting_down_) {
+    return nullptr;
+  }
+  if (!pref_registrar_) {
+    pref_registrar_ = std::make_unique<pref_helper::Registrar>();
+    pref_registrar_->Init(g_browser_process->local_state());
+  }
+  return pref_registrar_.get();
 }
 
 void CefContext::PopulateGlobalRequestContextSettings(
@@ -645,12 +539,15 @@ void CefContext::ShutdownOnUIThread() {
     observer.OnContextDestroyed();
   }
 
-  if (trace_subscriber_.get()) {
-    trace_subscriber_.reset(nullptr);
+  if (trace_subscriber_) {
+    trace_subscriber_.reset();
+  }
+  if (pref_registrar_) {
+    pref_registrar_.reset();
   }
 }
 
 void CefContext::FinalizeShutdown() {
-  browser_info_manager_.reset(nullptr);
+  browser_info_manager_.reset();
   application_ = nullptr;
 }

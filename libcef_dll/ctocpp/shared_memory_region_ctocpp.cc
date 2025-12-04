@@ -9,20 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ccc52eefedeca6a0cd380838ae86e08baf28afbb$
+// $hash=5a067ec411e53c8737406db0030b707f90d5f070$
 //
 
 #include "libcef_dll/ctocpp/shared_memory_region_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") bool CefSharedMemoryRegionCToCpp::IsValid() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_shared_memory_region_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_valid)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_valid) {
     return false;
   }
 
@@ -32,14 +32,14 @@ NO_SANITIZE("cfi-icall") bool CefSharedMemoryRegionCToCpp::IsValid() {
   int _retval = _struct->is_valid(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") size_t CefSharedMemoryRegionCToCpp::Size() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_shared_memory_region_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, size)) {
+  auto* _struct = GetStruct();
+  if (!_struct->size) {
     return 0;
   }
 
@@ -55,8 +55,8 @@ NO_SANITIZE("cfi-icall") size_t CefSharedMemoryRegionCToCpp::Size() {
 NO_SANITIZE("cfi-icall") void* CefSharedMemoryRegionCToCpp::Memory() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_shared_memory_region_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, memory)) {
+  auto* _struct = GetStruct();
+  if (!_struct->memory) {
     return nullptr;
   }
 
@@ -71,7 +71,8 @@ NO_SANITIZE("cfi-icall") void* CefSharedMemoryRegionCToCpp::Memory() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefSharedMemoryRegionCToCpp::CefSharedMemoryRegionCToCpp() {}
+CefSharedMemoryRegionCToCpp::CefSharedMemoryRegionCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -79,18 +80,11 @@ CefSharedMemoryRegionCToCpp::~CefSharedMemoryRegionCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_shared_memory_region_t* CefCToCppRefCounted<
-    CefSharedMemoryRegionCToCpp,
-    CefSharedMemoryRegion,
-    cef_shared_memory_region_t>::UnwrapDerived(CefWrapperType type,
-                                               CefSharedMemoryRegion* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_shared_memory_region_t* CefCToCppRefCounted<CefSharedMemoryRegionCToCpp, CefSharedMemoryRegion, cef_shared_memory_region_t>::UnwrapDerived(CefWrapperType type, CefSharedMemoryRegion* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefSharedMemoryRegionCToCpp,
-                                   CefSharedMemoryRegion,
-                                   cef_shared_memory_region_t>::kWrapperType =
-    WT_SHARED_MEMORY_REGION;
+template<> CefWrapperType CefCToCppRefCounted<CefSharedMemoryRegionCToCpp, CefSharedMemoryRegion, cef_shared_memory_region_t>::kWrapperType = WT_SHARED_MEMORY_REGION;
+
+

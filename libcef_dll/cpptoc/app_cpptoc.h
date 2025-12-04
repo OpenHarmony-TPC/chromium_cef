@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a9838c613a3f788c929193f14e80629219ea052c$
+// $hash=9ef91e318be538fd5e7816ecd79828d15cc6ee7e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_APP_CPPTOC_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_app_capi.h"
 #include "include/cef_app.h"
+#include "include/capi/cef_app_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
@@ -32,5 +32,8 @@ class CefAppCppToC
   CefAppCppToC();
   virtual ~CefAppCppToC();
 };
+
+constexpr auto CefAppCppToC_Wrap = CefAppCppToC::Wrap;
+constexpr auto CefAppCppToC_Unwrap = CefAppCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_APP_CPPTOC_H_

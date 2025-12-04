@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c20b65725d97c5a9e09ae76c082c361935941a37$
+// $hash=c75890ff2b7a45a39fc51492ddb16d6f6107b7ef$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,9 +50,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Callback structure used for asynchronous continuation of authentication
 /// requests.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_auth_callback_t {
   ///
@@ -59,15 +66,14 @@ typedef struct _cef_auth_callback_t {
   ///
   /// Continue the authentication request.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_auth_callback_t* self,
-                           const cef_string_t* username,
-                           const cef_string_t* password);
+  void (CEF_CALLBACK *cont)(struct _cef_auth_callback_t* self, const cef_string_t* username, const cef_string_t* password);
 
   ///
   /// Cancel the authentication request.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_auth_callback_t* self);
+  void (CEF_CALLBACK *cancel)(struct _cef_auth_callback_t* self);
 } cef_auth_callback_t;
+
 
 #ifdef __cplusplus
 }

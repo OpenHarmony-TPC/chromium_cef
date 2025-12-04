@@ -12,8 +12,7 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 load("//bazel:library_helpers.bzl", "declare_cc_library", "declare_objc_library")
 load("//bazel/win:variables.bzl",
      WIN_DLLS="DLLS",
-     WIN_DLLS_X64="DLLS_X64",
-     WIN_SANDBOX_LIBS="SANDBOX_LIBS")
+     WIN_DLLS_X64="DLLS_X64")
 load("//bazel/linux:variables.bzl",
      LINUX_SOS="SOS")
 load("//bazel/mac:variables.bzl",
@@ -106,26 +105,26 @@ selects.config_setting_group(
 #
 
 # Public headers for cef_wrapper here.
-# Seperated from the actual cef_wrapper since the *.mm file needs access to these as well.
 declare_cc_library(
     name = "cef_wrapper_headers",
     hdrs = glob(
         [
             "include/**/*.h",
         ],
-        exclude = [
-            "include/base/internal/**/*.*",
-            "include/internal/**/*.*",
-        ],
     ),
+    defines = [
+        "WRAPPING_CEF_SHARED",
+    ],
 )
 
 declare_objc_library(
     name = "cef_wrapper_apple",
-    srcs = [
-        "libcef_dll/wrapper/cef_library_loader_mac.mm",
-    ],
-    implementation_deps = [":cef_wrapper_headers"],
+    srcs = glob(
+        [
+            "libcef_dll/**/*.mm",
+        ]
+    ),
+    deps = [":cef_wrapper_headers"],
 )
 
 declare_cc_library(
@@ -134,65 +133,15 @@ declare_cc_library(
         [
             "libcef_dll/**/*.cc",
             "libcef_dll/**/*.h",
-            "libcef_dll_wrapper/**/*.cc",
-            "libcef_dll_wrapper/**/*.h",
-            "include/base/internal/**/*.h",
-            "include/base/internal/**/*.inc",
-            "include/internal/**/*.h",
-            "include/test/*.h",
+            "include/**/*.inc",
         ],
     ),
-    defines = [
-        "WRAPPING_CEF_SHARED",
-    ],
     deps = [":cef_wrapper_headers"] +
            select({
                "@platforms//os:macos": [":cef_wrapper_apple"],
                "@platforms//os:windows": [":cef"],
                "//conditions:default": None,
            }),
-    # Support <angled> includes.
-    includes = ["./"],
-)
-
-# Only available on MacOS/Windows.
-declare_cc_library(
-    name = "cef_sandbox_linkflags",
-    linkopts = select({
-        "@platforms//os:macos": ["-lsandbox"],
-        "@platforms//os:windows": [
-            "/DEFAULTLIB:{}".format(lib) for lib in WIN_SANDBOX_LIBS
-        ],
-        "//conditions:default": [],
-    }),
-)
-
-cc_import(
-    name = "cef_sandbox_debug",
-    static_library = select({
-        "@platforms//os:macos": "Debug/cef_sandbox.a",
-        "@platforms//os:windows": "Debug/cef_sandbox.lib",
-        "//conditions:default": None,
-    }),
-    deps = [":cef_sandbox_linkflags"],
-)
-
-cc_import(
-    name = "cef_sandbox_release",
-    static_library = select({
-        "@platforms//os:macos": "Release/cef_sandbox.a",
-        "@platforms//os:windows": "Release/cef_sandbox.lib",
-        "//conditions:default": None,
-    }),
-    deps = [":cef_sandbox_linkflags"],
-)
-
-alias(
-    name = "cef_sandbox",
-    actual = select({
-        "@cef//:dbg": "@cef//:cef_sandbox_debug",
-        "//conditions:default": "@cef//:cef_sandbox_release",
-    }),
 )
 
 filegroup(
@@ -218,6 +167,54 @@ alias(
     actual = select({
         "@cef//:dbg": "@cef//:dlls_dbg",
         "//conditions:default": "@cef//:dlls_opt",
+    })
+)
+
+alias(
+    name = "bootstrap.exe_opt",
+    actual = select({
+        "@platforms//os:windows": "Release/bootstrap.exe",
+        "//conditions:default": None,
+    })
+)
+
+alias(
+    name = "bootstrap.exe_dbg",
+    actual = select({
+        "@platforms//os:windows": "Debug/bootstrap.exe",
+        "//conditions:default": None,
+    })
+)
+
+alias(
+    name = "bootstrap.exe",
+    actual = select({
+        "@cef//:dbg": "@cef//:bootstrap.exe_dbg",
+        "//conditions:default": "@cef//:bootstrap.exe_opt",
+    })
+)
+
+alias(
+    name = "bootstrapc.exe_opt",
+    actual = select({
+        "@platforms//os:windows": "Release/bootstrapc.exe",
+        "//conditions:default": None,
+    })
+)
+
+alias(
+    name = "bootstrapc.exe_dbg",
+    actual = select({
+        "@platforms//os:windows": "Debug/bootstrapc.exe",
+        "//conditions:default": None,
+    })
+)
+
+alias(
+    name = "bootstrapc.exe",
+    actual = select({
+        "@cef//:dbg": "@cef//:bootstrapc.exe_dbg",
+        "//conditions:default": "@cef//:bootstrapc.exe_opt",
     })
 )
 
@@ -249,7 +246,6 @@ filegroup(
 filegroup(
     name = "resources_opt",
     srcs = [
-        "Release/snapshot_blob.bin",
         "Release/v8_context_snapshot.bin",
         "Release/vk_swiftshader_icd.json",
         "@cef//:resources_common",
@@ -259,7 +255,6 @@ filegroup(
 filegroup(
     name = "resources_dbg",
     srcs = [
-        "Debug/snapshot_blob.bin",
         "Debug/v8_context_snapshot.bin",
         "Debug/vk_swiftshader_icd.json",
         "@cef//:resources_common",

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fcae7c63a143a9cf8d82dca9820af13411ccdb52$
+// $hash=13f37410f62ed312c969960dba1e7e78d5f66bd4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaRouterCppToC : public CefCppToCRefCounted<CefMediaRouterCppToC,
-                                                        CefMediaRouter,
-                                                        cef_media_router_t> {
+class CefMediaRouter_0_CppToC
+    : public CefCppToCRefCounted<CefMediaRouter_0_CppToC, CefMediaRouter, cef_media_router_0_t> {
  public:
-  CefMediaRouterCppToC();
-  virtual ~CefMediaRouterCppToC();
+  CefMediaRouter_0_CppToC();
+  virtual ~CefMediaRouter_0_CppToC();
 };
+
+constexpr auto CefMediaRouterCppToC_Wrap = CefMediaRouter_0_CppToC::Wrap;
+constexpr auto CefMediaRouterCppToC_Unwrap = CefMediaRouter_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTER_CPPTOC_H_

@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=61727f265e30efbc1011bec61d965725d58d8fea$
+// $hash=fedb9cfcf3a67104257c728bb8de6ee473c870e8$
 //
 
-#include "libcef_dll/ctocpp/media_route_create_callback_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/media_route_cpptoc.h"
+#include "libcef_dll/ctocpp/media_route_create_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefMediaRouteCreateCallbackCToCpp::OnMediaRouteCreateFinished(
-    RouteCreateResult result,
-    const CefString& error,
-    CefRefPtr<CefMediaRoute> route) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefMediaRouteCreateCallback_0_CToCpp::OnMediaRouteCreateFinished(RouteCreateResult result, const CefString& error, CefRefPtr<CefMediaRoute> route) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_route_create_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_media_route_create_finished)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_media_route_create_finished) {
     return;
   }
 
@@ -36,33 +33,29 @@ void CefMediaRouteCreateCallbackCToCpp::OnMediaRouteCreateFinished(
   // Unverified params: error, route
 
   // Execute
-  _struct->on_media_route_create_finished(_struct, result, error.GetStruct(),
-                                          CefMediaRouteCppToC::Wrap(route));
+  _struct->on_media_route_create_finished(_struct,
+      result,
+      error.GetStruct(),
+      CefMediaRouteCppToC_Wrap(route));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaRouteCreateCallbackCToCpp::CefMediaRouteCreateCallbackCToCpp() {}
+CefMediaRouteCreateCallback_0_CToCpp::CefMediaRouteCreateCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaRouteCreateCallbackCToCpp::~CefMediaRouteCreateCallbackCToCpp() {
+CefMediaRouteCreateCallback_0_CToCpp::~CefMediaRouteCreateCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_media_route_create_callback_t*
-CefCToCppRefCounted<CefMediaRouteCreateCallbackCToCpp,
-                    CefMediaRouteCreateCallback,
-                    cef_media_route_create_callback_t>::
-    UnwrapDerived(CefWrapperType type, CefMediaRouteCreateCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_media_route_create_callback_0_t* CefCToCppRefCounted<CefMediaRouteCreateCallback_0_CToCpp, CefMediaRouteCreateCallback, cef_media_route_create_callback_0_t>::UnwrapDerived(CefWrapperType type, CefMediaRouteCreateCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefMediaRouteCreateCallbackCToCpp,
-                        CefMediaRouteCreateCallback,
-                        cef_media_route_create_callback_t>::kWrapperType =
-        WT_MEDIA_ROUTE_CREATE_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefMediaRouteCreateCallback_0_CToCpp, CefMediaRouteCreateCallback, cef_media_route_create_callback_0_t>::kWrapperType = WT_MEDIA_ROUTE_CREATE_CALLBACK;
+
+

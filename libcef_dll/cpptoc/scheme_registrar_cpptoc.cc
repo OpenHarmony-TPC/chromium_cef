@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5694fedbf6a982e3086358b114b80fe9b2a81e57$
+// $hash=0a3b68c1fea87a513be7e94cf261b784a9e0c9f6$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/scheme_registrar_cpptoc.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK
-scheme_registrar_add_custom_scheme(struct _cef_scheme_registrar_t* self,
-                                   const cef_string_t* scheme_name,
-                                   int options) {
+int CEF_CALLBACK scheme_registrar_add_custom_scheme(struct _cef_scheme_registrar_0_t* self, const cef_string_t* scheme_name, int options) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -35,8 +33,9 @@ scheme_registrar_add_custom_scheme(struct _cef_scheme_registrar_t* self,
   }
 
   // Execute
-  bool _retval = CefSchemeRegistrarCppToC::Get(self)->AddCustomScheme(
-      CefString(scheme_name), options);
+  bool _retval = CefSchemeRegistrar_0_CppToC::Get(self)->AddCustomScheme(
+      CefString(scheme_name),
+      options);
 
   // Return type: bool
   return _retval;
@@ -44,38 +43,28 @@ scheme_registrar_add_custom_scheme(struct _cef_scheme_registrar_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSchemeRegistrarCppToC::CefSchemeRegistrarCppToC() {
+CefSchemeRegistrar_0_CppToC::CefSchemeRegistrar_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->add_custom_scheme = scheme_registrar_add_custom_scheme;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSchemeRegistrarCppToC::~CefSchemeRegistrarCppToC() {}
-
-template <>
-CefOwnPtr<CefSchemeRegistrar> CefCppToCScoped<
-    CefSchemeRegistrarCppToC,
-    CefSchemeRegistrar,
-    cef_scheme_registrar_t>::UnwrapDerivedOwn(CefWrapperType type,
-                                              cef_scheme_registrar_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return CefOwnPtr<CefSchemeRegistrar>();
+CefSchemeRegistrar_0_CppToC::~CefSchemeRegistrar_0_CppToC() {
 }
 
-template <>
-CefRawPtr<CefSchemeRegistrar> CefCppToCScoped<
-    CefSchemeRegistrarCppToC,
-    CefSchemeRegistrar,
-    cef_scheme_registrar_t>::UnwrapDerivedRaw(CefWrapperType type,
-                                              cef_scheme_registrar_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefOwnPtr<CefSchemeRegistrar> CefCppToCScoped<CefSchemeRegistrar_0_CppToC, CefSchemeRegistrar, cef_scheme_registrar_0_t>::UnwrapDerivedOwn(CefWrapperType type, cef_scheme_registrar_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCScoped<CefSchemeRegistrarCppToC,
-                               CefSchemeRegistrar,
-                               cef_scheme_registrar_t>::kWrapperType =
-    WT_SCHEME_REGISTRAR;
+template<> CefRawPtr<CefSchemeRegistrar> CefCppToCScoped<CefSchemeRegistrar_0_CppToC, CefSchemeRegistrar, cef_scheme_registrar_0_t>::UnwrapDerivedRaw(CefWrapperType type, cef_scheme_registrar_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCScoped<CefSchemeRegistrar_0_CppToC, CefSchemeRegistrar, cef_scheme_registrar_0_t>::kWrapperType = WT_SCHEME_REGISTRAR;
+
+

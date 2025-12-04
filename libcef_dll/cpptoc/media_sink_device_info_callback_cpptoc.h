@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c33a50c083b8dc139f1fd92321b91880f90d6615$
+// $hash=449d1f609b408e81d60e08796d93f83d4f0d199f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_DEVICE_INFO_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefMediaSinkDeviceInfoCallbackCppToC
-    : public CefCppToCRefCounted<CefMediaSinkDeviceInfoCallbackCppToC,
-                                 CefMediaSinkDeviceInfoCallback,
-                                 cef_media_sink_device_info_callback_t> {
+    : public CefCppToCRefCounted<CefMediaSinkDeviceInfoCallbackCppToC, CefMediaSinkDeviceInfoCallback, cef_media_sink_device_info_callback_t> {
  public:
   CefMediaSinkDeviceInfoCallbackCppToC();
   virtual ~CefMediaSinkDeviceInfoCallbackCppToC();
 };
+
+constexpr auto CefMediaSinkDeviceInfoCallbackCppToC_Wrap = CefMediaSinkDeviceInfoCallbackCppToC::Wrap;
+constexpr auto CefMediaSinkDeviceInfoCallbackCppToC_Unwrap = CefMediaSinkDeviceInfoCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_DEVICE_INFO_CALLBACK_CPPTOC_H_

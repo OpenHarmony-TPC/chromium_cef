@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=523fb16e5d4c37ce65c3d1f300eb517780c702a7$
+// $hash=314a1ddea972b425d5ce7a17b05f9ca9bdafd2c4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_STREAM_WRITER_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_stream_capi.h"
 #include "include/cef_stream.h"
+#include "include/capi/cef_stream_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefStreamWriterCToCpp : public CefCToCppRefCounted<CefStreamWriterCToCpp,
-                                                         CefStreamWriter,
-                                                         cef_stream_writer_t> {
+class CefStreamWriterCToCpp
+    : public CefCToCppRefCounted<CefStreamWriterCToCpp, CefStreamWriter, cef_stream_writer_t> {
  public:
   CefStreamWriterCToCpp();
   virtual ~CefStreamWriterCToCpp();
@@ -40,5 +39,8 @@ class CefStreamWriterCToCpp : public CefCToCppRefCounted<CefStreamWriterCToCpp,
   int Flush() override;
   bool MayBlock() override;
 };
+
+constexpr auto CefStreamWriterCToCpp_Wrap = CefStreamWriterCToCpp::Wrap;
+constexpr auto CefStreamWriterCToCpp_Unwrap = CefStreamWriterCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_STREAM_WRITER_CTOCPP_H_

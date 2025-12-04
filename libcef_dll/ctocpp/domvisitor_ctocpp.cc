@@ -9,22 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f7d7b37ed2a83629641523969a1655bff3e98e5f$
+// $hash=1bc480e5b18f1f444313f77eb23a913cbc9acd1c$
 //
 
-#include "libcef_dll/ctocpp/domvisitor_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/domdocument_cpptoc.h"
+#include "libcef_dll/ctocpp/domvisitor_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefDOMVisitorCToCpp::Visit(CefRefPtr<CefDOMDocument> document) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefDOMVisitor_0_CToCpp::Visit(CefRefPtr<CefDOMDocument> document) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_domvisitor_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, visit)) {
+  auto* _struct = GetStruct();
+  if (!_struct->visit) {
     return;
   }
 
@@ -37,29 +37,27 @@ void CefDOMVisitorCToCpp::Visit(CefRefPtr<CefDOMDocument> document) {
   }
 
   // Execute
-  _struct->visit(_struct, CefDOMDocumentCppToC::Wrap(document));
+  _struct->visit(_struct,
+      CefDOMDocumentCppToC_Wrap(document));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDOMVisitorCToCpp::CefDOMVisitorCToCpp() {}
+CefDOMVisitor_0_CToCpp::CefDOMVisitor_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefDOMVisitorCToCpp::~CefDOMVisitorCToCpp() {
+CefDOMVisitor_0_CToCpp::~CefDOMVisitor_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_domvisitor_t*
-CefCToCppRefCounted<CefDOMVisitorCToCpp, CefDOMVisitor, cef_domvisitor_t>::
-    UnwrapDerived(CefWrapperType type, CefDOMVisitor* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_domvisitor_0_t* CefCToCppRefCounted<CefDOMVisitor_0_CToCpp, CefDOMVisitor, cef_domvisitor_0_t>::UnwrapDerived(CefWrapperType type, CefDOMVisitor* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefDOMVisitorCToCpp,
-                                   CefDOMVisitor,
-                                   cef_domvisitor_t>::kWrapperType =
-    WT_DOMVISITOR;
+template<> CefWrapperType CefCToCppRefCounted<CefDOMVisitor_0_CToCpp, CefDOMVisitor, cef_domvisitor_0_t>::kWrapperType = WT_DOMVISITOR;
+
+

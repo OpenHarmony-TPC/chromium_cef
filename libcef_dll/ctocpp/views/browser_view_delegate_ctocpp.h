@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ed9efa7de71090621b5d548d1582d04d10aeb38f$
+// $hash=09513ec4e1be895a8b8c91e4697673109b725847$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_DELEGATE_CTOCPP_H_
@@ -20,43 +20,31 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/views/cef_browser_view_capi.h"
-#include "include/capi/views/cef_browser_view_delegate_capi.h"
-#include "include/cef_browser.h"
-#include "include/views/cef_browser_view.h"
 #include "include/views/cef_browser_view_delegate.h"
+#include "include/capi/views/cef_browser_view_delegate_capi_versions.h"
+#include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi_versions.h"
+#include "include/views/cef_browser_view.h"
+#include "include/capi/views/cef_browser_view_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserViewDelegateCToCpp
-    : public CefCToCppRefCounted<CefBrowserViewDelegateCToCpp,
-                                 CefBrowserViewDelegate,
-                                 cef_browser_view_delegate_t> {
+class CefBrowserViewDelegate_0_CToCpp
+    : public CefCToCppRefCounted<CefBrowserViewDelegate_0_CToCpp, CefBrowserViewDelegate, cef_browser_view_delegate_0_t> {
  public:
-  CefBrowserViewDelegateCToCpp();
-  virtual ~CefBrowserViewDelegateCToCpp();
+  CefBrowserViewDelegate_0_CToCpp();
+  virtual ~CefBrowserViewDelegate_0_CToCpp();
 
   // CefBrowserViewDelegate methods.
-  void OnBrowserCreated(CefRefPtr<CefBrowserView> browser_view,
-                        CefRefPtr<CefBrowser> browser) override;
-  void OnBrowserDestroyed(CefRefPtr<CefBrowserView> browser_view,
-                          CefRefPtr<CefBrowser> browser) override;
-  CefRefPtr<CefBrowserViewDelegate> GetDelegateForPopupBrowserView(
-      CefRefPtr<CefBrowserView> browser_view,
-      const CefBrowserSettings& settings,
-      CefRefPtr<CefClient> client,
-      bool is_devtools) override;
-  bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
-                                 CefRefPtr<CefBrowserView> popup_browser_view,
-                                 bool is_devtools) override;
-  ChromeToolbarType GetChromeToolbarType(
-      CefRefPtr<CefBrowserView> browser_view) override;
-  bool UseFramelessWindowForPictureInPicture(
-      CefRefPtr<CefBrowserView> browser_view) override;
-  bool OnGestureCommand(CefRefPtr<CefBrowserView> browser_view,
-                        cef_gesture_command_t gesture_command) override;
+  void OnBrowserCreated(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowser> browser) override;
+  void OnBrowserDestroyed(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowser> browser) override;
+  CefRefPtr<CefBrowserViewDelegate> GetDelegateForPopupBrowserView(CefRefPtr<CefBrowserView> browser_view, const CefBrowserSettings& settings, CefRefPtr<CefClient> client, bool is_devtools) override;
+  bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowserView> popup_browser_view, bool is_devtools) override;
+  ChromeToolbarType GetChromeToolbarType(CefRefPtr<CefBrowserView> browser_view) override;
+  bool UseFramelessWindowForPictureInPicture(CefRefPtr<CefBrowserView> browser_view) override;
+  bool AllowMoveForPictureInPicture(CefRefPtr<CefBrowserView> browser_view) override;
+  bool OnGestureCommand(CefRefPtr<CefBrowserView> browser_view, cef_gesture_command_t gesture_command) override;
   cef_runtime_style_t GetBrowserRuntimeStyle() override;
 
   // CefViewDelegate methods.
@@ -64,18 +52,50 @@ class CefBrowserViewDelegateCToCpp
   CefSize GetMinimumSize(CefRefPtr<CefView> view) override;
   CefSize GetMaximumSize(CefRefPtr<CefView> view) override;
   int GetHeightForWidth(CefRefPtr<CefView> view, int width) override;
-  void OnParentViewChanged(CefRefPtr<CefView> view,
-                           bool added,
-                           CefRefPtr<CefView> parent) override;
-  void OnChildViewChanged(CefRefPtr<CefView> view,
-                          bool added,
-                          CefRefPtr<CefView> child) override;
+  void OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) override;
+  void OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) override;
   void OnWindowChanged(CefRefPtr<CefView> view, bool added) override;
-  void OnLayoutChanged(CefRefPtr<CefView> view,
-                       const CefRect& new_bounds) override;
+  void OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) override;
   void OnFocus(CefRefPtr<CefView> view) override;
   void OnBlur(CefRefPtr<CefView> view) override;
   void OnThemeChanged(CefRefPtr<CefView> view) override;
 };
+
+// Wrap a C structure with a C++ class at API version 13601.
+// This class may be instantiated and accessed DLL-side only.
+class CefBrowserViewDelegate_13601_CToCpp
+    : public CefCToCppRefCounted<CefBrowserViewDelegate_13601_CToCpp, CefBrowserViewDelegate, cef_browser_view_delegate_13601_t> {
+ public:
+  CefBrowserViewDelegate_13601_CToCpp();
+  virtual ~CefBrowserViewDelegate_13601_CToCpp();
+
+  // CefBrowserViewDelegate methods.
+  void OnBrowserCreated(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowser> browser) override;
+  void OnBrowserDestroyed(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowser> browser) override;
+  CefRefPtr<CefBrowserViewDelegate> GetDelegateForPopupBrowserView(CefRefPtr<CefBrowserView> browser_view, const CefBrowserSettings& settings, CefRefPtr<CefClient> client, bool is_devtools) override;
+  bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view, CefRefPtr<CefBrowserView> popup_browser_view, bool is_devtools) override;
+  ChromeToolbarType GetChromeToolbarType(CefRefPtr<CefBrowserView> browser_view) override;
+  bool UseFramelessWindowForPictureInPicture(CefRefPtr<CefBrowserView> browser_view) override;
+  bool AllowMoveForPictureInPicture(CefRefPtr<CefBrowserView> browser_view) override;
+  bool OnGestureCommand(CefRefPtr<CefBrowserView> browser_view, cef_gesture_command_t gesture_command) override;
+  cef_runtime_style_t GetBrowserRuntimeStyle() override;
+
+  // CefViewDelegate methods.
+  CefSize GetPreferredSize(CefRefPtr<CefView> view) override;
+  CefSize GetMinimumSize(CefRefPtr<CefView> view) override;
+  CefSize GetMaximumSize(CefRefPtr<CefView> view) override;
+  int GetHeightForWidth(CefRefPtr<CefView> view, int width) override;
+  void OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) override;
+  void OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) override;
+  void OnWindowChanged(CefRefPtr<CefView> view, bool added) override;
+  void OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) override;
+  void OnFocus(CefRefPtr<CefView> view) override;
+  void OnBlur(CefRefPtr<CefView> view) override;
+  void OnThemeChanged(CefRefPtr<CefView> view) override;
+};
+
+// Helpers to return objects at the globally configured API version.
+CefRefPtr<CefBrowserViewDelegate> CefBrowserViewDelegateCToCpp_Wrap(cef_browser_view_delegate_0_t* s);
+cef_browser_view_delegate_0_t* CefBrowserViewDelegateCToCpp_Unwrap(CefRefPtr<CefBrowserViewDelegate> c);
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_DELEGATE_CTOCPP_H_

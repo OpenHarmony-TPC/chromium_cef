@@ -9,57 +9,55 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c897c94aeabe00a05c947ea1ec6a75f2cd15dc01$
+// $hash=f958aef3602b89f47adb736d82274d37e3e95857$
 //
 
-#include "libcef_dll/ctocpp/views/fill_layout_ctocpp.h"
-
 #include "libcef_dll/ctocpp/views/box_layout_ctocpp.h"
+#include "libcef_dll/ctocpp/views/fill_layout_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefBoxLayout> CefFillLayoutCToCpp::AsBoxLayout() {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefBoxLayout> CefFillLayoutCToCpp::AsBoxLayout() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_layout_t* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, as_box_layout)) {
+  auto* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
+  if (!_struct->as_box_layout) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_box_layout_t* _retval = _struct->as_box_layout(_struct);
+  auto* _retval = _struct->as_box_layout(_struct);
 
   // Return type: refptr_same
-  return CefBoxLayoutCToCpp::Wrap(_retval);
+  return CefBoxLayoutCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefFillLayout> CefFillLayoutCToCpp::AsFillLayout() {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefFillLayout> CefFillLayoutCToCpp::AsFillLayout() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_layout_t* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, as_fill_layout)) {
+  auto* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
+  if (!_struct->as_fill_layout) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_fill_layout_t* _retval = _struct->as_fill_layout(_struct);
+  auto* _retval = _struct->as_fill_layout(_struct);
 
   // Return type: refptr_same
-  return CefFillLayoutCToCpp::Wrap(_retval);
+  return CefFillLayoutCToCpp_Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall") bool CefFillLayoutCToCpp::IsValid() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_layout_t* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
-  if (CEF_MEMBER_MISSING(_struct, is_valid)) {
+  auto* _struct = reinterpret_cast<cef_layout_t*>(GetStruct());
+  if (!_struct->is_valid) {
     return false;
   }
 
@@ -69,12 +67,13 @@ NO_SANITIZE("cfi-icall") bool CefFillLayoutCToCpp::IsValid() {
   int _retval = _struct->is_valid(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefFillLayoutCToCpp::CefFillLayoutCToCpp() {}
+CefFillLayoutCToCpp::CefFillLayoutCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -82,16 +81,11 @@ CefFillLayoutCToCpp::~CefFillLayoutCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_fill_layout_t*
-CefCToCppRefCounted<CefFillLayoutCToCpp, CefFillLayout, cef_fill_layout_t>::
-    UnwrapDerived(CefWrapperType type, CefFillLayout* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_fill_layout_t* CefCToCppRefCounted<CefFillLayoutCToCpp, CefFillLayout, cef_fill_layout_t>::UnwrapDerived(CefWrapperType type, CefFillLayout* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefFillLayoutCToCpp,
-                                   CefFillLayout,
-                                   cef_fill_layout_t>::kWrapperType =
-    WT_FILL_LAYOUT;
+template<> CefWrapperType CefCToCppRefCounted<CefFillLayoutCToCpp, CefFillLayout, cef_fill_layout_t>::kWrapperType = WT_FILL_LAYOUT;
+
+

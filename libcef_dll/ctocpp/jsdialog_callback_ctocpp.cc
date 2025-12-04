@@ -9,22 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fb82836b77092cc2183205efe57286c6ab7f504c$
+// $hash=a8d2b1bdaf699b6ffe8ae24cdd8a0f11514fdaf8$
 //
 
 #include "libcef_dll/ctocpp/jsdialog_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefJSDialogCallbackCToCpp::Continue(bool success,
-                                         const CefString& user_input) {
+NO_SANITIZE("cfi-icall") void CefJSDialogCallbackCToCpp::Continue(bool success, const CefString& user_input) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_jsdialog_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
@@ -33,12 +31,15 @@ void CefJSDialogCallbackCToCpp::Continue(bool success,
   // Unverified params: user_input
 
   // Execute
-  _struct->cont(_struct, success, user_input.GetStruct());
+  _struct->cont(_struct,
+      success,
+      user_input.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefJSDialogCallbackCToCpp::CefJSDialogCallbackCToCpp() {}
+CefJSDialogCallbackCToCpp::CefJSDialogCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -46,18 +47,11 @@ CefJSDialogCallbackCToCpp::~CefJSDialogCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_jsdialog_callback_t* CefCToCppRefCounted<
-    CefJSDialogCallbackCToCpp,
-    CefJSDialogCallback,
-    cef_jsdialog_callback_t>::UnwrapDerived(CefWrapperType type,
-                                            CefJSDialogCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_jsdialog_callback_t* CefCToCppRefCounted<CefJSDialogCallbackCToCpp, CefJSDialogCallback, cef_jsdialog_callback_t>::UnwrapDerived(CefWrapperType type, CefJSDialogCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefJSDialogCallbackCToCpp,
-                                   CefJSDialogCallback,
-                                   cef_jsdialog_callback_t>::kWrapperType =
-    WT_JSDIALOG_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefJSDialogCallbackCToCpp, CefJSDialogCallback, cef_jsdialog_callback_t>::kWrapperType = WT_JSDIALOG_CALLBACK;
+
+

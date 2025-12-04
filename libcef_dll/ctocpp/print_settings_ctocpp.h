@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=efc684600086b0eaf4aab43a1245aa2aca72b88e$
+// $hash=38c105c9e5a14e03472bc0910117dff2bdd68bf8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PRINT_SETTINGS_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_print_settings_capi.h"
 #include "include/cef_print_settings.h"
+#include "include/capi/cef_print_settings_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPrintSettingsCToCpp
-    : public CefCToCppRefCounted<CefPrintSettingsCToCpp,
-                                 CefPrintSettings,
-                                 cef_print_settings_t> {
+    : public CefCToCppRefCounted<CefPrintSettingsCToCpp, CefPrintSettings, cef_print_settings_t> {
  public:
   CefPrintSettingsCToCpp();
   virtual ~CefPrintSettingsCToCpp();
@@ -39,9 +37,7 @@ class CefPrintSettingsCToCpp
   bool IsReadOnly() override;
   void SetOrientation(bool landscape) override;
   bool IsLandscape() override;
-  void SetPrinterPrintableArea(const CefSize& physical_size_device_units,
-                               const CefRect& printable_area_device_units,
-                               bool landscape_needs_flip) override;
+  void SetPrinterPrintableArea(const CefSize& physical_size_device_units, const CefRect& printable_area_device_units, bool landscape_needs_flip) override;
   void SetDeviceName(const CefString& name) override;
   CefString GetDeviceName() override;
   void SetDPI(int dpi) override;
@@ -60,5 +56,8 @@ class CefPrintSettingsCToCpp
   void SetDuplexMode(DuplexMode mode) override;
   DuplexMode GetDuplexMode() override;
 };
+
+constexpr auto CefPrintSettingsCToCpp_Wrap = CefPrintSettingsCToCpp::Wrap;
+constexpr auto CefPrintSettingsCToCpp_Unwrap = CefPrintSettingsCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_SETTINGS_CTOCPP_H_

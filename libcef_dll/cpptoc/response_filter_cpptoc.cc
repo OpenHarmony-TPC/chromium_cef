@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=17ea044539e91fc6a29cdf2f3fdac245ced5596b$
+// $hash=edcbd0a56d4bad832f4761cfbd7207f83af817f8$
 //
 
 #include "libcef_dll/cpptoc/response_filter_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK
-response_filter_init_filter(struct _cef_response_filter_t* self) {
+int CEF_CALLBACK response_filter_init_filter(struct _cef_response_filter_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -38,14 +36,7 @@ response_filter_init_filter(struct _cef_response_filter_t* self) {
   return _retval;
 }
 
-cef_response_filter_status_t CEF_CALLBACK
-response_filter_filter(struct _cef_response_filter_t* self,
-                       void* data_in,
-                       size_t data_in_size,
-                       size_t* data_in_read,
-                       void* data_out,
-                       size_t data_out_size,
-                       size_t* data_out_written) {
+cef_response_filter_status_t CEF_CALLBACK response_filter_filter(struct _cef_response_filter_t* self, void* data_in, size_t data_in_size, size_t* data_in_read, void* data_out, size_t data_out_size, size_t* data_out_written) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -72,15 +63,18 @@ response_filter_filter(struct _cef_response_filter_t* self,
   // Unverified params: data_in
 
   // Translate param: data_in_read; type: simple_byref
-  size_t data_in_readVal = data_in_read ? *data_in_read : 0;
+  size_t data_in_readVal = data_in_read?*data_in_read:0;
   // Translate param: data_out_written; type: simple_byref
-  size_t data_out_writtenVal = data_out_written ? *data_out_written : 0;
+  size_t data_out_writtenVal = data_out_written?*data_out_written:0;
 
   // Execute
-  cef_response_filter_status_t _retval =
-      CefResponseFilterCppToC::Get(self)->Filter(
-          data_in, data_in_size, data_in_readVal, data_out, data_out_size,
-          data_out_writtenVal);
+  cef_response_filter_status_t _retval = CefResponseFilterCppToC::Get(self)->Filter(
+      data_in,
+      data_in_size,
+      data_in_readVal,
+      data_out,
+      data_out_size,
+      data_out_writtenVal);
 
   // Restore param: data_in_read; type: simple_byref
   if (data_in_read) {
@@ -110,18 +104,11 @@ CefResponseFilterCppToC::~CefResponseFilterCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefResponseFilter> CefCppToCRefCounted<
-    CefResponseFilterCppToC,
-    CefResponseFilter,
-    cef_response_filter_t>::UnwrapDerived(CefWrapperType type,
-                                          cef_response_filter_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefResponseFilter> CefCppToCRefCounted<CefResponseFilterCppToC, CefResponseFilter, cef_response_filter_t>::UnwrapDerived(CefWrapperType type, cef_response_filter_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefResponseFilterCppToC,
-                                   CefResponseFilter,
-                                   cef_response_filter_t>::kWrapperType =
-    WT_RESPONSE_FILTER;
+template<> CefWrapperType CefCppToCRefCounted<CefResponseFilterCppToC, CefResponseFilter, cef_response_filter_t>::kWrapperType = WT_RESPONSE_FILTER;
+
+

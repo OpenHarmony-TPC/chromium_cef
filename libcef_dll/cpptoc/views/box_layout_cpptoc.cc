@@ -9,22 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=20128a67c8b4e7e775f25193e69f7c31b9e5eac8$
+// $hash=8a95db7b69118944d7eaa0e832809531e30f6cce$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/box_layout_cpptoc.h"
-
 #include "libcef_dll/cpptoc/views/fill_layout_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK box_layout_set_flex_for_view(struct _cef_box_layout_t* self,
-                                               struct _cef_view_t* view,
-                                               int flex) {
+void CEF_CALLBACK box_layout_set_flex_for_view(struct _cef_box_layout_0_t* self, struct _cef_view_0_t* view, int flex) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -40,12 +38,12 @@ void CEF_CALLBACK box_layout_set_flex_for_view(struct _cef_box_layout_t* self,
   }
 
   // Execute
-  CefBoxLayoutCppToC::Get(self)->SetFlexForView(CefViewCppToC::Unwrap(view),
-                                                flex);
+  CefBoxLayout_0_CppToC::Get(self)->SetFlexForView(
+      CefViewCppToC_Unwrap(view),
+      flex);
 }
 
-void CEF_CALLBACK box_layout_clear_flex_for_view(struct _cef_box_layout_t* self,
-                                                 struct _cef_view_t* view) {
+void CEF_CALLBACK box_layout_clear_flex_for_view(struct _cef_box_layout_0_t* self, struct _cef_view_0_t* view) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -61,11 +59,11 @@ void CEF_CALLBACK box_layout_clear_flex_for_view(struct _cef_box_layout_t* self,
   }
 
   // Execute
-  CefBoxLayoutCppToC::Get(self)->ClearFlexForView(CefViewCppToC::Unwrap(view));
+  CefBoxLayout_0_CppToC::Get(self)->ClearFlexForView(
+      CefViewCppToC_Unwrap(view));
 }
 
-cef_box_layout_t* CEF_CALLBACK
-box_layout_as_box_layout(struct _cef_layout_t* self) {
+cef_box_layout_0_t* CEF_CALLBACK box_layout_as_box_layout(struct _cef_layout_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -76,16 +74,13 @@ box_layout_as_box_layout(struct _cef_layout_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefBoxLayout> _retval =
-      CefBoxLayoutCppToC::Get(reinterpret_cast<cef_box_layout_t*>(self))
-          ->AsBoxLayout();
+  CefRefPtr<CefBoxLayout> _retval = CefBoxLayout_0_CppToC::Get(reinterpret_cast<cef_box_layout_0_t*>(self))->AsBoxLayout();
 
   // Return type: refptr_same
-  return CefBoxLayoutCppToC::Wrap(_retval);
+  return CefBoxLayoutCppToC_Wrap(_retval);
 }
 
-cef_fill_layout_t* CEF_CALLBACK
-box_layout_as_fill_layout(struct _cef_layout_t* self) {
+struct _cef_fill_layout_0_t* CEF_CALLBACK box_layout_as_fill_layout(struct _cef_layout_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -96,15 +91,13 @@ box_layout_as_fill_layout(struct _cef_layout_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefFillLayout> _retval =
-      CefBoxLayoutCppToC::Get(reinterpret_cast<cef_box_layout_t*>(self))
-          ->AsFillLayout();
+  CefRefPtr<CefFillLayout> _retval = CefBoxLayout_0_CppToC::Get(reinterpret_cast<cef_box_layout_0_t*>(self))->AsFillLayout();
 
   // Return type: refptr_same
-  return CefFillLayoutCppToC::Wrap(_retval);
+  return CefFillLayoutCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK box_layout_is_valid(struct _cef_layout_t* self) {
+int CEF_CALLBACK box_layout_is_valid(struct _cef_layout_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -115,9 +108,7 @@ int CEF_CALLBACK box_layout_is_valid(struct _cef_layout_t* self) {
   }
 
   // Execute
-  bool _retval =
-      CefBoxLayoutCppToC::Get(reinterpret_cast<cef_box_layout_t*>(self))
-          ->IsValid();
+  bool _retval = CefBoxLayout_0_CppToC::Get(reinterpret_cast<cef_box_layout_0_t*>(self))->IsValid();
 
   // Return type: bool
   return _retval;
@@ -125,9 +116,12 @@ int CEF_CALLBACK box_layout_is_valid(struct _cef_layout_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBoxLayoutCppToC::CefBoxLayoutCppToC() {
+CefBoxLayout_0_CppToC::CefBoxLayout_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->set_flex_for_view = box_layout_set_flex_for_view;
   GetStruct()->clear_flex_for_view = box_layout_clear_flex_for_view;
   GetStruct()->base.as_box_layout = box_layout_as_box_layout;
@@ -135,22 +129,16 @@ CefBoxLayoutCppToC::CefBoxLayoutCppToC() {
   GetStruct()->base.is_valid = box_layout_is_valid;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefBoxLayoutCppToC::~CefBoxLayoutCppToC() {
+CefBoxLayout_0_CppToC::~CefBoxLayout_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefBoxLayout>
-CefCppToCRefCounted<CefBoxLayoutCppToC, CefBoxLayout, cef_box_layout_t>::
-    UnwrapDerived(CefWrapperType type, cef_box_layout_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefBoxLayout> CefCppToCRefCounted<CefBoxLayout_0_CppToC, CefBoxLayout, cef_box_layout_0_t>::UnwrapDerived(CefWrapperType type, cef_box_layout_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefBoxLayoutCppToC,
-                                   CefBoxLayout,
-                                   cef_box_layout_t>::kWrapperType =
-    WT_BOX_LAYOUT;
+template<> CefWrapperType CefCppToCRefCounted<CefBoxLayout_0_CppToC, CefBoxLayout, cef_box_layout_0_t>::kWrapperType = WT_BOX_LAYOUT;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8fbd3cf042e8857c784f7577aa0c813ad8c7395$
+// $hash=08684ee0d1f8cd47c6cacb741a128978002ddace$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_ACCESS_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_permission_handler_capi.h"
 #include "include/cef_permission_handler.h"
+#include "include/capi/cef_permission_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefMediaAccessCallbackCToCpp
-    : public CefCToCppRefCounted<CefMediaAccessCallbackCToCpp,
-                                 CefMediaAccessCallback,
-                                 cef_media_access_callback_t> {
+    : public CefCToCppRefCounted<CefMediaAccessCallbackCToCpp, CefMediaAccessCallback, cef_media_access_callback_t> {
  public:
   CefMediaAccessCallbackCToCpp();
   virtual ~CefMediaAccessCallbackCToCpp();
@@ -38,5 +36,8 @@ class CefMediaAccessCallbackCToCpp
   void Continue(uint32_t allowed_permissions) override;
   void Cancel() override;
 };
+
+constexpr auto CefMediaAccessCallbackCToCpp_Wrap = CefMediaAccessCallbackCToCpp::Wrap;
+constexpr auto CefMediaAccessCallbackCToCpp_Unwrap = CefMediaAccessCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ACCESS_CALLBACK_CTOCPP_H_

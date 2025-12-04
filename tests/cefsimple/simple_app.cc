@@ -185,8 +185,6 @@ void SimpleApp::OnContextInitialized() {
     // Alloy style will create a basic native window. Chrome style will create a
     // fully styled Chrome UI window.
     window_info.runtime_style = runtime_style;
-    // enable osr
-    // window_info.windowless_rendering_enabled = true;
 
     // Create the first browser window.
     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,

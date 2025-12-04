@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fedc2e007807e830e22c72aaf241885233438c4e$
+// $hash=6773a9bd270ff5f6b699f4e9a36cd20599b18264$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CHILD_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/test/cef_translator_test_capi.h"
 #include "include/test/cef_translator_test.h"
+#include "include/capi/test/cef_translator_test_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_scoped.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefTranslatorTestScopedLibraryChildChildCToCpp
-    : public CefCToCppScoped<CefTranslatorTestScopedLibraryChildChildCToCpp,
-                             CefTranslatorTestScopedLibraryChildChild,
-                             cef_translator_test_scoped_library_child_child_t> {
+    : public CefCToCppScoped<CefTranslatorTestScopedLibraryChildChildCToCpp, CefTranslatorTestScopedLibraryChildChild, cef_translator_test_scoped_library_child_child_t> {
  public:
   CefTranslatorTestScopedLibraryChildChildCToCpp();
   virtual ~CefTranslatorTestScopedLibraryChildChildCToCpp();
@@ -46,5 +44,9 @@ class CefTranslatorTestScopedLibraryChildChildCToCpp
   int GetValue() override;
   void SetValue(int value) override;
 };
+
+constexpr auto CefTranslatorTestScopedLibraryChildChildCToCpp_Wrap = CefTranslatorTestScopedLibraryChildChildCToCpp::Wrap;
+constexpr auto CefTranslatorTestScopedLibraryChildChildCToCpp_UnwrapOwn = CefTranslatorTestScopedLibraryChildChildCToCpp::UnwrapOwn;
+constexpr auto CefTranslatorTestScopedLibraryChildChildCToCpp_UnwrapRaw = CefTranslatorTestScopedLibraryChildChildCToCpp::UnwrapRaw;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CHILD_CTOCPP_H_

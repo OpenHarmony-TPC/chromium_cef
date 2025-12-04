@@ -178,6 +178,8 @@ ui::ImeTextSpan::UnderlineStyle GetImeUnderlineStyle(
       return ui::ImeTextSpan::UnderlineStyle::kDash;
     case CEF_CUS_NONE:
       return ui::ImeTextSpan::UnderlineStyle::kNone;
+    case CEF_CUS_NUM_VALUES:
+      break;
   }
 
   DCHECK(false);
@@ -236,8 +238,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 
   root_layer_ = std::make_unique<ui::Layer>(ui::LAYER_SOLID_COLOR);
 
-  bool opaque = SkColorGetA(background_color_) == SK_AlphaOPAQUE;
-  GetRootLayer()->SetFillsBoundsOpaquely(opaque);
+  // Opacity of SOLID_COLOR layer is determined by the color's alpha channel.
   GetRootLayer()->SetColor(background_color_);
 
   external_begin_frame_enabled_ = use_external_begin_frame;
@@ -442,7 +443,9 @@ void CefRenderWidgetHostViewOSR::Hide() {
   }
 
   if (render_widget_host_) {
-    render_widget_host_->WasHidden();
+    if (render_widget_host_->delegate()) {
+      render_widget_host_->WasHidden();
+    }
 
     auto provider = content::RenderWidgetHostImpl::From(render_widget_host_)
                         ->render_frame_metadata_provider();
@@ -500,7 +503,11 @@ CefRenderWidgetHostViewOSR::GetDisplayFeature() {
   return std::nullopt;
 }
 
-void CefRenderWidgetHostViewOSR::SetDisplayFeatureForTesting(
+void CefRenderWidgetHostViewOSR::DisableDisplayFeatureOverrideForEmulation() {
+  DCHECK(false);
+}
+
+void CefRenderWidgetHostViewOSR::OverrideDisplayFeatureForEmulation(
     const content::DisplayFeature* display_feature) {
   DCHECK(false);
 }
@@ -1474,7 +1481,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRenderHandler::TextInputMode mode = CEF_TEXT_INPUT_MODE_NONE;
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
-        static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
+        static_cast<int>(CEF_TEXT_INPUT_MODE_NUM_VALUES) - 1 ==
             static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
     mode = static_cast<CefRenderHandler::TextInputMode>(state->mode);
@@ -1863,8 +1870,7 @@ void CefRenderWidgetHostViewOSR::RequestImeCompositionUpdate(
 
 void CefRenderWidgetHostViewOSR::ImeCompositionRangeChanged(
     const gfx::Range& range,
-    const std::optional<std::vector<gfx::Rect>>& character_bounds,
-    const std::optional<std::vector<gfx::Rect>>& line_bounds) {
+    const std::optional<std::vector<gfx::Rect>>& character_bounds) {
   if (browser_impl_.get()) {
     CefRange cef_range(range.start(), range.end());
     CefRenderHandler::RectList rcList;

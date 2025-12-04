@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3f482bb452e1be0836eabb33451c4a833d46f42f$
+// $hash=4400b5c6b84d713163cd17f9ac2da62573fe2bfc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_WAITABLE_EVENT_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_waitable_event_capi.h"
 #include "include/cef_waitable_event.h"
+#include "include/capi/cef_waitable_event_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefWaitableEventCToCpp
-    : public CefCToCppRefCounted<CefWaitableEventCToCpp,
-                                 CefWaitableEvent,
-                                 cef_waitable_event_t> {
+    : public CefCToCppRefCounted<CefWaitableEventCToCpp, CefWaitableEvent, cef_waitable_event_t> {
  public:
   CefWaitableEventCToCpp();
   virtual ~CefWaitableEventCToCpp();
@@ -41,5 +39,8 @@ class CefWaitableEventCToCpp
   void Wait() override;
   bool TimedWait(int64_t max_ms) override;
 };
+
+constexpr auto CefWaitableEventCToCpp_Wrap = CefWaitableEventCToCpp::Wrap;
+constexpr auto CefWaitableEventCToCpp_Unwrap = CefWaitableEventCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WAITABLE_EVENT_CTOCPP_H_

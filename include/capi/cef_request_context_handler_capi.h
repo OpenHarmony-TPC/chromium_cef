@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=57c59462474c5568d3f33b06c0b712e1443fea16$
+// $hash=fef0d3340e7c791bed431719a7864f707a830ddc$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -51,10 +55,13 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to provide handler implementations. The handler
 /// instance will not be released until all objects related to the context have
 /// been destroyed.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_request_context_handler_t {
   ///
@@ -66,9 +73,7 @@ typedef struct _cef_request_context_handler_t {
   /// Called on the browser process UI thread immediately after the request
   /// context has been initialized.
   ///
-  void(CEF_CALLBACK* on_request_context_initialized)(
-      struct _cef_request_context_handler_t* self,
-      struct _cef_request_context_t* request_context);
+  void (CEF_CALLBACK *on_request_context_initialized)(struct _cef_request_context_handler_t* self, struct _cef_request_context_t* request_context);
 
   ///
   /// Called on the browser process IO thread before a resource request is
@@ -89,17 +94,9 @@ typedef struct _cef_request_context_handler_t {
   /// cef_request_handler_t::GetResourceRequestHandler for the same request
   /// (identified by cef_request_t::GetIdentifier).
   ///
-  struct _cef_resource_request_handler_t*(
-      CEF_CALLBACK* get_resource_request_handler)(
-      struct _cef_request_context_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      struct _cef_request_t* request,
-      int is_navigation,
-      int is_download,
-      const cef_string_t* request_initiator,
-      int* disable_default_handling);
+  struct _cef_resource_request_handler_t* (CEF_CALLBACK *get_resource_request_handler)(struct _cef_request_context_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, struct _cef_request_t* request, int is_navigation, int is_download, const cef_string_t* request_initiator, int* disable_default_handling);
 } cef_request_context_handler_t;
+
 
 #ifdef __cplusplus
 }

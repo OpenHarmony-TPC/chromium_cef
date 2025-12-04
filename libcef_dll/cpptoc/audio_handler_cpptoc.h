@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=342712fd79b254d4dea72564a511a25e98218cb2$
+// $hash=759479b792e807c1491003737e3d23702aa06127$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_AUDIO_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_audio_handler_capi.h"
 #include "include/cef_audio_handler.h"
+#include "include/capi/cef_audio_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefAudioHandlerCppToC : public CefCppToCRefCounted<CefAudioHandlerCppToC,
-                                                         CefAudioHandler,
-                                                         cef_audio_handler_t> {
+class CefAudioHandlerCppToC
+    : public CefCppToCRefCounted<CefAudioHandlerCppToC, CefAudioHandler, cef_audio_handler_t> {
  public:
   CefAudioHandlerCppToC();
   virtual ~CefAudioHandlerCppToC();
 };
+
+constexpr auto CefAudioHandlerCppToC_Wrap = CefAudioHandlerCppToC::Wrap;
+constexpr auto CefAudioHandlerCppToC_Unwrap = CefAudioHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_AUDIO_HANDLER_CPPTOC_H_

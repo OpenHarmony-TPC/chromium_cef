@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7aed80e6f53e47cadf5ab5ef5eace1a208378bd6$
+// $hash=ba91cbebd3f8dda1131713c51cd4621069939589$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CALLBACK_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_CALLBACK_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,8 +50,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Generic callback structure used for asynchronous continuation.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_callback_t {
   ///
@@ -58,16 +65,19 @@ typedef struct _cef_callback_t {
   ///
   /// Continue processing.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_callback_t* self);
+  void (CEF_CALLBACK *cont)(struct _cef_callback_t* self);
 
   ///
   /// Cancel processing.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_callback_t* self);
+  void (CEF_CALLBACK *cancel)(struct _cef_callback_t* self);
 } cef_callback_t;
+
 
 ///
 /// Generic callback structure used for asynchronous completion.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_completion_callback_t {
   ///
@@ -78,8 +88,9 @@ typedef struct _cef_completion_callback_t {
   ///
   /// Method that will be called once the task is complete.
   ///
-  void(CEF_CALLBACK* on_complete)(struct _cef_completion_callback_t* self);
+  void (CEF_CALLBACK *on_complete)(struct _cef_completion_callback_t* self);
 } cef_completion_callback_t;
+
 
 #ifdef __cplusplus
 }

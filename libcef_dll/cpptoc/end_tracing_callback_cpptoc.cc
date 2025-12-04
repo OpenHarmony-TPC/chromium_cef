@@ -9,20 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5bc5b0319a745d884cff342e2633f784c3312349$
+// $hash=15469ef9bdeb1fffc1cc52696dd8ef7048c6a947$
 //
 
 #include "libcef_dll/cpptoc/end_tracing_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK end_tracing_callback_on_end_tracing_complete(
-    struct _cef_end_tracing_callback_t* self,
-    const cef_string_t* tracing_file) {
+void CEF_CALLBACK end_tracing_callback_on_end_tracing_complete(struct _cef_end_tracing_callback_t* self, const cef_string_t* tracing_file) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -47,8 +44,7 @@ void CEF_CALLBACK end_tracing_callback_on_end_tracing_complete(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefEndTracingCallbackCppToC::CefEndTracingCallbackCppToC() {
-  GetStruct()->on_end_tracing_complete =
-      end_tracing_callback_on_end_tracing_complete;
+  GetStruct()->on_end_tracing_complete = end_tracing_callback_on_end_tracing_complete;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -57,18 +53,11 @@ CefEndTracingCallbackCppToC::~CefEndTracingCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefEndTracingCallback> CefCppToCRefCounted<
-    CefEndTracingCallbackCppToC,
-    CefEndTracingCallback,
-    cef_end_tracing_callback_t>::UnwrapDerived(CefWrapperType type,
-                                               cef_end_tracing_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefEndTracingCallback> CefCppToCRefCounted<CefEndTracingCallbackCppToC, CefEndTracingCallback, cef_end_tracing_callback_t>::UnwrapDerived(CefWrapperType type, cef_end_tracing_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefEndTracingCallbackCppToC,
-                                   CefEndTracingCallback,
-                                   cef_end_tracing_callback_t>::kWrapperType =
-    WT_END_TRACING_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefEndTracingCallbackCppToC, CefEndTracingCallback, cef_end_tracing_callback_t>::kWrapperType = WT_END_TRACING_CALLBACK;
+
+

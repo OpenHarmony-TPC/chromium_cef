@@ -9,22 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=34a6528332cf07c7fb14e0597d2e0060504dafce$
+// $hash=24f16905e9a9b8dc9cbef4715a7ff8bb2148cc9a$
 //
 
 #include "libcef_dll/ctocpp/views/overlay_controller_ctocpp.h"
-
 #include "libcef_dll/ctocpp/views/view_ctocpp.h"
 #include "libcef_dll/ctocpp/views/window_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsValid() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_valid)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_valid) {
     return false;
   }
 
@@ -34,15 +34,14 @@ NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsValid() {
   int _retval = _struct->is_valid(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefOverlayControllerCToCpp::IsSame(CefRefPtr<CefOverlayController> that) {
+NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsSame(CefRefPtr<CefOverlayController> that) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_same)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_same) {
     return false;
   }
 
@@ -55,55 +54,52 @@ bool CefOverlayControllerCToCpp::IsSame(CefRefPtr<CefOverlayController> that) {
   }
 
   // Execute
-  int _retval =
-      _struct->is_same(_struct, CefOverlayControllerCToCpp::Unwrap(that));
+  int _retval = _struct->is_same(_struct,
+      CefOverlayControllerCToCpp_Unwrap(that));
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefView> CefOverlayControllerCToCpp::GetContentsView() {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefView> CefOverlayControllerCToCpp::GetContentsView() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_contents_view)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_contents_view) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_view_t* _retval = _struct->get_contents_view(_struct);
+  auto* _retval = _struct->get_contents_view(_struct);
 
   // Return type: refptr_same
-  return CefViewCToCpp::Wrap(_retval);
+  return CefViewCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefWindow> CefOverlayControllerCToCpp::GetWindow() {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefWindow> CefOverlayControllerCToCpp::GetWindow() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_window)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_window) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_window_t* _retval = _struct->get_window(_struct);
+  auto* _retval = _struct->get_window(_struct);
 
   // Return type: refptr_same
-  return CefWindowCToCpp::Wrap(_retval);
+  return CefWindowCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-cef_docking_mode_t CefOverlayControllerCToCpp::GetDockingMode() {
+NO_SANITIZE("cfi-icall") cef_docking_mode_t CefOverlayControllerCToCpp::GetDockingMode() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_docking_mode)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_docking_mode) {
     return CEF_DOCKING_MODE_TOP_LEFT;
   }
 
@@ -119,8 +115,8 @@ cef_docking_mode_t CefOverlayControllerCToCpp::GetDockingMode() {
 NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::Destroy() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, destroy)) {
+  auto* _struct = GetStruct();
+  if (!_struct->destroy) {
     return;
   }
 
@@ -130,26 +126,26 @@ NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::Destroy() {
   _struct->destroy(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SetBounds(const CefRect& bounds) {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SetBounds(const CefRect& bounds) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_bounds)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_bounds) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_bounds(_struct, &bounds);
+  _struct->set_bounds(_struct,
+      &bounds);
 }
 
 NO_SANITIZE("cfi-icall") CefRect CefOverlayControllerCToCpp::GetBounds() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_bounds)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_bounds) {
     return CefRect();
   }
 
@@ -162,12 +158,11 @@ NO_SANITIZE("cfi-icall") CefRect CefOverlayControllerCToCpp::GetBounds() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRect CefOverlayControllerCToCpp::GetBoundsInScreen() {
+NO_SANITIZE("cfi-icall") CefRect CefOverlayControllerCToCpp::GetBoundsInScreen() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_bounds_in_screen)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_bounds_in_screen) {
     return CefRect();
   }
 
@@ -180,26 +175,26 @@ CefRect CefOverlayControllerCToCpp::GetBoundsInScreen() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SetSize(const CefSize& size) {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SetSize(const CefSize& size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_size)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_size) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_size(_struct, &size);
+  _struct->set_size(_struct,
+      &size);
 }
 
 NO_SANITIZE("cfi-icall") CefSize CefOverlayControllerCToCpp::GetSize() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_size)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_size) {
     return CefSize();
   }
 
@@ -212,26 +207,26 @@ NO_SANITIZE("cfi-icall") CefSize CefOverlayControllerCToCpp::GetSize() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SetPosition(const CefPoint& position) {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SetPosition(const CefPoint& position) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_position)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_position) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_position(_struct, &position);
+  _struct->set_position(_struct,
+      &position);
 }
 
 NO_SANITIZE("cfi-icall") CefPoint CefOverlayControllerCToCpp::GetPosition() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_position)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_position) {
     return CefPoint();
   }
 
@@ -244,26 +239,26 @@ NO_SANITIZE("cfi-icall") CefPoint CefOverlayControllerCToCpp::GetPosition() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SetInsets(const CefInsets& insets) {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SetInsets(const CefInsets& insets) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_insets)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_insets) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_insets(_struct, &insets);
+  _struct->set_insets(_struct,
+      &insets);
 }
 
 NO_SANITIZE("cfi-icall") CefInsets CefOverlayControllerCToCpp::GetInsets() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_insets)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_insets) {
     return CefInsets();
   }
 
@@ -276,12 +271,11 @@ NO_SANITIZE("cfi-icall") CefInsets CefOverlayControllerCToCpp::GetInsets() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SizeToPreferredSize() {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SizeToPreferredSize() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, size_to_preferred_size)) {
+  auto* _struct = GetStruct();
+  if (!_struct->size_to_preferred_size) {
     return;
   }
 
@@ -291,26 +285,26 @@ void CefOverlayControllerCToCpp::SizeToPreferredSize() {
   _struct->size_to_preferred_size(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefOverlayControllerCToCpp::SetVisible(bool visible) {
+NO_SANITIZE("cfi-icall") void CefOverlayControllerCToCpp::SetVisible(bool visible) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_visible)) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_visible) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_visible(_struct, visible);
+  _struct->set_visible(_struct,
+      visible);
 }
 
 NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsVisible() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_visible)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_visible) {
     return false;
   }
 
@@ -320,14 +314,14 @@ NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsVisible() {
   int _retval = _struct->is_visible(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsDrawn() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_overlay_controller_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_drawn)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_drawn) {
     return false;
   }
 
@@ -337,12 +331,13 @@ NO_SANITIZE("cfi-icall") bool CefOverlayControllerCToCpp::IsDrawn() {
   int _retval = _struct->is_drawn(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefOverlayControllerCToCpp::CefOverlayControllerCToCpp() {}
+CefOverlayControllerCToCpp::CefOverlayControllerCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -350,18 +345,11 @@ CefOverlayControllerCToCpp::~CefOverlayControllerCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_overlay_controller_t* CefCToCppRefCounted<
-    CefOverlayControllerCToCpp,
-    CefOverlayController,
-    cef_overlay_controller_t>::UnwrapDerived(CefWrapperType type,
-                                             CefOverlayController* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_overlay_controller_t* CefCToCppRefCounted<CefOverlayControllerCToCpp, CefOverlayController, cef_overlay_controller_t>::UnwrapDerived(CefWrapperType type, CefOverlayController* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefOverlayControllerCToCpp,
-                                   CefOverlayController,
-                                   cef_overlay_controller_t>::kWrapperType =
-    WT_OVERLAY_CONTROLLER;
+template<> CefWrapperType CefCToCppRefCounted<CefOverlayControllerCToCpp, CefOverlayController, cef_overlay_controller_t>::kWrapperType = WT_OVERLAY_CONTROLLER;
+
+

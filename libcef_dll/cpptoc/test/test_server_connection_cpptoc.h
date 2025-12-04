@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=443fc93f3616d2faa7fc54e4377b27ad989e7a06$
+// $hash=d481ab3a5657e6200a27533ceeaa516d5a69338b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_CONNECTION_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_test_server_capi.h"
 #include "include/test/cef_test_server.h"
+#include "include/capi/test/cef_test_server_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTestServerConnectionCppToC
-    : public CefCppToCRefCounted<CefTestServerConnectionCppToC,
-                                 CefTestServerConnection,
-                                 cef_test_server_connection_t> {
+class CefTestServerConnection_0_CppToC
+    : public CefCppToCRefCounted<CefTestServerConnection_0_CppToC, CefTestServerConnection, cef_test_server_connection_0_t> {
  public:
-  CefTestServerConnectionCppToC();
-  virtual ~CefTestServerConnectionCppToC();
+  CefTestServerConnection_0_CppToC();
+  virtual ~CefTestServerConnection_0_CppToC();
 };
+
+constexpr auto CefTestServerConnectionCppToC_Wrap = CefTestServerConnection_0_CppToC::Wrap;
+constexpr auto CefTestServerConnectionCppToC_Unwrap = CefTestServerConnection_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_CONNECTION_CPPTOC_H_

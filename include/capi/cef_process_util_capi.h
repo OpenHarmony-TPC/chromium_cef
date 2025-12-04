@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7f41a1d1511515da28b07ee4e488e436ed942f23$
+// $hash=3f9182df1fe85fe89287c4260c60ce224fef6d27$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PROCESS_UTIL_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_PROCESS_UTIL_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Launches the process specified via |command_line|. Returns true (1) upon

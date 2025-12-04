@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=80b93e936ad7635a4f49f8eeb3574e495235bbe6$
+// $hash=5ea64009b5943c027b2bd361c0291e6a3ab37816$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_AUTH_CALLBACK_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_auth_callback_capi.h"
 #include "include/cef_auth_callback.h"
+#include "include/capi/cef_auth_callback_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefAuthCallbackCppToC : public CefCppToCRefCounted<CefAuthCallbackCppToC,
-                                                         CefAuthCallback,
-                                                         cef_auth_callback_t> {
+class CefAuthCallback_0_CppToC
+    : public CefCppToCRefCounted<CefAuthCallback_0_CppToC, CefAuthCallback, cef_auth_callback_0_t> {
  public:
-  CefAuthCallbackCppToC();
-  virtual ~CefAuthCallbackCppToC();
+  CefAuthCallback_0_CppToC();
+  virtual ~CefAuthCallback_0_CppToC();
 };
+
+constexpr auto CefAuthCallbackCppToC_Wrap = CefAuthCallback_0_CppToC::Wrap;
+constexpr auto CefAuthCallbackCppToC_Unwrap = CefAuthCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_AUTH_CALLBACK_CPPTOC_H_

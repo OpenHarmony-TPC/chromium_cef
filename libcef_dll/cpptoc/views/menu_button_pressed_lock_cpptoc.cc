@@ -9,36 +9,31 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fc986f9db044b7a9ca4a1c6bed1f46b0f97665be$
+// $hash=8755f1fe8ea0ce6fd03275107e05930970fc7d1c$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/views/menu_button_pressed_lock_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMenuButtonPressedLockCppToC::CefMenuButtonPressedLockCppToC() {}
+CefMenuButtonPressedLock_0_CppToC::CefMenuButtonPressedLock_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 
-// DESTRUCTOR - Do not edit by hand.
+}
 
-CefMenuButtonPressedLockCppToC::~CefMenuButtonPressedLockCppToC() {
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefMenuButtonPressedLock_0_CppToC::~CefMenuButtonPressedLock_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMenuButtonPressedLock>
-CefCppToCRefCounted<CefMenuButtonPressedLockCppToC,
-                    CefMenuButtonPressedLock,
-                    cef_menu_button_pressed_lock_t>::
-    UnwrapDerived(CefWrapperType type, cef_menu_button_pressed_lock_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefMenuButtonPressedLock> CefCppToCRefCounted<CefMenuButtonPressedLock_0_CppToC, CefMenuButtonPressedLock, cef_menu_button_pressed_lock_0_t>::UnwrapDerived(CefWrapperType type, cef_menu_button_pressed_lock_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefMenuButtonPressedLockCppToC,
-                        CefMenuButtonPressedLock,
-                        cef_menu_button_pressed_lock_t>::kWrapperType =
-        WT_MENU_BUTTON_PRESSED_LOCK;
+template<> CefWrapperType CefCppToCRefCounted<CefMenuButtonPressedLock_0_CppToC, CefMenuButtonPressedLock, cef_menu_button_pressed_lock_0_t>::kWrapperType = WT_MENU_BUTTON_PRESSED_LOCK;
+
+

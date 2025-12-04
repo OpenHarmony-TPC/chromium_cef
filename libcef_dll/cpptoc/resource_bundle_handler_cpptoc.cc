@@ -9,21 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4fb0bcdc30b000a29953c80410a4ac3de4f184ce$
+// $hash=7edcf56322bf94e9dd904a225a191081f184732f$
 //
 
 #include "libcef_dll/cpptoc/resource_bundle_handler_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK resource_bundle_handler_get_localized_string(
-    struct _cef_resource_bundle_handler_t* self,
-    int string_id,
-    cef_string_t* string) {
+int CEF_CALLBACK resource_bundle_handler_get_localized_string(struct _cef_resource_bundle_handler_t* self, int string_id, cef_string_t* string) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -43,17 +39,14 @@ int CEF_CALLBACK resource_bundle_handler_get_localized_string(
 
   // Execute
   bool _retval = CefResourceBundleHandlerCppToC::Get(self)->GetLocalizedString(
-      string_id, stringStr);
+      string_id,
+      stringStr);
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK resource_bundle_handler_get_data_resource(
-    struct _cef_resource_bundle_handler_t* self,
-    int resource_id,
-    void** data,
-    size_t* data_size) {
+int CEF_CALLBACK resource_bundle_handler_get_data_resource(struct _cef_resource_bundle_handler_t* self, int resource_id, void** data, size_t* data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -74,13 +67,15 @@ int CEF_CALLBACK resource_bundle_handler_get_data_resource(
   }
 
   // Translate param: data; type: simple_byref
-  void* dataVal = data ? *data : NULL;
+  void* dataVal = data?*data:NULL;
   // Translate param: data_size; type: simple_byref
-  size_t data_sizeVal = data_size ? *data_size : 0;
+  size_t data_sizeVal = data_size?*data_size:0;
 
   // Execute
   bool _retval = CefResourceBundleHandlerCppToC::Get(self)->GetDataResource(
-      resource_id, dataVal, data_sizeVal);
+      resource_id,
+      dataVal,
+      data_sizeVal);
 
   // Restore param: data; type: simple_byref
   if (data) {
@@ -95,12 +90,7 @@ int CEF_CALLBACK resource_bundle_handler_get_data_resource(
   return _retval;
 }
 
-int CEF_CALLBACK resource_bundle_handler_get_data_resource_for_scale(
-    struct _cef_resource_bundle_handler_t* self,
-    int resource_id,
-    cef_scale_factor_t scale_factor,
-    void** data,
-    size_t* data_size) {
+int CEF_CALLBACK resource_bundle_handler_get_data_resource_for_scale(struct _cef_resource_bundle_handler_t* self, int resource_id, cef_scale_factor_t scale_factor, void** data, size_t* data_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -121,14 +111,16 @@ int CEF_CALLBACK resource_bundle_handler_get_data_resource_for_scale(
   }
 
   // Translate param: data; type: simple_byref
-  void* dataVal = data ? *data : NULL;
+  void* dataVal = data?*data:NULL;
   // Translate param: data_size; type: simple_byref
-  size_t data_sizeVal = data_size ? *data_size : 0;
+  size_t data_sizeVal = data_size?*data_size:0;
 
   // Execute
-  bool _retval =
-      CefResourceBundleHandlerCppToC::Get(self)->GetDataResourceForScale(
-          resource_id, scale_factor, dataVal, data_sizeVal);
+  bool _retval = CefResourceBundleHandlerCppToC::Get(self)->GetDataResourceForScale(
+      resource_id,
+      scale_factor,
+      dataVal,
+      data_sizeVal);
 
   // Restore param: data; type: simple_byref
   if (data) {
@@ -148,11 +140,9 @@ int CEF_CALLBACK resource_bundle_handler_get_data_resource_for_scale(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefResourceBundleHandlerCppToC::CefResourceBundleHandlerCppToC() {
-  GetStruct()->get_localized_string =
-      resource_bundle_handler_get_localized_string;
+  GetStruct()->get_localized_string = resource_bundle_handler_get_localized_string;
   GetStruct()->get_data_resource = resource_bundle_handler_get_data_resource;
-  GetStruct()->get_data_resource_for_scale =
-      resource_bundle_handler_get_data_resource_for_scale;
+  GetStruct()->get_data_resource_for_scale = resource_bundle_handler_get_data_resource_for_scale;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -161,20 +151,11 @@ CefResourceBundleHandlerCppToC::~CefResourceBundleHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefResourceBundleHandler> CefCppToCRefCounted<
-    CefResourceBundleHandlerCppToC,
-    CefResourceBundleHandler,
-    cef_resource_bundle_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                  cef_resource_bundle_handler_t*
-                                                      s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefResourceBundleHandler> CefCppToCRefCounted<CefResourceBundleHandlerCppToC, CefResourceBundleHandler, cef_resource_bundle_handler_t>::UnwrapDerived(CefWrapperType type, cef_resource_bundle_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefResourceBundleHandlerCppToC,
-                        CefResourceBundleHandler,
-                        cef_resource_bundle_handler_t>::kWrapperType =
-        WT_RESOURCE_BUNDLE_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefResourceBundleHandlerCppToC, CefResourceBundleHandler, cef_resource_bundle_handler_t>::kWrapperType = WT_RESOURCE_BUNDLE_HANDLER;
+
+

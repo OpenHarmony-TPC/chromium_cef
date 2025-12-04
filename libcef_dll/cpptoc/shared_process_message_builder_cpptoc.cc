@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0210a4bbdd04aa418fe8dd63cb3fe315351bd056$
+// $hash=81049e15a4de396e473e78f09af535e76baf557a$
 //
 
-#include "libcef_dll/cpptoc/shared_process_message_builder_cpptoc.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/process_message_cpptoc.h"
+#include "libcef_dll/cpptoc/shared_process_message_builder_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_shared_process_message_builder_t*
-cef_shared_process_message_builder_create(const cef_string_t* name,
-                                          size_t byte_size) {
+CEF_EXPORT cef_shared_process_message_builder_0_t* cef_shared_process_message_builder_create(const cef_string_t* name, size_t byte_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,19 +31,19 @@ cef_shared_process_message_builder_create(const cef_string_t* name,
   }
 
   // Execute
-  CefRefPtr<CefSharedProcessMessageBuilder> _retval =
-      CefSharedProcessMessageBuilder::Create(CefString(name), byte_size);
+  CefRefPtr<CefSharedProcessMessageBuilder> _retval = CefSharedProcessMessageBuilder::Create(
+      CefString(name),
+      byte_size);
 
   // Return type: refptr_same
-  return CefSharedProcessMessageBuilderCppToC::Wrap(_retval);
+  return CefSharedProcessMessageBuilderCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK shared_process_message_builder_is_valid(
-    struct _cef_shared_process_message_builder_t* self) {
+int CEF_CALLBACK shared_process_message_builder_is_valid(struct _cef_shared_process_message_builder_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -56,14 +54,13 @@ int CEF_CALLBACK shared_process_message_builder_is_valid(
   }
 
   // Execute
-  bool _retval = CefSharedProcessMessageBuilderCppToC::Get(self)->IsValid();
+  bool _retval = CefSharedProcessMessageBuilder_0_CppToC::Get(self)->IsValid();
 
   // Return type: bool
   return _retval;
 }
 
-size_t CEF_CALLBACK shared_process_message_builder_size(
-    struct _cef_shared_process_message_builder_t* self) {
+size_t CEF_CALLBACK shared_process_message_builder_size(struct _cef_shared_process_message_builder_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -74,14 +71,13 @@ size_t CEF_CALLBACK shared_process_message_builder_size(
   }
 
   // Execute
-  size_t _retval = CefSharedProcessMessageBuilderCppToC::Get(self)->Size();
+  size_t _retval = CefSharedProcessMessageBuilder_0_CppToC::Get(self)->Size();
 
   // Return type: simple
   return _retval;
 }
 
-void* CEF_CALLBACK shared_process_message_builder_memory(
-    struct _cef_shared_process_message_builder_t* self) {
+void* CEF_CALLBACK shared_process_message_builder_memory(struct _cef_shared_process_message_builder_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -92,14 +88,13 @@ void* CEF_CALLBACK shared_process_message_builder_memory(
   }
 
   // Execute
-  void* _retval = CefSharedProcessMessageBuilderCppToC::Get(self)->Memory();
+  void* _retval = CefSharedProcessMessageBuilder_0_CppToC::Get(self)->Memory();
 
   // Return type: simple_byaddr
   return _retval;
 }
 
-cef_process_message_t* CEF_CALLBACK shared_process_message_builder_build(
-    struct _cef_shared_process_message_builder_t* self) {
+struct _cef_process_message_0_t* CEF_CALLBACK shared_process_message_builder_build(struct _cef_shared_process_message_builder_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -110,44 +105,36 @@ cef_process_message_t* CEF_CALLBACK shared_process_message_builder_build(
   }
 
   // Execute
-  CefRefPtr<CefProcessMessage> _retval =
-      CefSharedProcessMessageBuilderCppToC::Get(self)->Build();
+  CefRefPtr<CefProcessMessage> _retval = CefSharedProcessMessageBuilder_0_CppToC::Get(self)->Build();
 
   // Return type: refptr_same
-  return CefProcessMessageCppToC::Wrap(_retval);
+  return CefProcessMessageCppToC_Wrap(_retval);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSharedProcessMessageBuilderCppToC::CefSharedProcessMessageBuilderCppToC() {
+CefSharedProcessMessageBuilder_0_CppToC::CefSharedProcessMessageBuilder_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_valid = shared_process_message_builder_is_valid;
   GetStruct()->size = shared_process_message_builder_size;
   GetStruct()->memory = shared_process_message_builder_memory;
   GetStruct()->build = shared_process_message_builder_build;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefSharedProcessMessageBuilderCppToC::~CefSharedProcessMessageBuilderCppToC() {
+CefSharedProcessMessageBuilder_0_CppToC::~CefSharedProcessMessageBuilder_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefSharedProcessMessageBuilder>
-CefCppToCRefCounted<CefSharedProcessMessageBuilderCppToC,
-                    CefSharedProcessMessageBuilder,
-                    cef_shared_process_message_builder_t>::
-    UnwrapDerived(CefWrapperType type,
-                  cef_shared_process_message_builder_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefSharedProcessMessageBuilder> CefCppToCRefCounted<CefSharedProcessMessageBuilder_0_CppToC, CefSharedProcessMessageBuilder, cef_shared_process_message_builder_0_t>::UnwrapDerived(CefWrapperType type, cef_shared_process_message_builder_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefSharedProcessMessageBuilderCppToC,
-                        CefSharedProcessMessageBuilder,
-                        cef_shared_process_message_builder_t>::kWrapperType =
-        WT_SHARED_PROCESS_MESSAGE_BUILDER;
+template<> CefWrapperType CefCppToCRefCounted<CefSharedProcessMessageBuilder_0_CppToC, CefSharedProcessMessageBuilder, cef_shared_process_message_builder_0_t>::kWrapperType = WT_SHARED_PROCESS_MESSAGE_BUILDER;
+
+

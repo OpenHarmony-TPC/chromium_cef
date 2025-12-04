@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b2564b5e98141080b037999a67615fd49b49f0b0$
+// $hash=dce2233cf08d4c9a55470aa11e4f8fab3cb2bede$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SSL_INFO_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_SSL_INFO_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_values_capi.h"
@@ -48,8 +52,11 @@
 extern "C" {
 #endif
 
+
 ///
 /// Structure representing SSL information.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_sslinfo_t {
   ///
@@ -61,14 +68,14 @@ typedef struct _cef_sslinfo_t {
   /// Returns a bitmask containing any and all problems verifying the server
   /// certificate.
   ///
-  cef_cert_status_t(CEF_CALLBACK* get_cert_status)(struct _cef_sslinfo_t* self);
+  cef_cert_status_t (CEF_CALLBACK *get_cert_status)(struct _cef_sslinfo_t* self);
 
   ///
   /// Returns the X.509 certificate.
   ///
-  struct _cef_x509certificate_t*(CEF_CALLBACK* get_x509certificate)(
-      struct _cef_sslinfo_t* self);
+  struct _cef_x509_certificate_t* (CEF_CALLBACK *get_x509_certificate)(struct _cef_sslinfo_t* self);
 } cef_sslinfo_t;
+
 
 ///
 /// Returns true (1) if the certificate status represents an error.

@@ -9,20 +9,20 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ce6db5c517341c5fb5b03c98a2a3bafd25dc73a2$
+// $hash=4dbbea7448d9725971738609a4779fa1a26e96b4$
 //
 
 #include "libcef_dll/ctocpp/unresponsive_process_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") void CefUnresponsiveProcessCallbackCToCpp::Wait() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_unresponsive_process_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, wait)) {
+  auto* _struct = GetStruct();
+  if (!_struct->wait) {
     return;
   }
 
@@ -32,12 +32,11 @@ NO_SANITIZE("cfi-icall") void CefUnresponsiveProcessCallbackCToCpp::Wait() {
   _struct->wait(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefUnresponsiveProcessCallbackCToCpp::Terminate() {
+NO_SANITIZE("cfi-icall") void CefUnresponsiveProcessCallbackCToCpp::Terminate() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_unresponsive_process_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, terminate)) {
+  auto* _struct = GetStruct();
+  if (!_struct->terminate) {
     return;
   }
 
@@ -49,7 +48,8 @@ void CefUnresponsiveProcessCallbackCToCpp::Terminate() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefUnresponsiveProcessCallbackCToCpp::CefUnresponsiveProcessCallbackCToCpp() {}
+CefUnresponsiveProcessCallbackCToCpp::CefUnresponsiveProcessCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -57,19 +57,11 @@ CefUnresponsiveProcessCallbackCToCpp::~CefUnresponsiveProcessCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_unresponsive_process_callback_t*
-CefCToCppRefCounted<CefUnresponsiveProcessCallbackCToCpp,
-                    CefUnresponsiveProcessCallback,
-                    cef_unresponsive_process_callback_t>::
-    UnwrapDerived(CefWrapperType type, CefUnresponsiveProcessCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_unresponsive_process_callback_t* CefCToCppRefCounted<CefUnresponsiveProcessCallbackCToCpp, CefUnresponsiveProcessCallback, cef_unresponsive_process_callback_t>::UnwrapDerived(CefWrapperType type, CefUnresponsiveProcessCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefUnresponsiveProcessCallbackCToCpp,
-                        CefUnresponsiveProcessCallback,
-                        cef_unresponsive_process_callback_t>::kWrapperType =
-        WT_UNRESPONSIVE_PROCESS_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefUnresponsiveProcessCallbackCToCpp, CefUnresponsiveProcessCallback, cef_unresponsive_process_callback_t>::kWrapperType = WT_UNRESPONSIVE_PROCESS_CALLBACK;
+
+

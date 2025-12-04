@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=741fc77cb9418531e8428527e0e2b95108f1b5ba$
+// $hash=a8b9d9e401b3c3b55589e7a43a0f58419edeaa9e$
 //
 
 #include "libcef_dll/cpptoc/resolve_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -21,10 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-resolve_callback_on_resolve_completed(struct _cef_resolve_callback_t* self,
-                                      cef_errorcode_t result,
-                                      cef_string_list_t resolved_ips) {
+void CEF_CALLBACK resolve_callback_on_resolve_completed(struct _cef_resolve_callback_t* self, cef_errorcode_t result, cef_string_list_t resolved_ips) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -40,8 +36,9 @@ resolve_callback_on_resolve_completed(struct _cef_resolve_callback_t* self,
   transfer_string_list_contents(resolved_ips, resolved_ipsList);
 
   // Execute
-  CefResolveCallbackCppToC::Get(self)->OnResolveCompleted(result,
-                                                          resolved_ipsList);
+  CefResolveCallbackCppToC::Get(self)->OnResolveCompleted(
+      result,
+      resolved_ipsList);
 }
 
 }  // namespace
@@ -58,18 +55,11 @@ CefResolveCallbackCppToC::~CefResolveCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefResolveCallback> CefCppToCRefCounted<
-    CefResolveCallbackCppToC,
-    CefResolveCallback,
-    cef_resolve_callback_t>::UnwrapDerived(CefWrapperType type,
-                                           cef_resolve_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefResolveCallback> CefCppToCRefCounted<CefResolveCallbackCppToC, CefResolveCallback, cef_resolve_callback_t>::UnwrapDerived(CefWrapperType type, cef_resolve_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefResolveCallbackCppToC,
-                                   CefResolveCallback,
-                                   cef_resolve_callback_t>::kWrapperType =
-    WT_RESOLVE_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefResolveCallbackCppToC, CefResolveCallback, cef_resolve_callback_t>::kWrapperType = WT_RESOLVE_CALLBACK;
+
+

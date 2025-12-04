@@ -31,7 +31,9 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_MAC_H_
 #pragma once
 
+#if !defined(GENERATING_CEF_API_HASH)
 #include "include/base/cef_build.h"
+#endif
 
 #if defined(OS_MAC)
 #include "include/internal/cef_string.h"
@@ -39,16 +41,6 @@
 #include "include/internal/cef_types_geometry.h"
 #include "include/internal/cef_types_osr.h"
 #include "include/internal/cef_types_runtime.h"
-
-// Handle types.
-// Actually NSCursor*
-#define cef_cursor_handle_t void*
-// Acutally NSEvent*
-#define cef_event_handle_t void*
-// Actually NSView*
-#define cef_window_handle_t void*
-// Actually IOSurface*
-#define cef_shared_texture_handle_t void*
 
 #define kNullCursorHandle NULL
 #define kNullEventHandle NULL
@@ -78,6 +70,16 @@
 extern "C" {
 #endif
 
+// Handle types.
+// Actually NSCursor*
+typedef void* cef_cursor_handle_t;
+// Actually NSEvent*
+typedef void* cef_event_handle_t;
+// Actually NSView*
+typedef void* cef_window_handle_t;
+// Actually IOSurface*
+typedef void* cef_shared_texture_handle_t;
+
 ///
 /// Structure representing CefExecuteProcess arguments.
 ///
@@ -90,6 +92,11 @@ typedef struct _cef_main_args_t {
 /// Class representing window information.
 ///
 typedef struct _cef_window_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
   cef_string_t window_name;
 
   ///
@@ -154,6 +161,11 @@ typedef struct _cef_window_info_t {
 /// the callback returns from client code.
 ///
 typedef struct _cef_accelerated_paint_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
   ///
   /// Handle for the shared texture IOSurface.
   ///

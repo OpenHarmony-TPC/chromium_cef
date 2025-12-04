@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d4f491c2729e5cb1ca4adf452a0527b3ad2bb7fa$
+// $hash=370277ccf1279ed519989dfdbc9814792612edbe$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SCHEME_HANDLER_FACTORY_CTOCPP_H_
@@ -20,25 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSchemeHandlerFactoryCToCpp
-    : public CefCToCppRefCounted<CefSchemeHandlerFactoryCToCpp,
-                                 CefSchemeHandlerFactory,
-                                 cef_scheme_handler_factory_t> {
+class CefSchemeHandlerFactory_0_CToCpp
+    : public CefCToCppRefCounted<CefSchemeHandlerFactory_0_CToCpp, CefSchemeHandlerFactory, cef_scheme_handler_factory_0_t> {
  public:
-  CefSchemeHandlerFactoryCToCpp();
-  virtual ~CefSchemeHandlerFactoryCToCpp();
+  CefSchemeHandlerFactory_0_CToCpp();
+  virtual ~CefSchemeHandlerFactory_0_CToCpp();
 
   // CefSchemeHandlerFactory methods.
-  CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
-                                       CefRefPtr<CefFrame> frame,
-                                       const CefString& scheme_name,
-                                       CefRefPtr<CefRequest> request) override;
+  CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& scheme_name, CefRefPtr<CefRequest> request) override;
 };
+
+constexpr auto CefSchemeHandlerFactoryCToCpp_Wrap = CefSchemeHandlerFactory_0_CToCpp::Wrap;
+constexpr auto CefSchemeHandlerFactoryCToCpp_Unwrap = CefSchemeHandlerFactory_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SCHEME_HANDLER_FACTORY_CTOCPP_H_

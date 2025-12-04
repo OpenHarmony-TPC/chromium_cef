@@ -9,16 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4659f8844e499cb9f7399c5fac411785f2f22a2c$
+// $hash=dfe0be85b9a427ac5730fd0f9adafcd139e8094a$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall") void CefTaskCToCpp::Execute() {
-  cef_task_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, execute)) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefTask_0_CToCpp::Execute() {
+  auto* _struct = GetStruct();
+  if (!_struct->execute) {
     return;
   }
 
@@ -28,24 +30,22 @@ NO_SANITIZE("cfi-icall") void CefTaskCToCpp::Execute() {
   _struct->execute(_struct);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTaskCToCpp::CefTaskCToCpp() {}
-
-// DESTRUCTOR - Do not edit by hand.
-
-CefTaskCToCpp::~CefTaskCToCpp() {}
-
-template <>
-cef_task_t*
-CefCToCppRefCounted<CefTaskCToCpp, CefTask, cef_task_t>::UnwrapDerived(
-    CefWrapperType type,
-    CefTask* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefTask_0_CToCpp::CefTask_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefTaskCToCpp, CefTask, cef_task_t>::kWrapperType =
-        WT_TASK;
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefTask_0_CToCpp::~CefTask_0_CToCpp() {
+}
+
+template<> cef_task_0_t* CefCToCppRefCounted<CefTask_0_CToCpp, CefTask, cef_task_0_t>::UnwrapDerived(CefWrapperType type, CefTask* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCToCppRefCounted<CefTask_0_CToCpp, CefTask, cef_task_0_t>::kWrapperType = WT_TASK;
+
+

@@ -9,21 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c1b95d21218d6694f9c0b47b4f8eb4e2424fc75d$
+// $hash=2446c15325328d4f81e6e18cd90b97bc0f99625c$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/read_handler_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-size_t CefReadHandlerCToCpp::Read(void* ptr, size_t size, size_t n) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") size_t CefReadHandler_0_CToCpp::Read(void* ptr, size_t size, size_t n) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_read_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, read)) {
+  auto* _struct = GetStruct();
+  if (!_struct->read) {
     return 0;
   }
 
@@ -36,35 +36,39 @@ size_t CefReadHandlerCToCpp::Read(void* ptr, size_t size, size_t n) {
   }
 
   // Execute
-  size_t _retval = _struct->read(_struct, ptr, size, n);
+  size_t _retval = _struct->read(_struct,
+      ptr,
+      size,
+      n);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall")
-int CefReadHandlerCToCpp::Seek(int64_t offset, int whence) {
+NO_SANITIZE("cfi-icall") int CefReadHandler_0_CToCpp::Seek(int64_t offset, int whence) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_read_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, seek)) {
+  auto* _struct = GetStruct();
+  if (!_struct->seek) {
     return 0;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int _retval = _struct->seek(_struct, offset, whence);
+  int _retval = _struct->seek(_struct,
+      offset,
+      whence);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") int64_t CefReadHandlerCToCpp::Tell() {
+NO_SANITIZE("cfi-icall") int64_t CefReadHandler_0_CToCpp::Tell() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_read_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, tell)) {
+  auto* _struct = GetStruct();
+  if (!_struct->tell) {
     return 0;
   }
 
@@ -77,11 +81,11 @@ NO_SANITIZE("cfi-icall") int64_t CefReadHandlerCToCpp::Tell() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") int CefReadHandlerCToCpp::Eof() {
+NO_SANITIZE("cfi-icall") int CefReadHandler_0_CToCpp::Eof() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_read_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, eof)) {
+  auto* _struct = GetStruct();
+  if (!_struct->eof) {
     return 0;
   }
 
@@ -94,11 +98,11 @@ NO_SANITIZE("cfi-icall") int CefReadHandlerCToCpp::Eof() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") bool CefReadHandlerCToCpp::MayBlock() {
+NO_SANITIZE("cfi-icall") bool CefReadHandler_0_CToCpp::MayBlock() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_read_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, may_block)) {
+  auto* _struct = GetStruct();
+  if (!_struct->may_block) {
     return false;
   }
 
@@ -108,29 +112,26 @@ NO_SANITIZE("cfi-icall") bool CefReadHandlerCToCpp::MayBlock() {
   int _retval = _struct->may_block(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefReadHandlerCToCpp::CefReadHandlerCToCpp() {}
+CefReadHandler_0_CToCpp::CefReadHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefReadHandlerCToCpp::~CefReadHandlerCToCpp() {
+CefReadHandler_0_CToCpp::~CefReadHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_read_handler_t*
-CefCToCppRefCounted<CefReadHandlerCToCpp, CefReadHandler, cef_read_handler_t>::
-    UnwrapDerived(CefWrapperType type, CefReadHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_read_handler_0_t* CefCToCppRefCounted<CefReadHandler_0_CToCpp, CefReadHandler, cef_read_handler_0_t>::UnwrapDerived(CefWrapperType type, CefReadHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefReadHandlerCToCpp,
-                                   CefReadHandler,
-                                   cef_read_handler_t>::kWrapperType =
-    WT_READ_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefReadHandler_0_CToCpp, CefReadHandler, cef_read_handler_0_t>::kWrapperType = WT_READ_HANDLER;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7880f42ff2afafaa9a5fba8f7aa9dbcd8a10706a$
+// $hash=6f241d9053e5b568f591822edc4c57ee4221389d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_ACCESS_FILTER_CTOCPP_H_
@@ -20,30 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_request_handler_capi.h"
 #include "include/cef_resource_request_handler.h"
+#include "include/capi/cef_resource_request_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCookieAccessFilterCToCpp
-    : public CefCToCppRefCounted<CefCookieAccessFilterCToCpp,
-                                 CefCookieAccessFilter,
-                                 cef_cookie_access_filter_t> {
+class CefCookieAccessFilter_0_CToCpp
+    : public CefCToCppRefCounted<CefCookieAccessFilter_0_CToCpp, CefCookieAccessFilter, cef_cookie_access_filter_0_t> {
  public:
-  CefCookieAccessFilterCToCpp();
-  virtual ~CefCookieAccessFilterCToCpp();
+  CefCookieAccessFilter_0_CToCpp();
+  virtual ~CefCookieAccessFilter_0_CToCpp();
 
   // CefCookieAccessFilter methods.
-  bool CanSendCookie(CefRefPtr<CefBrowser> browser,
-                     CefRefPtr<CefFrame> frame,
-                     CefRefPtr<CefRequest> request,
-                     const CefCookie& cookie) override;
-  bool CanSaveCookie(CefRefPtr<CefBrowser> browser,
-                     CefRefPtr<CefFrame> frame,
-                     CefRefPtr<CefRequest> request,
-                     CefRefPtr<CefResponse> response,
-                     const CefCookie& cookie) override;
+  bool CanSendCookie(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, const CefCookie& cookie) override;
+  bool CanSaveCookie(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response, const CefCookie& cookie) override;
 };
+
+constexpr auto CefCookieAccessFilterCToCpp_Wrap = CefCookieAccessFilter_0_CToCpp::Wrap;
+constexpr auto CefCookieAccessFilterCToCpp_Unwrap = CefCookieAccessFilter_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_ACCESS_FILTER_CTOCPP_H_

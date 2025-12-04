@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=009bfdcf7ddd5f20f605872f200b9d224edacbe1$
+// $hash=b1cedacf1716dc0db5f9459b1f5e8715ed55f1da$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DRAG_HANDLER_CTOCPP_H_
@@ -21,28 +21,24 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_drag_handler_capi.h"
 #include "include/cef_drag_handler.h"
+#include "include/capi/cef_drag_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDragHandlerCToCpp : public CefCToCppRefCounted<CefDragHandlerCToCpp,
-                                                        CefDragHandler,
-                                                        cef_drag_handler_t> {
+class CefDragHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefDragHandler_0_CToCpp, CefDragHandler, cef_drag_handler_0_t> {
  public:
-  CefDragHandlerCToCpp();
-  virtual ~CefDragHandlerCToCpp();
+  CefDragHandler_0_CToCpp();
+  virtual ~CefDragHandler_0_CToCpp();
 
   // CefDragHandler methods.
-  bool OnDragEnter(CefRefPtr<CefBrowser> browser,
-                   CefRefPtr<CefDragData> dragData,
-                   DragOperationsMask mask) override;
-  void OnDraggableRegionsChanged(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      const std::vector<CefDraggableRegion>& regions) override;
+  bool OnDragEnter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDragData> dragData, DragOperationsMask mask) override;
+  void OnDraggableRegionsChanged(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const std::vector<CefDraggableRegion>& regions) override;
 };
+
+constexpr auto CefDragHandlerCToCpp_Wrap = CefDragHandler_0_CToCpp::Wrap;
+constexpr auto CefDragHandlerCToCpp_Unwrap = CefDragHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DRAG_HANDLER_CTOCPP_H_

@@ -9,24 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a64562c6c42566bd18dba4d36e6c77a08d2b343c$
+// $hash=66f7407ed73dcd7ccd0c49c87883d29f9cdeab89$
 //
 
-#include "libcef_dll/ctocpp/media_observer_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/media_route_cpptoc.h"
 #include "libcef_dll/cpptoc/media_sink_cpptoc.h"
+#include "libcef_dll/ctocpp/media_observer_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefMediaObserverCToCpp::OnSinks(
-    const std::vector<CefRefPtr<CefMediaSink>>& sinks) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefMediaObserver_0_CToCpp::OnSinks(const std::vector<CefRefPtr<CefMediaSink>>& sinks) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_sinks)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_sinks) {
     return;
   }
 
@@ -34,33 +33,33 @@ void CefMediaObserverCToCpp::OnSinks(
 
   // Translate param: sinks; type: refptr_vec_diff_byref_const
   const size_t sinksCount = sinks.size();
-  cef_media_sink_t** sinksList = NULL;
+  cef_media_sink_0_t** sinksList = NULL;
   if (sinksCount > 0) {
-    sinksList = new cef_media_sink_t*[sinksCount];
+    sinksList = new cef_media_sink_0_t*[sinksCount];
     DCHECK(sinksList);
     if (sinksList) {
       for (size_t i = 0; i < sinksCount; ++i) {
-        sinksList[i] = CefMediaSinkCppToC::Wrap(sinks[i]);
+        sinksList[i] = CefMediaSinkCppToC_Wrap(sinks[i]);
       }
     }
   }
 
   // Execute
-  _struct->on_sinks(_struct, sinksCount, sinksList);
+  _struct->on_sinks(_struct,
+      sinksCount,
+      sinksList);
 
   // Restore param:sinks; type: refptr_vec_diff_byref_const
   if (sinksList) {
-    delete[] sinksList;
+    delete [] sinksList;
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMediaObserverCToCpp::OnRoutes(
-    const std::vector<CefRefPtr<CefMediaRoute>>& routes) {
+NO_SANITIZE("cfi-icall") void CefMediaObserver_0_CToCpp::OnRoutes(const std::vector<CefRefPtr<CefMediaRoute>>& routes) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_routes)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_routes) {
     return;
   }
 
@@ -68,33 +67,33 @@ void CefMediaObserverCToCpp::OnRoutes(
 
   // Translate param: routes; type: refptr_vec_diff_byref_const
   const size_t routesCount = routes.size();
-  cef_media_route_t** routesList = NULL;
+  cef_media_route_0_t** routesList = NULL;
   if (routesCount > 0) {
-    routesList = new cef_media_route_t*[routesCount];
+    routesList = new cef_media_route_0_t*[routesCount];
     DCHECK(routesList);
     if (routesList) {
       for (size_t i = 0; i < routesCount; ++i) {
-        routesList[i] = CefMediaRouteCppToC::Wrap(routes[i]);
+        routesList[i] = CefMediaRouteCppToC_Wrap(routes[i]);
       }
     }
   }
 
   // Execute
-  _struct->on_routes(_struct, routesCount, routesList);
+  _struct->on_routes(_struct,
+      routesCount,
+      routesList);
 
   // Restore param:routes; type: refptr_vec_diff_byref_const
   if (routesList) {
-    delete[] routesList;
+    delete [] routesList;
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMediaObserverCToCpp::OnRouteStateChanged(CefRefPtr<CefMediaRoute> route,
-                                                 ConnectionState state) {
+NO_SANITIZE("cfi-icall") void CefMediaObserver_0_CToCpp::OnRouteStateChanged(CefRefPtr<CefMediaRoute> route, ConnectionState state) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_route_state_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_route_state_changed) {
     return;
   }
 
@@ -107,19 +106,16 @@ void CefMediaObserverCToCpp::OnRouteStateChanged(CefRefPtr<CefMediaRoute> route,
   }
 
   // Execute
-  _struct->on_route_state_changed(_struct, CefMediaRouteCppToC::Wrap(route),
-                                  state);
+  _struct->on_route_state_changed(_struct,
+      CefMediaRouteCppToC_Wrap(route),
+      state);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefMediaObserverCToCpp::OnRouteMessageReceived(
-    CefRefPtr<CefMediaRoute> route,
-    const void* message,
-    size_t message_size) {
+NO_SANITIZE("cfi-icall") void CefMediaObserver_0_CToCpp::OnRouteMessageReceived(CefRefPtr<CefMediaRoute> route, const void* message, size_t message_size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_media_observer_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_route_message_received)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_route_message_received) {
     return;
   }
 
@@ -137,32 +133,29 @@ void CefMediaObserverCToCpp::OnRouteMessageReceived(
   }
 
   // Execute
-  _struct->on_route_message_received(_struct, CefMediaRouteCppToC::Wrap(route),
-                                     message, message_size);
+  _struct->on_route_message_received(_struct,
+      CefMediaRouteCppToC_Wrap(route),
+      message,
+      message_size);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaObserverCToCpp::CefMediaObserverCToCpp() {}
+CefMediaObserver_0_CToCpp::CefMediaObserver_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefMediaObserverCToCpp::~CefMediaObserverCToCpp() {
+CefMediaObserver_0_CToCpp::~CefMediaObserver_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_media_observer_t*
-CefCToCppRefCounted<CefMediaObserverCToCpp,
-                    CefMediaObserver,
-                    cef_media_observer_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefMediaObserver* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_media_observer_0_t* CefCToCppRefCounted<CefMediaObserver_0_CToCpp, CefMediaObserver, cef_media_observer_0_t>::UnwrapDerived(CefWrapperType type, CefMediaObserver* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefMediaObserverCToCpp,
-                                   CefMediaObserver,
-                                   cef_media_observer_t>::kWrapperType =
-    WT_MEDIA_OBSERVER;
+template<> CefWrapperType CefCToCppRefCounted<CefMediaObserver_0_CToCpp, CefMediaObserver, cef_media_observer_0_t>::kWrapperType = WT_MEDIA_OBSERVER;
+
+

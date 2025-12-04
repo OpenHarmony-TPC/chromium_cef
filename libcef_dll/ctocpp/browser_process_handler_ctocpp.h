@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=974005ab114e2ed3d657755ae87e21e611536796$
+// $hash=0b1d6fe18217f2aeb6b9e23267e787f2f7324988$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_
@@ -20,33 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_process_handler_capi.h"
 #include "include/cef_browser_process_handler.h"
+#include "include/capi/cef_browser_process_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserProcessHandlerCToCpp
-    : public CefCToCppRefCounted<CefBrowserProcessHandlerCToCpp,
-                                 CefBrowserProcessHandler,
-                                 cef_browser_process_handler_t> {
+class CefBrowserProcessHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefBrowserProcessHandler_0_CToCpp, CefBrowserProcessHandler, cef_browser_process_handler_0_t> {
  public:
-  CefBrowserProcessHandlerCToCpp();
-  virtual ~CefBrowserProcessHandlerCToCpp();
+  CefBrowserProcessHandler_0_CToCpp();
+  virtual ~CefBrowserProcessHandler_0_CToCpp();
 
   // CefBrowserProcessHandler methods.
-  void OnRegisterCustomPreferences(
-      cef_preferences_type_t type,
-      CefRawPtr<CefPreferenceRegistrar> registrar) override;
+  void OnRegisterCustomPreferences(cef_preferences_type_t type, CefRawPtr<CefPreferenceRegistrar> registrar) override;
   void OnContextInitialized() override;
-  void OnBeforeChildProcessLaunch(
-      CefRefPtr<CefCommandLine> command_line) override;
-  bool OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line,
-                                   const CefString& current_directory) override;
+  void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) override;
+  bool OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line, const CefString& current_directory) override;
   void OnScheduleMessagePumpWork(int64_t delay_ms) override;
   CefRefPtr<CefClient> GetDefaultClient() override;
-  CefRefPtr<CefRequestContextHandler> GetDefaultRequestContextHandler()
-      override;
+  CefRefPtr<CefRequestContextHandler> GetDefaultRequestContextHandler() override;
 };
+
+constexpr auto CefBrowserProcessHandlerCToCpp_Wrap = CefBrowserProcessHandler_0_CToCpp::Wrap;
+constexpr auto CefBrowserProcessHandlerCToCpp_Unwrap = CefBrowserProcessHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_

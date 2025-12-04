@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6a32a30c075f2eb4fe2891894adf1505de1a2534$
+// $hash=39dbc547c373261c49444102c41ff8668ca8e284$
 //
 
-#include "libcef_dll/ctocpp/cookie_access_filter_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
+#include "libcef_dll/ctocpp/cookie_access_filter_ctocpp.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieAccessFilterCToCpp::CanSendCookie(CefRefPtr<CefBrowser> browser,
-                                                CefRefPtr<CefFrame> frame,
-                                                CefRefPtr<CefRequest> request,
-                                                const CefCookie& cookie) {
-  cef_cookie_access_filter_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_send_cookie)) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefCookieAccessFilter_0_CToCpp::CanSendCookie(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, const CefCookie& cookie) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_send_cookie) {
     return false;
   }
 
@@ -41,22 +38,19 @@ bool CefCookieAccessFilterCToCpp::CanSendCookie(CefRefPtr<CefBrowser> browser,
   // Unverified params: browser, frame
 
   // Execute
-  int _retval = _struct->can_send_cookie(
-      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      CefRequestCppToC::Wrap(request), &cookie);
+  int _retval = _struct->can_send_cookie(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      CefRequestCppToC_Wrap(request),
+      &cookie);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCookieAccessFilterCToCpp::CanSaveCookie(CefRefPtr<CefBrowser> browser,
-                                                CefRefPtr<CefFrame> frame,
-                                                CefRefPtr<CefRequest> request,
-                                                CefRefPtr<CefResponse> response,
-                                                const CefCookie& cookie) {
-  cef_cookie_access_filter_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_save_cookie)) {
+NO_SANITIZE("cfi-icall") bool CefCookieAccessFilter_0_CToCpp::CanSaveCookie(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response, const CefCookie& cookie) {
+  auto* _struct = GetStruct();
+  if (!_struct->can_save_cookie) {
     return false;
   }
 
@@ -75,35 +69,33 @@ bool CefCookieAccessFilterCToCpp::CanSaveCookie(CefRefPtr<CefBrowser> browser,
   // Unverified params: browser, frame
 
   // Execute
-  int _retval = _struct->can_save_cookie(
-      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      CefRequestCppToC::Wrap(request), CefResponseCppToC::Wrap(response),
+  int _retval = _struct->can_save_cookie(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      CefRequestCppToC_Wrap(request),
+      CefResponseCppToC_Wrap(response),
       &cookie);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefCookieAccessFilterCToCpp::CefCookieAccessFilterCToCpp() {}
-
-// DESTRUCTOR - Do not edit by hand.
-
-CefCookieAccessFilterCToCpp::~CefCookieAccessFilterCToCpp() {}
-
-template <>
-cef_cookie_access_filter_t* CefCToCppRefCounted<
-    CefCookieAccessFilterCToCpp,
-    CefCookieAccessFilter,
-    cef_cookie_access_filter_t>::UnwrapDerived(CefWrapperType type,
-                                               CefCookieAccessFilter* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefCookieAccessFilter_0_CToCpp::CefCookieAccessFilter_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCookieAccessFilterCToCpp,
-                                   CefCookieAccessFilter,
-                                   cef_cookie_access_filter_t>::kWrapperType =
-    WT_COOKIE_ACCESS_FILTER;
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
+
+CefCookieAccessFilter_0_CToCpp::~CefCookieAccessFilter_0_CToCpp() {
+}
+
+template<> cef_cookie_access_filter_0_t* CefCToCppRefCounted<CefCookieAccessFilter_0_CToCpp, CefCookieAccessFilter, cef_cookie_access_filter_0_t>::UnwrapDerived(CefWrapperType type, CefCookieAccessFilter* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCToCppRefCounted<CefCookieAccessFilter_0_CToCpp, CefCookieAccessFilter, cef_cookie_access_filter_0_t>::kWrapperType = WT_COOKIE_ACCESS_FILTER;
+
+

@@ -13,11 +13,13 @@
 #include "base/synchronization/waitable_event.h"
 #include "cef/libcef/browser/browser_message_loop.h"
 #include "cef/libcef/browser/chrome/chrome_content_browser_client_cef.h"
+#include "cef/libcef/browser/crashpad_runner.h"
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/app_manager.h"
 #include "cef/libcef/common/cef_switches.h"
 #include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/chrome_process_singleton.h"
+#include "chrome/chrome_elf/chrome_elf_main.h"
 #include "chrome/common/chrome_result_codes.h"
 #include "components/crash/core/app/crash_switches.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
@@ -27,7 +29,6 @@
 #include "content/public/app/content_main.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
-#include "third_party/crashpad/crashpad/handler/handler_main.h"
 
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
@@ -35,56 +36,10 @@
 #include <memory>
 
 #include "content/public/app/sandbox_helper_win.h"
+#include "sandbox/policy/mojom/sandbox.mojom.h"
+#include "sandbox/policy/sandbox_type.h"
 #include "sandbox/win/src/sandbox_types.h"
 #endif
-
-namespace {
-
-// Based on components/crash/core/app/run_as_crashpad_handler_win.cc
-// Remove the "--type=crashpad-handler" command-line flag that will otherwise
-// confuse the crashpad handler.
-// Chrome uses an embedded crashpad handler on Windows only and imports this
-// function via the existing "run_as_crashpad_handler" target defined in
-// components/crash/core/app/BUILD.gn. CEF uses an embedded handler on all
-// platforms so we define the function here instead of using the existing
-// target (because we can't use that target on macOS).
-int RunAsCrashpadHandler(const base::CommandLine& command_line) {
-  base::CommandLine::StringVector argv = command_line.argv();
-  const base::CommandLine::StringType process_type =
-      FILE_PATH_LITERAL("--type=");
-  argv.erase(
-      std::remove_if(argv.begin(), argv.end(),
-                     [&process_type](const base::CommandLine::StringType& str) {
-                       return base::StartsWith(str, process_type,
-                                               base::CompareCase::SENSITIVE) ||
-                              (!str.empty() && str[0] == L'/');
-                     }),
-      argv.end());
-
-#if BUILDFLAG(IS_POSIX)
-  // HandlerMain on POSIX uses the system version of getopt_long which expects
-  // the first argument to be the program name.
-  argv.insert(argv.begin(), command_line.GetProgram().value());
-#endif
-
-  std::unique_ptr<char*[]> argv_as_utf8(new char*[argv.size() + 1]);
-  std::vector<std::string> storage;
-  storage.reserve(argv.size());
-  for (size_t i = 0; i < argv.size(); ++i) {
-#if BUILDFLAG(IS_WIN)
-    storage.push_back(base::WideToUTF8(argv[i]));
-#else
-    storage.push_back(argv[i]);
-#endif
-    argv_as_utf8[i] = &storage[i][0];
-  }
-  argv_as_utf8[argv.size()] = nullptr;
-  argv.clear();
-  return crashpad::HandlerMain(static_cast<int>(storage.size()),
-                               argv_as_utf8.get(), nullptr);
-}
-
-}  // namespace
 
 CefMainRunner::CefMainRunner(bool multi_threaded_message_loop,
                              bool external_message_pump)
@@ -117,8 +72,7 @@ bool CefMainRunner::Initialize(CefSettings* settings,
   if (exit_code_ != content::RESULT_CODE_NORMAL_EXIT) {
     // Some exit codes are used to exit early, but are otherwise a normal
     // result. Don't log for those codes.
-    if (!chrome::IsNormalResultCode(
-            static_cast<chrome::ResultCode>(exit_code_))) {
+    if (!IsNormalResultCode(static_cast<ResultCode>(exit_code_))) {
       LOG(ERROR) << "ContentMainRun failed with exit code " << exit_code_;
     }
     return false;
@@ -207,6 +161,7 @@ void CefMainRunner::QuitMessageLoop() {
 }
 
 // static
+NO_STACK_PROTECTOR
 int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
                                       CefRefPtr<CefApp> application,
                                       void* windows_sandbox_info) {
@@ -224,10 +179,15 @@ int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
 
   // If no process type is specified then it represents the browser process and
   // we do nothing.
+  if (!command_line.HasSwitch(switches::kProcessType)) {
+    return -1;
+  }
+
   const std::string& process_type =
       command_line.GetSwitchValueASCII(switches::kProcessType);
   if (process_type.empty()) {
-    return -1;
+    // Early exit on invalid process type.
+    return CEF_RESULT_CODE_BAD_PROCESS_TYPE;
   }
 
   auto main_delegate = std::make_unique<ChromeMainDelegateCef>(
@@ -235,15 +195,35 @@ int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
   BeforeMainInitialize(args);
 
   if (process_type == crash_reporter::switches::kCrashpadHandler) {
-    return RunAsCrashpadHandler(command_line);
+    return crashpad_runner::RunAsCrashpadHandler(command_line);
   }
 
   // Execute the secondary process.
   content::ContentMainParams main_params(main_delegate.get());
 #if BUILDFLAG(IS_WIN)
+  // Initialize the sandbox services.
+  // Match the logic in MainDllLoader::Launch.
   sandbox::SandboxInterfaceInfo sandbox_info = {nullptr};
-  if (windows_sandbox_info == nullptr) {
-    content::InitializeSandboxInfo(&sandbox_info);
+
+  // IsUnsandboxedSandboxType() can't be used here because its result can be
+  // gated behind a feature flag, which are not yet initialized.
+  const bool is_sandboxed =
+      sandbox::policy::SandboxTypeFromCommandLine(command_line) !=
+      sandbox::mojom::Sandbox::kNoSandbox;
+
+  // When using cef_sandbox_info_create() the sandbox info will always be
+  // initialized. This is incorrect for cases where the sandbox is disabled, and
+  // we adjust for that here.
+  if (!is_sandboxed || windows_sandbox_info == nullptr) {
+    if (is_sandboxed) {
+      // For child processes that are running as --no-sandbox, don't
+      // initialize the sandbox info, otherwise they'll be treated as brokers
+      // (as if they were the browser).
+      content::InitializeSandboxInfo(
+          &sandbox_info, IsExtensionPointDisableSet()
+                             ? sandbox::MITIGATION_EXTENSION_POINT_DISABLE
+                             : 0);
+    }
     windows_sandbox_info = &sandbox_info;
   }
 
@@ -460,7 +440,7 @@ void CefMainRunner::FinishShutdownOnUIThread() {
     ChromeProcessSingleton::DeleteInstance();
   }
 
-   static_cast<content::ContentMainRunnerImpl*>(main_runner_.get())
+  static_cast<content::ContentMainRunnerImpl*>(main_runner_.get())
       ->ShutdownOnUIThread();
 }
 

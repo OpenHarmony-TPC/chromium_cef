@@ -9,16 +9,16 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c86fe4e4db7dca7aa29fdc017a10680028ab7fcd$
+// $hash=73be899e4fffe33233d25d242ea3a754a830f1e6$
 //
 
 #include "libcef_dll/ctocpp/views/menu_button_pressed_lock_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefMenuButtonPressedLockCToCpp::CefMenuButtonPressedLockCToCpp() {}
+CefMenuButtonPressedLockCToCpp::CefMenuButtonPressedLockCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -26,20 +26,11 @@ CefMenuButtonPressedLockCToCpp::~CefMenuButtonPressedLockCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_menu_button_pressed_lock_t* CefCToCppRefCounted<
-    CefMenuButtonPressedLockCToCpp,
-    CefMenuButtonPressedLock,
-    cef_menu_button_pressed_lock_t>::UnwrapDerived(CefWrapperType type,
-                                                   CefMenuButtonPressedLock*
-                                                       c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_menu_button_pressed_lock_t* CefCToCppRefCounted<CefMenuButtonPressedLockCToCpp, CefMenuButtonPressedLock, cef_menu_button_pressed_lock_t>::UnwrapDerived(CefWrapperType type, CefMenuButtonPressedLock* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCToCppRefCounted<CefMenuButtonPressedLockCToCpp,
-                        CefMenuButtonPressedLock,
-                        cef_menu_button_pressed_lock_t>::kWrapperType =
-        WT_MENU_BUTTON_PRESSED_LOCK;
+template<> CefWrapperType CefCToCppRefCounted<CefMenuButtonPressedLockCToCpp, CefMenuButtonPressedLock, cef_menu_button_pressed_lock_t>::kWrapperType = WT_MENU_BUTTON_PRESSED_LOCK;
+
+

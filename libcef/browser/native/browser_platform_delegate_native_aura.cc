@@ -4,6 +4,7 @@
 
 #include "cef/libcef/browser/native/browser_platform_delegate_native_aura.h"
 
+#include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/native/menu_runner_views_aura.h"
 #include "cef/libcef/browser/views/view_util.h"
 #include "content/browser/renderer_host/render_widget_host_view_aura.h"
@@ -18,6 +19,42 @@ CefBrowserPlatformDelegateNativeAura::CefBrowserPlatformDelegateNativeAura(
     const CefWindowInfo& window_info,
     SkColor background_color)
     : CefBrowserPlatformDelegateNative(window_info, background_color) {}
+
+void CefBrowserPlatformDelegateNativeAura::InstallRootWindowBoundsCallback() {
+  auto* host_view = GetHostView();
+  CHECK(host_view);
+
+  host_view->SetRootWindowBoundsCallback(base::BindRepeating(
+      [](base::WeakPtr<CefBrowserPlatformDelegateNativeAura> self) {
+        return self->RootWindowBoundsCallback();
+      },
+      weak_ptr_factory_.GetWeakPtr()));
+}
+
+std::optional<gfx::Rect>
+CefBrowserPlatformDelegateNativeAura::RootWindowBoundsCallback() {
+  if (browser_) {
+    if (auto client = browser_->client()) {
+      if (auto handler = client->GetDisplayHandler()) {
+        CefRect rect;
+        if (handler->GetRootWindowScreenRect(browser_.get(), rect) &&
+            !rect.IsEmpty()) {
+          return gfx::Rect(rect.x, rect.y, rect.width, rect.height);
+        }
+      }
+    }
+  }
+
+  // Call the default platform implementation, if any.
+  return GetRootWindowBounds();
+}
+
+void CefBrowserPlatformDelegateNativeAura::RenderViewReady() {
+  CefBrowserPlatformDelegateNative::RenderViewReady();
+
+  // The RWHV should now exist for Alloy style browsers.
+  InstallRootWindowBoundsCallback();
+}
 
 void CefBrowserPlatformDelegateNativeAura::SendKeyEvent(
     const CefKeyEvent& event) {
@@ -203,8 +240,7 @@ ui::MouseWheelEvent CefBrowserPlatformDelegateNativeAura::TranslateUiWheelEvent(
   int changed_button_flags =
       TranslateUiChangedButtonFlags(mouse_event.modifiers);
 
-  return ui::MouseWheelEvent(offset, location, root_location, time_stamp,
-                             (ui::EF_PRECISION_SCROLLING_DELTA | flags),
+  return ui::MouseWheelEvent(offset, location, root_location, time_stamp, flags,
                              changed_button_flags);
 }
 
@@ -266,6 +302,13 @@ int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
   if (cef_modifiers & EVENTFLAG_IS_REPEAT) {
     result |= ui::EF_IS_REPEAT;
   }
+  if (cef_modifiers & EVENTFLAG_PRECISION_SCROLLING_DELTA) {
+    result |= ui::EF_PRECISION_SCROLLING_DELTA;
+  }
+  if (cef_modifiers & EVENTFLAG_SCROLL_BY_PAGE) {
+    result |= ui::EF_SCROLL_BY_PAGE;
+  }
+
   return result;
 }
 

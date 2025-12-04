@@ -142,6 +142,18 @@ content::WebContents* CefBrowserContentsDelegate::OpenURLFromTabEx(
   return nullptr;
 }
 
+bool CefBrowserContentsDelegate::SetContentsBoundsEx(
+    content::WebContents* source,
+    const gfx::Rect& bounds) {
+  if (auto c = client()) {
+    if (auto handler = c->GetDisplayHandler()) {
+      return handler->OnContentsBoundsChange(
+          browser(), {bounds.x(), bounds.y(), bounds.width(), bounds.height()});
+    }
+  }
+  return false;
+}
+
 void CefBrowserContentsDelegate::LoadingStateChanged(
     content::WebContents* source,
     bool should_show_loading_ui) {
@@ -378,19 +390,23 @@ void CefBrowserContentsDelegate::RenderViewReady() {
 void CefBrowserContentsDelegate::PrimaryMainFrameRenderProcessGone(
     base::TerminationStatus status) {
   static_assert(static_cast<int>(CEF_RESULT_CODE_CHROME_FIRST) ==
-                    static_cast<int>(chrome::RESULT_CODE_CHROME_START),
-                "enum mismatch");
+                    static_cast<int>(CHROME_RESULT_CODE_CHROME_START),
+                "CEF_RESULT_CODE_CHROME_FIRST must match "
+                "chrome::RESULT_CODE_CHROME_START");
   static_assert(static_cast<int>(CEF_RESULT_CODE_CHROME_LAST) ==
-                    static_cast<int>(chrome::RESULT_CODE_CHROME_LAST_CODE),
-                "enum mismatch");
+                    static_cast<int>(CHROME_RESULT_CODE_CHROME_LAST_CODE),
+                "CEF_RESULT_CODE_CHROME_LAST must match "
+                "chrome::RESULT_CODE_CHROME_LAST_CODE");
 
 #if defined(OS_WIN)
   static_assert(static_cast<int>(CEF_RESULT_CODE_SANDBOX_FATAL_FIRST) ==
                     static_cast<int>(sandbox::SBOX_FATAL_INTEGRITY),
-                "enum mismatch");
-  static_assert(static_cast<int>(CEF_RESULT_CODE_SANDBOX_FATAL_LAST) ==
-                    static_cast<int>(sandbox::SBOX_FATAL_LAST),
-                "enum mismatch");
+                "CEF_RESULT_CODE_SANDBOX_FATAL_FIRST must match "
+                "sandbox::SBOX_FATAL_INTEGRITY");
+  static_assert(
+      static_cast<int>(CEF_RESULT_CODE_SANDBOX_FATAL_LAST) ==
+          static_cast<int>(sandbox::SBOX_FATAL_LAST),
+      "CEF_RESULT_CODE_SANDBOX_FATAL_LAST must match sandbox::SBOX_FATAL_LAST");
 #endif
 
   cef_termination_status_t ts = TS_ABNORMAL_TERMINATION;
@@ -623,6 +639,17 @@ void CefBrowserContentsDelegate::OnFocusChangedInPage(
   focus_on_editable_field_ =
       details->focus_type != blink::mojom::FocusType::kNone &&
       details->is_editable_node;
+}
+
+bool CefBrowserContentsDelegate::TakeFocus(content::WebContents* source,
+                                           bool reverse) {
+  if (auto c = client()) {
+    if (auto handler = c->GetFocusHandler()) {
+      handler->OnTakeFocus(browser(), !reverse);
+    }
+  }
+
+  return false;
 }
 
 void CefBrowserContentsDelegate::WebContentsDestroyed() {

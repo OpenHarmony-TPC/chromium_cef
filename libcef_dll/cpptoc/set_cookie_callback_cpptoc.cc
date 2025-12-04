@@ -9,20 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=abc2f99aa7f246d702a33b0112ebb52000e659c8$
+// $hash=be82bbfac4c4802d4bd7a4d5552fc39f5a05f1a0$
 //
 
 #include "libcef_dll/cpptoc/set_cookie_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-set_cookie_callback_on_complete(struct _cef_set_cookie_callback_t* self,
-                                int success) {
+void CEF_CALLBACK set_cookie_callback_on_complete(struct _cef_set_cookie_callback_t* self, int success) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,7 +30,8 @@ set_cookie_callback_on_complete(struct _cef_set_cookie_callback_t* self,
   }
 
   // Execute
-  CefSetCookieCallbackCppToC::Get(self)->OnComplete(success ? true : false);
+  CefSetCookieCallbackCppToC::Get(self)->OnComplete(
+      success?true:false);
 }
 
 }  // namespace
@@ -50,18 +48,11 @@ CefSetCookieCallbackCppToC::~CefSetCookieCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefSetCookieCallback> CefCppToCRefCounted<
-    CefSetCookieCallbackCppToC,
-    CefSetCookieCallback,
-    cef_set_cookie_callback_t>::UnwrapDerived(CefWrapperType type,
-                                              cef_set_cookie_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefSetCookieCallback> CefCppToCRefCounted<CefSetCookieCallbackCppToC, CefSetCookieCallback, cef_set_cookie_callback_t>::UnwrapDerived(CefWrapperType type, cef_set_cookie_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefSetCookieCallbackCppToC,
-                                   CefSetCookieCallback,
-                                   cef_set_cookie_callback_t>::kWrapperType =
-    WT_SET_COOKIE_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefSetCookieCallbackCppToC, CefSetCookieCallback, cef_set_cookie_callback_t>::kWrapperType = WT_SET_COOKIE_CALLBACK;
+
+

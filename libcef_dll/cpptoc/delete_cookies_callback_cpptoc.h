@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=89b550c5c6a7516f8f3997fd8931469e9bd4dbb2$
+// $hash=19f53df3fd7b4f237a6449078ea2e84e6c4663bc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DELETE_COOKIES_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDeleteCookiesCallbackCppToC
-    : public CefCppToCRefCounted<CefDeleteCookiesCallbackCppToC,
-                                 CefDeleteCookiesCallback,
-                                 cef_delete_cookies_callback_t> {
+    : public CefCppToCRefCounted<CefDeleteCookiesCallbackCppToC, CefDeleteCookiesCallback, cef_delete_cookies_callback_t> {
  public:
   CefDeleteCookiesCallbackCppToC();
   virtual ~CefDeleteCookiesCallbackCppToC();
 };
+
+constexpr auto CefDeleteCookiesCallbackCppToC_Wrap = CefDeleteCookiesCallbackCppToC::Wrap;
+constexpr auto CefDeleteCookiesCallbackCppToC_Unwrap = CefDeleteCookiesCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DELETE_COOKIES_CALLBACK_CPPTOC_H_

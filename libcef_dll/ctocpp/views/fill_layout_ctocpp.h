@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8d4b1432fcc487af8561082fe13cc4a6997daed$
+// $hash=1528f0f2912a73d4ad54672dac7c8084f595f1ab$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_FILL_LAYOUT_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_fill_layout_capi.h"
 #include "include/views/cef_fill_layout.h"
+#include "include/capi/views/cef_fill_layout_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefFillLayoutCToCpp : public CefCToCppRefCounted<CefFillLayoutCToCpp,
-                                                       CefFillLayout,
-                                                       cef_fill_layout_t> {
+class CefFillLayoutCToCpp
+    : public CefCToCppRefCounted<CefFillLayoutCToCpp, CefFillLayout, cef_fill_layout_t> {
  public:
   CefFillLayoutCToCpp();
   virtual ~CefFillLayoutCToCpp();
@@ -40,5 +39,8 @@ class CefFillLayoutCToCpp : public CefCToCppRefCounted<CefFillLayoutCToCpp,
   CefRefPtr<CefFillLayout> AsFillLayout() override;
   bool IsValid() override;
 };
+
+constexpr auto CefFillLayoutCToCpp_Wrap = CefFillLayoutCToCpp::Wrap;
+constexpr auto CefFillLayoutCToCpp_Unwrap = CefFillLayoutCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_FILL_LAYOUT_CTOCPP_H_

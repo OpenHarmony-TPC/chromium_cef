@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6b1815d4164f521c5b7dbcff01df3716d43f20b2$
+// $hash=112ae6c018efd2807f6a716e714a7bc02fb62e6d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_navigation_entry_capi.h"
 #include "include/cef_navigation_entry.h"
+#include "include/capi/cef_navigation_entry_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefNavigationEntryCToCpp
-    : public CefCToCppRefCounted<CefNavigationEntryCToCpp,
-                                 CefNavigationEntry,
-                                 cef_navigation_entry_t> {
+    : public CefCToCppRefCounted<CefNavigationEntryCToCpp, CefNavigationEntry, cef_navigation_entry_t> {
  public:
   CefNavigationEntryCToCpp();
   virtual ~CefNavigationEntryCToCpp();
@@ -46,5 +44,8 @@ class CefNavigationEntryCToCpp
   int GetHttpStatusCode() override;
   CefRefPtr<CefSSLStatus> GetSSLStatus() override;
 };
+
+constexpr auto CefNavigationEntryCToCpp_Wrap = CefNavigationEntryCToCpp::Wrap;
+constexpr auto CefNavigationEntryCToCpp_Unwrap = CefNavigationEntryCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_

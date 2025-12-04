@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d6b7ae96df08911b766d7af9e3cb04546b0d1386$
+// $hash=65155c020c82c04ab5a5f887ee555e4cb192a2d2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_MENU_BUTTON_PRESSED_LOCK_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_menu_button_capi.h"
-#include "include/capi/views/cef_menu_button_delegate_capi.h"
-#include "include/views/cef_menu_button.h"
 #include "include/views/cef_menu_button_delegate.h"
+#include "include/capi/views/cef_menu_button_delegate_capi_versions.h"
+#include "include/views/cef_menu_button.h"
+#include "include/capi/views/cef_menu_button_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMenuButtonPressedLockCppToC
-    : public CefCppToCRefCounted<CefMenuButtonPressedLockCppToC,
-                                 CefMenuButtonPressedLock,
-                                 cef_menu_button_pressed_lock_t> {
+class CefMenuButtonPressedLock_0_CppToC
+    : public CefCppToCRefCounted<CefMenuButtonPressedLock_0_CppToC, CefMenuButtonPressedLock, cef_menu_button_pressed_lock_0_t> {
  public:
-  CefMenuButtonPressedLockCppToC();
-  virtual ~CefMenuButtonPressedLockCppToC();
+  CefMenuButtonPressedLock_0_CppToC();
+  virtual ~CefMenuButtonPressedLock_0_CppToC();
 };
+
+constexpr auto CefMenuButtonPressedLockCppToC_Wrap = CefMenuButtonPressedLock_0_CppToC::Wrap;
+constexpr auto CefMenuButtonPressedLockCppToC_Unwrap = CefMenuButtonPressedLock_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_MENU_BUTTON_PRESSED_LOCK_CPPTOC_H_

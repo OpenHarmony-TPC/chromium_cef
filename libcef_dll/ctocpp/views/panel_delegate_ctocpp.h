@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6bc13feeeaec606c7998fe683dc381b9a54d14c0$
+// $hash=9344fef33b61b77733dc8a43b7360b9fd8a52b06$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_PANEL_DELEGATE_CTOCPP_H_
@@ -20,19 +20,17 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_panel_delegate_capi.h"
 #include "include/views/cef_panel_delegate.h"
+#include "include/capi/views/cef_panel_delegate_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPanelDelegateCToCpp
-    : public CefCToCppRefCounted<CefPanelDelegateCToCpp,
-                                 CefPanelDelegate,
-                                 cef_panel_delegate_t> {
+class CefPanelDelegate_0_CToCpp
+    : public CefCToCppRefCounted<CefPanelDelegate_0_CToCpp, CefPanelDelegate, cef_panel_delegate_0_t> {
  public:
-  CefPanelDelegateCToCpp();
-  virtual ~CefPanelDelegateCToCpp();
+  CefPanelDelegate_0_CToCpp();
+  virtual ~CefPanelDelegate_0_CToCpp();
 
   // CefPanelDelegate methods.
 
@@ -41,18 +39,16 @@ class CefPanelDelegateCToCpp
   CefSize GetMinimumSize(CefRefPtr<CefView> view) override;
   CefSize GetMaximumSize(CefRefPtr<CefView> view) override;
   int GetHeightForWidth(CefRefPtr<CefView> view, int width) override;
-  void OnParentViewChanged(CefRefPtr<CefView> view,
-                           bool added,
-                           CefRefPtr<CefView> parent) override;
-  void OnChildViewChanged(CefRefPtr<CefView> view,
-                          bool added,
-                          CefRefPtr<CefView> child) override;
+  void OnParentViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> parent) override;
+  void OnChildViewChanged(CefRefPtr<CefView> view, bool added, CefRefPtr<CefView> child) override;
   void OnWindowChanged(CefRefPtr<CefView> view, bool added) override;
-  void OnLayoutChanged(CefRefPtr<CefView> view,
-                       const CefRect& new_bounds) override;
+  void OnLayoutChanged(CefRefPtr<CefView> view, const CefRect& new_bounds) override;
   void OnFocus(CefRefPtr<CefView> view) override;
   void OnBlur(CefRefPtr<CefView> view) override;
   void OnThemeChanged(CefRefPtr<CefView> view) override;
 };
+
+constexpr auto CefPanelDelegateCToCpp_Wrap = CefPanelDelegate_0_CToCpp::Wrap;
+constexpr auto CefPanelDelegateCToCpp_Unwrap = CefPanelDelegate_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_PANEL_DELEGATE_CTOCPP_H_

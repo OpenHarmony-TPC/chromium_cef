@@ -18,7 +18,7 @@ media::ChannelLayoutConfig TranslateChannelLayout(
   // between those enums and existing values don't ever change, so it's enough
   // to check that there are no new ones added.
   static_assert(
-      static_cast<int>(CEF_CHANNEL_LAYOUT_MAX) ==
+      static_cast<int>(CEF_CHANNEL_NUM_VALUES) - 1 ==
           static_cast<int>(media::CHANNEL_LAYOUT_MAX),
       "cef_channel_layout_t must match the ChannelLayout enum in Chromium");
 
@@ -40,7 +40,7 @@ void StreamCreatorHelper(
              mojo::PendingRemote<media::mojom::AudioInputStream> stream,
              mojo::PendingReceiver<media::mojom::AudioInputStreamClient>
                  client_receiver,
-             media::mojom::ReadOnlyAudioDataPipePtr data_pipe) {
+             media::mojom::ReadWriteAudioDataPipePtr data_pipe) {
             mojo::Remote<mirroring::mojom::AudioStreamCreatorClient>
                 audio_client(std::move(client));
             audio_client->StreamCreated(std::move(stream),
@@ -74,7 +74,7 @@ CefAudioCapturer::CefAudioCapturer(const CefAudioParameters& params,
   DCHECK(browser_->web_contents());
 
   channels_ = audio_params.channels();
-  audio_input_device_ = new media::AudioInputDevice(
+  audio_input_device_ = base::MakeRefCounted<media::AudioInputDevice>(
       std::make_unique<mirroring::CapturedAudioInput>(
           base::BindRepeating(&StreamCreatorHelper,
                               base::Unretained(browser_->web_contents()),
@@ -100,8 +100,7 @@ void CefAudioCapturer::OnCaptureStarted() {
 void CefAudioCapturer::Capture(const media::AudioBus* source,
                                base::TimeTicks audio_capture_time,
                                const media::AudioGlitchInfo& /*glitch_info*/,
-                               double /*volume*/,
-                               bool /*key_pressed*/) {
+                               double /*volume*/) {
   const int channels = source->channels();
   std::array<const float*, media::CHANNELS_MAX> data;
   DCHECK(channels == channels_);

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=371a0abf1ac104f743cc575be244c6830eb62d9f$
+// $hash=720afd07b91f562c3682712961299664ef98c279$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_WAITABLE_EVENT_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_waitable_event_capi.h"
 #include "include/cef_waitable_event.h"
+#include "include/capi/cef_waitable_event_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefWaitableEventCppToC
-    : public CefCppToCRefCounted<CefWaitableEventCppToC,
-                                 CefWaitableEvent,
-                                 cef_waitable_event_t> {
+class CefWaitableEvent_0_CppToC
+    : public CefCppToCRefCounted<CefWaitableEvent_0_CppToC, CefWaitableEvent, cef_waitable_event_0_t> {
  public:
-  CefWaitableEventCppToC();
-  virtual ~CefWaitableEventCppToC();
+  CefWaitableEvent_0_CppToC();
+  virtual ~CefWaitableEvent_0_CppToC();
 };
+
+constexpr auto CefWaitableEventCppToC_Wrap = CefWaitableEvent_0_CppToC::Wrap;
+constexpr auto CefWaitableEventCppToC_Unwrap = CefWaitableEvent_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_WAITABLE_EVENT_CPPTOC_H_

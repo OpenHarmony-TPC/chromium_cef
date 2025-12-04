@@ -461,8 +461,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         url_loader_network_observer =
             static_cast<content::StoragePartitionImpl*>(
                 browser_context->GetDefaultStoragePartition())
-                ->CreateAuthCertObserverForServiceWorker(
-                    content::ChildProcessHost::kInvalidUniqueID);
+                ->CreateURLLoaderNetworkObserverForServiceWorker(
+                    content::ChildProcessHost::kInvalidUniqueID, url::Origin());
       }
     }
 
@@ -1069,10 +1069,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
   }
 
-  void OnRequestComplete(
-      int32_t request_id,
-      const network::ResourceRequest& request,
-      const network::URLLoaderCompletionStatus& status) override {
+  void OnRequestComplete(int32_t request_id,
+                         const network::ResourceRequest& request,
+                         const network::URLLoaderCompletionStatus& status,
+                         bool& handled_externally) override {
     CEF_REQUIRE_IOT();
 
     RequestState* state = GetState(request_id);
@@ -1116,6 +1116,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
             init_state_->browser_, init_state_->frame_,
             state->pending_request_.get(), allow_os_execution);
         if (allow_os_execution && init_state_->unhandled_request_callback_) {
+          handled_externally = true;
           CEF_POST_TASK(TID_UI, init_state_->unhandled_request_callback_);
         }
       }
@@ -1403,8 +1404,10 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   // Default to handlers for the same process in case |frame| doesn't have an
   // associated CefBrowserHost.
-  content::GlobalRenderFrameHostId global_id(frame->GetProcess()->GetID(),
-                                             MSG_ROUTING_NONE);
+  // TODO: Change to content::ChildProcessId usage once supported by
+  // GlobalRenderFrameHostId. See https://crbug.com/379869738.
+  content::GlobalRenderFrameHostId global_id(
+      frame->GetProcess()->GetDeprecatedID(), MSG_ROUTING_NONE);
 
   browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
   if (browserPtr) {

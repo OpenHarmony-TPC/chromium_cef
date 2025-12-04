@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=03469ef51706b11040ff204425f693bfaee40ed6$
+// $hash=88accf45b7da8219796b80d7acda4d867c48a838$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_LIFE_SPAN_HANDLER_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_client_capi.h"
+#include "include/cef_life_span_handler.h"
 #include "include/capi/cef_life_span_handler_capi.h"
 #include "include/cef_client.h"
-#include "include/cef_life_span_handler.h"
+#include "include/capi/cef_client_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefLifeSpanHandlerCppToC
-    : public CefCppToCRefCounted<CefLifeSpanHandlerCppToC,
-                                 CefLifeSpanHandler,
-                                 cef_life_span_handler_t> {
+    : public CefCppToCRefCounted<CefLifeSpanHandlerCppToC, CefLifeSpanHandler, cef_life_span_handler_t> {
  public:
   CefLifeSpanHandlerCppToC();
   virtual ~CefLifeSpanHandlerCppToC();
 };
+
+constexpr auto CefLifeSpanHandlerCppToC_Wrap = CefLifeSpanHandlerCppToC::Wrap;
+constexpr auto CefLifeSpanHandlerCppToC_Unwrap = CefLifeSpanHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_LIFE_SPAN_HANDLER_CPPTOC_H_

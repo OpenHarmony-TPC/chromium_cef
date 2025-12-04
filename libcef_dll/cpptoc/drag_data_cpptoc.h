@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dc5bbdfe3b51c0e66e778360cad1d4e2a543e11c$
+// $hash=30eb596dd903bd7886d6b5f5c29a632f1110d802$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DRAG_DATA_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_drag_data_capi.h"
 #include "include/cef_drag_data.h"
+#include "include/capi/cef_drag_data_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDragDataCppToC : public CefCppToCRefCounted<CefDragDataCppToC,
-                                                     CefDragData,
-                                                     cef_drag_data_t> {
+class CefDragData_0_CppToC
+    : public CefCppToCRefCounted<CefDragData_0_CppToC, CefDragData, cef_drag_data_0_t> {
  public:
-  CefDragDataCppToC();
-  virtual ~CefDragDataCppToC();
+  CefDragData_0_CppToC();
+  virtual ~CefDragData_0_CppToC();
 };
+
+constexpr auto CefDragDataCppToC_Wrap = CefDragData_0_CppToC::Wrap;
+constexpr auto CefDragDataCppToC_Unwrap = CefDragData_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DRAG_DATA_CPPTOC_H_

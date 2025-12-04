@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2547e83ff0313fb5da88cd66b78717fbe04bade0$
+// $hash=3d4e8c86ab0546c70c56a9ec4bba332cdc344627$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DICTIONARY_VALUE_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_values_capi.h"
 #include "include/cef_values.h"
+#include "include/capi/cef_values_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDictionaryValueCppToC
-    : public CefCppToCRefCounted<CefDictionaryValueCppToC,
-                                 CefDictionaryValue,
-                                 cef_dictionary_value_t> {
+class CefDictionaryValue_0_CppToC
+    : public CefCppToCRefCounted<CefDictionaryValue_0_CppToC, CefDictionaryValue, cef_dictionary_value_0_t> {
  public:
-  CefDictionaryValueCppToC();
-  virtual ~CefDictionaryValueCppToC();
+  CefDictionaryValue_0_CppToC();
+  virtual ~CefDictionaryValue_0_CppToC();
 };
+
+constexpr auto CefDictionaryValueCppToC_Wrap = CefDictionaryValue_0_CppToC::Wrap;
+constexpr auto CefDictionaryValueCppToC_Unwrap = CefDictionaryValue_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DICTIONARY_VALUE_CPPTOC_H_

@@ -33,18 +33,23 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=df875cb63efa86d99aeea4528b34c0fa4d610365$
+// $hash=fc600dc0b69aa3deef96205d41cb96883cc6bcac$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_I18N_UTIL_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_I18N_UTIL_CAPI_H_
 #pragma once
 
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
 #include "include/capi/cef_base_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Returns true (1) if the application text direction is right-to-left.

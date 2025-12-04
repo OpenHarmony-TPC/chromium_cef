@@ -33,15 +33,18 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1981f02e8337b3d7e47c4a972a5b99d1f6bcb489$
+// $hash=71fed650639b04fee7412cceeff5d56e73f11026$
 //
 
 #ifndef CEF_INCLUDE_CAPI_TEST_CEF_TEST_HELPERS_CAPI_H_
 #define CEF_INCLUDE_CAPI_TEST_CEF_TEST_HELPERS_CAPI_H_
 #pragma once
 
-#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) && \
-    !defined(UNIT_TEST)
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
+
+#if !defined(WRAPPING_CEF_SHARED) && !defined(UNIT_TEST)
 #error This file can be included for unit tests only
 #endif
 
@@ -51,13 +54,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Execute JavaScript with a user gesture to trigger functionality like
 /// onbeforeunload handlers that will otherwise be blocked.
 ///
-CEF_EXPORT void cef_execute_java_script_with_user_gesture_for_tests(
-    struct _cef_frame_t* frame,
-    const cef_string_t* javascript);
+CEF_EXPORT void cef_execute_java_script_with_user_gesture_for_tests(struct _cef_frame_t* frame, const cef_string_t* javascript);
 
 ///
 /// Set the DIR_SRC_TEST_DATA_ROOT directory used to load test data. Must be
@@ -72,8 +74,7 @@ CEF_EXPORT void cef_set_data_directory_for_tests(const cef_string_t* dir);
 /// field trial. This supports a short list of curated values that are queried
 /// by unit tests.
 ///
-CEF_EXPORT int cef_is_feature_enabled_for_tests(
-    const cef_string_t* feature_name);
+CEF_EXPORT int cef_is_feature_enabled_for_tests(const cef_string_t* feature_name);
 
 #ifdef __cplusplus
 }

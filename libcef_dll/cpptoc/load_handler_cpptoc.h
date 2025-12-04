@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ededd6ada77e05f87cbb0ff03b483dddb5419ff8$
+// $hash=95635804abecdf7af6139f3adec31e77ba9272b1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_LOAD_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_load_handler_capi.h"
 #include "include/cef_load_handler.h"
+#include "include/capi/cef_load_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefLoadHandlerCppToC : public CefCppToCRefCounted<CefLoadHandlerCppToC,
-                                                        CefLoadHandler,
-                                                        cef_load_handler_t> {
+class CefLoadHandlerCppToC
+    : public CefCppToCRefCounted<CefLoadHandlerCppToC, CefLoadHandler, cef_load_handler_t> {
  public:
   CefLoadHandlerCppToC();
   virtual ~CefLoadHandlerCppToC();
 };
+
+constexpr auto CefLoadHandlerCppToC_Wrap = CefLoadHandlerCppToC::Wrap;
+constexpr auto CefLoadHandlerCppToC_Unwrap = CefLoadHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_LOAD_HANDLER_CPPTOC_H_

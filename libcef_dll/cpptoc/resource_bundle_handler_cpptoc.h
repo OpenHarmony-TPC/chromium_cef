@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c5c516294da1de2e424f7928a03d8f64b2f3b837$
+// $hash=a390c60ded2e72a723ad242798195ce1a30d2fd8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESOURCE_BUNDLE_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_resource_bundle_handler_capi.h"
 #include "include/cef_resource_bundle_handler.h"
+#include "include/capi/cef_resource_bundle_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResourceBundleHandlerCppToC
-    : public CefCppToCRefCounted<CefResourceBundleHandlerCppToC,
-                                 CefResourceBundleHandler,
-                                 cef_resource_bundle_handler_t> {
+    : public CefCppToCRefCounted<CefResourceBundleHandlerCppToC, CefResourceBundleHandler, cef_resource_bundle_handler_t> {
  public:
   CefResourceBundleHandlerCppToC();
   virtual ~CefResourceBundleHandlerCppToC();
 };
+
+constexpr auto CefResourceBundleHandlerCppToC_Wrap = CefResourceBundleHandlerCppToC::Wrap;
+constexpr auto CefResourceBundleHandlerCppToC_Unwrap = CefResourceBundleHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_BUNDLE_HANDLER_CPPTOC_H_

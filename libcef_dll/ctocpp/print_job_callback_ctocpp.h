@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=46038f1b6551ed64c273cd4ca3401ad6ad455cec$
+// $hash=c207c043ad33c29a49ef4db45f1445661ce71cd2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PRINT_JOB_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_print_handler_capi.h"
 #include "include/cef_print_handler.h"
+#include "include/capi/cef_print_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPrintJobCallbackCToCpp
-    : public CefCToCppRefCounted<CefPrintJobCallbackCToCpp,
-                                 CefPrintJobCallback,
-                                 cef_print_job_callback_t> {
+    : public CefCToCppRefCounted<CefPrintJobCallbackCToCpp, CefPrintJobCallback, cef_print_job_callback_t> {
  public:
   CefPrintJobCallbackCToCpp();
   virtual ~CefPrintJobCallbackCToCpp();
@@ -37,5 +35,8 @@ class CefPrintJobCallbackCToCpp
   // CefPrintJobCallback methods.
   void Continue() override;
 };
+
+constexpr auto CefPrintJobCallbackCToCpp_Wrap = CefPrintJobCallbackCToCpp::Wrap;
+constexpr auto CefPrintJobCallbackCToCpp_Unwrap = CefPrintJobCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_JOB_CALLBACK_CTOCPP_H_

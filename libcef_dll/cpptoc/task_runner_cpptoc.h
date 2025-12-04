@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e90b116f4adf4e27d5936ecf61e7cc4b8a1313ec$
+// $hash=23dd3f01f4928cbf675985c107f56df21a997276$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_TASK_RUNNER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_task_capi.h"
 #include "include/cef_task.h"
+#include "include/capi/cef_task_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTaskRunnerCppToC : public CefCppToCRefCounted<CefTaskRunnerCppToC,
-                                                       CefTaskRunner,
-                                                       cef_task_runner_t> {
+class CefTaskRunner_0_CppToC
+    : public CefCppToCRefCounted<CefTaskRunner_0_CppToC, CefTaskRunner, cef_task_runner_0_t> {
  public:
-  CefTaskRunnerCppToC();
-  virtual ~CefTaskRunnerCppToC();
+  CefTaskRunner_0_CppToC();
+  virtual ~CefTaskRunner_0_CppToC();
 };
+
+constexpr auto CefTaskRunnerCppToC_Wrap = CefTaskRunner_0_CppToC::Wrap;
+constexpr auto CefTaskRunnerCppToC_Unwrap = CefTaskRunner_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_TASK_RUNNER_CPPTOC_H_

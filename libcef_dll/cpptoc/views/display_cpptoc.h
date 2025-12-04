@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=be0764d632e484157a12cfb46e27433738270f6a$
+// $hash=e2afc2b20b52b052b2435ace3ba3c359cd5c885a$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_DISPLAY_CPPTOC_H_
@@ -20,17 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_display_capi.h"
 #include "include/views/cef_display.h"
+#include "include/capi/views/cef_display_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDisplayCppToC
-    : public CefCppToCRefCounted<CefDisplayCppToC, CefDisplay, cef_display_t> {
+class CefDisplay_0_CppToC
+    : public CefCppToCRefCounted<CefDisplay_0_CppToC, CefDisplay, cef_display_0_t> {
  public:
-  CefDisplayCppToC();
-  virtual ~CefDisplayCppToC();
+  CefDisplay_0_CppToC();
+  virtual ~CefDisplay_0_CppToC();
 };
+
+constexpr auto CefDisplayCppToC_Wrap = CefDisplay_0_CppToC::Wrap;
+constexpr auto CefDisplayCppToC_Unwrap = CefDisplay_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_DISPLAY_CPPTOC_H_

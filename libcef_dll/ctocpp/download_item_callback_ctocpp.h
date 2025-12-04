@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=861bd9226d83b8d127cb5a561a7252d4fcd22926$
+// $hash=c7edc2f9266f2cc30a44b09ad4eb1fce9c24da01$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_download_handler_capi.h"
 #include "include/cef_download_handler.h"
+#include "include/capi/cef_download_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDownloadItemCallbackCToCpp
-    : public CefCToCppRefCounted<CefDownloadItemCallbackCToCpp,
-                                 CefDownloadItemCallback,
-                                 cef_download_item_callback_t> {
+    : public CefCToCppRefCounted<CefDownloadItemCallbackCToCpp, CefDownloadItemCallback, cef_download_item_callback_t> {
  public:
   CefDownloadItemCallbackCToCpp();
   virtual ~CefDownloadItemCallbackCToCpp();
@@ -39,5 +37,8 @@ class CefDownloadItemCallbackCToCpp
   void Pause() override;
   void Resume() override;
 };
+
+constexpr auto CefDownloadItemCallbackCToCpp_Wrap = CefDownloadItemCallbackCToCpp::Wrap;
+constexpr auto CefDownloadItemCallbackCToCpp_Unwrap = CefDownloadItemCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CALLBACK_CTOCPP_H_

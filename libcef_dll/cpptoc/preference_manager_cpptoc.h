@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4d547d406b0d4206f96b646533a3d17a367441b9$
+// $hash=0c0408772ddf309aecdea01e098e2859bcf0f894$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PREFERENCE_MANAGER_CPPTOC_H_
@@ -20,19 +20,30 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_preference_capi.h"
 #include "include/cef_preference.h"
+#include "include/capi/cef_preference_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPreferenceManagerCppToC
-    : public CefCppToCRefCounted<CefPreferenceManagerCppToC,
-                                 CefPreferenceManager,
-                                 cef_preference_manager_t> {
+class CefPreferenceManager_0_CppToC
+    : public CefCppToCRefCounted<CefPreferenceManager_0_CppToC, CefPreferenceManager, cef_preference_manager_0_t> {
  public:
-  CefPreferenceManagerCppToC();
-  virtual ~CefPreferenceManagerCppToC();
+  CefPreferenceManager_0_CppToC();
+  virtual ~CefPreferenceManager_0_CppToC();
 };
+
+// Wrap a C++ class with a C structure at API version 13401.
+// This class may be instantiated and accessed DLL-side only.
+class CefPreferenceManager_13401_CppToC
+    : public CefCppToCRefCounted<CefPreferenceManager_13401_CppToC, CefPreferenceManager, cef_preference_manager_13401_t> {
+ public:
+  CefPreferenceManager_13401_CppToC();
+  virtual ~CefPreferenceManager_13401_CppToC();
+};
+
+// Helpers to return objects at the globally configured API version.
+cef_preference_manager_0_t* CefPreferenceManagerCppToC_Wrap(CefRefPtr<CefPreferenceManager> c);
+CefRefPtr<CefPreferenceManager> CefPreferenceManagerCppToC_Unwrap(cef_preference_manager_0_t* s);
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PREFERENCE_MANAGER_CPPTOC_H_

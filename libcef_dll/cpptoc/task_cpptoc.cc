@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3a4f4763f92b2684a1293e9877a2d2d275228058$
+// $hash=cd0fb3cc926fd2551378a107ccf92c4256f33269$
 //
 
 #include "libcef_dll/cpptoc/task_cpptoc.h"
@@ -40,18 +40,14 @@ CefTaskCppToC::CefTaskCppToC() {
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefTaskCppToC::~CefTaskCppToC() {}
+CefTaskCppToC::~CefTaskCppToC() {
+}
 
-template <>
-CefRefPtr<CefTask>
-CefCppToCRefCounted<CefTaskCppToC, CefTask, cef_task_t>::UnwrapDerived(
-    CefWrapperType type,
-    cef_task_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefTask> CefCppToCRefCounted<CefTaskCppToC, CefTask, cef_task_t>::UnwrapDerived(CefWrapperType type, cef_task_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefTaskCppToC, CefTask, cef_task_t>::kWrapperType =
-        WT_TASK;
+template<> CefWrapperType CefCppToCRefCounted<CefTaskCppToC, CefTask, cef_task_t>::kWrapperType = WT_TASK;
+
+

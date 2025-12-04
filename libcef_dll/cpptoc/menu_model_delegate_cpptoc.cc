@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ec98f0b47f0b95c0dc5c7d015dcd6b9c1c469cca$
+// $hash=baffd4d49389109159a90be521bd3f41894758fc$
 //
 
 #include "libcef_dll/cpptoc/menu_model_delegate_cpptoc.h"
-
 #include "libcef_dll/ctocpp/menu_model_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -21,11 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-menu_model_delegate_execute_command(struct _cef_menu_model_delegate_t* self,
-                                    cef_menu_model_t* menu_model,
-                                    int command_id,
-                                    cef_event_flags_t event_flags) {
+void CEF_CALLBACK menu_model_delegate_execute_command(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int command_id, cef_event_flags_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -42,13 +37,12 @@ menu_model_delegate_execute_command(struct _cef_menu_model_delegate_t* self,
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->ExecuteCommand(
-      CefMenuModelCToCpp::Wrap(menu_model), command_id, event_flags);
+      CefMenuModelCToCpp_Wrap(menu_model),
+      command_id,
+      event_flags);
 }
 
-void CEF_CALLBACK
-menu_model_delegate_mouse_outside_menu(struct _cef_menu_model_delegate_t* self,
-                                       cef_menu_model_t* menu_model,
-                                       const cef_point_t* screen_point) {
+void CEF_CALLBACK menu_model_delegate_mouse_outside_menu(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, const cef_point_t* screen_point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -69,17 +63,15 @@ menu_model_delegate_mouse_outside_menu(struct _cef_menu_model_delegate_t* self,
   }
 
   // Translate param: screen_point; type: simple_byref_const
-  CefPoint screen_pointVal = screen_point ? *screen_point : CefPoint();
+  CefPoint screen_pointVal = screen_point?*screen_point:CefPoint();
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->MouseOutsideMenu(
-      CefMenuModelCToCpp::Wrap(menu_model), screen_pointVal);
+      CefMenuModelCToCpp_Wrap(menu_model),
+      screen_pointVal);
 }
 
-void CEF_CALLBACK menu_model_delegate_unhandled_open_submenu(
-    struct _cef_menu_model_delegate_t* self,
-    cef_menu_model_t* menu_model,
-    int is_rtl) {
+void CEF_CALLBACK menu_model_delegate_unhandled_open_submenu(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int is_rtl) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -96,13 +88,11 @@ void CEF_CALLBACK menu_model_delegate_unhandled_open_submenu(
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->UnhandledOpenSubmenu(
-      CefMenuModelCToCpp::Wrap(menu_model), is_rtl ? true : false);
+      CefMenuModelCToCpp_Wrap(menu_model),
+      is_rtl?true:false);
 }
 
-void CEF_CALLBACK menu_model_delegate_unhandled_close_submenu(
-    struct _cef_menu_model_delegate_t* self,
-    cef_menu_model_t* menu_model,
-    int is_rtl) {
+void CEF_CALLBACK menu_model_delegate_unhandled_close_submenu(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int is_rtl) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -119,12 +109,11 @@ void CEF_CALLBACK menu_model_delegate_unhandled_close_submenu(
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->UnhandledCloseSubmenu(
-      CefMenuModelCToCpp::Wrap(menu_model), is_rtl ? true : false);
+      CefMenuModelCToCpp_Wrap(menu_model),
+      is_rtl?true:false);
 }
 
-void CEF_CALLBACK
-menu_model_delegate_menu_will_show(struct _cef_menu_model_delegate_t* self,
-                                   cef_menu_model_t* menu_model) {
+void CEF_CALLBACK menu_model_delegate_menu_will_show(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -141,12 +130,10 @@ menu_model_delegate_menu_will_show(struct _cef_menu_model_delegate_t* self,
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->MenuWillShow(
-      CefMenuModelCToCpp::Wrap(menu_model));
+      CefMenuModelCToCpp_Wrap(menu_model));
 }
 
-void CEF_CALLBACK
-menu_model_delegate_menu_closed(struct _cef_menu_model_delegate_t* self,
-                                cef_menu_model_t* menu_model) {
+void CEF_CALLBACK menu_model_delegate_menu_closed(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -163,13 +150,10 @@ menu_model_delegate_menu_closed(struct _cef_menu_model_delegate_t* self,
 
   // Execute
   CefMenuModelDelegateCppToC::Get(self)->MenuClosed(
-      CefMenuModelCToCpp::Wrap(menu_model));
+      CefMenuModelCToCpp_Wrap(menu_model));
 }
 
-int CEF_CALLBACK
-menu_model_delegate_format_label(struct _cef_menu_model_delegate_t* self,
-                                 cef_menu_model_t* menu_model,
-                                 cef_string_t* label) {
+int CEF_CALLBACK menu_model_delegate_format_label(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, cef_string_t* label) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -194,7 +178,8 @@ menu_model_delegate_format_label(struct _cef_menu_model_delegate_t* self,
 
   // Execute
   bool _retval = CefMenuModelDelegateCppToC::Get(self)->FormatLabel(
-      CefMenuModelCToCpp::Wrap(menu_model), labelStr);
+      CefMenuModelCToCpp_Wrap(menu_model),
+      labelStr);
 
   // Return type: bool
   return _retval;
@@ -207,10 +192,8 @@ menu_model_delegate_format_label(struct _cef_menu_model_delegate_t* self,
 CefMenuModelDelegateCppToC::CefMenuModelDelegateCppToC() {
   GetStruct()->execute_command = menu_model_delegate_execute_command;
   GetStruct()->mouse_outside_menu = menu_model_delegate_mouse_outside_menu;
-  GetStruct()->unhandled_open_submenu =
-      menu_model_delegate_unhandled_open_submenu;
-  GetStruct()->unhandled_close_submenu =
-      menu_model_delegate_unhandled_close_submenu;
+  GetStruct()->unhandled_open_submenu = menu_model_delegate_unhandled_open_submenu;
+  GetStruct()->unhandled_close_submenu = menu_model_delegate_unhandled_close_submenu;
   GetStruct()->menu_will_show = menu_model_delegate_menu_will_show;
   GetStruct()->menu_closed = menu_model_delegate_menu_closed;
   GetStruct()->format_label = menu_model_delegate_format_label;
@@ -222,18 +205,11 @@ CefMenuModelDelegateCppToC::~CefMenuModelDelegateCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefMenuModelDelegate> CefCppToCRefCounted<
-    CefMenuModelDelegateCppToC,
-    CefMenuModelDelegate,
-    cef_menu_model_delegate_t>::UnwrapDerived(CefWrapperType type,
-                                              cef_menu_model_delegate_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefMenuModelDelegate> CefCppToCRefCounted<CefMenuModelDelegateCppToC, CefMenuModelDelegate, cef_menu_model_delegate_t>::UnwrapDerived(CefWrapperType type, cef_menu_model_delegate_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefMenuModelDelegateCppToC,
-                                   CefMenuModelDelegate,
-                                   cef_menu_model_delegate_t>::kWrapperType =
-    WT_MENU_MODEL_DELEGATE;
+template<> CefWrapperType CefCppToCRefCounted<CefMenuModelDelegateCppToC, CefMenuModelDelegate, cef_menu_model_delegate_t>::kWrapperType = WT_MENU_MODEL_DELEGATE;
+
+

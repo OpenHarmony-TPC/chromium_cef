@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5aec7a736ba6eb80bf371ded8b2e035f09080f4e$
+// $hash=d041be803b8fc6686174f75d5dddddfadb177a22$
 //
 
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -21,9 +20,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK run_file_dialog_callback_on_file_dialog_dismissed(
-    struct _cef_run_file_dialog_callback_t* self,
-    cef_string_list_t file_paths) {
+void CEF_CALLBACK run_file_dialog_callback_on_file_dialog_dismissed(struct _cef_run_file_dialog_callback_t* self, cef_string_list_t file_paths) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -48,8 +45,7 @@ void CEF_CALLBACK run_file_dialog_callback_on_file_dialog_dismissed(
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRunFileDialogCallbackCppToC::CefRunFileDialogCallbackCppToC() {
-  GetStruct()->on_file_dialog_dismissed =
-      run_file_dialog_callback_on_file_dialog_dismissed;
+  GetStruct()->on_file_dialog_dismissed = run_file_dialog_callback_on_file_dialog_dismissed;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -58,19 +54,11 @@ CefRunFileDialogCallbackCppToC::~CefRunFileDialogCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefRunFileDialogCallback>
-CefCppToCRefCounted<CefRunFileDialogCallbackCppToC,
-                    CefRunFileDialogCallback,
-                    cef_run_file_dialog_callback_t>::
-    UnwrapDerived(CefWrapperType type, cef_run_file_dialog_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefRunFileDialogCallback> CefCppToCRefCounted<CefRunFileDialogCallbackCppToC, CefRunFileDialogCallback, cef_run_file_dialog_callback_t>::UnwrapDerived(CefWrapperType type, cef_run_file_dialog_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType
-    CefCppToCRefCounted<CefRunFileDialogCallbackCppToC,
-                        CefRunFileDialogCallback,
-                        cef_run_file_dialog_callback_t>::kWrapperType =
-        WT_RUN_FILE_DIALOG_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefRunFileDialogCallbackCppToC, CefRunFileDialogCallback, cef_run_file_dialog_callback_t>::kWrapperType = WT_RUN_FILE_DIALOG_CALLBACK;
+
+

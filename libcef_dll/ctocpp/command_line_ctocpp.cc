@@ -9,57 +9,50 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9f3309c79e2a5a58132212106b93415581e7a7a0$
+// $hash=27d8411693975d9d21b6a523a0a0524171524c7f$
 //
 
-#include "libcef_dll/ctocpp/command_line_ctocpp.h"
-
 #include "include/cef_api_hash.h"
+#include "libcef_dll/ctocpp/command_line_ctocpp.h"
 #include "libcef_dll/transfer_util.h"
+
 
 // STATIC METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefCommandLine> CefCommandLine::CreateCommandLine() {
-  const char* api_hash = cef_api_hash(0);
-  if (strcmp(api_hash, CEF_API_HASH_PLATFORM)) {
-    // The libcef API hash does not match the current header API hash.
-    DCHECK(false);
-    return nullptr;
-  }
+NO_SANITIZE("cfi-icall") CefRefPtr<CefCommandLine> CefCommandLine::CreateCommandLine() {
+  const char* api_hash = cef_api_hash(CEF_API_VERSION, 0);
+  CHECK(!strcmp(api_hash, CEF_API_HASH_PLATFORM)) <<
+      "API hashes for libcef and libcef_dll_wrapper do not match.";
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_command_line_t* _retval = cef_command_line_create();
+  auto* _retval = cef_command_line_create();
 
   // Return type: refptr_same
-  return CefCommandLineCToCpp::Wrap(_retval);
+  return CefCommandLineCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefCommandLine> CefCommandLine::GetGlobalCommandLine() {
-  const char* api_hash = cef_api_hash(0);
-  if (strcmp(api_hash, CEF_API_HASH_PLATFORM)) {
-    // The libcef API hash does not match the current header API hash.
-    DCHECK(false);
-    return nullptr;
-  }
+NO_SANITIZE("cfi-icall") CefRefPtr<CefCommandLine> CefCommandLine::GetGlobalCommandLine() {
+  const char* api_hash = cef_api_hash(CEF_API_VERSION, 0);
+  CHECK(!strcmp(api_hash, CEF_API_HASH_PLATFORM)) <<
+      "API hashes for libcef and libcef_dll_wrapper do not match.";
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_command_line_t* _retval = cef_command_line_get_global();
+  auto* _retval = cef_command_line_get_global();
 
   // Return type: refptr_same
-  return CefCommandLineCToCpp::Wrap(_retval);
+  return CefCommandLineCToCpp_Wrap(_retval);
 }
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::IsValid() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_valid)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_valid) {
     return false;
   }
 
@@ -69,12 +62,12 @@ NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::IsValid() {
   int _retval = _struct->is_valid(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
 NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::IsReadOnly() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_read_only)) {
+  auto* _struct = GetStruct();
+  if (!_struct->is_read_only) {
     return false;
   }
 
@@ -84,29 +77,27 @@ NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::IsReadOnly() {
   int _retval = _struct->is_read_only(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefCommandLine> CefCommandLineCToCpp::Copy() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, copy)) {
+NO_SANITIZE("cfi-icall") CefRefPtr<CefCommandLine> CefCommandLineCToCpp::Copy() {
+  auto* _struct = GetStruct();
+  if (!_struct->copy) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_command_line_t* _retval = _struct->copy(_struct);
+  auto* _retval = _struct->copy(_struct);
 
   // Return type: refptr_same
-  return CefCommandLineCToCpp::Wrap(_retval);
+  return CefCommandLineCToCpp_Wrap(_retval);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::InitFromArgv(int argc, const char* const* argv) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, init_from_argv)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::InitFromArgv(int argc, const char* const* argv) {
+  auto* _struct = GetStruct();
+  if (!_struct->init_from_argv) {
     return;
   }
 
@@ -119,13 +110,14 @@ void CefCommandLineCToCpp::InitFromArgv(int argc, const char* const* argv) {
   }
 
   // Execute
-  _struct->init_from_argv(_struct, argc, argv);
+  _struct->init_from_argv(_struct,
+      argc,
+      argv);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::InitFromString(const CefString& command_line) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, init_from_string)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::InitFromString(const CefString& command_line) {
+  auto* _struct = GetStruct();
+  if (!_struct->init_from_string) {
     return;
   }
 
@@ -138,12 +130,13 @@ void CefCommandLineCToCpp::InitFromString(const CefString& command_line) {
   }
 
   // Execute
-  _struct->init_from_string(_struct, command_line.GetStruct());
+  _struct->init_from_string(_struct,
+      command_line.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::Reset() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, reset)) {
+  auto* _struct = GetStruct();
+  if (!_struct->reset) {
     return;
   }
 
@@ -153,10 +146,9 @@ NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::Reset() {
   _struct->reset(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::GetArgv(std::vector<CefString>& argv) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_argv)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::GetArgv(std::vector<CefString>& argv) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_argv) {
     return;
   }
 
@@ -170,7 +162,8 @@ void CefCommandLineCToCpp::GetArgv(std::vector<CefString>& argv) {
   }
 
   // Execute
-  _struct->get_argv(_struct, argvList);
+  _struct->get_argv(_struct,
+      argvList);
 
   // Restore param:argv; type: string_vec_byref
   if (argvList) {
@@ -180,10 +173,9 @@ void CefCommandLineCToCpp::GetArgv(std::vector<CefString>& argv) {
   }
 }
 
-NO_SANITIZE("cfi-icall")
-CefString CefCommandLineCToCpp::GetCommandLineString() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_command_line_string)) {
+NO_SANITIZE("cfi-icall") CefString CefCommandLineCToCpp::GetCommandLineString() {
+  auto* _struct = GetStruct();
+  if (!_struct->get_command_line_string) {
     return CefString();
   }
 
@@ -199,8 +191,8 @@ CefString CefCommandLineCToCpp::GetCommandLineString() {
 }
 
 NO_SANITIZE("cfi-icall") CefString CefCommandLineCToCpp::GetProgram() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_program)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_program) {
     return CefString();
   }
 
@@ -215,10 +207,9 @@ NO_SANITIZE("cfi-icall") CefString CefCommandLineCToCpp::GetProgram() {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::SetProgram(const CefString& program) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_program)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::SetProgram(const CefString& program) {
+  auto* _struct = GetStruct();
+  if (!_struct->set_program) {
     return;
   }
 
@@ -231,12 +222,13 @@ void CefCommandLineCToCpp::SetProgram(const CefString& program) {
   }
 
   // Execute
-  _struct->set_program(_struct, program.GetStruct());
+  _struct->set_program(_struct,
+      program.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::HasSwitches() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, has_switches)) {
+  auto* _struct = GetStruct();
+  if (!_struct->has_switches) {
     return false;
   }
 
@@ -246,13 +238,12 @@ NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::HasSwitches() {
   int _retval = _struct->has_switches(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefCommandLineCToCpp::HasSwitch(const CefString& name) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, has_switch)) {
+NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::HasSwitch(const CefString& name) {
+  auto* _struct = GetStruct();
+  if (!_struct->has_switch) {
     return false;
   }
 
@@ -265,16 +256,16 @@ bool CefCommandLineCToCpp::HasSwitch(const CefString& name) {
   }
 
   // Execute
-  int _retval = _struct->has_switch(_struct, name.GetStruct());
+  int _retval = _struct->has_switch(_struct,
+      name.GetStruct());
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-CefString CefCommandLineCToCpp::GetSwitchValue(const CefString& name) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_switch_value)) {
+NO_SANITIZE("cfi-icall") CefString CefCommandLineCToCpp::GetSwitchValue(const CefString& name) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_switch_value) {
     return CefString();
   }
 
@@ -287,8 +278,8 @@ CefString CefCommandLineCToCpp::GetSwitchValue(const CefString& name) {
   }
 
   // Execute
-  cef_string_userfree_t _retval =
-      _struct->get_switch_value(_struct, name.GetStruct());
+  cef_string_userfree_t _retval = _struct->get_switch_value(_struct,
+      name.GetStruct());
 
   // Return type: string
   CefString _retvalStr;
@@ -296,10 +287,9 @@ CefString CefCommandLineCToCpp::GetSwitchValue(const CefString& name) {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::GetSwitches(SwitchMap& switches) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_switches)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::GetSwitches(SwitchMap& switches) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_switches) {
     return;
   }
 
@@ -313,7 +303,8 @@ void CefCommandLineCToCpp::GetSwitches(SwitchMap& switches) {
   }
 
   // Execute
-  _struct->get_switches(_struct, switchesMap);
+  _struct->get_switches(_struct,
+      switchesMap);
 
   // Restore param:switches; type: string_map_single_byref
   if (switchesMap) {
@@ -323,10 +314,9 @@ void CefCommandLineCToCpp::GetSwitches(SwitchMap& switches) {
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::AppendSwitch(const CefString& name) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, append_switch)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::AppendSwitch(const CefString& name) {
+  auto* _struct = GetStruct();
+  if (!_struct->append_switch) {
     return;
   }
 
@@ -339,14 +329,13 @@ void CefCommandLineCToCpp::AppendSwitch(const CefString& name) {
   }
 
   // Execute
-  _struct->append_switch(_struct, name.GetStruct());
+  _struct->append_switch(_struct,
+      name.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::AppendSwitchWithValue(const CefString& name,
-                                                 const CefString& value) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, append_switch_with_value)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::AppendSwitchWithValue(const CefString& name, const CefString& value) {
+  auto* _struct = GetStruct();
+  if (!_struct->append_switch_with_value) {
     return;
   }
 
@@ -364,13 +353,14 @@ void CefCommandLineCToCpp::AppendSwitchWithValue(const CefString& name,
   }
 
   // Execute
-  _struct->append_switch_with_value(_struct, name.GetStruct(),
-                                    value.GetStruct());
+  _struct->append_switch_with_value(_struct,
+      name.GetStruct(),
+      value.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::HasArguments() {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, has_arguments)) {
+  auto* _struct = GetStruct();
+  if (!_struct->has_arguments) {
     return false;
   }
 
@@ -380,13 +370,12 @@ NO_SANITIZE("cfi-icall") bool CefCommandLineCToCpp::HasArguments() {
   int _retval = _struct->has_arguments(_struct);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::GetArguments(ArgumentList& arguments) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_arguments)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::GetArguments(ArgumentList& arguments) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_arguments) {
     return;
   }
 
@@ -400,7 +389,8 @@ void CefCommandLineCToCpp::GetArguments(ArgumentList& arguments) {
   }
 
   // Execute
-  _struct->get_arguments(_struct, argumentsList);
+  _struct->get_arguments(_struct,
+      argumentsList);
 
   // Restore param:arguments; type: string_vec_byref
   if (argumentsList) {
@@ -410,10 +400,9 @@ void CefCommandLineCToCpp::GetArguments(ArgumentList& arguments) {
   }
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::AppendArgument(const CefString& argument) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, append_argument)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::AppendArgument(const CefString& argument) {
+  auto* _struct = GetStruct();
+  if (!_struct->append_argument) {
     return;
   }
 
@@ -426,13 +415,13 @@ void CefCommandLineCToCpp::AppendArgument(const CefString& argument) {
   }
 
   // Execute
-  _struct->append_argument(_struct, argument.GetStruct());
+  _struct->append_argument(_struct,
+      argument.GetStruct());
 }
 
-NO_SANITIZE("cfi-icall")
-void CefCommandLineCToCpp::PrependWrapper(const CefString& wrapper) {
-  cef_command_line_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, prepend_wrapper)) {
+NO_SANITIZE("cfi-icall") void CefCommandLineCToCpp::PrependWrapper(const CefString& wrapper) {
+  auto* _struct = GetStruct();
+  if (!_struct->prepend_wrapper) {
     return;
   }
 
@@ -445,27 +434,25 @@ void CefCommandLineCToCpp::PrependWrapper(const CefString& wrapper) {
   }
 
   // Execute
-  _struct->prepend_wrapper(_struct, wrapper.GetStruct());
+  _struct->prepend_wrapper(_struct,
+      wrapper.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefCommandLineCToCpp::CefCommandLineCToCpp() {}
+CefCommandLineCToCpp::CefCommandLineCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
-CefCommandLineCToCpp::~CefCommandLineCToCpp() {}
+CefCommandLineCToCpp::~CefCommandLineCToCpp() {
+}
 
-template <>
-cef_command_line_t*
-CefCToCppRefCounted<CefCommandLineCToCpp, CefCommandLine, cef_command_line_t>::
-    UnwrapDerived(CefWrapperType type, CefCommandLine* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_command_line_t* CefCToCppRefCounted<CefCommandLineCToCpp, CefCommandLine, cef_command_line_t>::UnwrapDerived(CefWrapperType type, CefCommandLine* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefCommandLineCToCpp,
-                                   CefCommandLine,
-                                   cef_command_line_t>::kWrapperType =
-    WT_COMMAND_LINE;
+template<> CefWrapperType CefCToCppRefCounted<CefCommandLineCToCpp, CefCommandLine, cef_command_line_t>::kWrapperType = WT_COMMAND_LINE;
+
+

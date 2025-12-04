@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=805e54675b9bb0ad2a584fc4db33a343e61163fa$
+// $hash=027f71b4e7d4db1d9d41f736d6411089b302ed54$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TASK_CTOCPP_H_
@@ -20,20 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_task_capi.h"
 #include "include/cef_task.h"
+#include "include/capi/cef_task_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTaskCToCpp
-    : public CefCToCppRefCounted<CefTaskCToCpp, CefTask, cef_task_t> {
+class CefTask_0_CToCpp
+    : public CefCToCppRefCounted<CefTask_0_CToCpp, CefTask, cef_task_0_t> {
  public:
-  CefTaskCToCpp();
-  virtual ~CefTaskCToCpp();
+  CefTask_0_CToCpp();
+  virtual ~CefTask_0_CToCpp();
 
   // CefTask methods.
   void Execute() override;
 };
+
+constexpr auto CefTaskCToCpp_Wrap = CefTask_0_CToCpp::Wrap;
+constexpr auto CefTaskCToCpp_Unwrap = CefTask_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TASK_CTOCPP_H_

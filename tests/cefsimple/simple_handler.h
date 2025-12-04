@@ -14,15 +14,13 @@ class SimpleHandler : public CefClient,
                       public CefLifeSpanHandler,
                       public CefLoadHandler,
                       public CefDownloadHandler,
-                      public CefPermissionHandler,
-                      public CefRenderHandler {
+                      public CefPermissionHandler {
  public:
   explicit SimpleHandler(bool is_alloy_style);
   ~SimpleHandler() override;
 
   // Provide access to the single global instance of this object.
   static SimpleHandler* GetInstance();
-  bool RenderOnScreen(void* window, const void* osr_buffer, int w, int h);
 
   // CefClient methods:
   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
@@ -30,9 +28,6 @@ class SimpleHandler : public CefClient,
   CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
   CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
-    return this;
-  }
-  virtual CefRefPtr<CefRenderHandler> GetRenderHandler() override {
     return this;
   }
 
@@ -88,16 +83,6 @@ class SimpleHandler : public CefClient,
       CefRefPtr<CefBrowser> browser,
       uint64_t prompt_id,
       cef_permission_request_result_t result) override {}
-
-  // CefRenderHandler
-  virtual void GetViewRect(CefRefPtr<CefBrowser> browser,
-                           CefRect& rect) override;
-  virtual void OnPaint(CefRefPtr<CefBrowser> browser,
-                       PaintElementType type,
-                       const RectList& dirtyRects,
-                       const void* buffer,
-                       int width,
-                       int height) override;
 
   void ShowMainWindow();
 

@@ -9,20 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4af52257c34a00a0e66d1a266a29b988bc921d3d$
+// $hash=6f029de9a99e14f9981debd201bc8c0780192995$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/resource_skip_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK
-resource_skip_callback_cont(struct _cef_resource_skip_callback_t* self,
-                            int64_t bytes_skipped) {
+void CEF_CALLBACK resource_skip_callback_cont(struct _cef_resource_skip_callback_0_t* self, int64_t bytes_skipped) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -33,36 +31,31 @@ resource_skip_callback_cont(struct _cef_resource_skip_callback_t* self,
   }
 
   // Execute
-  CefResourceSkipCallbackCppToC::Get(self)->Continue(bytes_skipped);
+  CefResourceSkipCallback_0_CppToC::Get(self)->Continue(
+      bytes_skipped);
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceSkipCallbackCppToC::CefResourceSkipCallbackCppToC() {
+CefResourceSkipCallback_0_CppToC::CefResourceSkipCallback_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->cont = resource_skip_callback_cont;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResourceSkipCallbackCppToC::~CefResourceSkipCallbackCppToC() {
+CefResourceSkipCallback_0_CppToC::~CefResourceSkipCallback_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefResourceSkipCallback> CefCppToCRefCounted<
-    CefResourceSkipCallbackCppToC,
-    CefResourceSkipCallback,
-    cef_resource_skip_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                 cef_resource_skip_callback_t*
-                                                     s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefResourceSkipCallback> CefCppToCRefCounted<CefResourceSkipCallback_0_CppToC, CefResourceSkipCallback, cef_resource_skip_callback_0_t>::UnwrapDerived(CefWrapperType type, cef_resource_skip_callback_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefResourceSkipCallbackCppToC,
-                                   CefResourceSkipCallback,
-                                   cef_resource_skip_callback_t>::kWrapperType =
-    WT_RESOURCE_SKIP_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefResourceSkipCallback_0_CppToC, CefResourceSkipCallback, cef_resource_skip_callback_0_t>::kWrapperType = WT_RESOURCE_SKIP_CALLBACK;
+
+

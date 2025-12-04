@@ -10,6 +10,7 @@ from gclient_util import *
 from gn_args import GetAllPlatformConfigs, GetConfigFileContents
 import issue_1999
 import os
+from setup_vscode import GetPreferredOutputDirectory, UpdateCompileCommandsJSON
 import sys
 
 # The CEF directory is the parent directory of _this_ script.
@@ -26,10 +27,10 @@ elif sys.platform.startswith('linux'):
   platform = 'linux'
 else:
   print('Unknown operating system platform')
-  sys.exit()
+  sys.exit(1)
 
-print("\nGenerating CEF version header file...")
-cmd = [sys.executable, 'tools/make_version_header.py', 'include/cef_version.h']
+print("\nGenerating CEF translated files...")
+cmd = [sys.executable, 'tools/version_manager.py', '-u', '--fast-check']
 RunAction(cef_dir, cmd)
 
 print("\nPatching build configuration and source files for CEF...")
@@ -64,12 +65,6 @@ if platform == 'windows':
   # o Enable use of a custom toolchain on Windows.
   #
   #   set WIN_CUSTOM_TOOLCHAIN=1
-  #
-  # o Used by tools/msvs_env.bat to configure the MSVS tools environment.
-  #   Should be set to "none" because VC variables for CEF will be set via
-  #   INCLUDE/LIB/PATH.
-  #
-  #   set CEF_VCVARS=none
   #
   # o Used by the following scripts:
   #   (a) build/vs_toolchain.py SetEnvironmentAndGetRuntimeDllDirs when
@@ -134,6 +129,10 @@ if platform == 'windows':
     gn_args['windows_sdk_version'] = os.environ['SDK_VERSION']
 
 configs = GetAllPlatformConfigs(gn_args)
+
+# Returns the preferred output directory for VSCode, or None.
+preferred_dir = GetPreferredOutputDirectory(configs.keys())
+
 for dir, config in configs.items():
   # Create out directories and write the args.gn file.
   out_path = os.path.join(src_dir, 'out', dir)
@@ -149,3 +148,7 @@ for dir, config in configs.items():
   RunAction(src_dir, cmd)
   if platform == 'windows':
     issue_1999.apply(out_path)
+
+  if dir == preferred_dir and not UpdateCompileCommandsJSON(
+      src_dir, out_path, create=False):
+    sys.exit(1)

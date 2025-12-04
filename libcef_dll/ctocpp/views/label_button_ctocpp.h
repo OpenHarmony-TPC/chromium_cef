@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a1163699d67de1f0317224d8367392ddda4f24bc$
+// $hash=d0de072d44054ce6d6a8982190bccfff720922f1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_LABEL_BUTTON_CTOCPP_H_
@@ -20,17 +20,16 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_label_button_capi.h"
-#include "include/capi/views/cef_menu_button_capi.h"
 #include "include/views/cef_label_button.h"
+#include "include/capi/views/cef_label_button_capi.h"
 #include "include/views/cef_menu_button.h"
+#include "include/capi/views/cef_menu_button_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
-                                                        CefLabelButton,
-                                                        cef_label_button_t> {
+class CefLabelButtonCToCpp
+    : public CefCToCppRefCounted<CefLabelButtonCToCpp, CefLabelButton, cef_label_button_t> {
  public:
   CefLabelButtonCToCpp();
   virtual ~CefLabelButtonCToCpp();
@@ -39,8 +38,7 @@ class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
   CefRefPtr<CefMenuButton> AsMenuButton() override;
   void SetText(const CefString& text) override;
   CefString GetText() override;
-  void SetImage(cef_button_state_t button_state,
-                CefRefPtr<CefImage> image) override;
+  void SetImage(cef_button_state_t button_state, CefRefPtr<CefImage> image) override;
   CefRefPtr<CefImage> GetImage(cef_button_state_t button_state) override;
   void SetTextColor(cef_button_state_t for_state, cef_color_t color) override;
   void SetEnabledTextColors(cef_color_t color) override;
@@ -111,5 +109,8 @@ class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
   bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
   bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
 };
+
+constexpr auto CefLabelButtonCToCpp_Wrap = CefLabelButtonCToCpp::Wrap;
+constexpr auto CefLabelButtonCToCpp_Unwrap = CefLabelButtonCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_LABEL_BUTTON_CTOCPP_H_

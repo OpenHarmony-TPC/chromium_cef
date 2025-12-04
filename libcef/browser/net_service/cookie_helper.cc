@@ -201,10 +201,11 @@ void SaveCookiesOnUIThread(
                        cookie));
   }
 
-  SetCanonicalCookieCallback(
-      progress, net::CanonicalCookie(),
-      net::CookieAccessResult(net::CookieInclusionStatus(
-          net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
+  net::CookieInclusionStatus status;
+  status.AddExclusionReason(
+      net::CookieInclusionStatus::ExclusionReason::EXCLUDE_UNKNOWN_ERROR);
+  SetCanonicalCookieCallback(progress, net::CanonicalCookie(),
+                             net::CookieAccessResult(std::move(status)));
 }
 
 }  // namespace
@@ -251,7 +252,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
   if (request.trusted_params.has_value() &&
       !request.trusted_params->isolation_info.IsEmpty()) {
     const auto& isolation_info = request.trusted_params->isolation_info;
-    partition_key_collection = net::CookiePartitionKeyCollection::FromOptional(
+    partition_key_collection = net::CookiePartitionKeyCollection(
         net::CookiePartitionKey::FromNetworkIsolationKey(
             isolation_info.network_isolation_key(), request.site_for_cookies,
             net::SchemefulSite(request.url),

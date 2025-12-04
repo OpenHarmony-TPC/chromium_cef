@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dcb1844016560efe46f15482928ec7380108a605$
+// $hash=8afd8ae332029adfeb250c9e7fba1babc27a13ad$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_REGISTRAR_CTOCPP_H_
@@ -20,23 +20,24 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_preference_capi.h"
 #include "include/cef_preference.h"
+#include "include/capi/cef_preference_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_scoped.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPreferenceRegistrarCToCpp
-    : public CefCToCppScoped<CefPreferenceRegistrarCToCpp,
-                             CefPreferenceRegistrar,
-                             cef_preference_registrar_t> {
+    : public CefCToCppScoped<CefPreferenceRegistrarCToCpp, CefPreferenceRegistrar, cef_preference_registrar_t> {
  public:
   CefPreferenceRegistrarCToCpp();
   virtual ~CefPreferenceRegistrarCToCpp();
 
   // CefPreferenceRegistrar methods.
-  bool AddPreference(const CefString& name,
-                     CefRefPtr<CefValue> default_value) override;
+  bool AddPreference(const CefString& name, CefRefPtr<CefValue> default_value) override;
 };
+
+constexpr auto CefPreferenceRegistrarCToCpp_Wrap = CefPreferenceRegistrarCToCpp::Wrap;
+constexpr auto CefPreferenceRegistrarCToCpp_UnwrapOwn = CefPreferenceRegistrarCToCpp::UnwrapOwn;
+constexpr auto CefPreferenceRegistrarCToCpp_UnwrapRaw = CefPreferenceRegistrarCToCpp::UnwrapRaw;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_REGISTRAR_CTOCPP_H_

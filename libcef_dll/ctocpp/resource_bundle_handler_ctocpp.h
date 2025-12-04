@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4758d725bd4dd032d1f751095cba27df2d29d590$
+// $hash=2b963e3c7050232f34fb65e6788e01df92238143$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_HANDLER_CTOCPP_H_
@@ -20,29 +20,25 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_bundle_handler_capi.h"
 #include "include/cef_resource_bundle_handler.h"
+#include "include/capi/cef_resource_bundle_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResourceBundleHandlerCToCpp
-    : public CefCToCppRefCounted<CefResourceBundleHandlerCToCpp,
-                                 CefResourceBundleHandler,
-                                 cef_resource_bundle_handler_t> {
+class CefResourceBundleHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefResourceBundleHandler_0_CToCpp, CefResourceBundleHandler, cef_resource_bundle_handler_0_t> {
  public:
-  CefResourceBundleHandlerCToCpp();
-  virtual ~CefResourceBundleHandlerCToCpp();
+  CefResourceBundleHandler_0_CToCpp();
+  virtual ~CefResourceBundleHandler_0_CToCpp();
 
   // CefResourceBundleHandler methods.
   bool GetLocalizedString(int string_id, CefString& string) override;
-  bool GetDataResource(int resource_id,
-                       void*& data,
-                       size_t& data_size) override;
-  bool GetDataResourceForScale(int resource_id,
-                               ScaleFactor scale_factor,
-                               void*& data,
-                               size_t& data_size) override;
+  bool GetDataResource(int resource_id, void*& data, size_t& data_size) override;
+  bool GetDataResourceForScale(int resource_id, ScaleFactor scale_factor, void*& data, size_t& data_size) override;
 };
+
+constexpr auto CefResourceBundleHandlerCToCpp_Wrap = CefResourceBundleHandler_0_CToCpp::Wrap;
+constexpr auto CefResourceBundleHandlerCToCpp_Unwrap = CefResourceBundleHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_HANDLER_CTOCPP_H_

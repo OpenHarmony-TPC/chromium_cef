@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d4b303292737444546112e0e747b75ea5366bb6f$
+// $hash=8ab503eb8e961c8532cd664fcaa5eb1b0db9c076$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_BOX_LAYOUT_CPPTOC_H_
@@ -20,20 +20,22 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/views/cef_box_layout_capi.h"
-#include "include/capi/views/cef_view_capi.h"
 #include "include/views/cef_box_layout.h"
+#include "include/capi/views/cef_box_layout_capi_versions.h"
 #include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefBoxLayoutCppToC : public CefCppToCRefCounted<CefBoxLayoutCppToC,
-                                                      CefBoxLayout,
-                                                      cef_box_layout_t> {
+class CefBoxLayout_0_CppToC
+    : public CefCppToCRefCounted<CefBoxLayout_0_CppToC, CefBoxLayout, cef_box_layout_0_t> {
  public:
-  CefBoxLayoutCppToC();
-  virtual ~CefBoxLayoutCppToC();
+  CefBoxLayout_0_CppToC();
+  virtual ~CefBoxLayout_0_CppToC();
 };
+
+constexpr auto CefBoxLayoutCppToC_Wrap = CefBoxLayout_0_CppToC::Wrap;
+constexpr auto CefBoxLayoutCppToC_Unwrap = CefBoxLayout_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BOX_LAYOUT_CPPTOC_H_

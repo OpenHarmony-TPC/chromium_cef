@@ -9,24 +9,23 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ee29e6f4fb00c084836470d32d8c236dc08724a0$
+// $hash=d19ccbec488f8db7394b43777674423f36fb14e7$
 //
 
-#include "libcef_dll/ctocpp/frame_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/ctocpp/frame_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefFrameHandlerCToCpp::OnFrameCreated(CefRefPtr<CefBrowser> browser,
-                                           CefRefPtr<CefFrame> frame) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefFrameHandler_0_CToCpp::OnFrameCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_frame_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_frame_created)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_frame_created) {
     return;
   }
 
@@ -44,17 +43,16 @@ void CefFrameHandlerCToCpp::OnFrameCreated(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_frame_created(_struct, CefBrowserCppToC::Wrap(browser),
-                            CefFrameCppToC::Wrap(frame));
+  _struct->on_frame_created(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefFrameHandlerCToCpp::OnFrameDestroyed(CefRefPtr<CefBrowser> browser,
-                                             CefRefPtr<CefFrame> frame) {
+NO_SANITIZE("cfi-icall") void CefFrameHandler_0_CToCpp::OnFrameDestroyed(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_frame_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_frame_destroyed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_frame_destroyed) {
     return;
   }
 
@@ -72,18 +70,16 @@ void CefFrameHandlerCToCpp::OnFrameDestroyed(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_frame_destroyed(_struct, CefBrowserCppToC::Wrap(browser),
-                              CefFrameCppToC::Wrap(frame));
+  _struct->on_frame_destroyed(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefFrameHandlerCToCpp::OnFrameAttached(CefRefPtr<CefBrowser> browser,
-                                            CefRefPtr<CefFrame> frame,
-                                            bool reattached) {
+NO_SANITIZE("cfi-icall") void CefFrameHandler_0_CToCpp::OnFrameAttached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, bool reattached) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_frame_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_frame_attached)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_frame_attached) {
     return;
   }
 
@@ -101,17 +97,17 @@ void CefFrameHandlerCToCpp::OnFrameAttached(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_frame_attached(_struct, CefBrowserCppToC::Wrap(browser),
-                             CefFrameCppToC::Wrap(frame), reattached);
+  _struct->on_frame_attached(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame),
+      reattached);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefFrameHandlerCToCpp::OnFrameDetached(CefRefPtr<CefBrowser> browser,
-                                            CefRefPtr<CefFrame> frame) {
+NO_SANITIZE("cfi-icall") void CefFrameHandler_0_CToCpp::OnFrameDetached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_frame_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_frame_detached)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_frame_detached) {
     return;
   }
 
@@ -129,18 +125,16 @@ void CefFrameHandlerCToCpp::OnFrameDetached(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_frame_detached(_struct, CefBrowserCppToC::Wrap(browser),
-                             CefFrameCppToC::Wrap(frame));
+  _struct->on_frame_detached(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(frame));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefFrameHandlerCToCpp::OnMainFrameChanged(CefRefPtr<CefBrowser> browser,
-                                               CefRefPtr<CefFrame> old_frame,
-                                               CefRefPtr<CefFrame> new_frame) {
+NO_SANITIZE("cfi-icall") void CefFrameHandler_0_CToCpp::OnMainFrameChanged(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> old_frame, CefRefPtr<CefFrame> new_frame) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_frame_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_main_frame_changed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_main_frame_changed) {
     return;
   }
 
@@ -154,33 +148,29 @@ void CefFrameHandlerCToCpp::OnMainFrameChanged(CefRefPtr<CefBrowser> browser,
   // Unverified params: old_frame, new_frame
 
   // Execute
-  _struct->on_main_frame_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                                 CefFrameCppToC::Wrap(old_frame),
-                                 CefFrameCppToC::Wrap(new_frame));
+  _struct->on_main_frame_changed(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      CefFrameCppToC_Wrap(old_frame),
+      CefFrameCppToC_Wrap(new_frame));
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFrameHandlerCToCpp::CefFrameHandlerCToCpp() {}
+CefFrameHandler_0_CToCpp::CefFrameHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefFrameHandlerCToCpp::~CefFrameHandlerCToCpp() {
+CefFrameHandler_0_CToCpp::~CefFrameHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_frame_handler_t*
-CefCToCppRefCounted<CefFrameHandlerCToCpp,
-                    CefFrameHandler,
-                    cef_frame_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                        CefFrameHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_frame_handler_0_t* CefCToCppRefCounted<CefFrameHandler_0_CToCpp, CefFrameHandler, cef_frame_handler_0_t>::UnwrapDerived(CefWrapperType type, CefFrameHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefFrameHandlerCToCpp,
-                                   CefFrameHandler,
-                                   cef_frame_handler_t>::kWrapperType =
-    WT_FRAME_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefFrameHandler_0_CToCpp, CefFrameHandler, cef_frame_handler_0_t>::kWrapperType = WT_FRAME_HANDLER;
+
+

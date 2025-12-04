@@ -783,6 +783,28 @@ CefRefPtr<CefNavigationEntry> CefBrowserHostBase::GetVisibleNavigationEntry() {
   return new CefNavigationEntryImpl(entry);
 }
 
+void CefBrowserHostBase::SetAudioMuted(bool mute) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&CefBrowserHostBase::SetAudioMuted,
+                                          this, mute));
+    return;
+  }
+  if (auto web_contents = GetWebContents()) {
+    web_contents->SetAudioMuted(mute);
+  }
+}
+
+bool CefBrowserHostBase::IsAudioMuted() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    DCHECK(false) << "called on invalid thread";
+    return false;
+  }
+  if (auto web_contents = GetWebContents()) {
+    return web_contents->IsAudioMuted();
+  }
+  return false;
+}
+
 void CefBrowserHostBase::NotifyMoveOrResizeStarted() {
 #if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -795,7 +817,28 @@ void CefBrowserHostBase::NotifyMoveOrResizeStarted() {
   if (platform_delegate_) {
     platform_delegate_->NotifyMoveOrResizeStarted();
   }
+#else
+  LOG(WARNING)
+      << "Incorrect usage of CefBrowserHost::NotifyMoveOrResizeStarted";
 #endif
+}
+
+void CefBrowserHostBase::NotifyScreenInfoChanged() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefBrowserHostBase::NotifyScreenInfoChanged, this));
+    return;
+  }
+
+  if (platform_delegate_) {
+    if (IsWindowless() || platform_delegate_->HasExternalParent()) {
+      platform_delegate_->NotifyScreenInfoChanged();
+    } else {
+      LOG(WARNING)
+          << "Incorrect usage of CefBrowserHost::NotifyScreenInfoChanged";
+    }
+  }
 }
 
 bool CefBrowserHostBase::IsFullscreen() {
@@ -1396,6 +1439,19 @@ CefDevToolsWindowRunner* CefBrowserHostBase::GetDevToolsWindowRunner() {
     devtools_window_runner_ = std::make_unique<CefDevToolsWindowRunner>();
   }
   return devtools_window_runner_.get();
+}
+
+void CefBrowserHostBase::set_context_menu_observer(
+    RenderViewContextMenuObserver* observer) {
+  context_menu_observer_ = observer;
+}
+
+void CefBrowserHostBase::clear_context_menu_observer(
+    RenderViewContextMenuObserver* observer) {
+  // Don't clear if a new Observer has already been assigned.
+  if (context_menu_observer_ == observer) {
+    context_menu_observer_ = nullptr;
+  }
 }
 
 views::Widget* CefBrowserHostBase::GetWindowWidget() const {

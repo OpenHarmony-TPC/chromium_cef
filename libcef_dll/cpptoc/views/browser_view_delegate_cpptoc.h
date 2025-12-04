@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=766ee9be8fb2a80edcc0f6cd42802662073a2d66$
+// $hash=836bcae6c48ef4f7b92440327cceaca3c04c64b9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_DELEGATE_CPPTOC_H_
@@ -20,23 +20,24 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/views/cef_browser_view_capi.h"
+#include "include/views/cef_browser_view_delegate.h"
 #include "include/capi/views/cef_browser_view_delegate_capi.h"
 #include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi.h"
 #include "include/views/cef_browser_view.h"
-#include "include/views/cef_browser_view_delegate.h"
+#include "include/capi/views/cef_browser_view_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefBrowserViewDelegateCppToC
-    : public CefCppToCRefCounted<CefBrowserViewDelegateCppToC,
-                                 CefBrowserViewDelegate,
-                                 cef_browser_view_delegate_t> {
+    : public CefCppToCRefCounted<CefBrowserViewDelegateCppToC, CefBrowserViewDelegate, cef_browser_view_delegate_t> {
  public:
   CefBrowserViewDelegateCppToC();
   virtual ~CefBrowserViewDelegateCppToC();
 };
+
+constexpr auto CefBrowserViewDelegateCppToC_Wrap = CefBrowserViewDelegateCppToC::Wrap;
+constexpr auto CefBrowserViewDelegateCppToC_Unwrap = CefBrowserViewDelegateCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_DELEGATE_CPPTOC_H_

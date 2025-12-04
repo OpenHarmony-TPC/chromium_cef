@@ -9,23 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=06feeccb613de95d5489d9a4f3fe13823d8e7299$
+// $hash=b6d86a18511920f3ea60f9dc8f6575866898fbe2$
 //
 
 #include "libcef_dll/ctocpp/file_dialog_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
+
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefFileDialogCallbackCToCpp::Continue(
-    const std::vector<CefString>& file_paths) {
+NO_SANITIZE("cfi-icall") void CefFileDialogCallbackCToCpp::Continue(const std::vector<CefString>& file_paths) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_file_dialog_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
@@ -41,7 +39,8 @@ void CefFileDialogCallbackCToCpp::Continue(
   }
 
   // Execute
-  _struct->cont(_struct, file_pathsList);
+  _struct->cont(_struct,
+      file_pathsList);
 
   // Restore param:file_paths; type: string_vec_byref_const
   if (file_pathsList) {
@@ -52,8 +51,8 @@ void CefFileDialogCallbackCToCpp::Continue(
 NO_SANITIZE("cfi-icall") void CefFileDialogCallbackCToCpp::Cancel() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_file_dialog_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cancel)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cancel) {
     return;
   }
 
@@ -65,7 +64,8 @@ NO_SANITIZE("cfi-icall") void CefFileDialogCallbackCToCpp::Cancel() {
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefFileDialogCallbackCToCpp::CefFileDialogCallbackCToCpp() {}
+CefFileDialogCallbackCToCpp::CefFileDialogCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -73,18 +73,11 @@ CefFileDialogCallbackCToCpp::~CefFileDialogCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_file_dialog_callback_t* CefCToCppRefCounted<
-    CefFileDialogCallbackCToCpp,
-    CefFileDialogCallback,
-    cef_file_dialog_callback_t>::UnwrapDerived(CefWrapperType type,
-                                               CefFileDialogCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_file_dialog_callback_t* CefCToCppRefCounted<CefFileDialogCallbackCToCpp, CefFileDialogCallback, cef_file_dialog_callback_t>::UnwrapDerived(CefWrapperType type, CefFileDialogCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefFileDialogCallbackCToCpp,
-                                   CefFileDialogCallback,
-                                   cef_file_dialog_callback_t>::kWrapperType =
-    WT_FILE_DIALOG_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefFileDialogCallbackCToCpp, CefFileDialogCallback, cef_file_dialog_callback_t>::kWrapperType = WT_FILE_DIALOG_CALLBACK;
+
+

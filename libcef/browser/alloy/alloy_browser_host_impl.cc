@@ -117,8 +117,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::Create(
 
   scoped_refptr<CefBrowserInfo> info =
       CefBrowserInfoManager::GetInstance()->CreateBrowserInfo(
-          /*is_devtools_popup=*/false, platform_delegate->IsWindowless(),
-          platform_delegate->IsPrintPreviewSupported(),
+          /*is_devtools_popup=*/false, platform_delegate->GetBrowserConfig(),
           create_params.extra_info);
 
   bool own_web_contents = false;
@@ -132,8 +131,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::Create(
 
   CefRefPtr<AlloyBrowserHostImpl> browser =
       CreateInternal(create_params.settings, create_params.client, web_contents,
-                     own_web_contents, info,
-                     /*opener=*/nullptr, /*is_devtools_popup=*/false,
+                     own_web_contents, info, /*opener=*/nullptr,
                      request_context_impl, std::move(platform_delegate));
   if (!browser) {
     return nullptr;
@@ -160,7 +158,6 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::CreateInternal(
     bool own_web_contents,
     scoped_refptr<CefBrowserInfo> browser_info,
     CefRefPtr<AlloyBrowserHostImpl> opener,
-    bool is_devtools_popup,
     CefRefPtr<CefRequestContextImpl> request_context,
     std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate) {
   CEF_REQUIRE_UIT();
@@ -185,7 +182,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::CreateInternal(
     // new browser's platform delegate.
     opener->platform_delegate_->PopupWebContentsCreated(
         settings, client, web_contents, platform_delegate.get(),
-        is_devtools_popup);
+        /*is_devtools=*/false);
   }
 
   // Take ownership of |web_contents| if |own_web_contents| is true.
@@ -208,7 +205,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::CreateInternal(
     // result in a call to CefBrowserViewDelegate::OnPopupBrowserViewCreated().
     // Do this first for consistency with Chrome style.
     opener->platform_delegate_->PopupBrowserCreated(
-        browser->platform_delegate(), browser.get(), is_devtools_popup);
+        browser->platform_delegate(), browser.get(), /*is_devtools=*/false);
   }
 
   // 2. Notify the browser's LifeSpanHandler. This must always be the first
@@ -416,24 +413,6 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
 
   if (platform_delegate_) {
     platform_delegate_->WasHidden(hidden);
-  }
-}
-
-void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
-  if (!IsWindowless()) {
-    DCHECK(false) << "Window rendering is not disabled";
-    return;
-  }
-
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(&AlloyBrowserHostImpl::NotifyScreenInfoChanged, this));
-    return;
-  }
-
-  if (platform_delegate_) {
-    platform_delegate_->NotifyScreenInfoChanged();
   }
 }
 
@@ -901,29 +880,6 @@ void AlloyBrowserHostImpl::DragSourceEndedAt(
   }
 }
 
-void AlloyBrowserHostImpl::SetAudioMuted(bool mute) {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetAudioMuted,
-                                          this, mute));
-    return;
-  }
-  if (!web_contents()) {
-    return;
-  }
-  web_contents()->SetAudioMuted(mute);
-}
-
-bool AlloyBrowserHostImpl::IsAudioMuted() {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    DCHECK(false) << "called on invalid thread";
-    return false;
-  }
-  if (!web_contents()) {
-    return false;
-  }
-  return web_contents()->IsAudioMuted();
-}
-
 // content::WebContentsDelegate methods.
 // -----------------------------------------------------------------------------
 
@@ -1024,6 +980,11 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
   }
 }
 
+void AlloyBrowserHostImpl::SetContentsBounds(content::WebContents* source,
+                                             const gfx::Rect& bounds) {
+  contents_delegate_.SetContentsBoundsEx(source, bounds);
+}
+
 void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
                                            const GURL& url) {
   contents_delegate_.UpdateTargetURL(source, url);
@@ -1057,14 +1018,7 @@ void AlloyBrowserHostImpl::BeforeUnloadFired(content::WebContents* source,
 
 bool AlloyBrowserHostImpl::TakeFocus(content::WebContents* source,
                                      bool reverse) {
-  if (client_.get()) {
-    CefRefPtr<CefFocusHandler> handler = client_->GetFocusHandler();
-    if (handler.get()) {
-      handler->OnTakeFocus(this, !reverse);
-    }
-  }
-
-  return false;
+  return contents_delegate_.TakeFocus(source, reverse);
 }
 
 void AlloyBrowserHostImpl::CanDownload(
@@ -1151,8 +1105,7 @@ void AlloyBrowserHostImpl::WebContentsCreated(
 
   scoped_refptr<CefBrowserInfo> info =
       CefBrowserInfoManager::GetInstance()->CreatePopupBrowserInfo(
-          new_contents, platform_delegate->IsWindowless(),
-          platform_delegate->IsPrintPreviewSupported(), extra_info);
+          new_contents, platform_delegate->GetBrowserConfig(), extra_info);
   CHECK(info.get());
   CHECK(info->is_popup());
 
@@ -1170,8 +1123,7 @@ void AlloyBrowserHostImpl::WebContentsCreated(
   // However, we need to install observers/delegates here.
   CefRefPtr<AlloyBrowserHostImpl> browser = CreateInternal(
       settings, client, new_contents, /*own_web_contents=*/false, info, opener,
-      /*is_devtools_popup=*/false, request_context,
-      std::move(platform_delegate));
+      request_context, std::move(platform_delegate));
 }
 
 void AlloyBrowserHostImpl::RendererUnresponsive(
@@ -1276,7 +1228,8 @@ bool AlloyBrowserHostImpl::IsBackForwardCacheSupported(
 }
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
-    content::WebContents& web_contents) {
+    content::WebContents& web_contents,
+    content::PreloadingTriggerType trigger_type) {
   // Prerender is not supported in CEF. See issue #3664.
   return content::PreloadingEligibility::kPreloadingDisabled;
 }

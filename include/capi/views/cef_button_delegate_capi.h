@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8c2d8f002d25158e5848813fdd2d3bda7a3a5466$
+// $hash=53e4ce022d6f0d96052a2f4c347b8fbdb18f5be6$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_view_delegate_capi.h"
 
@@ -53,6 +57,8 @@ struct _cef_button_t;
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
 ///
+/// NOTE: This struct is allocated client-side.
+///
 typedef struct _cef_button_delegate_t {
   ///
   /// Base structure.
@@ -62,16 +68,14 @@ typedef struct _cef_button_delegate_t {
   ///
   /// Called when |button| is pressed.
   ///
-  void(CEF_CALLBACK* on_button_pressed)(struct _cef_button_delegate_t* self,
-                                        struct _cef_button_t* button);
+  void (CEF_CALLBACK *on_button_pressed)(struct _cef_button_delegate_t* self, struct _cef_button_t* button);
 
   ///
   /// Called when the state of |button| changes.
   ///
-  void(CEF_CALLBACK* on_button_state_changed)(
-      struct _cef_button_delegate_t* self,
-      struct _cef_button_t* button);
+  void (CEF_CALLBACK *on_button_state_changed)(struct _cef_button_delegate_t* self, struct _cef_button_t* button);
 } cef_button_delegate_t;
+
 
 #ifdef __cplusplus
 }

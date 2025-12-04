@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1287da53b0250339e913d5de405b801e569d5f07$
+// $hash=1d190fcafc2b9fe8963a94a216b085e04927ca74$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_HANDLER_CTOCPP_H_
@@ -20,31 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_request_context_handler_capi.h"
 #include "include/cef_request_context_handler.h"
+#include "include/capi/cef_request_context_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefRequestContextHandlerCToCpp
-    : public CefCToCppRefCounted<CefRequestContextHandlerCToCpp,
-                                 CefRequestContextHandler,
-                                 cef_request_context_handler_t> {
+class CefRequestContextHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefRequestContextHandler_0_CToCpp, CefRequestContextHandler, cef_request_context_handler_0_t> {
  public:
-  CefRequestContextHandlerCToCpp();
-  virtual ~CefRequestContextHandlerCToCpp();
+  CefRequestContextHandler_0_CToCpp();
+  virtual ~CefRequestContextHandler_0_CToCpp();
 
   // CefRequestContextHandler methods.
-  void OnRequestContextInitialized(
-      CefRefPtr<CefRequestContext> request_context) override;
-  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      bool is_navigation,
-      bool is_download,
-      const CefString& request_initiator,
-      bool& disable_default_handling) override;
+  void OnRequestContextInitialized(CefRefPtr<CefRequestContext> request_context) override;
+  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, bool is_navigation, bool is_download, const CefString& request_initiator, bool& disable_default_handling) override;
 };
+
+constexpr auto CefRequestContextHandlerCToCpp_Wrap = CefRequestContextHandler_0_CToCpp::Wrap;
+constexpr auto CefRequestContextHandlerCToCpp_Unwrap = CefRequestContextHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_HANDLER_CTOCPP_H_

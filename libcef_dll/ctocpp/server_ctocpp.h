@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e11ffb5410ccb3c6fe600a97db3c0d9f80bdfb06$
+// $hash=3e712e96bde4ab43384ffec5c574d883a6e42d89$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SERVER_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_server_capi.h"
 #include "include/cef_server.h"
+#include "include/capi/cef_server_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -39,25 +39,16 @@ class CefServerCToCpp
   CefString GetAddress() override;
   bool HasConnection() override;
   bool IsValidConnection(int connection_id) override;
-  void SendHttp200Response(int connection_id,
-                           const CefString& content_type,
-                           const void* data,
-                           size_t data_size) override;
+  void SendHttp200Response(int connection_id, const CefString& content_type, const void* data, size_t data_size) override;
   void SendHttp404Response(int connection_id) override;
-  void SendHttp500Response(int connection_id,
-                           const CefString& error_message) override;
-  void SendHttpResponse(int connection_id,
-                        int response_code,
-                        const CefString& content_type,
-                        int64_t content_length,
-                        const HeaderMap& extra_headers) override;
-  void SendRawData(int connection_id,
-                   const void* data,
-                   size_t data_size) override;
+  void SendHttp500Response(int connection_id, const CefString& error_message) override;
+  void SendHttpResponse(int connection_id, int response_code, const CefString& content_type, int64_t content_length, const HeaderMap& extra_headers) override;
+  void SendRawData(int connection_id, const void* data, size_t data_size) override;
   void CloseConnection(int connection_id) override;
-  void SendWebSocketMessage(int connection_id,
-                            const void* data,
-                            size_t data_size) override;
+  void SendWebSocketMessage(int connection_id, const void* data, size_t data_size) override;
 };
+
+constexpr auto CefServerCToCpp_Wrap = CefServerCToCpp::Wrap;
+constexpr auto CefServerCToCpp_Unwrap = CefServerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SERVER_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2bb68d4721cc3285c7d2414a76c0e1c3a9ca4dd2$
+// $hash=23323c45242f4b68554776f7b845cc165432433f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTE_CREATE_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefMediaRouteCreateCallbackCppToC
-    : public CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC,
-                                 CefMediaRouteCreateCallback,
-                                 cef_media_route_create_callback_t> {
+    : public CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC, CefMediaRouteCreateCallback, cef_media_route_create_callback_t> {
  public:
   CefMediaRouteCreateCallbackCppToC();
   virtual ~CefMediaRouteCreateCallbackCppToC();
 };
+
+constexpr auto CefMediaRouteCreateCallbackCppToC_Wrap = CefMediaRouteCreateCallbackCppToC::Wrap;
+constexpr auto CefMediaRouteCreateCallbackCppToC_Unwrap = CefMediaRouteCreateCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTE_CREATE_CALLBACK_CPPTOC_H_

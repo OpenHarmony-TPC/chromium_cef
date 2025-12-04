@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=de1b0124f98b8d7c8e978d7351217d06f274fbde$
+// $hash=7430747d3f8cc5517bba7735ce544bead64d44e5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_THREAD_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_thread_capi.h"
 #include "include/cef_thread.h"
+#include "include/capi/cef_thread_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -38,5 +38,8 @@ class CefThreadCToCpp
   void Stop() override;
   bool IsRunning() override;
 };
+
+constexpr auto CefThreadCToCpp_Wrap = CefThreadCToCpp::Wrap;
+constexpr auto CefThreadCToCpp_Unwrap = CefThreadCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_THREAD_CTOCPP_H_

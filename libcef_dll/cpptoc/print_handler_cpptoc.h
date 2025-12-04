@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=85a6e0c8d5c82d59934feffb93bb5681a1777aa9$
+// $hash=4df4c2f8b678cb071cb1873cdeced5adb4d032cb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_PRINT_HANDLER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_print_handler_capi.h"
 #include "include/cef_print_handler.h"
+#include "include/capi/cef_print_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefPrintHandlerCppToC : public CefCppToCRefCounted<CefPrintHandlerCppToC,
-                                                         CefPrintHandler,
-                                                         cef_print_handler_t> {
+class CefPrintHandlerCppToC
+    : public CefCppToCRefCounted<CefPrintHandlerCppToC, CefPrintHandler, cef_print_handler_t> {
  public:
   CefPrintHandlerCppToC();
   virtual ~CefPrintHandlerCppToC();
 };
+
+constexpr auto CefPrintHandlerCppToC_Wrap = CefPrintHandlerCppToC::Wrap;
+constexpr auto CefPrintHandlerCppToC_Unwrap = CefPrintHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_PRINT_HANDLER_CPPTOC_H_

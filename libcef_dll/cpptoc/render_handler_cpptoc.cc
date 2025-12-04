@@ -9,12 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=61d5f7b4452cf95c1834caaa60a38b203eb9c1bf$
+// $hash=930d9f127618d8124dd9d8e5611e5fef29e47b72$
 //
 
-#include "libcef_dll/cpptoc/render_handler_cpptoc.h"
-
 #include "libcef_dll/cpptoc/accessibility_handler_cpptoc.h"
+#include "libcef_dll/cpptoc/render_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -23,8 +22,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-cef_accessibility_handler_t* CEF_CALLBACK
-render_handler_get_accessibility_handler(struct _cef_render_handler_t* self) {
+struct _cef_accessibility_handler_t* CEF_CALLBACK render_handler_get_accessibility_handler(struct _cef_render_handler_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -35,17 +33,13 @@ render_handler_get_accessibility_handler(struct _cef_render_handler_t* self) {
   }
 
   // Execute
-  CefRefPtr<CefAccessibilityHandler> _retval =
-      CefRenderHandlerCppToC::Get(self)->GetAccessibilityHandler();
+  CefRefPtr<CefAccessibilityHandler> _retval = CefRenderHandlerCppToC::Get(self)->GetAccessibilityHandler();
 
   // Return type: refptr_same
-  return CefAccessibilityHandlerCppToC::Wrap(_retval);
+  return CefAccessibilityHandlerCppToC_Wrap(_retval);
 }
 
-int CEF_CALLBACK
-render_handler_get_root_screen_rect(struct _cef_render_handler_t* self,
-                                    cef_browser_t* browser,
-                                    cef_rect_t* rect) {
+int CEF_CALLBACK render_handler_get_root_screen_rect(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_rect_t* rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -66,11 +60,12 @@ render_handler_get_root_screen_rect(struct _cef_render_handler_t* self,
   }
 
   // Translate param: rect; type: simple_byref
-  CefRect rectVal = rect ? *rect : CefRect();
+  CefRect rectVal = rect?*rect:CefRect();
 
   // Execute
   bool _retval = CefRenderHandlerCppToC::Get(self)->GetRootScreenRect(
-      CefBrowserCToCpp::Wrap(browser), rectVal);
+      CefBrowserCToCpp_Wrap(browser),
+      rectVal);
 
   // Restore param: rect; type: simple_byref
   if (rect) {
@@ -81,10 +76,7 @@ render_handler_get_root_screen_rect(struct _cef_render_handler_t* self,
   return _retval;
 }
 
-void CEF_CALLBACK
-render_handler_get_view_rect(struct _cef_render_handler_t* self,
-                             cef_browser_t* browser,
-                             cef_rect_t* rect) {
+void CEF_CALLBACK render_handler_get_view_rect(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_rect_t* rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -105,11 +97,12 @@ render_handler_get_view_rect(struct _cef_render_handler_t* self,
   }
 
   // Translate param: rect; type: simple_byref
-  CefRect rectVal = rect ? *rect : CefRect();
+  CefRect rectVal = rect?*rect:CefRect();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->GetViewRect(
-      CefBrowserCToCpp::Wrap(browser), rectVal);
+      CefBrowserCToCpp_Wrap(browser),
+      rectVal);
 
   // Restore param: rect; type: simple_byref
   if (rect) {
@@ -117,13 +110,7 @@ render_handler_get_view_rect(struct _cef_render_handler_t* self,
   }
 }
 
-int CEF_CALLBACK
-render_handler_get_screen_point(struct _cef_render_handler_t* self,
-                                cef_browser_t* browser,
-                                int viewX,
-                                int viewY,
-                                int* screenX,
-                                int* screenY) {
+int CEF_CALLBACK render_handler_get_screen_point(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, int viewX, int viewY, int* screenX, int* screenY) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -149,13 +136,17 @@ render_handler_get_screen_point(struct _cef_render_handler_t* self,
   }
 
   // Translate param: screenX; type: simple_byref
-  int screenXVal = screenX ? *screenX : 0;
+  int screenXVal = screenX?*screenX:0;
   // Translate param: screenY; type: simple_byref
-  int screenYVal = screenY ? *screenY : 0;
+  int screenYVal = screenY?*screenY:0;
 
   // Execute
   bool _retval = CefRenderHandlerCppToC::Get(self)->GetScreenPoint(
-      CefBrowserCToCpp::Wrap(browser), viewX, viewY, screenXVal, screenYVal);
+      CefBrowserCToCpp_Wrap(browser),
+      viewX,
+      viewY,
+      screenXVal,
+      screenYVal);
 
   // Restore param: screenX; type: simple_byref
   if (screenX) {
@@ -170,10 +161,7 @@ render_handler_get_screen_point(struct _cef_render_handler_t* self,
   return _retval;
 }
 
-int CEF_CALLBACK
-render_handler_get_screen_info(struct _cef_render_handler_t* self,
-                               cef_browser_t* browser,
-                               cef_screen_info_t* screen_info) {
+int CEF_CALLBACK render_handler_get_screen_info(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_screen_info_t* screen_info) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -194,11 +182,12 @@ render_handler_get_screen_info(struct _cef_render_handler_t* self,
   }
 
   // Translate param: screen_info; type: simple_byref
-  CefScreenInfo screen_infoVal = screen_info ? *screen_info : CefScreenInfo();
+  CefScreenInfo screen_infoVal = screen_info?*screen_info:CefScreenInfo();
 
   // Execute
   bool _retval = CefRenderHandlerCppToC::Get(self)->GetScreenInfo(
-      CefBrowserCToCpp::Wrap(browser), screen_infoVal);
+      CefBrowserCToCpp_Wrap(browser),
+      screen_infoVal);
 
   // Restore param: screen_info; type: simple_byref
   if (screen_info) {
@@ -209,10 +198,7 @@ render_handler_get_screen_info(struct _cef_render_handler_t* self,
   return _retval;
 }
 
-void CEF_CALLBACK
-render_handler_on_popup_show(struct _cef_render_handler_t* self,
-                             cef_browser_t* browser,
-                             int show) {
+void CEF_CALLBACK render_handler_on_popup_show(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, int show) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -229,13 +215,11 @@ render_handler_on_popup_show(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnPopupShow(
-      CefBrowserCToCpp::Wrap(browser), show ? true : false);
+      CefBrowserCToCpp_Wrap(browser),
+      show?true:false);
 }
 
-void CEF_CALLBACK
-render_handler_on_popup_size(struct _cef_render_handler_t* self,
-                             cef_browser_t* browser,
-                             const cef_rect_t* rect) {
+void CEF_CALLBACK render_handler_on_popup_size(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, const cef_rect_t* rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -256,21 +240,15 @@ render_handler_on_popup_size(struct _cef_render_handler_t* self,
   }
 
   // Translate param: rect; type: simple_byref_const
-  CefRect rectVal = rect ? *rect : CefRect();
+  CefRect rectVal = rect?*rect:CefRect();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnPopupSize(
-      CefBrowserCToCpp::Wrap(browser), rectVal);
+      CefBrowserCToCpp_Wrap(browser),
+      rectVal);
 }
 
-void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
-                                          cef_browser_t* browser,
-                                          cef_paint_element_type_t type,
-                                          size_t dirtyRectsCount,
-                                          cef_rect_t const* dirtyRects,
-                                          const void* buffer,
-                                          int width,
-                                          int height) {
+void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_paint_element_type_t type, size_t dirtyRectsCount, cef_rect_t const* dirtyRects, const void* buffer, int width, int height) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -296,7 +274,7 @@ void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
   }
 
   // Translate param: dirtyRects; type: simple_vec_byref_const
-  std::vector<CefRect> dirtyRectsList;
+  std::vector<CefRect > dirtyRectsList;
   if (dirtyRectsCount > 0) {
     for (size_t i = 0; i < dirtyRectsCount; ++i) {
       CefRect dirtyRectsVal = dirtyRects[i];
@@ -305,18 +283,16 @@ void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->OnPaint(CefBrowserCToCpp::Wrap(browser),
-                                             type, dirtyRectsList, buffer,
-                                             width, height);
+  CefRenderHandlerCppToC::Get(self)->OnPaint(
+      CefBrowserCToCpp_Wrap(browser),
+      type,
+      dirtyRectsList,
+      buffer,
+      width,
+      height);
 }
 
-void CEF_CALLBACK
-render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
-                                    cef_browser_t* browser,
-                                    cef_paint_element_type_t type,
-                                    size_t dirtyRectsCount,
-                                    cef_rect_t const* dirtyRects,
-                                    const cef_accelerated_paint_info_t* info) {
+void CEF_CALLBACK render_handler_on_accelerated_paint(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_paint_element_type_t type, size_t dirtyRectsCount, cef_rect_t const* dirtyRects, const cef_accelerated_paint_info_t* info) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -342,7 +318,7 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
   }
 
   // Translate param: dirtyRects; type: simple_vec_byref_const
-  std::vector<CefRect> dirtyRectsList;
+  std::vector<CefRect > dirtyRectsList;
   if (dirtyRectsCount > 0) {
     for (size_t i = 0; i < dirtyRectsCount; ++i) {
       CefRect dirtyRectsVal = dirtyRects[i];
@@ -350,18 +326,17 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
     }
   }
   // Translate param: info; type: simple_byref_const
-  CefAcceleratedPaintInfo infoVal = info ? *info : CefAcceleratedPaintInfo();
+  CefAcceleratedPaintInfo infoVal = info?*info:CefAcceleratedPaintInfo();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnAcceleratedPaint(
-      CefBrowserCToCpp::Wrap(browser), type, dirtyRectsList, infoVal);
+      CefBrowserCToCpp_Wrap(browser),
+      type,
+      dirtyRectsList,
+      infoVal);
 }
 
-void CEF_CALLBACK
-render_handler_get_touch_handle_size(struct _cef_render_handler_t* self,
-                                     cef_browser_t* browser,
-                                     cef_horizontal_alignment_t orientation,
-                                     cef_size_t* size) {
+void CEF_CALLBACK render_handler_get_touch_handle_size(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_horizontal_alignment_t orientation, cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -382,11 +357,13 @@ render_handler_get_touch_handle_size(struct _cef_render_handler_t* self,
   }
 
   // Translate param: size; type: simple_byref
-  CefSize sizeVal = size ? *size : CefSize();
+  CefSize sizeVal = size?*size:CefSize();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->GetTouchHandleSize(
-      CefBrowserCToCpp::Wrap(browser), orientation, sizeVal);
+      CefBrowserCToCpp_Wrap(browser),
+      orientation,
+      sizeVal);
 
   // Restore param: size; type: simple_byref
   if (size) {
@@ -394,10 +371,7 @@ render_handler_get_touch_handle_size(struct _cef_render_handler_t* self,
   }
 }
 
-void CEF_CALLBACK render_handler_on_touch_handle_state_changed(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const cef_touch_handle_state_t* state) {
+void CEF_CALLBACK render_handler_on_touch_handle_state_changed(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, const cef_touch_handle_state_t* state) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -418,20 +392,15 @@ void CEF_CALLBACK render_handler_on_touch_handle_state_changed(
   }
 
   // Translate param: state; type: simple_byref_const
-  CefTouchHandleState stateVal = state ? *state : CefTouchHandleState();
+  CefTouchHandleState stateVal = state?*state:CefTouchHandleState();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnTouchHandleStateChanged(
-      CefBrowserCToCpp::Wrap(browser), stateVal);
+      CefBrowserCToCpp_Wrap(browser),
+      stateVal);
 }
 
-int CEF_CALLBACK
-render_handler_start_dragging(struct _cef_render_handler_t* self,
-                              cef_browser_t* browser,
-                              cef_drag_data_t* drag_data,
-                              cef_drag_operations_mask_t allowed_ops,
-                              int x,
-                              int y) {
+int CEF_CALLBACK render_handler_start_dragging(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, struct _cef_drag_data_t* drag_data, cef_drag_operations_mask_t allowed_ops, int x, int y) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -453,17 +422,17 @@ render_handler_start_dragging(struct _cef_render_handler_t* self,
 
   // Execute
   bool _retval = CefRenderHandlerCppToC::Get(self)->StartDragging(
-      CefBrowserCToCpp::Wrap(browser), CefDragDataCToCpp::Wrap(drag_data),
-      allowed_ops, x, y);
+      CefBrowserCToCpp_Wrap(browser),
+      CefDragDataCToCpp_Wrap(drag_data),
+      allowed_ops,
+      x,
+      y);
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK
-render_handler_update_drag_cursor(struct _cef_render_handler_t* self,
-                                  cef_browser_t* browser,
-                                  cef_drag_operations_mask_t operation) {
+void CEF_CALLBACK render_handler_update_drag_cursor(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_drag_operations_mask_t operation) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -480,14 +449,11 @@ render_handler_update_drag_cursor(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->UpdateDragCursor(
-      CefBrowserCToCpp::Wrap(browser), operation);
+      CefBrowserCToCpp_Wrap(browser),
+      operation);
 }
 
-void CEF_CALLBACK
-render_handler_on_scroll_offset_changed(struct _cef_render_handler_t* self,
-                                        cef_browser_t* browser,
-                                        double x,
-                                        double y) {
+void CEF_CALLBACK render_handler_on_scroll_offset_changed(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, double x, double y) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -504,15 +470,12 @@ render_handler_on_scroll_offset_changed(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnScrollOffsetChanged(
-      CefBrowserCToCpp::Wrap(browser), x, y);
+      CefBrowserCToCpp_Wrap(browser),
+      x,
+      y);
 }
 
-void CEF_CALLBACK render_handler_on_ime_composition_range_changed(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const cef_range_t* selected_range,
-    size_t character_boundsCount,
-    cef_rect_t const* character_bounds) {
+void CEF_CALLBACK render_handler_on_ime_composition_range_changed(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, const cef_range_t* selected_range, size_t character_boundsCount, cef_rect_t const* character_bounds) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -538,9 +501,9 @@ void CEF_CALLBACK render_handler_on_ime_composition_range_changed(
   }
 
   // Translate param: selected_range; type: simple_byref_const
-  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
+  CefRange selected_rangeVal = selected_range?*selected_range:CefRange();
   // Translate param: character_bounds; type: simple_vec_byref_const
-  std::vector<CefRect> character_boundsList;
+  std::vector<CefRect > character_boundsList;
   if (character_boundsCount > 0) {
     for (size_t i = 0; i < character_boundsCount; ++i) {
       CefRect character_boundsVal = character_bounds[i];
@@ -550,14 +513,12 @@ void CEF_CALLBACK render_handler_on_ime_composition_range_changed(
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnImeCompositionRangeChanged(
-      CefBrowserCToCpp::Wrap(browser), selected_rangeVal, character_boundsList);
+      CefBrowserCToCpp_Wrap(browser),
+      selected_rangeVal,
+      character_boundsList);
 }
 
-void CEF_CALLBACK
-render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
-                                         cef_browser_t* browser,
-                                         const cef_string_t* selected_text,
-                                         const cef_range_t* selected_range) {
+void CEF_CALLBACK render_handler_on_text_selection_changed(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, const cef_string_t* selected_text, const cef_range_t* selected_range) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -574,18 +535,16 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
   // Unverified params: selected_text, selected_range
 
   // Translate param: selected_range; type: simple_byref_const
-  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
+  CefRange selected_rangeVal = selected_range?*selected_range:CefRange();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnTextSelectionChanged(
-      CefBrowserCToCpp::Wrap(browser), CefString(selected_text),
+      CefBrowserCToCpp_Wrap(browser),
+      CefString(selected_text),
       selected_rangeVal);
 }
 
-void CEF_CALLBACK
-render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
-                                             cef_browser_t* browser,
-                                             cef_text_input_mode_t input_mode) {
+void CEF_CALLBACK render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self, struct _cef_browser_t* browser, cef_text_input_mode_t input_mode) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -602,7 +561,8 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode);
+      CefBrowserCToCpp_Wrap(browser),
+      input_mode);
 }
 
 }  // namespace
@@ -610,8 +570,7 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
-  GetStruct()->get_accessibility_handler =
-      render_handler_get_accessibility_handler;
+  GetStruct()->get_accessibility_handler = render_handler_get_accessibility_handler;
   GetStruct()->get_root_screen_rect = render_handler_get_root_screen_rect;
   GetStruct()->get_view_rect = render_handler_get_view_rect;
   GetStruct()->get_screen_point = render_handler_get_screen_point;
@@ -621,18 +580,13 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_paint = render_handler_on_paint;
   GetStruct()->on_accelerated_paint = render_handler_on_accelerated_paint;
   GetStruct()->get_touch_handle_size = render_handler_get_touch_handle_size;
-  GetStruct()->on_touch_handle_state_changed =
-      render_handler_on_touch_handle_state_changed;
+  GetStruct()->on_touch_handle_state_changed = render_handler_on_touch_handle_state_changed;
   GetStruct()->start_dragging = render_handler_start_dragging;
   GetStruct()->update_drag_cursor = render_handler_update_drag_cursor;
-  GetStruct()->on_scroll_offset_changed =
-      render_handler_on_scroll_offset_changed;
-  GetStruct()->on_ime_composition_range_changed =
-      render_handler_on_ime_composition_range_changed;
-  GetStruct()->on_text_selection_changed =
-      render_handler_on_text_selection_changed;
-  GetStruct()->on_virtual_keyboard_requested =
-      render_handler_on_virtual_keyboard_requested;
+  GetStruct()->on_scroll_offset_changed = render_handler_on_scroll_offset_changed;
+  GetStruct()->on_ime_composition_range_changed = render_handler_on_ime_composition_range_changed;
+  GetStruct()->on_text_selection_changed = render_handler_on_text_selection_changed;
+  GetStruct()->on_virtual_keyboard_requested = render_handler_on_virtual_keyboard_requested;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -641,18 +595,11 @@ CefRenderHandlerCppToC::~CefRenderHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefRenderHandler> CefCppToCRefCounted<
-    CefRenderHandlerCppToC,
-    CefRenderHandler,
-    cef_render_handler_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_render_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefRenderHandler> CefCppToCRefCounted<CefRenderHandlerCppToC, CefRenderHandler, cef_render_handler_t>::UnwrapDerived(CefWrapperType type, cef_render_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefRenderHandlerCppToC,
-                                   CefRenderHandler,
-                                   cef_render_handler_t>::kWrapperType =
-    WT_RENDER_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefRenderHandlerCppToC, CefRenderHandler, cef_render_handler_t>::kWrapperType = WT_RENDER_HANDLER;
+
+

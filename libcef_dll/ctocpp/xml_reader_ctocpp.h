@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a0d64e326ec359745340109135aebe0a1aba1b8a$
+// $hash=13baf39b5c4b9e3c5fdd91f29f5c393ea7858ded$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_XML_READER_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_xml_reader_capi.h"
 #include "include/cef_xml_reader.h"
+#include "include/capi/cef_xml_reader_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefXmlReaderCToCpp : public CefCToCppRefCounted<CefXmlReaderCToCpp,
-                                                      CefXmlReader,
-                                                      cef_xml_reader_t> {
+class CefXmlReaderCToCpp
+    : public CefCToCppRefCounted<CefXmlReaderCToCpp, CefXmlReader, cef_xml_reader_t> {
  public:
   CefXmlReaderCToCpp();
   virtual ~CefXmlReaderCToCpp();
@@ -53,18 +52,19 @@ class CefXmlReaderCToCpp : public CefCToCppRefCounted<CefXmlReaderCToCpp,
   size_t GetAttributeCount() override;
   CefString GetAttribute(int index) override;
   CefString GetAttribute(const CefString& qualifiedName) override;
-  CefString GetAttribute(const CefString& localName,
-                         const CefString& namespaceURI) override;
+  CefString GetAttribute(const CefString& localName, const CefString& namespaceURI) override;
   CefString GetInnerXml() override;
   CefString GetOuterXml() override;
   int GetLineNumber() override;
   bool MoveToAttribute(int index) override;
   bool MoveToAttribute(const CefString& qualifiedName) override;
-  bool MoveToAttribute(const CefString& localName,
-                       const CefString& namespaceURI) override;
+  bool MoveToAttribute(const CefString& localName, const CefString& namespaceURI) override;
   bool MoveToFirstAttribute() override;
   bool MoveToNextAttribute() override;
   bool MoveToCarryingElement() override;
 };
+
+constexpr auto CefXmlReaderCToCpp_Wrap = CefXmlReaderCToCpp::Wrap;
+constexpr auto CefXmlReaderCToCpp_Unwrap = CefXmlReaderCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_XML_READER_CTOCPP_H_

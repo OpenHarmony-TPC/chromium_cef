@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e1708003dd541fa0ffa4a4955ada20dcec3a8667$
+// $hash=ac37f770ca34c914bf1c84a18ad17cd54e602bf6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_XML_READER_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_xml_reader_capi.h"
 #include "include/cef_xml_reader.h"
+#include "include/capi/cef_xml_reader_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefXmlReaderCppToC : public CefCppToCRefCounted<CefXmlReaderCppToC,
-                                                      CefXmlReader,
-                                                      cef_xml_reader_t> {
+class CefXmlReader_0_CppToC
+    : public CefCppToCRefCounted<CefXmlReader_0_CppToC, CefXmlReader, cef_xml_reader_0_t> {
  public:
-  CefXmlReaderCppToC();
-  virtual ~CefXmlReaderCppToC();
+  CefXmlReader_0_CppToC();
+  virtual ~CefXmlReader_0_CppToC();
 };
+
+constexpr auto CefXmlReaderCppToC_Wrap = CefXmlReader_0_CppToC::Wrap;
+constexpr auto CefXmlReaderCppToC_Unwrap = CefXmlReader_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_XML_READER_CPPTOC_H_

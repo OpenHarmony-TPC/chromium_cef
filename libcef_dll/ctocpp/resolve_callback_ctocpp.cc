@@ -9,24 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c958455d98abb9e81f5a430534e7724c1be5aecc$
+// $hash=b61d20c4ef75472bcabab3616686250b902e716a$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/resolve_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefResolveCallbackCToCpp::OnResolveCompleted(
-    cef_errorcode_t result,
-    const std::vector<CefString>& resolved_ips) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefResolveCallback_0_CToCpp::OnResolveCompleted(cef_errorcode_t result, const std::vector<CefString>& resolved_ips) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resolve_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_resolve_completed)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_resolve_completed) {
     return;
   }
 
@@ -42,7 +40,9 @@ void CefResolveCallbackCToCpp::OnResolveCompleted(
   }
 
   // Execute
-  _struct->on_resolve_completed(_struct, result, resolved_ipsList);
+  _struct->on_resolve_completed(_struct,
+      result,
+      resolved_ipsList);
 
   // Restore param:resolved_ips; type: string_vec_byref_const
   if (resolved_ipsList) {
@@ -50,28 +50,23 @@ void CefResolveCallbackCToCpp::OnResolveCompleted(
   }
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResolveCallbackCToCpp::CefResolveCallbackCToCpp() {}
+CefResolveCallback_0_CToCpp::CefResolveCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefResolveCallbackCToCpp::~CefResolveCallbackCToCpp() {
+CefResolveCallback_0_CToCpp::~CefResolveCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_resolve_callback_t* CefCToCppRefCounted<
-    CefResolveCallbackCToCpp,
-    CefResolveCallback,
-    cef_resolve_callback_t>::UnwrapDerived(CefWrapperType type,
-                                           CefResolveCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_resolve_callback_0_t* CefCToCppRefCounted<CefResolveCallback_0_CToCpp, CefResolveCallback, cef_resolve_callback_0_t>::UnwrapDerived(CefWrapperType type, CefResolveCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefResolveCallbackCToCpp,
-                                   CefResolveCallback,
-                                   cef_resolve_callback_t>::kWrapperType =
-    WT_RESOLVE_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefResolveCallback_0_CToCpp, CefResolveCallback, cef_resolve_callback_0_t>::kWrapperType = WT_RESOLVE_CALLBACK;
+
+

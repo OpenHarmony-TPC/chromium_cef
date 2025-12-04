@@ -9,21 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1215ff3d1dd3fe7e2fa93f1f413f4102a3f63468$
+// $hash=66913d3d32f55e14259c9e95b297604d49f9093d$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/preference_registrar_cpptoc.h"
-
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK
-preference_registrar_add_preference(struct _cef_preference_registrar_t* self,
-                                    const cef_string_t* name,
-                                    struct _cef_value_t* default_value) {
+int CEF_CALLBACK preference_registrar_add_preference(struct _cef_preference_registrar_0_t* self, const cef_string_t* name, struct _cef_value_0_t* default_value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -42,8 +39,9 @@ preference_registrar_add_preference(struct _cef_preference_registrar_t* self,
   }
 
   // Execute
-  bool _retval = CefPreferenceRegistrarCppToC::Get(self)->AddPreference(
-      CefString(name), CefValueCppToC::Unwrap(default_value));
+  bool _retval = CefPreferenceRegistrar_0_CppToC::Get(self)->AddPreference(
+      CefString(name),
+      CefValueCppToC_Unwrap(default_value));
 
   // Return type: bool
   return _retval;
@@ -51,36 +49,28 @@ preference_registrar_add_preference(struct _cef_preference_registrar_t* self,
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPreferenceRegistrarCppToC::CefPreferenceRegistrarCppToC() {
+CefPreferenceRegistrar_0_CppToC::CefPreferenceRegistrar_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->add_preference = preference_registrar_add_preference;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPreferenceRegistrarCppToC::~CefPreferenceRegistrarCppToC() {}
-
-template <>
-CefOwnPtr<CefPreferenceRegistrar> CefCppToCScoped<CefPreferenceRegistrarCppToC,
-                                                  CefPreferenceRegistrar,
-                                                  cef_preference_registrar_t>::
-    UnwrapDerivedOwn(CefWrapperType type, cef_preference_registrar_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return CefOwnPtr<CefPreferenceRegistrar>();
+CefPreferenceRegistrar_0_CppToC::~CefPreferenceRegistrar_0_CppToC() {
 }
 
-template <>
-CefRawPtr<CefPreferenceRegistrar> CefCppToCScoped<CefPreferenceRegistrarCppToC,
-                                                  CefPreferenceRegistrar,
-                                                  cef_preference_registrar_t>::
-    UnwrapDerivedRaw(CefWrapperType type, cef_preference_registrar_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefOwnPtr<CefPreferenceRegistrar> CefCppToCScoped<CefPreferenceRegistrar_0_CppToC, CefPreferenceRegistrar, cef_preference_registrar_0_t>::UnwrapDerivedOwn(CefWrapperType type, cef_preference_registrar_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCScoped<CefPreferenceRegistrarCppToC,
-                               CefPreferenceRegistrar,
-                               cef_preference_registrar_t>::kWrapperType =
-    WT_PREFERENCE_REGISTRAR;
+template<> CefRawPtr<CefPreferenceRegistrar> CefCppToCScoped<CefPreferenceRegistrar_0_CppToC, CefPreferenceRegistrar, cef_preference_registrar_0_t>::UnwrapDerivedRaw(CefWrapperType type, cef_preference_registrar_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCScoped<CefPreferenceRegistrar_0_CppToC, CefPreferenceRegistrar, cef_preference_registrar_0_t>::kWrapperType = WT_PREFERENCE_REGISTRAR;
+
+

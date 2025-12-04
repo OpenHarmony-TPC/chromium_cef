@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ea474447a4faf4c2c73ba42adbd5a2c523d44589$
+// $hash=f9ee78525b56f4281389ec876ac4b9db2521303d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_ACCESSIBILITY_HANDLER_CTOCPP_H_
@@ -20,23 +20,24 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_accessibility_handler_capi.h"
 #include "include/cef_accessibility_handler.h"
+#include "include/capi/cef_accessibility_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefAccessibilityHandlerCToCpp
-    : public CefCToCppRefCounted<CefAccessibilityHandlerCToCpp,
-                                 CefAccessibilityHandler,
-                                 cef_accessibility_handler_t> {
+class CefAccessibilityHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefAccessibilityHandler_0_CToCpp, CefAccessibilityHandler, cef_accessibility_handler_0_t> {
  public:
-  CefAccessibilityHandlerCToCpp();
-  virtual ~CefAccessibilityHandlerCToCpp();
+  CefAccessibilityHandler_0_CToCpp();
+  virtual ~CefAccessibilityHandler_0_CToCpp();
 
   // CefAccessibilityHandler methods.
   void OnAccessibilityTreeChange(CefRefPtr<CefValue> value) override;
   void OnAccessibilityLocationChange(CefRefPtr<CefValue> value) override;
 };
+
+constexpr auto CefAccessibilityHandlerCToCpp_Wrap = CefAccessibilityHandler_0_CToCpp::Wrap;
+constexpr auto CefAccessibilityHandlerCToCpp_Unwrap = CefAccessibilityHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_ACCESSIBILITY_HANDLER_CTOCPP_H_

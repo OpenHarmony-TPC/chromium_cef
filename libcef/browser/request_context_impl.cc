@@ -10,7 +10,9 @@
 #include "cef/libcef/browser/browser_context.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/prefs/pref_helper.h"
+#include "cef/libcef/browser/setting_helper.h"
 #include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/api_version_util.h"
 #include "cef/libcef/common/app_manager.h"
 #include "cef/libcef/common/task_runner_impl.h"
 #include "cef/libcef/common/values_impl.h"
@@ -127,6 +129,12 @@ CefRefPtr<CefRequestContext> CefRequestContext::CreateContext(
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
     DCHECK(false) << "context not valid";
+    return nullptr;
+  }
+
+  // Verify that the settings structure is a valid size.
+  if (!CEF_MEMBER_EXISTS(&settings, cookieable_schemes_exclude_defaults)) {
+    DCHECK(false) << "invalid CefRequestContextSettings structure size";
     return nullptr;
   }
 
@@ -453,6 +461,22 @@ bool CefRequestContextImpl::SetPreference(const CefString& name,
   return pref_helper::SetPreference(pref_service, name, value, error);
 }
 
+CefRefPtr<CefRegistration> CefRequestContextImpl::AddPreferenceObserver(
+    const CefString& name,
+    CefRefPtr<CefPreferenceObserver> observer) {
+  CEF_API_REQUIRE_ADDED(13401);
+  if (!VerifyBrowserContext()) {
+    return nullptr;
+  }
+
+  if (!pref_registrar_) {
+    pref_registrar_ = std::make_unique<pref_helper::Registrar>();
+    pref_registrar_->Init(browser_context()->AsProfile()->GetPrefs());
+  }
+
+  return pref_registrar_->AddObserver(name, observer);
+}
+
 void CefRequestContextImpl::ClearCertificateExceptions(
     CefRefPtr<CefCompletionCallback> callback) {
   GetBrowserContext(
@@ -506,14 +530,18 @@ CefRefPtr<CefValue> CefRequestContextImpl::GetWebsiteSetting(
     return nullptr;
   }
 
+  const auto setting_type = setting_helper::FromCefType(content_type);
+  if (!setting_type) {
+    return nullptr;
+  }
+
   // Either or both URLs may be invalid.
   GURL requesting_gurl(requesting_url.ToString());
   GURL top_level_gurl(top_level_url.ToString());
 
   content_settings::SettingInfo info;
   base::Value value = settings_map->GetWebsiteSetting(
-      requesting_gurl, top_level_gurl,
-      static_cast<ContentSettingsType>(content_type), &info);
+      requesting_gurl, top_level_gurl, *setting_type, &info);
   if (value.is_none()) {
     return nullptr;
   }
@@ -552,19 +580,22 @@ cef_content_setting_values_t CefRequestContextImpl::GetContentSetting(
     return CEF_CONTENT_SETTING_VALUE_DEFAULT;
   }
 
+  const auto setting_type = setting_helper::FromCefType(content_type);
+  if (!setting_type) {
+    return CEF_CONTENT_SETTING_VALUE_DEFAULT;
+  }
+
   ContentSetting value = ContentSetting::CONTENT_SETTING_DEFAULT;
 
   if (requesting_url.empty() && top_level_url.empty()) {
-    value = settings_map->GetDefaultContentSetting(
-        static_cast<ContentSettingsType>(content_type),
-        /*provider_id=*/nullptr);
+    value = settings_map->GetDefaultContentSetting(*setting_type,
+                                                   /*provider_id=*/nullptr);
   } else {
     GURL requesting_gurl(requesting_url.ToString());
     GURL top_level_gurl(top_level_url.ToString());
     if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
-      value = settings_map->GetContentSetting(
-          requesting_gurl, top_level_gurl,
-          static_cast<ContentSettingsType>(content_type));
+      value = settings_map->GetContentSetting(requesting_gurl, top_level_gurl,
+                                              *setting_type);
     }
   }
 
@@ -580,6 +611,26 @@ void CefRequestContextImpl::SetContentSetting(
       content::GetUIThreadTaskRunner({}),
       base::BindOnce(&CefRequestContextImpl::SetContentSettingInternal, this,
                      requesting_url, top_level_url, content_type, value));
+}
+
+CefRefPtr<CefRegistration> CefRequestContextImpl::AddSettingObserver(
+    CefRefPtr<CefSettingObserver> observer) {
+  CEF_API_REQUIRE_ADDED(13401);
+  if (!VerifyBrowserContext()) {
+    return nullptr;
+  }
+
+  if (!setting_registrar_) {
+    auto* settings_map = HostContentSettingsMapFactory::GetForProfile(
+        browser_context()->AsProfile());
+    if (!settings_map) {
+      return nullptr;
+    }
+    setting_registrar_ = std::make_unique<setting_helper::Registrar>();
+    setting_registrar_->Init(settings_map);
+  }
+
+  return setting_registrar_->AddObserver(observer);
 }
 
 void CefRequestContextImpl::SetChromeColorScheme(cef_color_variant_t variant,
@@ -857,6 +908,11 @@ void CefRequestContextImpl::SetWebsiteSettingInternal(
     return;
   }
 
+  const auto setting_type = setting_helper::FromCefType(content_type);
+  if (!setting_type) {
+    return;
+  }
+
   // Starts as a NONE value.
   base::Value new_value;
   if (value && value->IsValid()) {
@@ -866,14 +922,13 @@ void CefRequestContextImpl::SetWebsiteSettingInternal(
   if (requesting_url.empty() && top_level_url.empty()) {
     settings_map->SetWebsiteSettingCustomScope(
         ContentSettingsPattern::Wildcard(), ContentSettingsPattern::Wildcard(),
-        static_cast<ContentSettingsType>(content_type), std::move(new_value));
+        *setting_type, std::move(new_value));
   } else {
     GURL requesting_gurl(requesting_url.ToString());
     GURL top_level_gurl(top_level_url.ToString());
     if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
       settings_map->SetWebsiteSettingDefaultScope(
-          requesting_gurl, top_level_gurl,
-          static_cast<ContentSettingsType>(content_type), std::move(new_value));
+          requesting_gurl, top_level_gurl, *setting_type, std::move(new_value));
     }
   }
 }
@@ -895,17 +950,20 @@ void CefRequestContextImpl::SetContentSettingInternal(
     return;
   }
 
+  const auto setting_type = setting_helper::FromCefType(content_type);
+  if (!setting_type) {
+    return;
+  }
+
   if (requesting_url.empty() && top_level_url.empty()) {
-    settings_map->SetDefaultContentSetting(
-        static_cast<ContentSettingsType>(content_type),
-        static_cast<ContentSetting>(value));
+    settings_map->SetDefaultContentSetting(*setting_type,
+                                           static_cast<ContentSetting>(value));
   } else {
     GURL requesting_gurl(requesting_url.ToString());
     GURL top_level_gurl(top_level_url.ToString());
     if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
       settings_map->SetContentSettingDefaultScope(
-          requesting_gurl, top_level_gurl,
-          static_cast<ContentSettingsType>(content_type),
+          requesting_gurl, top_level_gurl, *setting_type,
           static_cast<ContentSetting>(value));
     }
   }

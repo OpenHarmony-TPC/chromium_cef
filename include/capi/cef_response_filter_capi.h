@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=25ce5468fe3e80b2af7380449bebb0112abfc875$
+// $hash=bd8bf0bc352c1ff20740c04a8cd5f9df4841c8f0$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RESPONSE_FILTER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_RESPONSE_FILTER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -46,9 +50,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to filter resource response content. The functions
 /// of this structure will be called on the browser process IO thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_response_filter_t {
   ///
@@ -60,7 +67,7 @@ typedef struct _cef_response_filter_t {
   /// Initialize the response filter. Will only be called a single time. The
   /// filter will not be installed if this function returns false (0).
   ///
-  int(CEF_CALLBACK* init_filter)(struct _cef_response_filter_t* self);
+  int (CEF_CALLBACK *init_filter)(struct _cef_response_filter_t* self);
 
   ///
   /// Called to filter a chunk of data. Expected usage is as follows:
@@ -93,15 +100,9 @@ typedef struct _cef_response_filter_t {
   ///
   /// Do not keep a reference to the buffers passed to this function.
   ///
-  cef_response_filter_status_t(CEF_CALLBACK* filter)(
-      struct _cef_response_filter_t* self,
-      void* data_in,
-      size_t data_in_size,
-      size_t* data_in_read,
-      void* data_out,
-      size_t data_out_size,
-      size_t* data_out_written);
+  cef_response_filter_status_t (CEF_CALLBACK *filter)(struct _cef_response_filter_t* self, void* data_in, size_t data_in_size, size_t* data_in_read, void* data_out, size_t data_out_size, size_t* data_out_written);
 } cef_response_filter_t;
+
 
 #ifdef __cplusplus
 }

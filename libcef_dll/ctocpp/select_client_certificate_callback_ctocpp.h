@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1d2bfa450267410b25caf47808050f4d16f0cbe0$
+// $hash=dcff4b640512cd3d70d87a2c395f8dca8d4c39e2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_handler_capi.h"
 #include "include/cef_request_handler.h"
+#include "include/capi/cef_request_handler_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSelectClientCertificateCallbackCToCpp
-    : public CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp,
-                                 CefSelectClientCertificateCallback,
-                                 cef_select_client_certificate_callback_t> {
+    : public CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp, CefSelectClientCertificateCallback, cef_select_client_certificate_callback_t> {
  public:
   CefSelectClientCertificateCallbackCToCpp();
   virtual ~CefSelectClientCertificateCallbackCToCpp();
@@ -37,5 +35,8 @@ class CefSelectClientCertificateCallbackCToCpp
   // CefSelectClientCertificateCallback methods.
   void Select(CefRefPtr<CefX509Certificate> cert) override;
 };
+
+constexpr auto CefSelectClientCertificateCallbackCToCpp_Wrap = CefSelectClientCertificateCallbackCToCpp::Wrap;
+constexpr auto CefSelectClientCertificateCallbackCToCpp_Unwrap = CefSelectClientCertificateCallbackCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_

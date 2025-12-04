@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2fdff65cc42fcc6880cd744ce46478cb690c95af$
+// $hash=da7e858b677237f773eebad86108b7c1a5275573$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SHARED_MEMORY_REGION_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_shared_memory_region_capi.h"
 #include "include/cef_shared_memory_region.h"
+#include "include/capi/cef_shared_memory_region_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefSharedMemoryRegionCppToC
-    : public CefCppToCRefCounted<CefSharedMemoryRegionCppToC,
-                                 CefSharedMemoryRegion,
-                                 cef_shared_memory_region_t> {
+class CefSharedMemoryRegion_0_CppToC
+    : public CefCppToCRefCounted<CefSharedMemoryRegion_0_CppToC, CefSharedMemoryRegion, cef_shared_memory_region_0_t> {
  public:
-  CefSharedMemoryRegionCppToC();
-  virtual ~CefSharedMemoryRegionCppToC();
+  CefSharedMemoryRegion_0_CppToC();
+  virtual ~CefSharedMemoryRegion_0_CppToC();
 };
+
+constexpr auto CefSharedMemoryRegionCppToC_Wrap = CefSharedMemoryRegion_0_CppToC::Wrap;
+constexpr auto CefSharedMemoryRegionCppToC_Unwrap = CefSharedMemoryRegion_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_SHARED_MEMORY_REGION_CPPTOC_H_

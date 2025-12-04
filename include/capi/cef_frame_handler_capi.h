@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=5b34d6cb46ae29d2934b0f3eeecac8e03a9654dd$
+// $hash=965da5d7c93b61b4ce758db80f1c49ceeb2cd9e9$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FRAME_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_FRAME_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,6 +51,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 ///
 /// Implement this structure to handle events related to cef_frame_t life span.
@@ -120,6 +125,8 @@ extern "C" {
 /// The functions of this structure will be called on the UI thread unless
 /// otherwise indicated.
 ///
+/// NOTE: This struct is allocated client-side.
+///
 typedef struct _cef_frame_handler_t {
   ///
   /// Base structure.
@@ -134,9 +141,7 @@ typedef struct _cef_frame_handler_t {
   /// OnFrameAttached or discarded before OnFrameDestroyed if the frame never
   /// attaches.
   ///
-  void(CEF_CALLBACK* on_frame_created)(struct _cef_frame_handler_t* self,
-                                       struct _cef_browser_t* browser,
-                                       struct _cef_frame_t* frame);
+  void (CEF_CALLBACK *on_frame_created)(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame);
 
   ///
   /// Called when an existing frame is destroyed. This will be the last
@@ -146,9 +151,7 @@ typedef struct _cef_frame_handler_t {
   /// cef_browser_t::is_valid() will return false (0) for |browser|. Any queued
   /// commands that have not been sent will be discarded before this callback.
   ///
-  void(CEF_CALLBACK* on_frame_destroyed)(struct _cef_frame_handler_t* self,
-                                         struct _cef_browser_t* browser,
-                                         struct _cef_frame_t* frame);
+  void (CEF_CALLBACK *on_frame_destroyed)(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame);
 
   ///
   /// Called when a frame can begin routing commands to/from the associated
@@ -158,10 +161,7 @@ typedef struct _cef_frame_handler_t {
   /// dispatched. This function will not be called for temporary frames created
   /// during cross-origin navigation.
   ///
-  void(CEF_CALLBACK* on_frame_attached)(struct _cef_frame_handler_t* self,
-                                        struct _cef_browser_t* browser,
-                                        struct _cef_frame_t* frame,
-                                        int reattached);
+  void (CEF_CALLBACK *on_frame_attached)(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame, int reattached);
 
   ///
   /// Called when a frame loses its connection to the renderer process. This may
@@ -178,9 +178,7 @@ typedef struct _cef_frame_handler_t {
   /// function will not be called for temporary frames created during cross-
   /// origin navigation.
   ///
-  void(CEF_CALLBACK* on_frame_detached)(struct _cef_frame_handler_t* self,
-                                        struct _cef_browser_t* browser,
-                                        struct _cef_frame_t* frame);
+  void (CEF_CALLBACK *on_frame_detached)(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* frame);
 
   ///
   /// Called when the main frame changes due to (a) initial browser creation,
@@ -197,11 +195,9 @@ typedef struct _cef_frame_handler_t {
   /// cef_life_span_handler_t::on_before_close() then cef_browser_t::is_valid()
   /// will return false (0) for |browser|.
   ///
-  void(CEF_CALLBACK* on_main_frame_changed)(struct _cef_frame_handler_t* self,
-                                            struct _cef_browser_t* browser,
-                                            struct _cef_frame_t* old_frame,
-                                            struct _cef_frame_t* new_frame);
+  void (CEF_CALLBACK *on_main_frame_changed)(struct _cef_frame_handler_t* self, struct _cef_browser_t* browser, struct _cef_frame_t* old_frame, struct _cef_frame_t* new_frame);
 } cef_frame_handler_t;
+
 
 #ifdef __cplusplus
 }

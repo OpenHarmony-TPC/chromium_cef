@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=eeb6f5f419cfefc3c6ef7be5ec7cef9463b3a89a$
+// $hash=ac331b66d14f36e29f8db32600d172e8981f0013$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COMPLETION_CALLBACK_CTOCPP_H_
@@ -20,22 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_callback_capi.h"
 #include "include/cef_callback.h"
+#include "include/capi/cef_callback_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCompletionCallbackCToCpp
-    : public CefCToCppRefCounted<CefCompletionCallbackCToCpp,
-                                 CefCompletionCallback,
-                                 cef_completion_callback_t> {
+class CefCompletionCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefCompletionCallback_0_CToCpp, CefCompletionCallback, cef_completion_callback_0_t> {
  public:
-  CefCompletionCallbackCToCpp();
-  virtual ~CefCompletionCallbackCToCpp();
+  CefCompletionCallback_0_CToCpp();
+  virtual ~CefCompletionCallback_0_CToCpp();
 
   // CefCompletionCallback methods.
   void OnComplete() override;
 };
+
+constexpr auto CefCompletionCallbackCToCpp_Wrap = CefCompletionCallback_0_CToCpp::Wrap;
+constexpr auto CefCompletionCallbackCToCpp_Unwrap = CefCompletionCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COMPLETION_CALLBACK_CTOCPP_H_

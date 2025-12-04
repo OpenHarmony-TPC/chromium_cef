@@ -1,26 +1,26 @@
 diff --git BUILD.gn BUILD.gn
-index 0c559713ea0..9b2f2daff7a 100644
+index f2f72a02c61d64f75d6a3304b48b6a7ee5eef18d..642ca2f2c43d2b17dc099b484cb11289f0237bfc 100644
 --- BUILD.gn
 +++ BUILD.gn
-@@ -11,6 +11,7 @@ import("//build/config/mips.gni")
- import("//build/config/riscv.gni")
+@@ -12,6 +12,7 @@ import("//build/config/riscv.gni")
+ import("//build/config/rust.gni")
  import("//build/config/sanitizers/sanitizers.gni")
  import("//build_overrides/build.gni")
 +import("//cef/libcef/features/features.gni")
  import("//third_party/icu/config.gni")
  
  import("gni/snapshot_toolchain.gni")
-@@ -458,6 +459,9 @@ declare_args() {
-   # Some fuzzers depend on fuzzing functionality linked into the v8 library.
-   # For binary size reasons this functionality is not always available.
-   v8_wasm_random_fuzzers = ""
-+
+@@ -500,6 +501,9 @@ declare_args() {
+   # Experimental testing mode where various limits are artificially set lower.
+   v8_lower_limits_mode = false
+ 
 +  # Set to true if V8 will be used in a shared library.
 +  v8_used_in_shared_library = enable_cef
- }
- 
- # Derived defaults.
-@@ -805,6 +809,10 @@ config("internal_config") {
++
+   # Enables the use of partition_alloc as the default allocator for standalone
+   # V8. This should be used for benchmarking and testing purposes to more
+   # closely mimic in-browser behavior.
+@@ -890,6 +894,10 @@ config("internal_config") {
      defines += [ "BUILDING_V8_SHARED" ]
    }
  

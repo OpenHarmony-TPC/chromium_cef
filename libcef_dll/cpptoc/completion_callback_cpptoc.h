@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=97465078297fec76ea7daf2651c250018e331ea0$
+// $hash=c357bc4c21a42cb206c67b27f253e0f81af859eb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_COMPLETION_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_callback_capi.h"
 #include "include/cef_callback.h"
+#include "include/capi/cef_callback_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCompletionCallbackCppToC
-    : public CefCppToCRefCounted<CefCompletionCallbackCppToC,
-                                 CefCompletionCallback,
-                                 cef_completion_callback_t> {
+    : public CefCppToCRefCounted<CefCompletionCallbackCppToC, CefCompletionCallback, cef_completion_callback_t> {
  public:
   CefCompletionCallbackCppToC();
   virtual ~CefCompletionCallbackCppToC();
 };
+
+constexpr auto CefCompletionCallbackCppToC_Wrap = CefCompletionCallbackCppToC::Wrap;
+constexpr auto CefCompletionCallbackCppToC_Unwrap = CefCompletionCallbackCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_COMPLETION_CALLBACK_CPPTOC_H_

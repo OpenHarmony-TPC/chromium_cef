@@ -1,11 +1,11 @@
 diff --git tools/gritsettings/resource_ids.spec tools/gritsettings/resource_ids.spec
-index a5b89cfbae164..1c3532b2a8196 100644
+index 2f4ab49cbe968ec8a47d72a08fefbbc938fb41c8..5e78796e1820b891ecc9e4b349312e0ac3a26222 100644
 --- tools/gritsettings/resource_ids.spec
 +++ tools/gritsettings/resource_ids.spec
-@@ -1385,11 +1385,20 @@
-   "<(SHARED_INTERMEDIATE_DIR)/third_party/blink/public/strings/permission_element_generated_strings.grd": {
-     "META": {"sizes": {"messages": [2000],}},
-     "messages": [10080],
+@@ -1532,11 +1532,18 @@
+ 
+   "third_party/search_engines_data/resources/search_engines_scaled_resources.grd": {
+     "structures": [10100],
 -  }
 +  },
  
@@ -13,12 +13,10 @@ index a5b89cfbae164..1c3532b2a8196 100644
    # Everything but chrome/, components/, content/, and ios/
  
 +  "cef/libcef/resources/cef_resources.grd": {
-+    "META": {"align": 31500},
-+    "includes": [31500],
++    "includes": [12500],
 +  },
 +  "cef/libcef/resources/cef_strings.grd": {
-+    "META": {"align": 32000},
-+    "messages": [32000],
++    "messages": [12510],
 +  }
 +
    # Thinking about appending to the end?

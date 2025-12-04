@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f903c9575e7ca54a8077334e4e89a3274c755b4$
+// $hash=8e1d46b336b9ba88970e3f885c8f8dec56b5ff6c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_VISITOR_CTOCPP_H_
@@ -20,25 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefCookieVisitorCToCpp
-    : public CefCToCppRefCounted<CefCookieVisitorCToCpp,
-                                 CefCookieVisitor,
-                                 cef_cookie_visitor_t> {
+class CefCookieVisitor_0_CToCpp
+    : public CefCToCppRefCounted<CefCookieVisitor_0_CToCpp, CefCookieVisitor, cef_cookie_visitor_0_t> {
  public:
-  CefCookieVisitorCToCpp();
-  virtual ~CefCookieVisitorCToCpp();
+  CefCookieVisitor_0_CToCpp();
+  virtual ~CefCookieVisitor_0_CToCpp();
 
   // CefCookieVisitor methods.
-  bool Visit(const CefCookie& cookie,
-             int count,
-             int total,
-             bool& deleteCookie) override;
+  bool Visit(const CefCookie& cookie, int count, int total, bool& deleteCookie) override;
 };
+
+constexpr auto CefCookieVisitorCToCpp_Wrap = CefCookieVisitor_0_CToCpp::Wrap;
+constexpr auto CefCookieVisitorCToCpp_Unwrap = CefCookieVisitor_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_VISITOR_CTOCPP_H_

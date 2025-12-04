@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d849f2334e597b6396172576bfcfadbb0fa4bd80$
+// $hash=3b825027624a6324fcc41787af82297fa83c2ede$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
-
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/file_dialog_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -23,16 +22,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK
-dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
-                              cef_browser_t* browser,
-                              cef_file_dialog_mode_t mode,
-                              const cef_string_t* title,
-                              const cef_string_t* default_file_path,
-                              cef_string_list_t accept_filters,
-                              cef_string_list_t accept_extensions,
-                              cef_string_list_t accept_descriptions,
-                              cef_file_dialog_callback_t* callback) {
+int CEF_CALLBACK dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self, struct _cef_browser_t* browser, cef_file_dialog_mode_t mode, const cef_string_t* title, const cef_string_t* default_file_path, cef_string_list_t accept_filters, cef_string_list_t accept_extensions, cef_string_list_t accept_descriptions, struct _cef_file_dialog_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -66,9 +56,14 @@ dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
 
   // Execute
   bool _retval = CefDialogHandlerCppToC::Get(self)->OnFileDialog(
-      CefBrowserCToCpp::Wrap(browser), mode, CefString(title),
-      CefString(default_file_path), accept_filtersList, accept_extensionsList,
-      accept_descriptionsList, CefFileDialogCallbackCToCpp::Wrap(callback));
+      CefBrowserCToCpp_Wrap(browser),
+      mode,
+      CefString(title),
+      CefString(default_file_path),
+      accept_filtersList,
+      accept_extensionsList,
+      accept_descriptionsList,
+      CefFileDialogCallbackCToCpp_Wrap(callback));
 
   // Return type: bool
   return _retval;
@@ -88,18 +83,11 @@ CefDialogHandlerCppToC::~CefDialogHandlerCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefDialogHandler> CefCppToCRefCounted<
-    CefDialogHandlerCppToC,
-    CefDialogHandler,
-    cef_dialog_handler_t>::UnwrapDerived(CefWrapperType type,
-                                         cef_dialog_handler_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefDialogHandler> CefCppToCRefCounted<CefDialogHandlerCppToC, CefDialogHandler, cef_dialog_handler_t>::UnwrapDerived(CefWrapperType type, cef_dialog_handler_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefDialogHandlerCppToC,
-                                   CefDialogHandler,
-                                   cef_dialog_handler_t>::kWrapperType =
-    WT_DIALOG_HANDLER;
+template<> CefWrapperType CefCppToCRefCounted<CefDialogHandlerCppToC, CefDialogHandler, cef_dialog_handler_t>::kWrapperType = WT_DIALOG_HANDLER;
+
+

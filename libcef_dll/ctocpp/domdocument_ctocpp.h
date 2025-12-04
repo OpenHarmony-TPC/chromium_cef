@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=82ed8817a33c52a8440113a7dfe5145d10930dd6$
+// $hash=51ec4904f7aba995043f9d6e0d65604b54bf76dc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOMDOCUMENT_CTOCPP_H_
@@ -20,15 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_dom_capi.h"
 #include "include/cef_dom.h"
+#include "include/capi/cef_dom_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDOMDocumentCToCpp : public CefCToCppRefCounted<CefDOMDocumentCToCpp,
-                                                        CefDOMDocument,
-                                                        cef_domdocument_t> {
+class CefDOMDocumentCToCpp
+    : public CefCToCppRefCounted<CefDOMDocumentCToCpp, CefDOMDocument, cef_domdocument_t> {
  public:
   CefDOMDocumentCToCpp();
   virtual ~CefDOMDocumentCToCpp();
@@ -49,5 +48,8 @@ class CefDOMDocumentCToCpp : public CefCToCppRefCounted<CefDOMDocumentCToCpp,
   CefString GetBaseURL() override;
   CefString GetCompleteURL(const CefString& partialURL) override;
 };
+
+constexpr auto CefDOMDocumentCToCpp_Wrap = CefDOMDocumentCToCpp::Wrap;
+constexpr auto CefDOMDocumentCToCpp_Unwrap = CefDOMDocumentCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DOMDOCUMENT_CTOCPP_H_

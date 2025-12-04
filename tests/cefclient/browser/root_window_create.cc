@@ -9,10 +9,10 @@
 #include "tests/cefclient/browser/root_window_win.h"
 #elif defined(OS_LINUX)
 #include "tests/cefclient/browser/root_window_gtk.h"
-#elif defined(OS_OHOS)
-#include "tests/cefclient/browser/root_window_ohos.h"
 #elif defined(OS_MAC)
 #include "tests/cefclient/browser/root_window_mac.h"
+#elif defined(OS_OHOS)
+#include "tests/cefclient/browser/root_window_ohos.h"
 #endif
 
 namespace client {

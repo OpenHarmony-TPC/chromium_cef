@@ -9,33 +9,34 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c50144a1aa798c1539a3509ead0189478853a1bf$
+// $hash=08c9225f466dc11ee13b1668f3ae37f6bb7442e6$
 //
 
 #include "libcef_dll/ctocpp/resource_read_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
+
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefResourceReadCallbackCToCpp::Continue(int bytes_read) {
+NO_SANITIZE("cfi-icall") void CefResourceReadCallbackCToCpp::Continue(int bytes_read) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_resource_read_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cont)) {
+  auto* _struct = GetStruct();
+  if (!_struct->cont) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->cont(_struct, bytes_read);
+  _struct->cont(_struct,
+      bytes_read);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefResourceReadCallbackCToCpp::CefResourceReadCallbackCToCpp() {}
+CefResourceReadCallbackCToCpp::CefResourceReadCallbackCToCpp() {
+}
 
 // DESTRUCTOR - Do not edit by hand.
 
@@ -43,18 +44,11 @@ CefResourceReadCallbackCToCpp::~CefResourceReadCallbackCToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_resource_read_callback_t* CefCToCppRefCounted<
-    CefResourceReadCallbackCToCpp,
-    CefResourceReadCallback,
-    cef_resource_read_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                 CefResourceReadCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> cef_resource_read_callback_t* CefCToCppRefCounted<CefResourceReadCallbackCToCpp, CefResourceReadCallback, cef_resource_read_callback_t>::UnwrapDerived(CefWrapperType type, CefResourceReadCallback* c) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefResourceReadCallbackCToCpp,
-                                   CefResourceReadCallback,
-                                   cef_resource_read_callback_t>::kWrapperType =
-    WT_RESOURCE_READ_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefResourceReadCallbackCToCpp, CefResourceReadCallback, cef_resource_read_callback_t>::kWrapperType = WT_RESOURCE_READ_CALLBACK;
+
+

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a5f734cfac7c82307b240c915e2b45d8a5fe5e48$
+// $hash=1fa5e47327237893ecf5b9575dc2b3a9403f97c3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESOURCE_SKIP_CALLBACK_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_resource_handler_capi.h"
 #include "include/cef_resource_handler.h"
+#include "include/capi/cef_resource_handler_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefResourceSkipCallbackCppToC
-    : public CefCppToCRefCounted<CefResourceSkipCallbackCppToC,
-                                 CefResourceSkipCallback,
-                                 cef_resource_skip_callback_t> {
+class CefResourceSkipCallback_0_CppToC
+    : public CefCppToCRefCounted<CefResourceSkipCallback_0_CppToC, CefResourceSkipCallback, cef_resource_skip_callback_0_t> {
  public:
-  CefResourceSkipCallbackCppToC();
-  virtual ~CefResourceSkipCallbackCppToC();
+  CefResourceSkipCallback_0_CppToC();
+  virtual ~CefResourceSkipCallback_0_CppToC();
 };
+
+constexpr auto CefResourceSkipCallbackCppToC_Wrap = CefResourceSkipCallback_0_CppToC::Wrap;
+constexpr auto CefResourceSkipCallbackCppToC_Unwrap = CefResourceSkipCallback_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_SKIP_CALLBACK_CPPTOC_H_

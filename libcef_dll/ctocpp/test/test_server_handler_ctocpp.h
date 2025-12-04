@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7090d1293b8cc7817bfafc6072907ceb8138b229$
+// $hash=50aee4f7a662e816e662768f0124815db594b422$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_HANDLER_CTOCPP_H_
@@ -20,25 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/test/cef_test_server_capi.h"
 #include "include/test/cef_test_server.h"
+#include "include/capi/test/cef_test_server_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefTestServerHandlerCToCpp
-    : public CefCToCppRefCounted<CefTestServerHandlerCToCpp,
-                                 CefTestServerHandler,
-                                 cef_test_server_handler_t> {
+class CefTestServerHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefTestServerHandler_0_CToCpp, CefTestServerHandler, cef_test_server_handler_0_t> {
  public:
-  CefTestServerHandlerCToCpp();
-  virtual ~CefTestServerHandlerCToCpp();
+  CefTestServerHandler_0_CToCpp();
+  virtual ~CefTestServerHandler_0_CToCpp();
 
   // CefTestServerHandler methods.
-  bool OnTestServerRequest(
-      CefRefPtr<CefTestServer> server,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefTestServerConnection> connection) override;
+  bool OnTestServerRequest(CefRefPtr<CefTestServer> server, CefRefPtr<CefRequest> request, CefRefPtr<CefTestServerConnection> connection) override;
 };
+
+constexpr auto CefTestServerHandlerCToCpp_Wrap = CefTestServerHandler_0_CToCpp::Wrap;
+constexpr auto CefTestServerHandlerCToCpp_Unwrap = CefTestServerHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_HANDLER_CTOCPP_H_

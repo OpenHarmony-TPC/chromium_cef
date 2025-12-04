@@ -9,21 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=218a6877adc4c4e6de4d3ebbb50995121ec737b1$
+// $hash=60b518ca9383b34df023e60003971923f03d2b92$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/test/test_server_cpptoc.h"
-
 #include "libcef_dll/ctocpp/test/test_server_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_test_server_t* cef_test_server_create_and_start(
-    uint16_t port,
-    int https_server,
-    cef_test_cert_type_t https_cert_type,
-    struct _cef_test_server_handler_t* handler) {
+CEF_EXPORT cef_test_server_0_t* cef_test_server_create_and_start(uint16_t port, int https_server, cef_test_cert_type_t https_cert_type, struct _cef_test_server_handler_0_t* handler) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -36,18 +32,20 @@ CEF_EXPORT cef_test_server_t* cef_test_server_create_and_start(
 
   // Execute
   CefRefPtr<CefTestServer> _retval = CefTestServer::CreateAndStart(
-      port, https_server ? true : false, https_cert_type,
-      CefTestServerHandlerCToCpp::Wrap(handler));
+      port,
+      https_server?true:false,
+      https_cert_type,
+      CefTestServerHandlerCToCpp_Wrap(handler));
 
   // Return type: refptr_same
-  return CefTestServerCppToC::Wrap(_retval);
+  return CefTestServerCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-void CEF_CALLBACK test_server_stop(struct _cef_test_server_t* self) {
+void CEF_CALLBACK test_server_stop(struct _cef_test_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -58,11 +56,10 @@ void CEF_CALLBACK test_server_stop(struct _cef_test_server_t* self) {
   }
 
   // Execute
-  CefTestServerCppToC::Get(self)->Stop();
+  CefTestServer_0_CppToC::Get(self)->Stop();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-test_server_get_origin(struct _cef_test_server_t* self) {
+cef_string_userfree_t CEF_CALLBACK test_server_get_origin(struct _cef_test_server_0_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -73,7 +70,7 @@ test_server_get_origin(struct _cef_test_server_t* self) {
   }
 
   // Execute
-  CefString _retval = CefTestServerCppToC::Get(self)->GetOrigin();
+  CefString _retval = CefTestServer_0_CppToC::Get(self)->GetOrigin();
 
   // Return type: string
   return _retval.DetachToUserFree();
@@ -81,29 +78,26 @@ test_server_get_origin(struct _cef_test_server_t* self) {
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerCppToC::CefTestServerCppToC() {
+CefTestServer_0_CppToC::CefTestServer_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->stop = test_server_stop;
   GetStruct()->get_origin = test_server_get_origin;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefTestServerCppToC::~CefTestServerCppToC() {
+CefTestServer_0_CppToC::~CefTestServer_0_CppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefTestServer>
-CefCppToCRefCounted<CefTestServerCppToC, CefTestServer, cef_test_server_t>::
-    UnwrapDerived(CefWrapperType type, cef_test_server_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> CefRefPtr<CefTestServer> CefCppToCRefCounted<CefTestServer_0_CppToC, CefTestServer, cef_test_server_0_t>::UnwrapDerived(CefWrapperType type, cef_test_server_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefTestServerCppToC,
-                                   CefTestServer,
-                                   cef_test_server_t>::kWrapperType =
-    WT_TEST_SERVER;
+template<> CefWrapperType CefCppToCRefCounted<CefTestServer_0_CppToC, CefTestServer, cef_test_server_0_t>::kWrapperType = WT_TEST_SERVER;
+
+

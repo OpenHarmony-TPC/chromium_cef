@@ -9,25 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b9309271dbd061661cb2f2c0899b0ab43301a8d0$
+// $hash=cb4555d5883d7da783d6ea2b5197ad9bc3bb6b1c$
 //
 
-#include "libcef_dll/ctocpp/keyboard_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/keyboard_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefKeyboardHandlerCToCpp::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
-                                             const CefKeyEvent& event,
-                                             CefEventHandle os_event,
-                                             bool* is_keyboard_shortcut) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefKeyboardHandler_0_CToCpp::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent& event, CefEventHandle os_event, bool* is_keyboard_shortcut) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_keyboard_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_pre_key_event)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_pre_key_event) {
     return false;
   }
 
@@ -45,31 +42,29 @@ bool CefKeyboardHandlerCToCpp::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
   }
 
   // Translate param: is_keyboard_shortcut; type: bool_byaddr
-  int is_keyboard_shortcutInt =
-      is_keyboard_shortcut ? *is_keyboard_shortcut : 0;
+  int is_keyboard_shortcutInt = is_keyboard_shortcut?*is_keyboard_shortcut:0;
 
   // Execute
-  int _retval =
-      _struct->on_pre_key_event(_struct, CefBrowserCppToC::Wrap(browser),
-                                &event, os_event, &is_keyboard_shortcutInt);
+  int _retval = _struct->on_pre_key_event(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      &event,
+      os_event,
+      &is_keyboard_shortcutInt);
 
   // Restore param:is_keyboard_shortcut; type: bool_byaddr
   if (is_keyboard_shortcut) {
-    *is_keyboard_shortcut = is_keyboard_shortcutInt ? true : false;
+    *is_keyboard_shortcut = is_keyboard_shortcutInt?true:false;
   }
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefKeyboardHandlerCToCpp::OnKeyEvent(CefRefPtr<CefBrowser> browser,
-                                          const CefKeyEvent& event,
-                                          CefEventHandle os_event) {
+NO_SANITIZE("cfi-icall") bool CefKeyboardHandler_0_CToCpp::OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent& event, CefEventHandle os_event) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_keyboard_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_key_event)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_key_event) {
     return false;
   }
 
@@ -82,35 +77,32 @@ bool CefKeyboardHandlerCToCpp::OnKeyEvent(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  int _retval = _struct->on_key_event(_struct, CefBrowserCppToC::Wrap(browser),
-                                      &event, os_event);
+  int _retval = _struct->on_key_event(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      &event,
+      os_event);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefKeyboardHandlerCToCpp::CefKeyboardHandlerCToCpp() {}
+CefKeyboardHandler_0_CToCpp::CefKeyboardHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefKeyboardHandlerCToCpp::~CefKeyboardHandlerCToCpp() {
+CefKeyboardHandler_0_CToCpp::~CefKeyboardHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_keyboard_handler_t* CefCToCppRefCounted<
-    CefKeyboardHandlerCToCpp,
-    CefKeyboardHandler,
-    cef_keyboard_handler_t>::UnwrapDerived(CefWrapperType type,
-                                           CefKeyboardHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_keyboard_handler_0_t* CefCToCppRefCounted<CefKeyboardHandler_0_CToCpp, CefKeyboardHandler, cef_keyboard_handler_0_t>::UnwrapDerived(CefWrapperType type, CefKeyboardHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefKeyboardHandlerCToCpp,
-                                   CefKeyboardHandler,
-                                   cef_keyboard_handler_t>::kWrapperType =
-    WT_KEYBOARD_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefKeyboardHandler_0_CToCpp, CefKeyboardHandler, cef_keyboard_handler_0_t>::kWrapperType = WT_KEYBOARD_HANDLER;
+
+

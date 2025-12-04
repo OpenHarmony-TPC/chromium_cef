@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=caedce6bfadf82e9c0f4469ec85ae1cb0cecf272$
+// $hash=356622117a74adbc02a4b778985a3dcf402992f6$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_MENU_MODEL_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_MENU_MODEL_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 
@@ -53,6 +57,8 @@ struct _cef_menu_model_t;
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
 ///
+/// NOTE: This struct is allocated client-side.
+///
 typedef struct _cef_menu_model_delegate_t {
   ///
   /// Base structure.
@@ -63,58 +69,43 @@ typedef struct _cef_menu_model_delegate_t {
   /// Perform the action associated with the specified |command_id| and optional
   /// |event_flags|.
   ///
-  void(CEF_CALLBACK* execute_command)(struct _cef_menu_model_delegate_t* self,
-                                      struct _cef_menu_model_t* menu_model,
-                                      int command_id,
-                                      cef_event_flags_t event_flags);
+  void (CEF_CALLBACK *execute_command)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int command_id, cef_event_flags_t event_flags);
 
   ///
   /// Called when the user moves the mouse outside the menu and over the owning
   /// window.
   ///
-  void(CEF_CALLBACK* mouse_outside_menu)(
-      struct _cef_menu_model_delegate_t* self,
-      struct _cef_menu_model_t* menu_model,
-      const cef_point_t* screen_point);
+  void (CEF_CALLBACK *mouse_outside_menu)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, const cef_point_t* screen_point);
 
   ///
   /// Called on unhandled open submenu keyboard commands. |is_rtl| will be true
   /// (1) if the menu is displaying a right-to-left language.
   ///
-  void(CEF_CALLBACK* unhandled_open_submenu)(
-      struct _cef_menu_model_delegate_t* self,
-      struct _cef_menu_model_t* menu_model,
-      int is_rtl);
+  void (CEF_CALLBACK *unhandled_open_submenu)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int is_rtl);
 
   ///
   /// Called on unhandled close submenu keyboard commands. |is_rtl| will be true
   /// (1) if the menu is displaying a right-to-left language.
   ///
-  void(CEF_CALLBACK* unhandled_close_submenu)(
-      struct _cef_menu_model_delegate_t* self,
-      struct _cef_menu_model_t* menu_model,
-      int is_rtl);
+  void (CEF_CALLBACK *unhandled_close_submenu)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, int is_rtl);
 
   ///
   /// The menu is about to show.
   ///
-  void(CEF_CALLBACK* menu_will_show)(struct _cef_menu_model_delegate_t* self,
-                                     struct _cef_menu_model_t* menu_model);
+  void (CEF_CALLBACK *menu_will_show)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model);
 
   ///
   /// The menu has closed.
   ///
-  void(CEF_CALLBACK* menu_closed)(struct _cef_menu_model_delegate_t* self,
-                                  struct _cef_menu_model_t* menu_model);
+  void (CEF_CALLBACK *menu_closed)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model);
 
   ///
   /// Optionally modify a menu item label. Return true (1) if |label| was
   /// modified.
   ///
-  int(CEF_CALLBACK* format_label)(struct _cef_menu_model_delegate_t* self,
-                                  struct _cef_menu_model_t* menu_model,
-                                  cef_string_t* label);
+  int (CEF_CALLBACK *format_label)(struct _cef_menu_model_delegate_t* self, struct _cef_menu_model_t* menu_model, cef_string_t* label);
 } cef_menu_model_delegate_t;
+
 
 #ifdef __cplusplus
 }

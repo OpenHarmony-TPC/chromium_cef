@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4877d6f2e6a30208dae7038cac49d2af6c1b9272$
+// $hash=cbcb1ecf0970d426dbf045cd6b3fd28a26a0c7c7$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SHARED_MEMORY_REGION_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_shared_memory_region_capi.h"
 #include "include/cef_shared_memory_region.h"
+#include "include/capi/cef_shared_memory_region_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSharedMemoryRegionCToCpp
-    : public CefCToCppRefCounted<CefSharedMemoryRegionCToCpp,
-                                 CefSharedMemoryRegion,
-                                 cef_shared_memory_region_t> {
+    : public CefCToCppRefCounted<CefSharedMemoryRegionCToCpp, CefSharedMemoryRegion, cef_shared_memory_region_t> {
  public:
   CefSharedMemoryRegionCToCpp();
   virtual ~CefSharedMemoryRegionCToCpp();
@@ -39,5 +37,8 @@ class CefSharedMemoryRegionCToCpp
   size_t Size() override;
   void* Memory() override;
 };
+
+constexpr auto CefSharedMemoryRegionCToCpp_Wrap = CefSharedMemoryRegionCToCpp::Wrap;
+constexpr auto CefSharedMemoryRegionCToCpp_Unwrap = CefSharedMemoryRegionCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SHARED_MEMORY_REGION_CTOCPP_H_

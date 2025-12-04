@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e2eac8ea46c811f80398fea2be9690f32d7deb24$
+// $hash=4bf55753dec4c9a784d2732f17fb3cf5f405a29d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_AUDIO_HANDLER_CTOCPP_H_
@@ -20,32 +20,27 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_audio_handler_capi.h"
 #include "include/cef_audio_handler.h"
+#include "include/capi/cef_audio_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefAudioHandlerCToCpp : public CefCToCppRefCounted<CefAudioHandlerCToCpp,
-                                                         CefAudioHandler,
-                                                         cef_audio_handler_t> {
+class CefAudioHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefAudioHandler_0_CToCpp, CefAudioHandler, cef_audio_handler_0_t> {
  public:
-  CefAudioHandlerCToCpp();
-  virtual ~CefAudioHandlerCToCpp();
+  CefAudioHandler_0_CToCpp();
+  virtual ~CefAudioHandler_0_CToCpp();
 
   // CefAudioHandler methods.
-  bool GetAudioParameters(CefRefPtr<CefBrowser> browser,
-                          CefAudioParameters& params) override;
-  void OnAudioStreamStarted(CefRefPtr<CefBrowser> browser,
-                            const CefAudioParameters& params,
-                            int channels) override;
-  void OnAudioStreamPacket(CefRefPtr<CefBrowser> browser,
-                           const float** data,
-                           int frames,
-                           int64_t pts) override;
+  bool GetAudioParameters(CefRefPtr<CefBrowser> browser, CefAudioParameters& params) override;
+  void OnAudioStreamStarted(CefRefPtr<CefBrowser> browser, const CefAudioParameters& params, int channels) override;
+  void OnAudioStreamPacket(CefRefPtr<CefBrowser> browser, const float** data, int frames, int64_t pts) override;
   void OnAudioStreamStopped(CefRefPtr<CefBrowser> browser) override;
-  void OnAudioStreamError(CefRefPtr<CefBrowser> browser,
-                          const CefString& message) override;
+  void OnAudioStreamError(CefRefPtr<CefBrowser> browser, const CefString& message) override;
 };
+
+constexpr auto CefAudioHandlerCToCpp_Wrap = CefAudioHandler_0_CToCpp::Wrap;
+constexpr auto CefAudioHandlerCToCpp_Unwrap = CefAudioHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_AUDIO_HANDLER_CTOCPP_H_

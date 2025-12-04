@@ -23,8 +23,10 @@
 #elif defined(OS_OHOS)
 #include <ace/xcomponent/native_xcomponent_key_event.h>
 #elif defined(OS_WIN)
+#include "tests/shared/browser/util_win.h"
+
 // Required for resource_util_win, which uses this as an extern
-HINSTANCE hInst = ::GetModuleHandle(nullptr);
+HINSTANCE hInst = client::GetCodeModuleHandle();
 #endif
 
 // Set to 1 to enable verbose debugging info logging.
@@ -1655,7 +1657,8 @@ class OSRTestHandler : public RoutingTestHandler,
 
     // Use a thin black underline by default.
     CefRange range(0, static_cast<uint32_t>(markedText.length()));
-    cef_composition_underline_t line = {range, 0xFF000000, 0, false};
+    cef_composition_underline_t line = {sizeof(cef_composition_underline_t),
+                                        range, 0xFF000000, 0, false};
     underlines.push_back(line);
 
     CefRange replacement_range(0, static_cast<uint32_t>(markedText.length()));
@@ -1680,7 +1683,8 @@ class OSRTestHandler : public RoutingTestHandler,
 
     // Use a thin black underline by default.
     CefRange range(0, static_cast<uint32_t>(markedText.length()));
-    cef_composition_underline_t line = {range, 0xFF000000, 0, false};
+    cef_composition_underline_t line = {sizeof(cef_composition_underline_t),
+                                        range, 0xFF000000, 0, false};
     underlines.push_back(line);
 
     CefRange replacement_range(0, static_cast<uint32_t>(markedText.length()));

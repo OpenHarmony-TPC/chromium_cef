@@ -9,59 +9,51 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=92c9a6934a2d618e5b0671bab5e3f2644855f221$
+// $hash=16982218c294bbf9073559d3bb832fb870927d74$
 //
 
+#include "include/cef_api_hash.h"
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefPdfPrintCallbackCToCpp::OnPdfPrintFinished(const CefString& path,
-                                                   bool ok) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") void CefPdfPrintCallback_0_CToCpp::OnPdfPrintFinished(const CefString& path, bool ok) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_pdf_print_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_pdf_print_finished)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_pdf_print_finished) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: path; type: string_byref_const
-  DCHECK(!path.empty());
-  if (path.empty()) {
-    return;
-  }
+  // Unverified params: path
 
   // Execute
-  _struct->on_pdf_print_finished(_struct, path.GetStruct(), ok);
+  _struct->on_pdf_print_finished(_struct,
+      path.GetStruct(),
+      ok);
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPdfPrintCallbackCToCpp::CefPdfPrintCallbackCToCpp() {}
+CefPdfPrintCallback_0_CToCpp::CefPdfPrintCallback_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPdfPrintCallbackCToCpp::~CefPdfPrintCallbackCToCpp() {
+CefPdfPrintCallback_0_CToCpp::~CefPdfPrintCallback_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_pdf_print_callback_t* CefCToCppRefCounted<
-    CefPdfPrintCallbackCToCpp,
-    CefPdfPrintCallback,
-    cef_pdf_print_callback_t>::UnwrapDerived(CefWrapperType type,
-                                             CefPdfPrintCallback* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_pdf_print_callback_0_t* CefCToCppRefCounted<CefPdfPrintCallback_0_CToCpp, CefPdfPrintCallback, cef_pdf_print_callback_0_t>::UnwrapDerived(CefWrapperType type, CefPdfPrintCallback* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefPdfPrintCallbackCToCpp,
-                                   CefPdfPrintCallback,
-                                   cef_pdf_print_callback_t>::kWrapperType =
-    WT_PDF_PRINT_CALLBACK;
+template<> CefWrapperType CefCToCppRefCounted<CefPdfPrintCallback_0_CToCpp, CefPdfPrintCallback, cef_pdf_print_callback_0_t>::kWrapperType = WT_PDF_PRINT_CALLBACK;
+
+

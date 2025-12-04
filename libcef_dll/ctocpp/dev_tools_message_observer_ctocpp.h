@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7a37c92e7fe2d9a9e49823b4f2cf3c8ba47890e2$
+// $hash=4b5d1e8798ac9cfd288e6331852e56adacf977d5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DEV_TOOLS_MESSAGE_OBSERVER_CTOCPP_H_
@@ -20,37 +20,29 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_devtools_message_observer_capi.h"
-#include "include/cef_browser.h"
 #include "include/cef_devtools_message_observer.h"
+#include "include/capi/cef_devtools_message_observer_capi_versions.h"
+#include "include/cef_browser.h"
+#include "include/capi/cef_browser_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDevToolsMessageObserverCToCpp
-    : public CefCToCppRefCounted<CefDevToolsMessageObserverCToCpp,
-                                 CefDevToolsMessageObserver,
-                                 cef_dev_tools_message_observer_t> {
+class CefDevToolsMessageObserver_0_CToCpp
+    : public CefCToCppRefCounted<CefDevToolsMessageObserver_0_CToCpp, CefDevToolsMessageObserver, cef_dev_tools_message_observer_0_t> {
  public:
-  CefDevToolsMessageObserverCToCpp();
-  virtual ~CefDevToolsMessageObserverCToCpp();
+  CefDevToolsMessageObserver_0_CToCpp();
+  virtual ~CefDevToolsMessageObserver_0_CToCpp();
 
   // CefDevToolsMessageObserver methods.
-  bool OnDevToolsMessage(CefRefPtr<CefBrowser> browser,
-                         const void* message,
-                         size_t message_size) override;
-  void OnDevToolsMethodResult(CefRefPtr<CefBrowser> browser,
-                              int message_id,
-                              bool success,
-                              const void* result,
-                              size_t result_size) override;
-  void OnDevToolsEvent(CefRefPtr<CefBrowser> browser,
-                       const CefString& method,
-                       const void* params,
-                       size_t params_size) override;
+  bool OnDevToolsMessage(CefRefPtr<CefBrowser> browser, const void* message, size_t message_size) override;
+  void OnDevToolsMethodResult(CefRefPtr<CefBrowser> browser, int message_id, bool success, const void* result, size_t result_size) override;
+  void OnDevToolsEvent(CefRefPtr<CefBrowser> browser, const CefString& method, const void* params, size_t params_size) override;
   void OnDevToolsAgentAttached(CefRefPtr<CefBrowser> browser) override;
   void OnDevToolsAgentDetached(CefRefPtr<CefBrowser> browser) override;
 };
+
+constexpr auto CefDevToolsMessageObserverCToCpp_Wrap = CefDevToolsMessageObserver_0_CToCpp::Wrap;
+constexpr auto CefDevToolsMessageObserverCToCpp_Unwrap = CefDevToolsMessageObserver_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DEV_TOOLS_MESSAGE_OBSERVER_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3c2ebb32a7f5012c09398447e671898e096edd0d$
+// $hash=566c0f33dc496c8213f4dc054acb1bf16561bba3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -20,32 +20,27 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_cookie_capi.h"
 #include "include/cef_cookie.h"
+#include "include/capi/cef_cookie_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieManagerCToCpp
-    : public CefCToCppRefCounted<CefCookieManagerCToCpp,
-                                 CefCookieManager,
-                                 cef_cookie_manager_t> {
+    : public CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager, cef_cookie_manager_t> {
  public:
   CefCookieManagerCToCpp();
   virtual ~CefCookieManagerCToCpp();
 
   // CefCookieManager methods.
   bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) override;
-  bool VisitUrlCookies(const CefString& url,
-                       bool includeHttpOnly,
-                       CefRefPtr<CefCookieVisitor> visitor) override;
-  bool SetCookie(const CefString& url,
-                 const CefCookie& cookie,
-                 CefRefPtr<CefSetCookieCallback> callback) override;
-  bool DeleteCookies(const CefString& url,
-                     const CefString& cookie_name,
-                     CefRefPtr<CefDeleteCookiesCallback> callback) override;
+  bool VisitUrlCookies(const CefString& url, bool includeHttpOnly, CefRefPtr<CefCookieVisitor> visitor) override;
+  bool SetCookie(const CefString& url, const CefCookie& cookie, CefRefPtr<CefSetCookieCallback> callback) override;
+  bool DeleteCookies(const CefString& url, const CefString& cookie_name, CefRefPtr<CefDeleteCookiesCallback> callback) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
 };
+
+constexpr auto CefCookieManagerCToCpp_Wrap = CefCookieManagerCToCpp::Wrap;
+constexpr auto CefCookieManagerCToCpp_Unwrap = CefCookieManagerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_

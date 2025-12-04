@@ -9,23 +9,22 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ad2782d4cee75df6082dbc834419841029866e0b$
+// $hash=e7511a158f5bc4d703f3998d9c26afdc4eead922$
 //
 
-#include "libcef_dll/ctocpp/audio_handler_ctocpp.h"
-
+#include "include/cef_api_hash.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/ctocpp/audio_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
-// VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-bool CefAudioHandlerCToCpp::GetAudioParameters(CefRefPtr<CefBrowser> browser,
-                                               CefAudioParameters& params) {
+// VIRTUAL METHODS FOR VERSION 0 - Body may be edited by hand.
+
+NO_SANITIZE("cfi-icall") bool CefAudioHandler_0_CToCpp::GetAudioParameters(CefRefPtr<CefBrowser> browser, CefAudioParameters& params) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_audio_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_audio_parameters)) {
+  auto* _struct = GetStruct();
+  if (!_struct->get_audio_parameters) {
     return false;
   }
 
@@ -38,22 +37,19 @@ bool CefAudioHandlerCToCpp::GetAudioParameters(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  int _retval = _struct->get_audio_parameters(
-      _struct, CefBrowserCppToC::Wrap(browser), &params);
+  int _retval = _struct->get_audio_parameters(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      &params);
 
   // Return type: bool
-  return _retval ? true : false;
+  return _retval?true:false;
 }
 
-NO_SANITIZE("cfi-icall")
-void CefAudioHandlerCToCpp::OnAudioStreamStarted(
-    CefRefPtr<CefBrowser> browser,
-    const CefAudioParameters& params,
-    int channels) {
+NO_SANITIZE("cfi-icall") void CefAudioHandler_0_CToCpp::OnAudioStreamStarted(CefRefPtr<CefBrowser> browser, const CefAudioParameters& params, int channels) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_audio_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_audio_stream_started)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_audio_stream_started) {
     return;
   }
 
@@ -66,19 +62,17 @@ void CefAudioHandlerCToCpp::OnAudioStreamStarted(
   }
 
   // Execute
-  _struct->on_audio_stream_started(_struct, CefBrowserCppToC::Wrap(browser),
-                                   &params, channels);
+  _struct->on_audio_stream_started(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      &params,
+      channels);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefAudioHandlerCToCpp::OnAudioStreamPacket(CefRefPtr<CefBrowser> browser,
-                                                const float** data,
-                                                int frames,
-                                                int64_t pts) {
+NO_SANITIZE("cfi-icall") void CefAudioHandler_0_CToCpp::OnAudioStreamPacket(CefRefPtr<CefBrowser> browser, const float** data, int frames, int64_t pts) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_audio_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_audio_stream_packet)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_audio_stream_packet) {
     return;
   }
 
@@ -96,17 +90,18 @@ void CefAudioHandlerCToCpp::OnAudioStreamPacket(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_audio_stream_packet(_struct, CefBrowserCppToC::Wrap(browser),
-                                  data, frames, pts);
+  _struct->on_audio_stream_packet(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      data,
+      frames,
+      pts);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefAudioHandlerCToCpp::OnAudioStreamStopped(
-    CefRefPtr<CefBrowser> browser) {
+NO_SANITIZE("cfi-icall") void CefAudioHandler_0_CToCpp::OnAudioStreamStopped(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_audio_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_audio_stream_stopped)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_audio_stream_stopped) {
     return;
   }
 
@@ -119,16 +114,15 @@ void CefAudioHandlerCToCpp::OnAudioStreamStopped(
   }
 
   // Execute
-  _struct->on_audio_stream_stopped(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_audio_stream_stopped(_struct,
+      CefBrowserCppToC_Wrap(browser));
 }
 
-NO_SANITIZE("cfi-icall")
-void CefAudioHandlerCToCpp::OnAudioStreamError(CefRefPtr<CefBrowser> browser,
-                                               const CefString& message) {
+NO_SANITIZE("cfi-icall") void CefAudioHandler_0_CToCpp::OnAudioStreamError(CefRefPtr<CefBrowser> browser, const CefString& message) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_audio_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_audio_stream_error)) {
+  auto* _struct = GetStruct();
+  if (!_struct->on_audio_stream_error) {
     return;
   }
 
@@ -146,32 +140,28 @@ void CefAudioHandlerCToCpp::OnAudioStreamError(CefRefPtr<CefBrowser> browser,
   }
 
   // Execute
-  _struct->on_audio_stream_error(_struct, CefBrowserCppToC::Wrap(browser),
-                                 message.GetStruct());
+  _struct->on_audio_stream_error(_struct,
+      CefBrowserCppToC_Wrap(browser),
+      message.GetStruct());
 }
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefAudioHandlerCToCpp::CefAudioHandlerCToCpp() {}
+CefAudioHandler_0_CToCpp::CefAudioHandler_0_CToCpp() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+}
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefAudioHandlerCToCpp::~CefAudioHandlerCToCpp() {
+CefAudioHandler_0_CToCpp::~CefAudioHandler_0_CToCpp() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-cef_audio_handler_t*
-CefCToCppRefCounted<CefAudioHandlerCToCpp,
-                    CefAudioHandler,
-                    cef_audio_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                        CefAudioHandler* c) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+template<> cef_audio_handler_0_t* CefCToCppRefCounted<CefAudioHandler_0_CToCpp, CefAudioHandler, cef_audio_handler_0_t>::UnwrapDerived(CefWrapperType type, CefAudioHandler* c) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
 }
 
-template <>
-CefWrapperType CefCToCppRefCounted<CefAudioHandlerCToCpp,
-                                   CefAudioHandler,
-                                   cef_audio_handler_t>::kWrapperType =
-    WT_AUDIO_HANDLER;
+template<> CefWrapperType CefCToCppRefCounted<CefAudioHandler_0_CToCpp, CefAudioHandler, cef_audio_handler_0_t>::kWrapperType = WT_AUDIO_HANDLER;
+
+

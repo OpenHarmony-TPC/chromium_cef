@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef48fa6e62d80f19aff8f4ac5764d019e9b72aff$
+// $hash=8ac6b1545d01939b6b43be154141810e1d4adcd6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PERMISSION_HANDLER_CTOCPP_H_
@@ -20,37 +20,25 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_permission_handler_capi.h"
 #include "include/cef_permission_handler.h"
+#include "include/capi/cef_permission_handler_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefPermissionHandlerCToCpp
-    : public CefCToCppRefCounted<CefPermissionHandlerCToCpp,
-                                 CefPermissionHandler,
-                                 cef_permission_handler_t> {
+class CefPermissionHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefPermissionHandler_0_CToCpp, CefPermissionHandler, cef_permission_handler_0_t> {
  public:
-  CefPermissionHandlerCToCpp();
-  virtual ~CefPermissionHandlerCToCpp();
+  CefPermissionHandler_0_CToCpp();
+  virtual ~CefPermissionHandler_0_CToCpp();
 
   // CefPermissionHandler methods.
-  bool OnRequestMediaAccessPermission(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      const CefString& requesting_origin,
-      uint32_t requested_permissions,
-      CefRefPtr<CefMediaAccessCallback> callback) override;
-  bool OnShowPermissionPrompt(
-      CefRefPtr<CefBrowser> browser,
-      uint64_t prompt_id,
-      const CefString& requesting_origin,
-      uint32_t requested_permissions,
-      CefRefPtr<CefPermissionPromptCallback> callback) override;
-  void OnDismissPermissionPrompt(
-      CefRefPtr<CefBrowser> browser,
-      uint64_t prompt_id,
-      cef_permission_request_result_t result) override;
+  bool OnRequestMediaAccessPermission(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& requesting_origin, uint32_t requested_permissions, CefRefPtr<CefMediaAccessCallback> callback) override;
+  bool OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id, const CefString& requesting_origin, uint32_t requested_permissions, CefRefPtr<CefPermissionPromptCallback> callback) override;
+  void OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id, cef_permission_request_result_t result) override;
 };
+
+constexpr auto CefPermissionHandlerCToCpp_Wrap = CefPermissionHandler_0_CToCpp::Wrap;
+constexpr auto CefPermissionHandlerCToCpp_Unwrap = CefPermissionHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PERMISSION_HANDLER_CTOCPP_H_

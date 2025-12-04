@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=457e803ce440ec32985d51e95a7efbce0ddf59d1$
+// $hash=d3eaf55b4b5742d2a83bed3517f64900b9423eec$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_KEYBOARD_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_KEYBOARD_HANDLER_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -47,9 +51,12 @@
 extern "C" {
 #endif
 
+
 ///
 /// Implement this structure to handle events related to keyboard input. The
 /// functions of this structure will be called on the UI thread.
+///
+/// NOTE: This struct is allocated client-side.
 ///
 typedef struct _cef_keyboard_handler_t {
   ///
@@ -65,11 +72,7 @@ typedef struct _cef_keyboard_handler_t {
   /// keyboard shortcut set |is_keyboard_shortcut| to true (1) and return false
   /// (0).
   ///
-  int(CEF_CALLBACK* on_pre_key_event)(struct _cef_keyboard_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      const cef_key_event_t* event,
-                                      cef_event_handle_t os_event,
-                                      int* is_keyboard_shortcut);
+  int (CEF_CALLBACK *on_pre_key_event)(struct _cef_keyboard_handler_t* self, struct _cef_browser_t* browser, const cef_key_event_t* event, cef_event_handle_t os_event, int* is_keyboard_shortcut);
 
   ///
   /// Called after the renderer and JavaScript in the page has had a chance to
@@ -77,11 +80,9 @@ typedef struct _cef_keyboard_handler_t {
   /// |os_event| is the operating system event message, if any. Return true (1)
   /// if the keyboard event was handled or false (0) otherwise.
   ///
-  int(CEF_CALLBACK* on_key_event)(struct _cef_keyboard_handler_t* self,
-                                  struct _cef_browser_t* browser,
-                                  const cef_key_event_t* event,
-                                  cef_event_handle_t os_event);
+  int (CEF_CALLBACK *on_key_event)(struct _cef_keyboard_handler_t* self, struct _cef_browser_t* browser, const cef_key_event_t* event, cef_event_handle_t os_event);
 } cef_keyboard_handler_t;
+
 
 #ifdef __cplusplus
 }

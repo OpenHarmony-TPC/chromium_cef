@@ -9,21 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3b6cb37bfeb8dfec22566d7c7a8ffb013e82962b$
+// $hash=69ffdc620f4a2b35d6b6826b53e5329979f1890a$
 //
 
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
-
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-pdf_print_callback_on_pdf_print_finished(struct _cef_pdf_print_callback_t* self,
-                                         const cef_string_t* path,
-                                         int ok) {
+void CEF_CALLBACK pdf_print_callback_on_pdf_print_finished(struct _cef_pdf_print_callback_t* self, const cef_string_t* path, int ok) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,15 +28,12 @@ pdf_print_callback_on_pdf_print_finished(struct _cef_pdf_print_callback_t* self,
   if (!self) {
     return;
   }
-  // Verify param: path; type: string_byref_const
-  DCHECK(path);
-  if (!path) {
-    return;
-  }
+  // Unverified params: path
 
   // Execute
-  CefPdfPrintCallbackCppToC::Get(self)->OnPdfPrintFinished(CefString(path),
-                                                           ok ? true : false);
+  CefPdfPrintCallbackCppToC::Get(self)->OnPdfPrintFinished(
+      CefString(path),
+      ok?true:false);
 }
 
 }  // namespace
@@ -57,18 +50,11 @@ CefPdfPrintCallbackCppToC::~CefPdfPrintCallbackCppToC() {
   shutdown_checker::AssertNotShutdown();
 }
 
-template <>
-CefRefPtr<CefPdfPrintCallback> CefCppToCRefCounted<
-    CefPdfPrintCallbackCppToC,
-    CefPdfPrintCallback,
-    cef_pdf_print_callback_t>::UnwrapDerived(CefWrapperType type,
-                                             cef_pdf_print_callback_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
+template<> CefRefPtr<CefPdfPrintCallback> CefCppToCRefCounted<CefPdfPrintCallbackCppToC, CefPdfPrintCallback, cef_pdf_print_callback_t>::UnwrapDerived(CefWrapperType type, cef_pdf_print_callback_t* s) {
+  CHECK(false) << __func__ << " called with unexpected class type " << type;
   return nullptr;
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPdfPrintCallbackCppToC,
-                                   CefPdfPrintCallback,
-                                   cef_pdf_print_callback_t>::kWrapperType =
-    WT_PDF_PRINT_CALLBACK;
+template<> CefWrapperType CefCppToCRefCounted<CefPdfPrintCallbackCppToC, CefPdfPrintCallback, cef_pdf_print_callback_t>::kWrapperType = WT_PDF_PRINT_CALLBACK;
+
+

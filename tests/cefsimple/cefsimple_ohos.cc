@@ -8,6 +8,7 @@
 #include "include/cef_command_line.h"
 
 // Entry point function for all processes.
+NO_STACK_PROTECTOR
 extern "C" {
 int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
   // Provide CEF with command-line arguments.

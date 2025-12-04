@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac828acc68fac2f12db451eb41078c95dbf8836c$
+// $hash=a9c2622840eed7c755532e9e76e4803b4e8c7cb0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LIFE_SPAN_HANDLER_CTOCPP_H_
@@ -20,47 +20,30 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_client_capi.h"
-#include "include/capi/cef_life_span_handler_capi.h"
-#include "include/cef_client.h"
 #include "include/cef_life_span_handler.h"
+#include "include/capi/cef_life_span_handler_capi_versions.h"
+#include "include/cef_client.h"
+#include "include/capi/cef_client_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefLifeSpanHandlerCToCpp
-    : public CefCToCppRefCounted<CefLifeSpanHandlerCToCpp,
-                                 CefLifeSpanHandler,
-                                 cef_life_span_handler_t> {
+class CefLifeSpanHandler_0_CToCpp
+    : public CefCToCppRefCounted<CefLifeSpanHandler_0_CToCpp, CefLifeSpanHandler, cef_life_span_handler_0_t> {
  public:
-  CefLifeSpanHandlerCToCpp();
-  virtual ~CefLifeSpanHandlerCToCpp();
+  CefLifeSpanHandler_0_CToCpp();
+  virtual ~CefLifeSpanHandler_0_CToCpp();
 
   // CefLifeSpanHandler methods.
-  bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
-                     CefRefPtr<CefFrame> frame,
-                     int popup_id,
-                     const CefString& target_url,
-                     const CefString& target_frame_name,
-                     WindowOpenDisposition target_disposition,
-                     bool user_gesture,
-                     const CefPopupFeatures& popupFeatures,
-                     CefWindowInfo& windowInfo,
-                     CefRefPtr<CefClient>& client,
-                     CefBrowserSettings& settings,
-                     CefRefPtr<CefDictionaryValue>& extra_info,
-                     bool* no_javascript_access) override;
-  void OnBeforePopupAborted(CefRefPtr<CefBrowser> browser,
-                            int popup_id) override;
-  void OnBeforeDevToolsPopup(CefRefPtr<CefBrowser> browser,
-                             CefWindowInfo& windowInfo,
-                             CefRefPtr<CefClient>& client,
-                             CefBrowserSettings& settings,
-                             CefRefPtr<CefDictionaryValue>& extra_info,
-                             bool* use_default_window) override;
+  bool OnBeforePopup(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int popup_id, const CefString& target_url, const CefString& target_frame_name, WindowOpenDisposition target_disposition, bool user_gesture, const CefPopupFeatures& popupFeatures, CefWindowInfo& windowInfo, CefRefPtr<CefClient>& client, CefBrowserSettings& settings, CefRefPtr<CefDictionaryValue>& extra_info, bool* no_javascript_access) override;
+  void OnBeforePopupAborted(CefRefPtr<CefBrowser> browser, int popup_id) override;
+  void OnBeforeDevToolsPopup(CefRefPtr<CefBrowser> browser, CefWindowInfo& windowInfo, CefRefPtr<CefClient>& client, CefBrowserSettings& settings, CefRefPtr<CefDictionaryValue>& extra_info, bool* use_default_window) override;
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
   bool DoClose(CefRefPtr<CefBrowser> browser) override;
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 };
+
+constexpr auto CefLifeSpanHandlerCToCpp_Wrap = CefLifeSpanHandler_0_CToCpp::Wrap;
+constexpr auto CefLifeSpanHandlerCToCpp_Unwrap = CefLifeSpanHandler_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LIFE_SPAN_HANDLER_CTOCPP_H_

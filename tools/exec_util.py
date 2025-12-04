@@ -7,35 +7,35 @@ from subprocess import Popen, PIPE
 import sys
 
 
-def exec_cmd(cmd, path, input_string=None):
+def exec_cmd(cmd, path, input_string=None, output_file=None):
   """ Execute the specified command and return the result. """
   out = ''
   err = ''
   ret = -1
   parts = cmd.split()
-  try:
-    if input_string is None:
-      process = Popen(
-          parts,
-          cwd=path,
-          stdout=PIPE,
-          stderr=PIPE,
-          shell=(sys.platform == 'win32'))
-      out, err = process.communicate()
-      ret = process.returncode
-    else:
-      process = Popen(
-          parts,
-          cwd=path,
-          stdin=PIPE,
-          stdout=PIPE,
-          stderr=PIPE,
-          shell=(sys.platform == 'win32'))
-      out, err = process.communicate(input=input_string)
-      ret = process.returncode
-  except IOError as e:
-    (errno, strerror) = e.args
-    raise
-  except:
-    raise
-  return {'out': out.decode('utf-8'), 'err': err.decode('utf-8'), 'ret': ret}
+
+  if input_string is None:
+    process = Popen(
+        parts,
+        cwd=path,
+        stdout=PIPE if output_file is None else output_file,
+        stderr=PIPE,
+        shell=(sys.platform == 'win32'))
+    out, err = process.communicate()
+    ret = process.returncode
+  else:
+    process = Popen(
+        parts,
+        cwd=path,
+        stdin=PIPE,
+        stdout=PIPE if output_file is None else output_file,
+        stderr=PIPE,
+        shell=(sys.platform == 'win32'))
+    out, err = process.communicate(input=input_string)
+    ret = process.returncode
+
+  return {
+      'out': out.decode('utf-8') if output_file is None else None,
+      'err': err.decode('utf-8'),
+      'ret': ret
+  }

@@ -32,9 +32,13 @@ DLLS_X64 = [
 # processes. Conversely, some DLLs must be loaded before sandbox lockdown. In
 # unsandboxed processes they will load when first needed. The linker will
 # automatically ignore anything which is not linked to the binary at all (it is
-# harmless to have an unmatched /delayload). This list should be kept in sync
-# with Chromium's "delayloads" target from the //build/config/win/BUILD.gn file.
+# harmless to have an unmatched /delayload). Lists should be kept in sync with
+# targets from Chromium's //build/config/win/BUILD.gn file.
 DELAYLOAD_DLLS = [
+    # Required to support CefScopedLibraryLoader.
+    "libcef.dll",
+
+    # "delayloads" target.
     "api-ms-win-core-winrt-error-l1-1-0.dll",
     "api-ms-win-core-winrt-l1-1-0.dll",
     "api-ms-win-core-winrt-string-l1-1-0.dll",
@@ -76,36 +80,34 @@ DELAYLOAD_DLLS = [
     "winusb.dll",
     "wsock32.dll",
     "wtsapi32.dll",
+
+    # "delayloads_not_for_child_dll" target.
+    "crypt32.dll",
+    "dbghelp.dll",
+    "dhcpcsvc.dll",
+    "dwrite.dll",
+    "iphlpapi.dll",
+    "oleaut32.dll",
+    "secur32.dll",
+    "userenv.dll",
+    "winhttp.dll",
+    "winmm.dll",
+    "winspool.drv",
+    "wintrust.dll",
+    "ws2_32.dll",
 ]
 
 # Standard link libraries.
 STANDARD_LIBS = [
     "comctl32.lib",
+    "crypt32.lib",
+    "delayimp.lib",
     "gdi32.lib",
     "rpcrt4.lib",
     "shlwapi.lib",
     "user32.lib",
+    "wintrust.lib",
     "ws2_32.lib",
-]
-
-# Sandbox link libraries.
-SANDBOX_LIBS = [
-    "Advapi32.lib",
-    "dbghelp.lib",
-    "Delayimp.lib",
-    "ntdll.lib",
-    "OleAut32.lib",
-    "PowrProf.lib",
-    "Propsys.lib",
-    "psapi.lib",
-    "SetupAPI.lib",
-    "Shcore.lib",
-    "Shell32.lib",
-    "Userenv.lib",
-    "version.lib",
-    "wbemuuid.lib",
-    "WindowsApp.lib",
-    "winmm.lib",
 ]
 
 COMMON_LINKOPTS_DEBUG = [
@@ -178,18 +180,9 @@ COMMON_DEFINES = [
     "WIN32_LEAN_AND_MEAN",
     # Disable exceptions
     "_HAS_EXCEPTIONS=0",
-
-    # Required by cef_sandbox.lib
-    "PSAPI_VERSION=1",
-    # Used by apps to test if the sandbox is enabled
-    "CEF_USE_SANDBOX",
 ]
 
 COMMON_DEFINES_DEBUG = [
-    # Required by cef_sandbox.lib
-    # Disable iterator debugging
-    "HAS_ITERATOR_DEBUGGING=0",
-    "_ITERATOR_DEBUG_LEVEL=0",
 ]
 
 COMMON_DEFINES_RELEASE = [

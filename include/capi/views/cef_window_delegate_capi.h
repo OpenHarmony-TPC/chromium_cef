@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4479bd6d81c5e984d5b2473c18c6836b9cbd9ecf$
+// $hash=f1fd84f51dee1d0ce7b7bd0b1c586a01100f13b6$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_WINDOW_DELEGATE_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_WINDOW_DELEGATE_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/views/cef_panel_delegate_capi.h"
 
@@ -53,6 +57,8 @@ struct _cef_window_t;
 /// structure will be called on the browser process UI thread unless otherwise
 /// indicated.
 ///
+/// NOTE: This struct is allocated client-side.
+///
 typedef struct _cef_window_delegate_t {
   ///
   /// Base structure.
@@ -62,39 +68,30 @@ typedef struct _cef_window_delegate_t {
   ///
   /// Called when |window| is created.
   ///
-  void(CEF_CALLBACK* on_window_created)(struct _cef_window_delegate_t* self,
-                                        struct _cef_window_t* window);
+  void (CEF_CALLBACK *on_window_created)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Called when |window| is closing.
   ///
-  void(CEF_CALLBACK* on_window_closing)(struct _cef_window_delegate_t* self,
-                                        struct _cef_window_t* window);
+  void (CEF_CALLBACK *on_window_closing)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Called when |window| is destroyed. Release all references to |window| and
   /// do not attempt to execute any functions on |window| after this callback
   /// returns.
   ///
-  void(CEF_CALLBACK* on_window_destroyed)(struct _cef_window_delegate_t* self,
-                                          struct _cef_window_t* window);
+  void (CEF_CALLBACK *on_window_destroyed)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Called when |window| is activated or deactivated.
   ///
-  void(CEF_CALLBACK* on_window_activation_changed)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      int active);
+  void (CEF_CALLBACK *on_window_activation_changed)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, int active);
 
   ///
   /// Called when |window| bounds have changed. |new_bounds| will be in DIP
   /// screen coordinates.
   ///
-  void(CEF_CALLBACK* on_window_bounds_changed)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      const cef_rect_t* new_bounds);
+  void (CEF_CALLBACK *on_window_bounds_changed)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, const cef_rect_t* new_bounds);
 
   ///
   /// Called when |window| is transitioning to or from fullscreen mode. On MacOS
@@ -105,10 +102,7 @@ typedef struct _cef_window_delegate_t {
   /// also implement cef_display_handler_t::OnFullscreenModeChange to handle
   /// fullscreen transitions initiated by browser content.
   ///
-  void(CEF_CALLBACK* on_window_fullscreen_transition)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      int is_completed);
+  void (CEF_CALLBACK *on_window_fullscreen_transition)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, int is_completed);
 
   ///
   /// Return the parent for |window| or NULL if the |window| does not have a
@@ -118,11 +112,7 @@ typedef struct _cef_window_delegate_t {
   /// false (0) if |is_menu| is true (1) and |window| should not be activated
   /// (given keyboard focus) when displayed.
   ///
-  struct _cef_window_t*(CEF_CALLBACK* get_parent_window)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      int* is_menu,
-      int* can_activate_menu);
+  struct _cef_window_t* (CEF_CALLBACK *get_parent_window)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, int* is_menu, int* can_activate_menu);
 
   ///
   /// Return true (1) if |window| should be created as a window modal dialog.
@@ -133,8 +123,7 @@ typedef struct _cef_window_delegate_t {
   /// cef_window_t::show_as_browser_modal_dialog() for a browser modal dialog
   /// that works on all platforms.
   ///
-  int(CEF_CALLBACK* is_window_modal_dialog)(struct _cef_window_delegate_t* self,
-                                            struct _cef_window_t* window);
+  int (CEF_CALLBACK *is_window_modal_dialog)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return the initial bounds for |window| in density independent pixel (DIP)
@@ -144,32 +133,25 @@ typedef struct _cef_window_delegate_t {
   /// in combination with cef_view_t::get_bounds_in_screen() to restore the
   /// previous window bounds.
   ///
-  cef_rect_t(CEF_CALLBACK* get_initial_bounds)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window);
+  cef_rect_t (CEF_CALLBACK *get_initial_bounds)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return the initial show state for |window|.
   ///
-  cef_show_state_t(CEF_CALLBACK* get_initial_show_state)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window);
+  cef_show_state_t (CEF_CALLBACK *get_initial_show_state)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| should be created without a frame or title
   /// bar. The window will be resizable if can_resize() returns true (1). Use
   /// cef_window_t::set_draggable_regions() to specify draggable regions.
   ///
-  int(CEF_CALLBACK* is_frameless)(struct _cef_window_delegate_t* self,
-                                  struct _cef_window_t* window);
+  int (CEF_CALLBACK *is_frameless)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| should be created with standard window buttons
   /// like close, minimize and zoom. This function is only supported on macOS.
   ///
-  int(CEF_CALLBACK* with_standard_window_buttons)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window);
+  int (CEF_CALLBACK *with_standard_window_buttons)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return whether the titlebar height should be overridden, and sets the
@@ -178,9 +160,7 @@ typedef struct _cef_window_delegate_t {
   /// windows. The buttons will be positioned halfway down the titlebar at a
   /// height of |titlebar_height| / 2.
   ///
-  int(CEF_CALLBACK* get_titlebar_height)(struct _cef_window_delegate_t* self,
-                                         struct _cef_window_t* window,
-                                         float* titlebar_height);
+  int (CEF_CALLBACK *get_titlebar_height)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, float* titlebar_height);
 
   ///
   /// Return whether the view should accept the initial mouse-down event,
@@ -192,52 +172,42 @@ typedef struct _cef_window_delegate_t {
   /// This function is only supported on macOS. For more details, refer to the
   /// documentation of acceptsFirstMouse.
   ///
-  cef_state_t(CEF_CALLBACK* accepts_first_mouse)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window);
+  cef_state_t (CEF_CALLBACK *accepts_first_mouse)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| can be resized.
   ///
-  int(CEF_CALLBACK* can_resize)(struct _cef_window_delegate_t* self,
-                                struct _cef_window_t* window);
+  int (CEF_CALLBACK *can_resize)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| can be maximized.
   ///
-  int(CEF_CALLBACK* can_maximize)(struct _cef_window_delegate_t* self,
-                                  struct _cef_window_t* window);
+  int (CEF_CALLBACK *can_maximize)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| can be minimized.
   ///
-  int(CEF_CALLBACK* can_minimize)(struct _cef_window_delegate_t* self,
-                                  struct _cef_window_t* window);
+  int (CEF_CALLBACK *can_minimize)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Return true (1) if |window| can be closed. This will be called for user-
   /// initiated window close actions and when cef_window_t::close() is called.
   ///
-  int(CEF_CALLBACK* can_close)(struct _cef_window_delegate_t* self,
-                               struct _cef_window_t* window);
+  int (CEF_CALLBACK *can_close)(struct _cef_window_delegate_t* self, struct _cef_window_t* window);
 
   ///
   /// Called when a keyboard accelerator registered with
   /// cef_window_t::SetAccelerator is triggered. Return true (1) if the
   /// accelerator was handled or false (0) otherwise.
   ///
-  int(CEF_CALLBACK* on_accelerator)(struct _cef_window_delegate_t* self,
-                                    struct _cef_window_t* window,
-                                    int command_id);
+  int (CEF_CALLBACK *on_accelerator)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, int command_id);
 
   ///
   /// Called after all other controls in the window have had a chance to handle
   /// the event. |event| contains information about the keyboard event. Return
   /// true (1) if the keyboard event was handled or false (0) otherwise.
   ///
-  int(CEF_CALLBACK* on_key_event)(struct _cef_window_delegate_t* self,
-                                  struct _cef_window_t* window,
-                                  const cef_key_event_t* event);
+  int (CEF_CALLBACK *on_key_event)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, const cef_key_event_t* event);
 
   ///
   /// Called after the native/OS or Chrome theme for |window| has changed.
@@ -269,27 +239,21 @@ typedef struct _cef_window_delegate_t {
   /// color. cef_view_delegate_t::OnThemeChanged will be called after this
   /// callback for the complete |window| component hierarchy.
   ///
-  void(CEF_CALLBACK* on_theme_colors_changed)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      int chrome_theme);
+  void (CEF_CALLBACK *on_theme_colors_changed)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, int chrome_theme);
 
   ///
   /// Optionally change the runtime style for this Window. See
   /// cef_runtime_style_t documentation for details.
   ///
-  cef_runtime_style_t(CEF_CALLBACK* get_window_runtime_style)(
-      struct _cef_window_delegate_t* self);
+  cef_runtime_style_t (CEF_CALLBACK *get_window_runtime_style)(struct _cef_window_delegate_t* self);
 
   ///
   /// Return Linux-specific window properties for correctly handling by window
   /// managers
   ///
-  int(CEF_CALLBACK* get_linux_window_properties)(
-      struct _cef_window_delegate_t* self,
-      struct _cef_window_t* window,
-      struct _cef_linux_window_properties_t* properties);
+  int (CEF_CALLBACK *get_linux_window_properties)(struct _cef_window_delegate_t* self, struct _cef_window_t* window, struct _cef_linux_window_properties_t* properties);
 } cef_window_delegate_t;
+
 
 #ifdef __cplusplus
 }

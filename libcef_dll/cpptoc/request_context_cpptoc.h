@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=64ee2bf9797ca42f854cf70141a2e5cd163fe19a$
+// $hash=5f117a79357b210960b894536b4a93a637b202a2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_CPPTOC_H_
@@ -20,23 +20,34 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_request_context_capi.h"
-#include "include/capi/cef_request_context_handler_capi.h"
-#include "include/capi/cef_scheme_capi.h"
 #include "include/cef_request_context.h"
+#include "include/capi/cef_request_context_capi_versions.h"
 #include "include/cef_request_context_handler.h"
+#include "include/capi/cef_request_context_handler_capi_versions.h"
 #include "include/cef_scheme.h"
+#include "include/capi/cef_scheme_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefRequestContextCppToC
-    : public CefCppToCRefCounted<CefRequestContextCppToC,
-                                 CefRequestContext,
-                                 cef_request_context_t> {
+class CefRequestContext_0_CppToC
+    : public CefCppToCRefCounted<CefRequestContext_0_CppToC, CefRequestContext, cef_request_context_0_t> {
  public:
-  CefRequestContextCppToC();
-  virtual ~CefRequestContextCppToC();
+  CefRequestContext_0_CppToC();
+  virtual ~CefRequestContext_0_CppToC();
 };
+
+// Wrap a C++ class with a C structure at API version 13401.
+// This class may be instantiated and accessed DLL-side only.
+class CefRequestContext_13401_CppToC
+    : public CefCppToCRefCounted<CefRequestContext_13401_CppToC, CefRequestContext, cef_request_context_13401_t> {
+ public:
+  CefRequestContext_13401_CppToC();
+  virtual ~CefRequestContext_13401_CppToC();
+};
+
+// Helpers to return objects at the globally configured API version.
+cef_request_context_0_t* CefRequestContextCppToC_Wrap(CefRefPtr<CefRequestContext> c);
+CefRefPtr<CefRequestContext> CefRequestContextCppToC_Unwrap(cef_request_context_0_t* s);
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_CPPTOC_H_

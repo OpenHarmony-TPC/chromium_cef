@@ -33,12 +33,16 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=dc4ca95f3b72fd12529731fc6d8ac0cb031e2b7e$
+// $hash=bbca87053624fb8cedfea5e6fa4934a8adf78874$
 //
 
 #ifndef CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_CAPI_H_
 #define CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_CAPI_H_
 #pragma once
+
+#if defined(BUILDING_CEF_SHARED)
+#error This file cannot be included DLL-side
+#endif
 
 #include "include/capi/cef_menu_model_capi.h"
 #include "include/capi/views/cef_label_button_capi.h"
@@ -48,12 +52,15 @@
 extern "C" {
 #endif
 
+
 ///
 /// MenuButton is a button with optional text, icon and/or menu marker that
 /// shows a menu when clicked with the left mouse button. All size and position
 /// values are in density independent pixels (DIP) unless otherwise indicated.
 /// Methods must be called on the browser process UI thread unless otherwise
 /// indicated.
+///
+/// NOTE: This struct is allocated DLL-side.
 ///
 typedef struct _cef_menu_button_t {
   ///
@@ -67,17 +74,15 @@ typedef struct _cef_menu_button_t {
   /// will be anchored relative to |screen_point|. This function should be
   /// called from cef_menu_button_delegate_t::on_menu_button_pressed().
   ///
-  void(CEF_CALLBACK* show_menu)(struct _cef_menu_button_t* self,
-                                struct _cef_menu_model_t* menu_model,
-                                const cef_point_t* screen_point,
-                                cef_menu_anchor_position_t anchor_position);
+  void (CEF_CALLBACK *show_menu)(struct _cef_menu_button_t* self, struct _cef_menu_model_t* menu_model, const cef_point_t* screen_point, cef_menu_anchor_position_t anchor_position);
 
   ///
   /// Show the menu for this button. Results in a call to
   /// cef_menu_button_delegate_t::on_menu_button_pressed().
   ///
-  void(CEF_CALLBACK* trigger_menu)(struct _cef_menu_button_t* self);
+  void (CEF_CALLBACK *trigger_menu)(struct _cef_menu_button_t* self);
 } cef_menu_button_t;
+
 
 ///
 /// Create a new MenuButton. A |delegate| must be provided to call show_menu()
@@ -88,9 +93,8 @@ typedef struct _cef_menu_button_t {
 /// will only have a visible frame on hover/press, left alignment, less padding
 /// and no default minimum size.
 ///
-CEF_EXPORT cef_menu_button_t* cef_menu_button_create(
-    struct _cef_menu_button_delegate_t* delegate,
-    const cef_string_t* text);
+CEF_EXPORT cef_menu_button_t* cef_menu_button_create(struct _cef_menu_button_delegate_t* delegate, const cef_string_t* text);
+
 
 #ifdef __cplusplus
 }

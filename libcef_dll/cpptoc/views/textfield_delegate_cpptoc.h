@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bb3fa993bd5752500c8f47919fb7ca5104433f1b$
+// $hash=9d81eb1a454ecc55b0767224f064880dadf853af$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_DELEGATE_CPPTOC_H_
@@ -20,21 +20,22 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_textfield_capi.h"
+#include "include/views/cef_textfield_delegate.h"
 #include "include/capi/views/cef_textfield_delegate_capi.h"
 #include "include/views/cef_textfield.h"
-#include "include/views/cef_textfield_delegate.h"
+#include "include/capi/views/cef_textfield_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefTextfieldDelegateCppToC
-    : public CefCppToCRefCounted<CefTextfieldDelegateCppToC,
-                                 CefTextfieldDelegate,
-                                 cef_textfield_delegate_t> {
+    : public CefCppToCRefCounted<CefTextfieldDelegateCppToC, CefTextfieldDelegate, cef_textfield_delegate_t> {
  public:
   CefTextfieldDelegateCppToC();
   virtual ~CefTextfieldDelegateCppToC();
 };
+
+constexpr auto CefTextfieldDelegateCppToC_Wrap = CefTextfieldDelegateCppToC::Wrap;
+constexpr auto CefTextfieldDelegateCppToC_Unwrap = CefTextfieldDelegateCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_DELEGATE_CPPTOC_H_

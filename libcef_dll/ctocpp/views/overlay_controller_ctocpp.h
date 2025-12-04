@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3d04965fad99e9debe9c72538e71afc7a1c294ab$
+// $hash=bb73cc443cc33cb2d5001ef2496f4925c0119490$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_OVERLAY_CONTROLLER_CTOCPP_H_
@@ -20,20 +20,18 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/views/cef_overlay_controller_capi.h"
-#include "include/capi/views/cef_view_capi.h"
-#include "include/capi/views/cef_window_capi.h"
 #include "include/views/cef_overlay_controller.h"
+#include "include/capi/views/cef_overlay_controller_capi.h"
 #include "include/views/cef_view.h"
+#include "include/capi/views/cef_view_capi.h"
 #include "include/views/cef_window.h"
+#include "include/capi/views/cef_window_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefOverlayControllerCToCpp
-    : public CefCToCppRefCounted<CefOverlayControllerCToCpp,
-                                 CefOverlayController,
-                                 cef_overlay_controller_t> {
+    : public CefCToCppRefCounted<CefOverlayControllerCToCpp, CefOverlayController, cef_overlay_controller_t> {
  public:
   CefOverlayControllerCToCpp();
   virtual ~CefOverlayControllerCToCpp();
@@ -59,5 +57,8 @@ class CefOverlayControllerCToCpp
   bool IsVisible() override;
   bool IsDrawn() override;
 };
+
+constexpr auto CefOverlayControllerCToCpp_Wrap = CefOverlayControllerCToCpp::Wrap;
+constexpr auto CefOverlayControllerCToCpp_Unwrap = CefOverlayControllerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_OVERLAY_CONTROLLER_CTOCPP_H_

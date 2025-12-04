@@ -9,32 +9,32 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=be7c52e51dbfdc45d5b852650d0e6a82e88883b0$
+// $hash=1b9b26ae553bf32b984ea26cfd67b5498d511d95$
 //
-
-#include "libcef_dll/cpptoc/post_data_cpptoc.h"
 
 #include <algorithm>
 
+#include "include/cef_api_hash.h"
+#include "libcef_dll/cpptoc/post_data_cpptoc.h"
 #include "libcef_dll/cpptoc/post_data_element_cpptoc.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_post_data_t* cef_post_data_create() {
+CEF_EXPORT cef_post_data_0_t* cef_post_data_create() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
   CefRefPtr<CefPostData> _retval = CefPostData::Create();
 
   // Return type: refptr_same
-  return CefPostDataCppToC::Wrap(_retval);
+  return CefPostDataCppToC_Wrap(_retval);
 }
 
 namespace {
 
-// MEMBER FUNCTIONS - Body may be edited by hand.
+// MEMBER FUNCTIONS FOR VERSION 0 - Body may be edited by hand.
 
-int CEF_CALLBACK post_data_is_read_only(struct _cef_post_data_t* self) {
+int CEF_CALLBACK post_data_is_read_only(struct _cef_post_data_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -43,14 +43,13 @@ int CEF_CALLBACK post_data_is_read_only(struct _cef_post_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefPostDataCppToC::Get(self)->IsReadOnly();
+  bool _retval = CefPostData_0_CppToC::Get(self)->IsReadOnly();
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-post_data_has_excluded_elements(struct _cef_post_data_t* self) {
+int CEF_CALLBACK post_data_has_excluded_elements(struct _cef_post_data_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -59,13 +58,13 @@ post_data_has_excluded_elements(struct _cef_post_data_t* self) {
   }
 
   // Execute
-  bool _retval = CefPostDataCppToC::Get(self)->HasExcludedElements();
+  bool _retval = CefPostData_0_CppToC::Get(self)->HasExcludedElements();
 
   // Return type: bool
   return _retval;
 }
 
-size_t CEF_CALLBACK post_data_get_element_count(struct _cef_post_data_t* self) {
+size_t CEF_CALLBACK post_data_get_element_count(struct _cef_post_data_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -74,16 +73,13 @@ size_t CEF_CALLBACK post_data_get_element_count(struct _cef_post_data_t* self) {
   }
 
   // Execute
-  size_t _retval = CefPostDataCppToC::Get(self)->GetElementCount();
+  size_t _retval = CefPostData_0_CppToC::Get(self)->GetElementCount();
 
   // Return type: simple
   return _retval;
 }
 
-void CEF_CALLBACK
-post_data_get_elements(struct _cef_post_data_t* self,
-                       size_t* elementsCount,
-                       struct _cef_post_data_element_t** elements) {
+void CEF_CALLBACK post_data_get_elements(struct _cef_post_data_0_t* self, size_t* elementsCount, struct _cef_post_data_element_0_t** elements) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -97,30 +93,29 @@ post_data_get_elements(struct _cef_post_data_t* self,
   }
 
   // Translate param: elements; type: refptr_vec_same_byref
-  std::vector<CefRefPtr<CefPostDataElement>> elementsList;
+  std::vector<CefRefPtr<CefPostDataElement> > elementsList;
   if (elementsCount && *elementsCount > 0 && elements) {
     for (size_t i = 0; i < *elementsCount; ++i) {
-      elementsList.push_back(CefPostDataElementCppToC::Unwrap(elements[i]));
+      elementsList.push_back(CefPostDataElementCppToC_Unwrap(elements[i]));
     }
   }
 
   // Execute
-  CefPostDataCppToC::Get(self)->GetElements(elementsList);
+  CefPostData_0_CppToC::Get(self)->GetElements(
+      elementsList);
 
   // Restore param: elements; type: refptr_vec_same_byref
   if (elementsCount && elements) {
     *elementsCount = std::min(elementsList.size(), *elementsCount);
     if (*elementsCount > 0) {
       for (size_t i = 0; i < *elementsCount; ++i) {
-        elements[i] = CefPostDataElementCppToC::Wrap(elementsList[i]);
+        elements[i] = CefPostDataElementCppToC_Wrap(elementsList[i]);
       }
     }
   }
 }
 
-int CEF_CALLBACK
-post_data_remove_element(struct _cef_post_data_t* self,
-                         struct _cef_post_data_element_t* element) {
+int CEF_CALLBACK post_data_remove_element(struct _cef_post_data_0_t* self, struct _cef_post_data_element_0_t* element) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -134,16 +129,14 @@ post_data_remove_element(struct _cef_post_data_t* self,
   }
 
   // Execute
-  bool _retval = CefPostDataCppToC::Get(self)->RemoveElement(
-      CefPostDataElementCppToC::Unwrap(element));
+  bool _retval = CefPostData_0_CppToC::Get(self)->RemoveElement(
+      CefPostDataElementCppToC_Unwrap(element));
 
   // Return type: bool
   return _retval;
 }
 
-int CEF_CALLBACK
-post_data_add_element(struct _cef_post_data_t* self,
-                      struct _cef_post_data_element_t* element) {
+int CEF_CALLBACK post_data_add_element(struct _cef_post_data_0_t* self, struct _cef_post_data_element_0_t* element) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -157,14 +150,14 @@ post_data_add_element(struct _cef_post_data_t* self,
   }
 
   // Execute
-  bool _retval = CefPostDataCppToC::Get(self)->AddElement(
-      CefPostDataElementCppToC::Unwrap(element));
+  bool _retval = CefPostData_0_CppToC::Get(self)->AddElement(
+      CefPostDataElementCppToC_Unwrap(element));
 
   // Return type: bool
   return _retval;
 }
 
-void CEF_CALLBACK post_data_remove_elements(struct _cef_post_data_t* self) {
+void CEF_CALLBACK post_data_remove_elements(struct _cef_post_data_0_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -173,14 +166,17 @@ void CEF_CALLBACK post_data_remove_elements(struct _cef_post_data_t* self) {
   }
 
   // Execute
-  CefPostDataCppToC::Get(self)->RemoveElements();
+  CefPostData_0_CppToC::Get(self)->RemoveElements();
 }
 
 }  // namespace
 
-// CONSTRUCTOR - Do not edit by hand.
+// CONSTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPostDataCppToC::CefPostDataCppToC() {
+CefPostData_0_CppToC::CefPostData_0_CppToC() {
+  const int version = cef_api_version();
+  LOG_IF(FATAL, version < 0) << __func__ << " called with invalid version " << version;
+
   GetStruct()->is_read_only = post_data_is_read_only;
   GetStruct()->has_excluded_elements = post_data_has_excluded_elements;
   GetStruct()->get_element_count = post_data_get_element_count;
@@ -190,20 +186,15 @@ CefPostDataCppToC::CefPostDataCppToC() {
   GetStruct()->remove_elements = post_data_remove_elements;
 }
 
-// DESTRUCTOR - Do not edit by hand.
+// DESTRUCTOR FOR VERSION 0 - Do not edit by hand.
 
-CefPostDataCppToC::~CefPostDataCppToC() {}
-
-template <>
-CefRefPtr<CefPostData>
-CefCppToCRefCounted<CefPostDataCppToC, CefPostData, cef_post_data_t>::
-    UnwrapDerived(CefWrapperType type, cef_post_data_t* s) {
-  DCHECK(false) << "Unexpected class type: " << type;
-  return nullptr;
+CefPostData_0_CppToC::~CefPostData_0_CppToC() {
 }
 
-template <>
-CefWrapperType CefCppToCRefCounted<CefPostDataCppToC,
-                                   CefPostData,
-                                   cef_post_data_t>::kWrapperType =
-    WT_POST_DATA;
+template<> CefRefPtr<CefPostData> CefCppToCRefCounted<CefPostData_0_CppToC, CefPostData, cef_post_data_0_t>::UnwrapDerived(CefWrapperType type, cef_post_data_0_t* s) {
+  NOTREACHED() << __func__ << " called with unexpected class type " << type;
+}
+
+template<> CefWrapperType CefCppToCRefCounted<CefPostData_0_CppToC, CefPostData, cef_post_data_0_t>::kWrapperType = WT_POST_DATA;
+
+

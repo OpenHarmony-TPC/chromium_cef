@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c0d3c42f4b9eb25ea2b611662239593836ffd4df$
+// $hash=1a393f7897c3eda0c2c9eeba31bea222c7510ee4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_MANAGER_CTOCPP_H_
@@ -20,16 +20,14 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_preference_capi.h"
 #include "include/cef_preference.h"
+#include "include/capi/cef_preference_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPreferenceManagerCToCpp
-    : public CefCToCppRefCounted<CefPreferenceManagerCToCpp,
-                                 CefPreferenceManager,
-                                 cef_preference_manager_t> {
+    : public CefCToCppRefCounted<CefPreferenceManagerCToCpp, CefPreferenceManager, cef_preference_manager_t> {
  public:
   CefPreferenceManagerCToCpp();
   virtual ~CefPreferenceManagerCToCpp();
@@ -37,12 +35,15 @@ class CefPreferenceManagerCToCpp
   // CefPreferenceManager methods.
   bool HasPreference(const CefString& name) override;
   CefRefPtr<CefValue> GetPreference(const CefString& name) override;
-  CefRefPtr<CefDictionaryValue> GetAllPreferences(
-      bool include_defaults) override;
+  CefRefPtr<CefDictionaryValue> GetAllPreferences(bool include_defaults) override;
   bool CanSetPreference(const CefString& name) override;
-  bool SetPreference(const CefString& name,
-                     CefRefPtr<CefValue> value,
-                     CefString& error) override;
+  bool SetPreference(const CefString& name, CefRefPtr<CefValue> value, CefString& error) override;
+#if CEF_API_ADDED(13401)
+  CefRefPtr<CefRegistration> AddPreferenceObserver(const CefString& name, CefRefPtr<CefPreferenceObserver> observer) override;
+#endif
 };
+
+constexpr auto CefPreferenceManagerCToCpp_Wrap = CefPreferenceManagerCToCpp::Wrap;
+constexpr auto CefPreferenceManagerCToCpp_Unwrap = CefPreferenceManagerCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_MANAGER_CTOCPP_H_

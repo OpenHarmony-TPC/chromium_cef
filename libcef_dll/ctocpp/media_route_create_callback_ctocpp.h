@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=07e13ef13e2f9cc7d45122245de201dde636f634$
+// $hash=bf0115108263bcde62c7a7b2354ea80ff94a04c6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CREATE_CALLBACK_CTOCPP_H_
@@ -20,24 +20,23 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_media_router_capi.h"
 #include "include/cef_media_router.h"
+#include "include/capi/cef_media_router_capi_versions.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
-// Wrap a C structure with a C++ class.
+// Wrap a C structure with a C++ class at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaRouteCreateCallbackCToCpp
-    : public CefCToCppRefCounted<CefMediaRouteCreateCallbackCToCpp,
-                                 CefMediaRouteCreateCallback,
-                                 cef_media_route_create_callback_t> {
+class CefMediaRouteCreateCallback_0_CToCpp
+    : public CefCToCppRefCounted<CefMediaRouteCreateCallback_0_CToCpp, CefMediaRouteCreateCallback, cef_media_route_create_callback_0_t> {
  public:
-  CefMediaRouteCreateCallbackCToCpp();
-  virtual ~CefMediaRouteCreateCallbackCToCpp();
+  CefMediaRouteCreateCallback_0_CToCpp();
+  virtual ~CefMediaRouteCreateCallback_0_CToCpp();
 
   // CefMediaRouteCreateCallback methods.
-  void OnMediaRouteCreateFinished(RouteCreateResult result,
-                                  const CefString& error,
-                                  CefRefPtr<CefMediaRoute> route) override;
+  void OnMediaRouteCreateFinished(RouteCreateResult result, const CefString& error, CefRefPtr<CefMediaRoute> route) override;
 };
+
+constexpr auto CefMediaRouteCreateCallbackCToCpp_Wrap = CefMediaRouteCreateCallback_0_CToCpp::Wrap;
+constexpr auto CefMediaRouteCreateCallbackCToCpp_Unwrap = CefMediaRouteCreateCallback_0_CToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CREATE_CALLBACK_CTOCPP_H_

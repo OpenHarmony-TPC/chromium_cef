@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cb50fb7a066e7d24ed83d5f4a6c2cc30beb5ed0d$
+// $hash=bb14703c2470d5bc3e17097527a2f7c90c789ded$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_RESOURCE_REQUEST_HANDLER_CPPTOC_H_
@@ -20,19 +20,20 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_resource_request_handler_capi.h"
 #include "include/cef_resource_request_handler.h"
+#include "include/capi/cef_resource_request_handler_capi.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResourceRequestHandlerCppToC
-    : public CefCppToCRefCounted<CefResourceRequestHandlerCppToC,
-                                 CefResourceRequestHandler,
-                                 cef_resource_request_handler_t> {
+    : public CefCppToCRefCounted<CefResourceRequestHandlerCppToC, CefResourceRequestHandler, cef_resource_request_handler_t> {
  public:
   CefResourceRequestHandlerCppToC();
   virtual ~CefResourceRequestHandlerCppToC();
 };
+
+constexpr auto CefResourceRequestHandlerCppToC_Wrap = CefResourceRequestHandlerCppToC::Wrap;
+constexpr auto CefResourceRequestHandlerCppToC_Unwrap = CefResourceRequestHandlerCppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_REQUEST_HANDLER_CPPTOC_H_

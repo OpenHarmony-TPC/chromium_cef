@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d6b4e2a6e2f200f33c277e7542f00cb963e84768$
+// $hash=241a28f354d2c0a3c1172096b36f16c52d4c7dee$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COMMAND_LINE_CTOCPP_H_
@@ -21,16 +21,14 @@
 #endif
 
 #include <vector>
-
-#include "include/capi/cef_command_line_capi.h"
 #include "include/cef_command_line.h"
+#include "include/capi/cef_command_line_capi.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefCommandLineCToCpp : public CefCToCppRefCounted<CefCommandLineCToCpp,
-                                                        CefCommandLine,
-                                                        cef_command_line_t> {
+class CefCommandLineCToCpp
+    : public CefCToCppRefCounted<CefCommandLineCToCpp, CefCommandLine, cef_command_line_t> {
  public:
   CefCommandLineCToCpp();
   virtual ~CefCommandLineCToCpp();
@@ -51,12 +49,14 @@ class CefCommandLineCToCpp : public CefCToCppRefCounted<CefCommandLineCToCpp,
   CefString GetSwitchValue(const CefString& name) override;
   void GetSwitches(SwitchMap& switches) override;
   void AppendSwitch(const CefString& name) override;
-  void AppendSwitchWithValue(const CefString& name,
-                             const CefString& value) override;
+  void AppendSwitchWithValue(const CefString& name, const CefString& value) override;
   bool HasArguments() override;
   void GetArguments(ArgumentList& arguments) override;
   void AppendArgument(const CefString& argument) override;
   void PrependWrapper(const CefString& wrapper) override;
 };
+
+constexpr auto CefCommandLineCToCpp_Wrap = CefCommandLineCToCpp::Wrap;
+constexpr auto CefCommandLineCToCpp_Unwrap = CefCommandLineCToCpp::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COMMAND_LINE_CTOCPP_H_

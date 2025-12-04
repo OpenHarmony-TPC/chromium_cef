@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a16779720b251810ba869299f5e5f38b7d03e130$
+// $hash=b4d753bc28ae864c5c848bfef46018852d279d10$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_ITEM_CPPTOC_H_
@@ -20,18 +20,20 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_download_item_capi.h"
 #include "include/cef_download_item.h"
+#include "include/capi/cef_download_item_capi_versions.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
-// Wrap a C++ class with a C structure.
+// Wrap a C++ class with a C structure at API version 0.
 // This class may be instantiated and accessed DLL-side only.
-class CefDownloadItemCppToC : public CefCppToCRefCounted<CefDownloadItemCppToC,
-                                                         CefDownloadItem,
-                                                         cef_download_item_t> {
+class CefDownloadItem_0_CppToC
+    : public CefCppToCRefCounted<CefDownloadItem_0_CppToC, CefDownloadItem, cef_download_item_0_t> {
  public:
-  CefDownloadItemCppToC();
-  virtual ~CefDownloadItemCppToC();
+  CefDownloadItem_0_CppToC();
+  virtual ~CefDownloadItem_0_CppToC();
 };
+
+constexpr auto CefDownloadItemCppToC_Wrap = CefDownloadItem_0_CppToC::Wrap;
+constexpr auto CefDownloadItemCppToC_Unwrap = CefDownloadItem_0_CppToC::Unwrap;
 
 #endif  // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_ITEM_CPPTOC_H_
