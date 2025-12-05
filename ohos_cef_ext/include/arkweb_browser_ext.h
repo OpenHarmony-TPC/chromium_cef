@@ -1302,7 +1302,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// Fill autofill data.
   ///
-  virtual void FillAutofillData(CefRefPtr<CefValue> message, int32_t trigger_type = 0) = 0;
+  virtual void FillAutofillData(CefRefPtr<CefValue> message) = 0;
 
   ///
   /// Process autofill cancel content.
@@ -1467,6 +1467,14 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Handle extend action from input method.
   ///
   virtual void HandleInputMethodExtendAction(int32_t action) {}
+
+#if BUILDFLAG(ARKWEB_AUTOFILL)
+  ///
+  /// Fill autofill data.
+  ///
+  virtual void FillAutofillDataFromTriggerType(
+      CefRefPtr<CefValue> message, int32_t trigger_type) {}
+#endif
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   ///
