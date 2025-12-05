@@ -472,7 +472,8 @@ net::CookieStore* CefCookieManagerImplExt::GetCookieStore() {
 
 void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete(
     mojo::PendingRemote<CookieManager> cookie_manager_remote,
-    base::OnceClosure complete) {
+    base::OnceClosure complete,
+    const net::CookieList& cookies) {
   LOG(INFO) << "CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete";
   DCHECK(cookie_store_task_runner_->RunsTasksInCurrentSequence());
   setting_network_cookie_manager_ = false;
