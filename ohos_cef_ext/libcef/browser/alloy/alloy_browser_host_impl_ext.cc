@@ -2005,3 +2005,11 @@ std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(
       original_url, referrer, transition_type, is_key_request);
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnDocumentEndReady(frameInfo);
+  }
+}
+#endif

@@ -299,7 +299,9 @@ public:
       int transition_type,
       bool is_key_request) override;
 #endif
-
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+  void OnDocumentEndReady(const FrameInfos& frameInfo) override;
+#endif
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;
