@@ -236,6 +236,25 @@ void OhAutofillManager::FillDataWithId(const base::Value::Dict* dict) {
   }
 }
 
+void OhAutofillManager::FillDataFromPaster(
+    const std::string& json_str, const FieldGlobalId& field_id) {
+  absl::optional<base::Value> root = base::JSONReader::Read(json_str);
+  if (!root.has_value()) {
+    return;
+  }
+  const base::Value::Dict* root_dict = root->GetIfDict();
+  if (!root_dict) {
+    return;
+  }
+  LOG(DEBUG) << "FillDataFromPaster field_id:" << field_id;
+  const std::string* value = root_dict->FindString(KEY_VALUE);
+  if (value) {
+    driver().ApplyFieldAction(
+        mojom::FieldActionType::kNotSmartReplaceSelection, mojom::ActionPersistence::kFill,
+        field_id, base::UTF8ToUTF16(*value));
+  }
+}
+
 void OhAutofillManager::FillData(const std::string& json_str) {
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
@@ -486,6 +505,24 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
 void OhAutofillManager::OnFocusOnFormFieldImpl(const FormData& form,
                                                const FieldGlobalId& field_id) {
   LOG(INFO) << "OnFocusOnFormFieldImpl";
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
+    return;
+  }
+
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
+    return;
+  }
+
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
+    return;
+  }
+  autofill_client->SetFocusFieldGlobalId(field_id);
 }
 
 void OhAutofillManager::OnSelectControlDidChangeImpl(

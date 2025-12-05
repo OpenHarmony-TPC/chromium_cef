@@ -48,6 +48,10 @@
 #include "arkweb/ohos_nweb/src/capi/nweb_extension_distill_item.h"
 #endif // ARKWEB_READER_MODE
 
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+#include "arkweb/ohos_nweb/include/nweb_vault_plain_text_callback.h"
+#endif
+
 class CefClient;
 
 ///
@@ -1463,6 +1467,22 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Handle extend action from input method.
   ///
   virtual void HandleInputMethodExtendAction(int32_t action) {}
+
+#if BUILDFLAG(ARKWEB_AUTOFILL)
+  ///
+  /// Fill autofill data.
+  ///
+  virtual void FillAutofillDataFromTriggerType(
+      CefRefPtr<CefValue> message, int32_t trigger_type) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  ///
+  /// SetVaultPlainTextCallback.
+  ///
+  virtual void SetVaultPlainTextCallback(
+      std::shared_ptr<OHOS::NWeb::NWebVaultPlainTextCallback> callback) {}
+#endif
 
 #if BUILDFLAG(ARKWEB_WEBRTC)
   ///

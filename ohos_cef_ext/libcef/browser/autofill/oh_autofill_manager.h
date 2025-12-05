@@ -86,6 +86,7 @@ class OhAutofillManager : public AutofillManager,
                                              const FormFieldData& field,
                                              const std::string& event);
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
+  void FillDataFromPaster(const std::string& json_str, const FieldGlobalId& field_id);
   void FillData(const std::string& json_str);
   std::string GetAttributeOrUniqueId(const FormFieldData& field);
   void FillDataWithId(const base::Value::Dict* dict);
