@@ -1,0 +1,658 @@
+From c376abff2cbc51a4719b3ace0448665e4d21613e Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Fri, 5 Dec 2025 15:39:27 +0800
+Subject: [PATCH] 001_cef_patch_third_party.patch
+
+Change-Id: Ifaf3fbda16f7f853b8e05511ba4a433cb8c69d70
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+---
+ blink/public/platform/platform.h              |  5 ++
+ blink/public/web/web_element.h                |  3 +
+ blink/public/web/web_view.h                   |  1 +
+ blink/renderer/controller/BUILD.gn            |  3 +
+ blink/renderer/core/exported/web_element.cc   | 18 ++++++
+ blink/renderer/core/exported/web_view_impl.cc | 10 +++-
+ blink/renderer/core/exported/web_view_impl.h  |  5 +-
+ .../core/inspector/devtools_session.cc        |  3 +
+ .../renderer/core/page/chrome_client_impl.cc  |  2 +-
+ blink/renderer/platform/heap/thread_local.h   |  2 +-
+ .../crashpad/client/prune_crash_reports.cc    | 12 +++-
+ .../crashpad/client/prune_crash_reports.h     |  3 +-
+ crashpad/crashpad/client/settings.cc          | 58 ++++++++++++++++++-
+ crashpad/crashpad/client/settings.h           |  5 ++
+ crashpad/crashpad/handler/BUILD.gn            | 13 +++++
+ .../handler/crash_report_upload_thread.cc     |  2 +
+ .../handler/crash_report_upload_thread.h      | 12 +++-
+ crashpad/crashpad/handler/handler_main.cc     | 47 ++++++++++++++-
+ libxml/BUILD.gn                               |  1 +
+ sentencepiece/src/src/util.cc                 | 15 ++++-
+ widevine/cdm/widevine.gni                     |  3 +-
+ 21 files changed, 206 insertions(+), 17 deletions(-)
+
+diff --git a/src/third_party/blink/public/platform/platform.h b/src/third_party/blink/public/platform/platform.h
+index f2be7de2e..4708b9ee7 100644
+--- a/src/third_party/blink/public/platform/platform.h
++++ b/src/third_party/blink/public/platform/platform.h
+@@ -812,6 +812,11 @@ class BLINK_PLATFORM_EXPORT Platform {
+   }
+ #endif
+ 
++  // DevTools ------------------------------------------------------------
++
++  virtual void DevToolsAgentAttached() {}
++  virtual void DevToolsAgentDetached() {}
++
+  private:
+   static void InitializeMainThreadCommon(
+       std::unique_ptr<MainThread> main_thread);
+diff --git a/src/third_party/blink/public/web/web_element.h b/src/third_party/blink/public/web/web_element.h
+index 023ce7091..f175b3683 100644
+--- a/src/third_party/blink/public/web/web_element.h
++++ b/src/third_party/blink/public/web/web_element.h
+@@ -82,6 +82,9 @@ class BLINK_EXPORT WebElement : public WebNode {
+   WebString TextContent() const;
+   WebString TextContentAbridged(unsigned int max_length) const;
+   WebString InnerHTML() const;
++  WebString AttributeLocalName(unsigned index) const;
++  WebString AttributeValue(unsigned index) const;
++  unsigned AttributeCount() const;
+ 
+   // Returns true if the element's computed writing suggestions value is true.
+   // https://html.spec.whatwg.org/#writing-suggestions:computed-writing-suggestions-value
+diff --git a/src/third_party/blink/public/web/web_view.h b/src/third_party/blink/public/web/web_view.h
+index 083af135d..799ef161a 100644
+--- a/src/third_party/blink/public/web/web_view.h
++++ b/src/third_party/blink/public/web/web_view.h
+@@ -344,6 +344,7 @@ class BLINK_EXPORT WebView {
+ 
+   // Sets whether select popup menus should be rendered by the browser.
+   static void SetUseExternalPopupMenus(bool);
++  virtual void SetUseExternalPopupMenusThisInstance(bool) = 0;
+ 
+   // Cancels and hides the current popup (datetime, select...) if any.
+   virtual void CancelPagePopup() = 0;
+diff --git a/src/third_party/blink/renderer/controller/BUILD.gn b/src/third_party/blink/renderer/controller/BUILD.gn
+index 624070f85..2f0a5e650 100644
+--- a/src/third_party/blink/renderer/controller/BUILD.gn
++++ b/src/third_party/blink/renderer/controller/BUILD.gn
+@@ -38,6 +38,7 @@ component("controller") {
+   }
+ 
+   configs += [
++    "//cef/libcef/features:config",
+     "//third_party/blink/renderer:config",
+     "//third_party/blink/renderer:inside_blink",
+     "//third_party/blink/renderer:non_test_config",
+@@ -67,6 +68,8 @@ component("controller") {
+     "performance_manager/v8_detailed_memory_reporter_impl.h",
+     "performance_manager/v8_worker_memory_reporter.cc",
+     "performance_manager/v8_worker_memory_reporter.h",
++    "//cef/libcef/renderer/blink_glue.cc",
++    "//cef/libcef/renderer/blink_glue.h",
+   ]
+ 
+   if (is_linux || is_chromeos) {
+diff --git a/src/third_party/blink/renderer/core/exported/web_element.cc b/src/third_party/blink/renderer/core/exported/web_element.cc
+index def4b446f..d48998241 100644
+--- a/src/third_party/blink/renderer/core/exported/web_element.cc
++++ b/src/third_party/blink/renderer/core/exported/web_element.cc
+@@ -119,6 +119,24 @@ void WebElement::SetAttribute(const WebString& attr_name,
+                                   IGNORE_EXCEPTION_FOR_TESTING);
+ }
+ 
++unsigned WebElement::AttributeCount() const {
++  if (!ConstUnwrap<Element>()->hasAttributes())
++    return 0;
++  return ConstUnwrap<Element>()->Attributes().size();
++}
++
++WebString WebElement::AttributeLocalName(unsigned index) const {
++  if (index >= AttributeCount())
++    return WebString();
++  return ConstUnwrap<Element>()->Attributes().at(index).LocalName();
++}
++
++WebString WebElement::AttributeValue(unsigned index) const {
++  if (index >= AttributeCount())
++    return WebString();
++  return ConstUnwrap<Element>()->Attributes().at(index).Value();
++}
++
+ WebString WebElement::TextContent() const {
+   return ConstUnwrap<Element>()->textContent();
+ }
+diff --git a/src/third_party/blink/renderer/core/exported/web_view_impl.cc b/src/third_party/blink/renderer/core/exported/web_view_impl.cc
+index a80cf6f20..db2f334a1 100644
+--- a/src/third_party/blink/renderer/core/exported/web_view_impl.cc
++++ b/src/third_party/blink/renderer/core/exported/web_view_impl.cc
+@@ -257,8 +257,13 @@ void WebView::SetUseExternalPopupMenus(bool use_external_popup_menus) {
+   g_should_use_external_popup_menus = use_external_popup_menus;
+ }
+ 
+-bool WebViewImpl::UseExternalPopupMenus() {
+-  return g_should_use_external_popup_menus;
++void WebViewImpl::SetUseExternalPopupMenusThisInstance(
++    bool use_external_popup_menus) {
++  should_use_external_popup_menus_ = use_external_popup_menus;
++}
++
++bool WebViewImpl::UseExternalPopupMenus() const {
++  return should_use_external_popup_menus_;
+ }
+ 
+ namespace {
+@@ -617,6 +622,7 @@ WebViewImpl::WebViewImpl(
+           blink::ZoomFactorToZoomLevel(kMinimumBrowserZoomFactor)),
+       maximum_zoom_level_(
+           blink::ZoomFactorToZoomLevel(kMaximumBrowserZoomFactor)),
++      should_use_external_popup_menus_(g_should_use_external_popup_menus),
+       does_composite_(does_composite),
+       fullscreen_controller_(std::make_unique<FullscreenController>(this)),
+       page_base_background_color_(
+diff --git a/src/third_party/blink/renderer/core/exported/web_view_impl.h b/src/third_party/blink/renderer/core/exported/web_view_impl.h
+index e4784453b..5dbbd3cd0 100644
+--- a/src/third_party/blink/renderer/core/exported/web_view_impl.h
++++ b/src/third_party/blink/renderer/core/exported/web_view_impl.h
+@@ -140,7 +140,8 @@ class CORE_EXPORT WebViewImpl final : public WebView,
+   static HashSet<WebViewImpl*>& AllInstances();
+   // Returns true if popup menus should be rendered by the browser, false if
+   // they should be rendered by WebKit (which is the default).
+-  static bool UseExternalPopupMenus();
++  void SetUseExternalPopupMenusThisInstance(bool) override;
++  bool UseExternalPopupMenus() const;
+ 
+   // Returns whether frames under this WebView are backed by a compositor.
+   bool does_composite() const { return does_composite_; }
+@@ -880,6 +881,8 @@ class CORE_EXPORT WebViewImpl final : public WebView,
+   float fake_page_scale_animation_page_scale_factor_ = 0.f;
+   bool fake_page_scale_animation_use_anchor_ = false;
+ 
++  bool should_use_external_popup_menus_;
++
+   float compositor_device_scale_factor_override_ = 0.f;
+   gfx::Transform device_emulation_transform_;
+ 
+diff --git a/src/third_party/blink/renderer/core/inspector/devtools_session.cc b/src/third_party/blink/renderer/core/inspector/devtools_session.cc
+index 128bb7d84..dd4f22aee 100644
+--- a/src/third_party/blink/renderer/core/inspector/devtools_session.cc
++++ b/src/third_party/blink/renderer/core/inspector/devtools_session.cc
+@@ -16,6 +16,7 @@
+ #include "base/task/sequenced_task_runner.h"
+ #include "base/task/single_thread_task_runner.h"
+ #include "base/trace_event/trace_event.h"
++#include "third_party/blink/public/platform/platform.h"
+ #include "third_party/blink/renderer/bindings/core/v8/script_controller.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+ #include "third_party/blink/renderer/core/inspector/devtools_agent.h"
+@@ -173,6 +174,7 @@ DevToolsSession::DevToolsSession(
+     for (wtf_size_t i = 0; i < agents_.size(); i++)
+       agents_[i]->Restore();
+   }
++  Platform::Current()->DevToolsAgentAttached();
+ }
+ 
+ DevToolsSession::~DevToolsSession() {
+@@ -218,6 +220,7 @@ void DevToolsSession::Detach() {
+   agents_.clear();
+   v8_session_.reset();
+   agent_->client_->DebuggerTaskFinished();
++  Platform::Current()->DevToolsAgentDetached();
+ }
+ 
+ void DevToolsSession::DetachFromV8() {
+diff --git a/src/third_party/blink/renderer/core/page/chrome_client_impl.cc b/src/third_party/blink/renderer/core/page/chrome_client_impl.cc
+index 53fad78fa..bd2833747 100644
+--- a/src/third_party/blink/renderer/core/page/chrome_client_impl.cc
++++ b/src/third_party/blink/renderer/core/page/chrome_client_impl.cc
+@@ -971,7 +971,7 @@ PopupMenu* ChromeClientImpl::OpenPopupMenu(LocalFrame& frame,
+                                            HTMLSelectElement& select) {
+   NotifyPopupOpeningObservers();
+ 
+-  if (WebViewImpl::UseExternalPopupMenus()) {
++  if (web_view_->UseExternalPopupMenus()) {
+     return MakeGarbageCollected<ExternalPopupMenu>(frame, select);
+   }
+ 
+diff --git a/src/third_party/blink/renderer/platform/heap/thread_local.h b/src/third_party/blink/renderer/platform/heap/thread_local.h
+index a672ba785..13d794dc1 100644
+--- a/src/third_party/blink/renderer/platform/heap/thread_local.h
++++ b/src/third_party/blink/renderer/platform/heap/thread_local.h
+@@ -37,7 +37,7 @@
+ #if BLINK_HEAP_HIDE_THREAD_LOCAL_IN_LIBRARY
+ #define BLINK_HEAP_THREAD_LOCAL_MODEL "local-dynamic"
+ #else
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
+ #define BLINK_HEAP_THREAD_LOCAL_MODEL "initial-exec"
+ #elif BUILDFLAG(IS_ANDROID)
+ #define BLINK_HEAP_THREAD_LOCAL_MODEL "local-dynamic"
+diff --git a/src/third_party/crashpad/crashpad/client/prune_crash_reports.cc b/src/third_party/crashpad/crashpad/client/prune_crash_reports.cc
+index 927ed6010..1a36ae5d4 100644
+--- a/src/third_party/crashpad/crashpad/client/prune_crash_reports.cc
++++ b/src/third_party/crashpad/crashpad/client/prune_crash_reports.cc
+@@ -75,13 +75,19 @@ size_t PruneCrashReportDatabase(CrashReportDatabase* database,
+ }
+ 
+ // static
+-std::unique_ptr<PruneCondition> PruneCondition::GetDefault() {
++std::unique_ptr<PruneCondition> PruneCondition::GetDefault(
++    int max_size_in_mb,
++    int max_age_in_days) {
+   // DatabaseSizePruneCondition must be the LHS so that it is always evaluated,
+   // due to the short-circuting behavior of BinaryPruneCondition.
++  if (max_size_in_mb <= 0)
++    max_size_in_mb = 128;
++  if (max_age_in_days <= 0)
++    max_age_in_days = 365;
+   return std::make_unique<BinaryPruneCondition>(
+       BinaryPruneCondition::OR,
+-      new DatabaseSizePruneCondition(1024 * 128),
+-      new AgePruneCondition(365));
++      new DatabaseSizePruneCondition(1024 * max_size_in_mb),
++      new AgePruneCondition(max_age_in_days));
+ }
+ 
+ static const time_t kSecondsInDay = 60 * 60 * 24;
+diff --git a/src/third_party/crashpad/crashpad/client/prune_crash_reports.h b/src/third_party/crashpad/crashpad/client/prune_crash_reports.h
+index b362e0aad..1588232a6 100644
+--- a/src/third_party/crashpad/crashpad/client/prune_crash_reports.h
++++ b/src/third_party/crashpad/crashpad/client/prune_crash_reports.h
+@@ -58,7 +58,8 @@ class PruneCondition {
+   //! of 128 MB.
+   //!
+   //! \return A PruneCondition for use with PruneCrashReportDatabase().
+-  static std::unique_ptr<PruneCondition> GetDefault();
++  static std::unique_ptr<PruneCondition> GetDefault(int max_size_in_mb,
++                                                    int max_age_in_days);
+ 
+   virtual ~PruneCondition() {}
+ 
+diff --git a/src/third_party/crashpad/crashpad/client/settings.cc b/src/third_party/crashpad/crashpad/client/settings.cc
+index 76d77c860..9cb6be87e 100644
+--- a/src/third_party/crashpad/crashpad/client/settings.cc
++++ b/src/third_party/crashpad/crashpad/client/settings.cc
+@@ -122,7 +122,7 @@ struct Settings::Data {
+   // Version number only used for incompatible changes to Data. Do not change
+   // this when adding additional fields at the end. Modifying `kSettingsVersion`
+   // will wipe away the entire struct when reading from other versions.
+-  static constexpr uint32_t kSettingsVersion = 1;
++  static constexpr uint32_t kSettingsVersion = 2;
+ 
+   enum Options : uint32_t {
+     kUploadsEnabled = 1 << 0,
+@@ -133,6 +133,9 @@ struct Settings::Data {
+            options(0),
+            padding_0(0),
+            last_upload_attempt_time(0),
++           next_upload_attempt_time(0),
++           backoff_step(0),
++           padding_1(0),
+            client_id() {}
+ 
+   uint32_t magic;
+@@ -140,6 +143,9 @@ struct Settings::Data {
+   uint32_t options;
+   uint32_t padding_0;
+   int64_t last_upload_attempt_time;  // time_t
++  int64_t next_upload_attempt_time;  // time_t
++  uint32_t backoff_step;
++  uint32_t padding_1;
+   UUID client_id;
+ };
+ 
+@@ -239,6 +245,56 @@ bool Settings::IsLockExpired(const base::FilePath& file_path,
+ }
+ #endif  // !CRASHPAD_FLOCK_ALWAYS_SUPPORTED
+ 
++bool Settings::GetNextUploadAttemptTime(time_t* time) {
++  DCHECK(initialized_.is_valid());
++
++  Data settings;
++  if (!OpenAndReadSettings(&settings))
++    return false;
++
++  *time = InRangeCast<time_t>(settings.next_upload_attempt_time,
++                              std::numeric_limits<time_t>::max());
++  return true;
++}
++
++bool Settings::SetNextUploadAttemptTime(time_t time) {
++  DCHECK(initialized_.is_valid());
++
++  Data settings;
++  ScopedLockedFileHandle handle = OpenForWritingAndReadSettings(&settings);
++  if (!handle.is_valid())
++    return false;
++
++  settings.next_upload_attempt_time = InRangeCast<int64_t>(time, 0);
++
++  return WriteSettings(handle.get(), settings);
++}
++
++bool Settings::GetBackoffStep(int* step) {
++  DCHECK(initialized_.is_valid());
++
++  Data settings;
++  if (!OpenAndReadSettings(&settings))
++    return false;
++
++  *step = InRangeCast<int>(settings.backoff_step,
++                           std::numeric_limits<int>::max());
++  return true;
++}
++
++bool Settings::SetBackoffStep(int step) {
++  DCHECK(initialized_.is_valid());
++
++  Data settings;
++  ScopedLockedFileHandle handle = OpenForWritingAndReadSettings(&settings);
++  if (!handle.is_valid())
++    return false;
++
++  settings.backoff_step = InRangeCast<uint32_t>(step, 0);
++
++  return WriteSettings(handle.get(), settings);
++}
++
+ // static
+ Settings::ScopedLockedFileHandle Settings::MakeScopedLockedFileHandle(
+     const internal::MakeScopedLockedFileHandleOptions& options,
+diff --git a/src/third_party/crashpad/crashpad/client/settings.h b/src/third_party/crashpad/crashpad/client/settings.h
+index 39b2de869..5a4e621c6 100644
+--- a/src/third_party/crashpad/crashpad/client/settings.h
++++ b/src/third_party/crashpad/crashpad/client/settings.h
+@@ -156,6 +156,11 @@ class Settings {
+                             time_t lockfile_ttl);
+ #endif  // !CRASHPAD_FLOCK_ALWAYS_SUPPORTED
+ 
++  bool GetNextUploadAttemptTime(time_t* time);
++  bool SetNextUploadAttemptTime(time_t time);
++  bool GetBackoffStep(int* step);
++  bool SetBackoffStep(int step);
++
+  private:
+   struct Data;
+ 
+diff --git a/src/third_party/crashpad/crashpad/handler/BUILD.gn b/src/third_party/crashpad/crashpad/handler/BUILD.gn
+index 5d5489a22..5d2b52cdd 100644
+--- a/src/third_party/crashpad/crashpad/handler/BUILD.gn
++++ b/src/third_party/crashpad/crashpad/handler/BUILD.gn
+@@ -12,6 +12,7 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++import("//cef/libcef/features/features.gni")
+ import("../build/crashpad_buildconfig.gni")
+ 
+ static_library("handler") {
+@@ -61,6 +62,17 @@ static_library("handler") {
+     ]
+   }
+ 
++  if (enable_cef) {
++    sources += [
++      "//cef/libcef/common/cef_crash_report_upload_thread.cc",
++      "//cef/libcef/common/cef_crash_report_upload_thread.h",
++      "//cef/libcef/common/cef_crash_report_utils.cc",
++      "//cef/libcef/common/cef_crash_report_utils.h",
++    ]
++
++    configs += [ "//cef/libcef/features:config" ]
++  }
++
+   public_configs = [ "..:crashpad_config" ]
+ 
+   public_deps = [
+@@ -76,6 +88,7 @@ static_library("handler") {
+     "../snapshot",
+     "../third_party/mini_chromium:chromeos_buildflags",
+     "../tools:tool_support",
++    "//cef/libcef/features",
+   ]
+ 
+   if (crashpad_is_win) {
+diff --git a/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc b/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
+index 8350d0761..9fc26214c 100644
+--- a/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
++++ b/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
+@@ -296,6 +296,8 @@ CrashReportUploadThread::UploadResult CrashReportUploadThread::UploadReport(
+   if (minidump_process_snapshot.Initialize(reader)) {
+     parameters =
+         BreakpadHTTPFormParametersFromMinidump(&minidump_process_snapshot);
++    if (!parameters.empty())
++      parameters = FilterParameters(parameters);
+   }
+ 
+   if (!reader->SeekSet(start_offset)) {
+diff --git a/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.h b/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
+index 22bb26e31..87c80604e 100644
+--- a/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
++++ b/src/third_party/crashpad/crashpad/handler/crash_report_upload_thread.h
+@@ -16,6 +16,7 @@
+ #define CRASHPAD_HANDLER_CRASH_REPORT_UPLOAD_THREAD_H_
+ 
+ #include <functional>
++#include <map>
+ #include <memory>
+ #include <string>
+ #include <unordered_map>
+@@ -128,7 +129,7 @@ class CrashReportUploadThread : public WorkerThread::Delegate,
+   //! \return `true` if the thread is running, `false` if it is not.
+   bool is_running() const { return thread_.is_running(); }
+ 
+- private:
++ protected:
+   //! \brief The result code from UploadReport().
+   enum class UploadResult {
+     //! \brief The crash report was uploaded successfully.
+@@ -156,7 +157,7 @@ class CrashReportUploadThread : public WorkerThread::Delegate,
+   //! object was constructed with \a watch_pending_reports, it will also scan
+   //! the crash report database for other pending reports, and process those as
+   //! well.
+-  void ProcessPendingReports();
++  virtual void ProcessPendingReports();
+ 
+   //! \brief Processes a single pending report from the database.
+   //!
+@@ -170,7 +171,7 @@ class CrashReportUploadThread : public WorkerThread::Delegate,
+   //! remain in the “pending” state. If the upload fails and no more retries are
+   //! desired, or report upload is disabled, it will be marked as “completed” in
+   //! the database without ever having been uploaded.
+-  void ProcessPendingReport(const CrashReportDatabase::Report& report);
++  virtual void ProcessPendingReport(const CrashReportDatabase::Report& report);
+ 
+   //! \brief Attempts to upload a crash report.
+   //!
+@@ -187,6 +188,11 @@ class CrashReportUploadThread : public WorkerThread::Delegate,
+   UploadResult UploadReport(const CrashReportDatabase::UploadReport* report,
+                             std::string* response_body);
+ 
++  using ParameterMap = std::map<std::string, std::string>;
++  virtual ParameterMap FilterParameters(const ParameterMap& parameters) {
++    return parameters;
++  }
++
+   // WorkerThread::Delegate:
+   //! \brief Calls ProcessPendingReports() in response to ReportPending() having
+   //!     been called on any thread, as well as periodically on a timer.
+diff --git a/src/third_party/crashpad/crashpad/handler/handler_main.cc b/src/third_party/crashpad/crashpad/handler/handler_main.cc
+index 7e23274e2..24e1c93be 100644
+--- a/src/third_party/crashpad/crashpad/handler/handler_main.cc
++++ b/src/third_party/crashpad/crashpad/handler/handler_main.cc
+@@ -39,6 +39,7 @@
+ #include "base/strings/utf_string_conversions.h"
+ #include "build/build_config.h"
+ #include "build/chromeos_buildflags.h"
++#include "cef/libcef/features/features.h"
+ #include "client/crash_report_database.h"
+ #include "client/crashpad_client.h"
+ #include "client/crashpad_info.h"
+@@ -90,6 +91,10 @@
+ #include "util/win/session_end_watcher.h"
+ #endif  // BUILDFLAG(IS_APPLE)
+ 
++#if BUILDFLAG(ENABLE_CEF)
++#include "cef/libcef/common/cef_crash_report_upload_thread.h"
++#endif
++
+ namespace crashpad {
+ 
+ namespace {
+@@ -251,6 +256,9 @@ struct Options {
+   bool periodic_tasks;
+   bool rate_limit;
+   bool upload_gzip;
++  int max_uploads;
++  int max_database_size;
++  int max_database_age;
+ #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+   bool use_cros_crash_reporter = false;
+   base::FilePath minidump_dir_for_tests;
+@@ -629,6 +637,9 @@ int HandlerMain(int argc,
+     kOptionTraceParentWithException,
+ #endif
+     kOptionURL,
++    kOptionMaxUploads,
++    kOptionMaxDatabaseSize,
++    kOptionMaxDatabaseAge,
+ #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+     kOptionUseCrosCrashReporter,
+     kOptionMinidumpDirForTests,
+@@ -731,6 +742,9 @@ int HandlerMain(int argc,
+ #endif  // BUILDFLAG(IS_ANDROID)
+     {"help", no_argument, nullptr, kOptionHelp},
+     {"version", no_argument, nullptr, kOptionVersion},
++    {"max-uploads", required_argument, nullptr, kOptionMaxUploads},
++    {"max-db-size", required_argument, nullptr, kOptionMaxDatabaseSize},
++    {"max-db-age", required_argument, nullptr, kOptionMaxDatabaseAge},
+     {nullptr, 0, nullptr, 0},
+   };
+ 
+@@ -891,6 +905,27 @@ int HandlerMain(int argc,
+         options.url = optarg;
+         break;
+       }
++      case kOptionMaxUploads: {
++        if (base::StringToInt(optarg, &options.max_uploads)) {
++          if (options.max_uploads < 0)
++            options.max_uploads = 0;
++        }
++        break;
++      }
++      case kOptionMaxDatabaseSize: {
++        if (base::StringToInt(optarg, &options.max_database_size)) {
++          if (options.max_database_size < 0)
++            options.max_database_size = 0;
++        }
++        break;
++      }
++      case kOptionMaxDatabaseAge: {
++        if (base::StringToInt(optarg, &options.max_database_age)) {
++          if (options.max_database_age < 0)
++            options.max_database_age = 0;
++        }
++        break;
++      }
+ #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
+       case kOptionUseCrosCrashReporter: {
+         options.use_cros_crash_reporter = true;
+@@ -1041,11 +1076,20 @@ int HandlerMain(int argc,
+     upload_thread_options.upload_gzip = options.upload_gzip;
+     upload_thread_options.watch_pending_reports = options.periodic_tasks;
+ 
++#if BUILDFLAG(ENABLE_CEF)
++    upload_thread.Reset(new CefCrashReportUploadThread(
++        database.get(),
++        options.url,
++        upload_thread_options,
++        CrashReportUploadThread::ProcessPendingReportsObservationCallback(),
++        options.max_uploads));
++#else
+     upload_thread.Reset(new CrashReportUploadThread(
+         database.get(),
+         options.url,
+         upload_thread_options,
+         CrashReportUploadThread::ProcessPendingReportsObservationCallback()));
++#endif
+     upload_thread.Get()->Start();
+   }
+ 
+@@ -1118,7 +1162,8 @@ int HandlerMain(int argc,
+   ScopedStoppable prune_thread;
+   if (options.periodic_tasks) {
+     prune_thread.Reset(new PruneCrashReportThread(
+-        database.get(), PruneCondition::GetDefault()));
++        database.get(), PruneCondition::GetDefault(options.max_database_size,
++                                                   options.max_database_age)));
+     prune_thread.Get()->Start();
+   }
+ 
+diff --git a/src/third_party/libxml/BUILD.gn b/src/third_party/libxml/BUILD.gn
+index 339be7327..84d11321a 100644
+--- a/src/third_party/libxml/BUILD.gn
++++ b/src/third_party/libxml/BUILD.gn
+@@ -140,6 +140,7 @@ static_library("libxml") {
+     ":libxml_utils",
+     ":xml_reader",
+     ":xml_writer",
++    "//cef:*",
+     "//chromecast/internal",
+     "//testing/libfuzzer/*",
+     "//third_party/blink/renderer/*",
+diff --git a/src/third_party/sentencepiece/src/src/util.cc b/src/third_party/sentencepiece/src/src/util.cc
+index c5e528980..e10880abc 100644
+--- a/src/third_party/sentencepiece/src/src/util.cc
++++ b/src/third_party/sentencepiece/src/src/util.cc
+@@ -16,6 +16,7 @@
+ 
+ #include <atomic>
+ #include <iostream>
++#include <memory>
+ 
+ namespace sentencepiece {
+ 
+@@ -197,8 +198,18 @@ std::mt19937 *GetRandomGenerator() {
+ }
+ #else
+ std::mt19937 *GetRandomGenerator() {
+-  thread_local static std::mt19937 mt(GetRandomGeneratorSeed());
+-  return &mt;
++  // Thread-locals occupy stack space in every thread ever created by the
++  // program, even if that thread never uses the thread-local variable.
++  //
++  // https://maskray.me/blog/2021-02-14-all-about-thread-local-storage
++  //
++  // sizeof(std::mt19937) is several kilobytes, so it is safer to put that on
++  // the heap, leaving only a pointer to it in thread-local storage.  This must
++  // be a unique_ptr, not a raw pointer, so that the generator is not leaked on
++  // thread exit.
++  thread_local static auto mt =
++      std::make_unique<std::mt19937>(GetRandomGeneratorSeed());
++  return mt.get();
+ }
+ #endif
+ }  // namespace random
+diff --git a/src/third_party/widevine/cdm/widevine.gni b/src/third_party/widevine/cdm/widevine.gni
+index 8b97b7a57..831ccde10 100644
+--- a/src/third_party/widevine/cdm/widevine.gni
++++ b/src/third_party/widevine/cdm/widevine.gni
+@@ -5,6 +5,7 @@
+ import("//build/config/chrome_build.gni")
+ import("//build/config/chromeos/ui_mode.gni")
+ import("//build/config/chromeos/ui_mode.gni")
++import("//cef/libcef/features/features.gni")
+ import("//media/media_options.gni")
+ 
+ declare_args() {
+@@ -13,7 +14,7 @@ declare_args() {
+   # Can be optionally enabled in Chromium on non-Android platforms. Please see
+   # //src/third_party/widevine/LICENSE file for details.
+   enable_widevine = ((is_chrome_branded || is_chrome_for_testing_branded) &&
+-                     !is_fuchsia) || is_android
++                     !is_fuchsia) || is_android || enable_cef
+ }
+ 
+ # Disable Widevine when running linux-chromeos.
+-- 
+2.34.1
+
