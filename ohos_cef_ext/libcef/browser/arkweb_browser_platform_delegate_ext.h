@@ -20,6 +20,10 @@
 #include "ui/gfx/geometry/rect_f.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_javascript_item.h"
+#endif
+
 class CefBrowserPlatformDelegate;
 // Provides platform-specific implementations of browser functionality. All
 // methods are called on the browser process UI thread unless otherwise
@@ -205,5 +209,9 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
   virtual void UpdateBackgroundColor(SkColor color) {}
 #endif  // ARKWEB_BACKGROUND_COLOR
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+  virtual void OnDocumentEndReady(const FrameInfos& frameInfo) {}
+#endif
 };
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_EXT_H_

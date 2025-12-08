@@ -196,6 +196,10 @@ public:
   void UpdateBackgroundColor(SkColor color) override;
 #endif  // ARKWEB_BACKGROUND_COLOR
 
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+  void OnDocumentEndReady(const FrameInfos& frameInfo) override;
+#endif
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(

@@ -183,6 +183,12 @@ class CefDialogHandlerExt : public virtual CefDialogHandler {
                           int event) {}
 
   CefRefPtr<CefDialogHandlerExt> AsArkDialogHandler() override { return this; }
+
+  ///
+  /// Notify document end ready.
+  ///
+  /*--cef()--*/
+  virtual void OnDocumentEndReady(const CefString& id, const CefString& parent_id) {}
 #endif  // BUILDFLAG(IS_ARKWEB)
 };
 #endif

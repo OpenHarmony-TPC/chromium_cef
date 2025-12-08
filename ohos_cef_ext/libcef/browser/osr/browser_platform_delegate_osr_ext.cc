@@ -1003,3 +1003,15 @@ void CefBrowserPlatformDelegateOsrExt::SendMouseMoveEvent(
   view->SendMouseEvent(web_event);
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+void CefBrowserPlatformDelegateOsrExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+
+  if (handler.get()) {
+    handler->AsArkDialogHandler()->OnDocumentEndReady(
+        CefString(frameInfo.id), CefString(frameInfo.parentId));
+  }
+}
+#endif
