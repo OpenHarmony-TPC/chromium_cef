@@ -17,71 +17,8 @@
 #include "content/browser/web_contents/web_contents_impl.h"
 #endif
 
-
 namespace arkweb_useragent_utils {
-std::string last_redirect_error_page_url_;
-std::vector<std::string> ConvertGURLVectorToStringVector(
-    const std::vector<GURL>& gurl_vector) {
-  std::vector<std::string> string_vector;
-  string_vector.reserve(gurl_vector.size());
-  for (const GURL& url : gurl_vector) {
-    string_vector.push_back(url.spec());
-  }
-  return string_vector;
-}
 
-bool ShouldUpdateErrorPageUrl(const std::vector<std::string>& redirect_chain,
-                              const std::string& current_url) {
-  // First check for duplicate URLs in the redirect chain
-  std::unordered_set<std::string> seen_urls;
-  bool has_duplicates = false;
-
-  for (const auto& url : redirect_chain) {
-    if (seen_urls.find(url) != seen_urls.end()) {
-      has_duplicates = true;
-      break;
-    }
-    seen_urls.insert(url);
-  }
-
-  // If no duplicates found, no need to update
-  if (!has_duplicates) {
-    return false;
-  }
-
-  // Check if we should update based on the current error page URL
-  if (last_redirect_error_page_url_.empty()) {
-    return true;
-  }
-
-  // Check if last_redirect_error_page_url_ is in the redirect chain
-  auto it = std::find(redirect_chain.begin(), redirect_chain.end(),
-                      last_redirect_error_page_url_);
-  bool is_in_chain = (it != redirect_chain.end());
-
-  // If last_redirect_error_page_url_ is in the chain, check if it appears multiple times
-  if (is_in_chain) {
-    size_t count = std::count(redirect_chain.begin(), redirect_chain.end(),
-                              last_redirect_error_page_url_);
-    return (count > 1) && (last_redirect_error_page_url_ == current_url);
-  }
-
-  // If last_redirect_error_page_url_ is not in the chain, update is needed
-  return true;
-}
-
-void CheckRedirectChainForDuplicates(content::NavigationHandle* navigation) {
-  if (!navigation) {
-    return;
-  }
-  const auto& current_url = navigation->GetURL();
-  const auto& redirect_chain = navigation->GetRedirectChain();
-  if (ShouldUpdateErrorPageUrl(
-          ConvertGURLVectorToStringVector(redirect_chain), current_url.spec())) {
-    last_redirect_error_page_url_ = current_url.spec();
-    content::NavigationRequest::From(navigation)->EnableRedirectAbortCancel();
-  }
-}
 bool IsIllegalUrl(const GURL& url) {
   return url.is_empty() || !url.is_valid() || !url.has_host();
 }
@@ -247,7 +184,7 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
       }
     }
   }
-  CheckRedirectChainForDuplicates(navigation);
+
   LOG(DEBUG) << __func__ << " host "
              << url::LogUtils::ConvertUrlWithMask(current_url.host())
              << " match_type:" << match_type << ", final_ua " << final_ua
@@ -258,4 +195,4 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 
-} // arkweb_useragent_utils
+}  // namespace arkweb_useragent_utils
