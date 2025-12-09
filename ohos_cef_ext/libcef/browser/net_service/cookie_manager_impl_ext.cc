@@ -472,13 +472,22 @@ net::CookieStore* CefCookieManagerImplExt::GetCookieStore() {
 
 void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete(
     mojo::PendingRemote<CookieManager> cookie_manager_remote,
-    base::OnceClosure complete) {
+    base::OnceClosure complete,
+    const net::CookieList& cookies) {
   LOG(INFO) << "CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete";
   DCHECK(cookie_store_task_runner_->RunsTasksInCurrentSequence());
   setting_network_cookie_manager_ = false;
   network_cookie_manager_.Bind(std::move(cookie_manager_remote));
   if (!complete.is_null()) {
     std::move(complete).Run();
+  }
+  if (support_incognito_) {
+    CookieManager* cookie_manager = GetNetworkCookieManager();
+    if (cookie_manager && !cookies.empty()) {
+      cookie_manager->SetAllCookies(
+          cookies,
+          base::BindOnce([](net::CookieAccessResult access_result) {}));
+    }
   }
   RunCookieTasks(base::NullCallback());
   remote_network_cookie_manager_inited_ = true;
@@ -493,13 +502,20 @@ void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteAsync(
   setting_network_cookie_manager_ = true;
   if (!cookie_store_created_) {
     SetNetWorkCookieManagerRemoteComplete(std::move(cookie_manager_remote),
-                                          std::move(complete));
+                                          std::move(complete),
+                                          net::CookieList{});
     return;
   }
-  GetCookieStore()->FlushStore(base::BindOnce(
-      &CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete,
-      base::Unretained(this), std::move(cookie_manager_remote),
-      std::move(complete)));
+  if (support_incognito_) {
+    GetCookieStore()->FlushStore(base::BindOnce(
+        &CefCookieManagerImplExt::OnFlushStoreComplete, base::Unretained(this),
+        std::move(cookie_manager_remote), std::move(complete)));
+  } else {
+    GetCookieStore()->FlushStore(base::BindOnce(
+        &CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete,
+        base::Unretained(this), std::move(cookie_manager_remote),
+        std::move(complete), net::CookieList{}));
+  }
 }
 
 void CefCookieManagerImplExt::SetNetWorkCookieManager(
@@ -1246,5 +1262,17 @@ bool CefCookieManagerImplExt::ShouldForceIgnoreSiteForCookies(
   }
 
   return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+void CefCookieManagerImplExt::OnFlushStoreComplete(
+    mojo::PendingRemote<CookieManager> cookie_manager_remote,
+    base::OnceClosure complete) {
+  LOG(INFO) << "CefCookieManagerImplExt::OnFlushStoreComplete";
+  GetCookieStore()->GetAllCookiesAsync(base::BindOnce(
+      &CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete,
+      base::Unretained(this), std::move(cookie_manager_remote),
+      std::move(complete)));
 }
 #endif

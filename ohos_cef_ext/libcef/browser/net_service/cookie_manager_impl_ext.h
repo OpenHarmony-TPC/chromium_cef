@@ -51,7 +51,8 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
 
   void SetNetWorkCookieManagerRemoteComplete(
       mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
-      base::OnceClosure complete);
+      base::OnceClosure complete,
+      const net::CookieList& cookies);
   void SetNetWorkCookieManagerRemoteAsync(
       mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
       base::OnceClosure complete);
@@ -122,6 +123,12 @@ void UpdateHostContentSettingsMap();
       std::vector<network::mojom::CorsOriginPatternPtr> allow_patterns,
       std::vector<network::mojom::CorsOriginPatternPtr> block_patterns);
   bool ShouldForceIgnoreSiteForCookies(const network::ResourceRequest& request);
+#endif
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+  void OnFlushStoreComplete(
+      mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
+      base::OnceClosure complete);
 #endif
 
  private:
