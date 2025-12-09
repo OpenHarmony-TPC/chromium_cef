@@ -255,6 +255,25 @@ void OhAutofillManager::FillDataFromPaster(
   }
 }
 
+void OhAutofillManager::FillDataFromAutofill(
+  const std::string& json_str, const FieldGlobalId& field_id) {
+  absl::optional<base::Value> root = base::JSONReader::Read(json_str);
+  if (!root.has_value()) {
+    return;
+  }
+  const base::Value::Dict* root_dict = root->GetIfDict();
+  if (!root_dict) {
+    return;
+  }
+  LOG(DEBUG) << "FillDataFromAutofill field_id:" << field_id;
+  const std::string* value = root_dict->FindString(KEY_VALUE);
+  if (value) {
+    driver().ApplyFieldAction(
+        mojom::FieldActionType::kReplaceSelection, mojom::ActionPersistence::kFill,
+        field_id, base::UTF8ToUTF16(*value));
+  }
+}
+
 void OhAutofillManager::FillData(const std::string& json_str) {
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {

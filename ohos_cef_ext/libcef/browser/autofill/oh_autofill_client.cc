@@ -43,6 +43,7 @@ using content::WebContents;
 
 namespace autofill {
 namespace {
+constexpr int32_t MANUAL_REQUEST_TRIGGER_TYPE = 1;
 constexpr int32_t PASTER_REQUEST_TRIGGER_TYPE = 2;
 }
 
@@ -92,6 +93,8 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data, int32_t trigger_type) 
   if (mgr) {
     if (trigger_type == PASTER_REQUEST_TRIGGER_TYPE) {
       mgr->FillDataFromPaster(json_str, focused_field_id_);
+    } else if (trigger_type == MANUAL_REQUEST_TRIGGER_TYPE) {
+      mgr->FillDataFromAutofill(json_str, focused_field_id_);
     } else {
       mgr->FillData(json_str);
     }

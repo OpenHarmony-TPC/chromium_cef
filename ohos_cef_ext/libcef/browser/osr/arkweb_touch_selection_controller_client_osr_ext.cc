@@ -54,7 +54,7 @@ constexpr int kSelectHandleMoveDelayMixInMs = 400;
 #if BUILDFLAG(ARKWEB_MENU)
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
     QM_EDITFLAG_CAN_ELLIPSIS, QM_EDITFLAG_CAN_CUT, QM_EDITFLAG_CAN_COPY,
-    QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL};
+    QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL, QM_EDITFLAG_CAN_AUTOFILL};
 
 void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
                              CefTouchHandleState& state) {
@@ -989,6 +989,10 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
       }
       return false;
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_MENU)
+    case QM_EDITFLAG_CAN_AUTOFILL:
+      return true;
+#endif  // BUILDFLAG(ARKWEB_MENU)
     default:
       return false;
   }
