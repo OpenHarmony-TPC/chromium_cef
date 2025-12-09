@@ -38,7 +38,10 @@
 #include "cef/libcef/common/util_mac.h"
 #elif BUILDFLAG(IS_POSIX)
 #if BUILDFLAG(IS_OHOS)
+#include <accesstoken/ability_access_control.h>
 #include "cef/libcef/common/util_ohos.h"
+#include "ohos/adapter/common/shared_library.h"
+#include "ohos/adapter/web_entry/permission_constants.h"
 #else
 #include "cef/libcef/common/util_linux.h"
 #endif
@@ -48,6 +51,40 @@ namespace {
 
 base::LazyInstance<ChromeContentRendererClientCef>::DestructorAtExit
     g_chrome_content_renderer_client = LAZY_INSTANCE_INITIALIZER;
+
+#if BUILDFLAG(IS_OHOS)
+using namespace ohos::adapter::common;
+__attribute__((no_sanitize("cfi", "cfi-icall")))
+bool CheckAdvSecMode() {
+  uint32_t mode = -1;
+  SharedLibrary shared_library_(
+      "/system/lib64/platformsdk/", "dsmm_innersdk.z");
+  auto fn = shared_library_.GetFunction<int(const char*, uint32_t, const char*,
+                                            uint32_t, uint32_t*)>(
+      "AdvancedSecurityModeGetStateByFeature");
+  if (fn != nullptr) {
+    // returns 0 if success or errcode
+    int32_t ret = fn("default", 7, "default", 7, &mode);  // len:7
+    if (ret == 0 && mode == 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ShouldDisableJit() {
+  if (CheckAdvSecMode()) {
+    return true;
+  }
+
+  if (!OH_AT_CheckSelfPermission(ohos::adapter::web_entry::PermissionConstants::
+                                     ALLOW_WRITABLE_CODE_MEMORY)) {
+    return true;
+  }
+
+  return false;
+}
+#endif
 
 void InitLogging(const base::CommandLine* command_line) {
   logging::LogSeverity log_severity = logging::LOGGING_INFO;
@@ -284,11 +321,24 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       }
     }
 
+#if BUILDFLAG(IS_OHOS)
+    if (settings_->javascript_flags.length > 0) {
+      command_line->AppendSwitchASCII(
+          blink::switches::kJavaScriptFlags,
+          CefString(&settings_->javascript_flags).ToString());
+    } else if (!command_line->HasSwitch(blink::switches::kJavaScriptFlags)) {
+      if (ShouldDisableJit()) {
+        command_line->AppendSwitchASCII(blink::switches::kJavaScriptFlags,
+                                        "--jitless");
+      }
+    }
+#else
     if (settings_->javascript_flags.length > 0) {
       command_line->AppendSwitchASCII(
           blink::switches::kJavaScriptFlags,
           CefString(&settings_->javascript_flags).ToString());
     }
+#endif
 
     if (settings_->resources_dir_path.length > 0) {
       base::FilePath file_path =

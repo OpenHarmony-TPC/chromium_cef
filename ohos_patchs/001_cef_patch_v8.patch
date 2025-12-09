@@ -1,0 +1,47 @@
+From ddfe765c586b77ec150be3d3a2532b5a2a656c29 Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Fri, 5 Dec 2025 15:38:19 +0800
+Subject: [PATCH] 001_cef_patch_v8.patch
+
+Change-Id: I65393637c94fc61aff7ed7b1b6840137b658844b
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+---
+ BUILD.gn | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/v8/BUILD.gn b/src/v8/BUILD.gn
+index 37db725c3..d13fee743 100644
+--- a/src/v8/BUILD.gn
++++ b/src/v8/BUILD.gn
+@@ -14,6 +14,7 @@ import("//build/config/mips.gni")
+ import("//build/config/riscv.gni")
+ import("//build/config/sanitizers/sanitizers.gni")
+ import("//build_overrides/build.gni")
++import("//cef/libcef/features/features.gni")
+ import("//third_party/icu/config.gni")
+ 
+ import("gni/snapshot_toolchain.gni")
+@@ -462,6 +463,9 @@ declare_args() {
+   # Some fuzzers depend on fuzzing functionality linked into the v8 library.
+   # For binary size reasons this functionality is not always available.
+   v8_wasm_random_fuzzers = ""
++
++  # Set to true if V8 will be used in a shared library.
++  v8_used_in_shared_library = enable_cef
+ }
+ 
+ # Derived defaults.
+@@ -809,6 +813,10 @@ config("internal_config") {
+     defines += [ "BUILDING_V8_SHARED" ]
+   }
+ 
++  if (v8_used_in_shared_library) {
++    defines += [ "V8_TLS_USED_IN_LIBRARY" ]
++  }
++
+   if (v8_current_cpu == "riscv64" || v8_current_cpu == "riscv32") {
+     if (!is_clang) {
+       libs = [ "atomic" ]
+-- 
+2.34.1
+
