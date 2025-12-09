@@ -112,6 +112,7 @@ void SaveCookiesOnAsyncThread(
   bool SupportAsyncThreadCookieLoad();
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool GetExceptionCookieSetting(const network::ResourceRequest& request);
 bool CanSaveOrLoadCookies(const network::ResourceRequest& request);
 void UpdateHostContentSettingsMap();
 #endif

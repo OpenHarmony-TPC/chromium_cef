@@ -55,6 +55,7 @@ bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
           ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
               ->AllowGetCookies(*request,
                                 request->site_for_cookies.RepresentativeUrl());
+      LOG(DEBUG) << "ITP Allow Get Cookies: " << third_party_cookie_access_policy;
       if (!third_party_cookie_access_policy) {
         ReportITPResult(browser, *request);
         *allow = false;

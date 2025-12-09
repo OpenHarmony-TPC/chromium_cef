@@ -786,7 +786,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       CefRefPtr<CefCookieManagerImplExt> cookie_manager =
         CefCookieManagerImplExt::GetInstance(init_state_->is_off_the_record_);
       if (cookie_manager) {
-        *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+        bool is_exception = cookie_manager->GetExceptionCookieSetting(*(state->request_));
+        LOG(DEBUG) << "Get Exception Cookie Setting: " << is_exception;
+        if (is_exception) {
+          *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+        }
       }
     }
 #endif // ARKWEB_EXT_EXCEPTION_LIST

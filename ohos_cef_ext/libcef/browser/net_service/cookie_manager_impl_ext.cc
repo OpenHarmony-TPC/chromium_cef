@@ -1163,6 +1163,23 @@ void CefCookieManagerImplExt::SaveCookiesOnAsyncThread(
 }
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool CefCookieManagerImplExt::GetExceptionCookieSetting(const network::ResourceRequest& request) {
+  if (!host_content_settings_map_) {
+    return false;
+  }
+
+  ContentSettingsForOneType cookie_settings =
+      host_content_settings_map_->GetSettingsForOneType(
+          ContentSettingsType::COOKIES);
+  for (auto& cookie_setting : cookie_settings) {
+    if (cookie_setting.primary_pattern != ContentSettingsPattern::Wildcard() &&
+        cookie_setting.primary_pattern.Matches(request.url)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool CefCookieManagerImplExt::CanSaveOrLoadCookies(const network::ResourceRequest& request) {
   if (!host_content_settings_map_) {
     return true;
