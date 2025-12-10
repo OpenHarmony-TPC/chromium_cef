@@ -774,13 +774,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     DCHECK(state->cookie_filter_);
 
-    CefCookie cef_cookie;
-    if (net_service::MakeCefCookie(cookie, cef_cookie)) {
-      *allow = state->cookie_filter_->CanSendCookie(
-          init_state_->browser_, init_state_->frame_,
-          state->pending_request_.get(), cef_cookie);
-    }
-
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
       CefRefPtr<CefCookieManagerImplExt> cookie_manager =
@@ -790,10 +783,18 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         LOG(DEBUG) << "Get Exception Cookie Setting: " << is_exception;
         if (is_exception) {
           *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+          return;
         }
       }
     }
 #endif // ARKWEB_EXT_EXCEPTION_LIST
+
+    CefCookie cef_cookie;
+    if (net_service::MakeCefCookie(cookie, cef_cookie)) {
+      *allow = state->cookie_filter_->CanSendCookie(
+          init_state_->browser_, init_state_->frame_,
+          state->pending_request_.get(), cef_cookie);
+    }
 
 #if BUILDFLAG(ARKWEB_ITP)
     if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(
