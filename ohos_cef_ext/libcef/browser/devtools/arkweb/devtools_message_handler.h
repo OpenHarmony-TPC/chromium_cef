@@ -69,7 +69,7 @@ class CefDevToolsMessageHandler final {
   explicit CefDevToolsMessageHandler(
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       Profile* profile,
-      bool can_dock);
+      OpenDevToolsExtOpt& extOpt);
   CefDevToolsMessageHandler(const CefDevToolsMessageHandler&) = delete;
   CefDevToolsMessageHandler(CefDevToolsMessageHandler&&) = delete;
   ~CefDevToolsMessageHandler();

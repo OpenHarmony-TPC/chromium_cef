@@ -787,8 +787,13 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) override;
+
+  void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at,
-      bool canDock) override;
+      OpenDevToolsExtOpt& ext_opt) override;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:

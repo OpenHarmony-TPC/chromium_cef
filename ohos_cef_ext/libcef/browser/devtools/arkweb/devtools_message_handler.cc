@@ -131,10 +131,10 @@ using Result = CefDevToolsMessageHandler::Result;
 CefDevToolsMessageHandler::CefDevToolsMessageHandler(
     CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
     Profile* profile,
-    bool can_dock)
+    OpenDevToolsExtOpt& extOpt)
     : delegate_(std::move(delegate)),
       settings_(profile),
-      can_dock_(can_dock),
+      can_dock_(extOpt.canDock),
       is_docked_(false),
       dock_mode_changed_(false) {
   method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(

@@ -338,15 +338,15 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
-      base::OnceClosure frontend_destroyed_callback,
-      bool can_dock) {
+      base::OnceClosure frontend_destroyed_callback) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})";
+  OpenDevToolsExtOpt ext_opt;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
           frontend_browser->web_contents()->GetBrowserContext()),
-      can_dock);
+      ext_opt);
   // CefDevToolsFrontend will delete itself when the frontend WebContents is
   // destroyed.
   CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
@@ -355,7 +355,36 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(can_dock));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false));
+
+  return devtools_frontend;
+}
+
+// static
+CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
+      AlloyBrowserHostImpl* frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      content::WebContents* inspected_contents,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback,
+      OpenDevToolsExtOpt& ext_opt) {
+  LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
+            << inspect_element_at.x << "*" << inspect_element_at.y << "})"
+            << ", canDock: " << ext_opt.canDock;
+  auto handler = std::make_unique<CefDevToolsMessageHandler>(
+      std::move(devtools_message_handler),
+      Profile::FromBrowserContext(
+          frontend_browser->web_contents()->GetBrowserContext()),
+      ext_opt);
+  // CefDevToolsFrontend will delete itself when the frontend WebContents is
+  // destroyed.
+  CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
+      frontend_browser, std::move(handler),
+      inspected_contents, inspect_element_at,
+      std::move(frontend_destroyed_callback));
+
+  // Need to load the URL after creating the DevTools objects.
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock));
 
   return devtools_frontend;
 }

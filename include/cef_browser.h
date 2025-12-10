@@ -61,6 +61,8 @@ class ArkWebBrowserExt;
 class CefBrowserHostBase;
 class ArkWebBrowserHostExt;
 
+struct OpenDevToolsExtOpt;
+
 ///
 /// Class used to represent a browser. When used in the browser process the
 /// methods of this class may be called on any thread unless otherwise indicated
@@ -633,8 +635,16 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   virtual void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) = 0;
+
+  ///
+  /// Opend DevTools with frontend_browser.
+  ///
+  virtual void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at,
-      bool canDock) = 0;
+      OpenDevToolsExtOpt& ext_opt) = 0;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///

@@ -50,7 +50,13 @@ class CefDevToolsWindowRunner final {
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefBrowserHostBase* inspected_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
-      const CefPoint& inspect_element_at, bool canDock);
+      const CefPoint& inspect_element_at);
+  void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefBrowserHostBase* inspected_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      const CefPoint& inspect_element_at,
+      OpenDevToolsExtOpt& ext_opt);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   void CloseDevTools();
   bool HasDevTools();
