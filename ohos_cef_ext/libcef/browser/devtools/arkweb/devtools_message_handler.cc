@@ -137,6 +137,7 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
       can_dock_(extOpt.canDock),
       is_docked_(false),
       dock_mode_changed_(false) {
+  LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
   method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
       &CefDevToolsMessageHandler::HandleProtocolMessage, base::Unretained(this));
   method_handlers_["bringToFront"] = base::BindRepeating(
@@ -401,11 +402,9 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
  
 void CefDevToolsMessageHandler::UpdateDockMode() {
   dock_mode_changed_ = false;
-  DockMode old_mode = dock_mode_;
   gfx::Rect inspected_page_bounds = resizing_strategy_.bounds();
   if (inspected_page_bounds.x() > 0) {
-    dock_mode_ = DockMode::LEFT;
-    delegate_->SetDockMode((int)dock_mode_);
+    delegate_->SetDockMode((int)DockMode::LEFT);
     return;
   }
  
@@ -413,11 +412,10 @@ void CefDevToolsMessageHandler::UpdateDockMode() {
                                   ->GetRenderWidgetHostView()
                                   ->GetViewBounds();
   if (inspected_page_bounds.width() == devtools_bounds.width()) {
-    dock_mode_ = DockMode::BOTTOM;
+    delegate_->SetDockMode((int)DockMode::BOTTOM);
   } else {
-    dock_mode_ = DockMode::RIGHT;
+    delegate_->SetDockMode((int)DockMode::RIGHT);
   }
-  delegate_->SetDockMode((int)dock_mode_);
 }
  
 Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
@@ -430,8 +428,7 @@ Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
 
   is_docked_ = dock_requested;
   if (!is_docked_) {
-    dock_mode_ = DockMode::UNDOCKED;
-    return {delegate_->SetDockMode((int)dock_mode_), {}};
+    return {delegate_->SetDockMode((int)DockMode::UNDOCKED), {}};
   }
   dock_mode_changed_ = true;
  

@@ -120,7 +120,6 @@ class CefDevToolsMessageHandler final {
   bool can_dock_;
   bool is_docked_;
   bool dock_mode_changed_;
-  DockMode dock_mode_;
   CefResizingStrategy resizing_strategy_;
   base::raw_ptr<CefDevToolsFrontend> devtools_frontend_;
 };
