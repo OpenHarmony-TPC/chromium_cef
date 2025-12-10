@@ -498,6 +498,12 @@ void SetMigrationPasswordPrefs(std::string_view path, bool value) {
 }
 
 bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter, bool migrateBackupFlag) {
+  static bool has_tried = false;
+  if (has_tried) {
+    return false;
+  }
+  has_tried = true;
+
   if (migrateBackupFlag) {
     return true;
   }
