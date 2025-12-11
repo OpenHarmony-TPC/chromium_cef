@@ -218,9 +218,10 @@ CertificateErrorCallback AllowAllCertificateError(
 #if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
     auto* tab_helper = HttpsOnlyModeTabHelper::FromWebContents(web_contents);
     if (tab_helper && tab_helper->is_navigation_upgraded() && is_main_frame_request) {
+      tab_helper->set_is_ssl_error(true);
       if (!callback.is_null()) {
-
-        std::move(callback).Run(content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE);
+        std::move(callback).Run(
+            content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE);
       }
       return base::NullCallback();
     }
