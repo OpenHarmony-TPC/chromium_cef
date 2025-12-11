@@ -81,6 +81,14 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "base/ohos/nweb_engine_event_logger_code.h"
 #endif
 
++#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_global_list_config.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_reload_reason.h"
+#include "cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_service.h"
+#include "components/error_page/content/browser/net_error_auto_reloader.h"
+#include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_USERAGENT)
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
@@ -756,6 +764,21 @@ ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
   ArkWebInnerCreateThrottlesForNavigation(navigation_handle, throttles);
 #endif
 
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+        ::switches::kEnableNwebEx)) {
+      content::WebContents* web_contents = navigation_handle->GetWebContents();
+      if (web_contents) {
+        std::unique_ptr<content::NavigationThrottle> auto_reloader =
+            OHOS::NWeb::NetErrorAutoReloader::MaybeCreateThrottleFor(
+                navigation_handle);
+        if (auto_reloader) {
+          throttles.push_back(std::move(auto_reloader));
+        }
+      }
+  }
+#endif
+
   return throttles;
 }
 
@@ -791,6 +814,22 @@ bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
   network_context_params->cookieable_schemes =
       cef_context ? cef_context->GetCookieableSchemes()
                   : CefBrowserContext::GetGlobalCookieableSchemes();
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx)) {
+    if (fallback_proxy::FallbackProxyService::GetInstance()) {
+      network_context_params->custom_proxy_connection_observer_remote =
+          fallback_proxy::FallbackProxyService::GetInstance()
+              ->NewProxyConnectionObserverRemote();
+      mojo::Remote<network::mojom::CustomProxyConfigClient> config_client;
+      network_context_params->custom_proxy_config_client_receiver =
+          config_client.BindNewPipeAndPassReceiver();
+      fallback_proxy::FallbackProxyService::GetInstance()
+          ->AddCustomProxyConfigClient(std::move(config_client));
+    }
+  }
+#endif  // HW_WEBVIEW_NETWORK
 
   return true;
 }

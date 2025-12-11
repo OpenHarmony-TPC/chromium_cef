@@ -62,6 +62,10 @@
 #include "content/public/common/content_switches.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#endif
+
 namespace net_service {
 
 namespace {
@@ -449,6 +453,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
 #if BUILDFLAG(ARKWEB_COOKIE)
   bool disable_web_security_{false};
+#endif
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  bool needs_reload_with_fallback_proxy_ = false;
 #endif
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
@@ -882,6 +890,10 @@ void InterceptedRequest::OnTransferSizeUpdated(int32_t transfer_size_diff) {
 
 void InterceptedRequest::OnComplete(
     const network::URLLoaderCompletionStatus& status) {
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  needs_reload_with_fallback_proxy_ = status.needs_reload_with_fallback_proxy;
+#endif
+
   // Only wait for the original loader to possibly have a custom error if the
   // target loader exists and succeeded. If the target loader failed, then it
   // was a race as to whether that error or the safe browsing error would be
@@ -1277,6 +1289,13 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   request_.site_for_cookies = new_redirect_info.new_site_for_cookies;
   request_.referrer = GURL(new_redirect_info.new_referrer);
   request_.referrer_policy = new_redirect_info.new_referrer_policy;
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    request_.retry_with_fallback_proxy = false;
+    request_.original_error_code = net::OK;
+  }
+#endif
 
   if (request_.trusted_params) {
     request_.trusted_params->isolation_info =
@@ -1512,6 +1531,17 @@ void InterceptedRequest::SendErrorCallback(int error_code,
   if (sent_error_callback_) {
     return;
   }
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    if (needs_reload_with_fallback_proxy_) {
+      return;
+    } else if (request_.retry_with_fallback_proxy) {
+      error_code = request_.original_error_code;
+    }
+  }
+#endif
 
   sent_error_callback_ = true;
   factory_->request_handler_->OnRequestError(id_, request_, error_code,
