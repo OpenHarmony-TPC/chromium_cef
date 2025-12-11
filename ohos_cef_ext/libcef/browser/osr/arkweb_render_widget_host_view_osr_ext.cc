@@ -2249,6 +2249,12 @@ void ArkWebRenderWidgetHostViewOSRExt::OnScaleChanged(
         std::round(old_page_scale_factor * SCALE_FACTOR_CONVERT_RATIO),
         std::round(new_page_scale_factor * SCALE_FACTOR_CONVERT_RATIO));
   }
+#if BUILDFLAG(ARKWEB_PDF)
+  if (selection_controller_client_) {
+    selection_controller_client_->AsArkWebTouchSelectionControllerClientOSRExt()
+        ->OnScaleChanged(new_page_scale_factor);
+  }
+#endif  // BUILDFLAG(ARKWEB_PDF)
 }
 #endif
 #if BUILDFLAG(ARKWEB_MENU)

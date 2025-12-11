@@ -1135,4 +1135,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::SetIsPdfDocument(bool is_pdf_do
 {
   is_pdf_document_.store(is_pdf_document);
 }
+
+void ArkWebTouchSelectionControllerClientOSRExt::OnScaleChanged(float new_page_scale_factor) {
+  if (!is_pdf_document_) {
+    return;
+  }
+  active_client_->OnScaleChanged(new_page_scale_factor);
+}
 #endif  // BUILDFLAG(ARKWEB_PDF)
