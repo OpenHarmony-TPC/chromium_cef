@@ -257,7 +257,7 @@ void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
 
 #if !BUILDFLAG(ARKWEB_NWEB_EX)
 // static
-void RegisterBrowserInterfaceBindersForNWebEx(
+void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
     content::RenderFrameHost* render_frame_host,
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
 }
