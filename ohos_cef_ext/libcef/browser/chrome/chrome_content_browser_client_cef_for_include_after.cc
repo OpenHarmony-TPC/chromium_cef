@@ -246,8 +246,10 @@ void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
     registry->GetBinders().ExposeInterfacesToRenderFrame(map);
   }
 #endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
       render_frame_host, map);
+#endif
 }
 
 }  // namespace
