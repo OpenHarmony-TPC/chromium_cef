@@ -853,7 +853,7 @@ void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForFrame(
   CefBrowserFrame::RegisterBrowserInterfaceBindersForFrame(render_frame_host,
                                                            map);
 #if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-  ArkWebInnerRegisterBrowserInterfaceBindersForFrame(map);
+  ArkWebInnerRegisterBrowserInterfaceBindersForFrame(render_frame_host, map);
 #endif
 }
 
