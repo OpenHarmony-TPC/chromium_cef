@@ -93,6 +93,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_PDF)
   void ResetResponsePendingInputEvent() override;
   void SetIsPdfDocument(bool is_pdf_document) override;
+  void OnScaleChanged(float new_page_scale_factor) override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
  private:
   // // Not owned, non-null for the lifetime of this object.
