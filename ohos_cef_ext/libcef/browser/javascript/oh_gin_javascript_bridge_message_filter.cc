@@ -284,7 +284,8 @@ void OhGinJavascriptBridgeMessageFilter::SetSiteInstanceGurl(const GURL& site_in
 }
 
 bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
-  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS()) {
+  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS() ||
+      site_instance_gurl_.possibly_invalid_spec() == "http://unisolated.invalid/") {
     return true;
   }
 
