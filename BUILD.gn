@@ -1215,6 +1215,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/downloads/download_api_ext_router.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/omnibox/omnibox_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/search/search_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/topSites/top_sites_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/history/history_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/browsing_data/browsing_data_api_ext.cc",
