@@ -85,6 +85,7 @@
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "chrome/browser/profiles/profile.h"
+#include "ohos_nweb/src/capi/nweb_devtools_message_handler.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace {
@@ -341,7 +342,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       base::OnceClosure frontend_destroyed_callback) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})";
-  OpenDevToolsExtOpt ext_opt;
+  CefOpenDevToolsExtOpt ext_opt;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
@@ -367,8 +368,8 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback,
-      OpenDevToolsExtOpt& ext_opt) {
-  LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
+      const CefOpenDevToolsExtOpt& ext_opt) {
+  LOG(INFO) << "CefDevToolsFrontend::ShowWithByPb({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})"
             << ", canDock: " << ext_opt.canDock;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(

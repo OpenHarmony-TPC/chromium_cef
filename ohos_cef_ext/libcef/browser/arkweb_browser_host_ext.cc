@@ -4148,7 +4148,7 @@ void ArkWebBrowserHostExtImpl::ShowDevToolsWithByPb(
     CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
     const CefPoint& inspect_element_at,
-    OpenDevToolsExtOpt& ext_opt) {
+    const CefOpenDevToolsExtOpt& ext_opt) {
   CEF_REQUIRE_UIT();
   GetDevToolsWindowRunner()->ShowDevToolsWithByPb(
       frontend_browser, this, delegate, inspect_element_at, ext_opt);

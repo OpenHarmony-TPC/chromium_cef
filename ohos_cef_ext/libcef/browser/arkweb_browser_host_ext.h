@@ -75,6 +75,7 @@
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "include/cef_devtools_message_handler_delegate.h"
+#include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 #if BUILDFLAG(ARKWEB_MSGPORT)
@@ -793,7 +794,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at,
-      OpenDevToolsExtOpt& ext_opt) override;
+      const CefOpenDevToolsExtOpt& ext_opt) override;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:

@@ -83,7 +83,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback,
-      OpenDevToolsExtOpt& ext_opt);
+      const CefOpenDevToolsExtOpt& ext_opt);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   void Activate();

@@ -21,6 +21,7 @@
 #include "content/browser/web_contents/web_contents_impl_ext.h"
 #include "libcef/browser/devtools/arkweb/devtools_frontend.h"
 #include "libcef/browser/thread_util.h"
+#include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace {
@@ -131,7 +132,7 @@ using Result = CefDevToolsMessageHandler::Result;
 CefDevToolsMessageHandler::CefDevToolsMessageHandler(
     CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
     Profile* profile,
-    OpenDevToolsExtOpt& extOpt)
+    const CefOpenDevToolsExtOpt& extOpt)
     : delegate_(std::move(delegate)),
       settings_(profile),
       can_dock_(extOpt.canDock),

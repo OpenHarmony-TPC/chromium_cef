@@ -32,6 +32,7 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h",
   "//cef/ohos_cef_ext/libcef/common/arkweb_app_manager_ext.cc",
   "//cef/ohos_cef_ext/libcef/common/arkweb_app_manager_ext.h",
+  "//cef/ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h",
   "//cef/ohos_cef_ext/libcef/renderer/arkweb_content_settings_client.cc",
   "//cef/ohos_cef_ext/libcef/renderer/arkweb_content_settings_client.h",
   "//cef/ohos_cef_ext/libcef/renderer/arkweb_frame_impl_ext.cc",

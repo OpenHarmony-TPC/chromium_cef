@@ -52,6 +52,7 @@
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 class CefDevToolsMessageHandlerDelegate;
+struct CefOpenDevToolsExtOpt;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 class CefBrowserHost;
@@ -60,8 +61,6 @@ class CefClient;
 class ArkWebBrowserExt;
 class CefBrowserHostBase;
 class ArkWebBrowserHostExt;
-
-struct OpenDevToolsExtOpt;
 
 ///
 /// Class used to represent a browser. When used in the browser process the
@@ -644,7 +643,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at,
-      OpenDevToolsExtOpt& ext_opt) = 0;
+      const CefOpenDevToolsExtOpt& ext_opt) = 0;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///

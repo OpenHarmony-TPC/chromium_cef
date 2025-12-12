@@ -30,6 +30,7 @@ class FileChooserParams;
 }
 
 class CefDevToolsFrontend;
+struct CefOpenDevToolsExtOpt;
  
 enum class DockMode { BOTTOM = 0, RIGHT, LEFT, UNDOCKED };
  
@@ -69,7 +70,7 @@ class CefDevToolsMessageHandler final {
   explicit CefDevToolsMessageHandler(
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       Profile* profile,
-      OpenDevToolsExtOpt& extOpt);
+      const CefOpenDevToolsExtOpt& extOpt);
   CefDevToolsMessageHandler(const CefDevToolsMessageHandler&) = delete;
   CefDevToolsMessageHandler(CefDevToolsMessageHandler&&) = delete;
   ~CefDevToolsMessageHandler();

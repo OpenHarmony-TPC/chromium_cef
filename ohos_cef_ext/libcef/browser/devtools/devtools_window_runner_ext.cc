@@ -62,13 +62,13 @@ void CefDevToolsWindowRunner::ShowDevToolsWithByPb(
     CefBrowserHostBase* inspected_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
     const CefPoint& inspect_element_at,
-    OpenDevToolsExtOpt& ext_opt) {
+    const CefOpenDevToolsExtOpt& ext_opt) {
   CEF_REQUIRE_UIT();
   auto* arkweb_host_ext = static_cast<ArkWebBrowserHostExtImpl*>(frontend_browser.get());
   auto alloy_frontend_browser = arkweb_host_ext->AsAlloyBrowserHostImpl();
   if (devtools_frontend_ &&
       devtools_frontend_->GetFrontendBrowser() == alloy_frontend_browser.get()) {
-    LOG(INFO) << "ShowDevToolsWith, reuse devtools_frontend";
+    LOG(INFO) << "ShowDevToolsWithByPb, reuse devtools_frontend";
     if (!inspect_element_at.IsEmpty()) {
       devtools_frontend_->InspectElementAt(inspect_element_at.x,
                                            inspect_element_at.y);
