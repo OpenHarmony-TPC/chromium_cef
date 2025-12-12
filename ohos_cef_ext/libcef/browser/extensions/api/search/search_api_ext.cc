@@ -57,7 +57,7 @@ ExtensionFunction::ResponseAction SearchQueryFunction::Run() {
   queryInfo.includeIncognitoInfo = include_incognito_information();
 
   call_query_ = true;
-  OHOS::NWeb::NWebExtensionSearchCefDelegate::Query(
+  bool success = OHOS::NWeb::NWebExtensionSearchCefDelegate::Query(
       base::BindRepeating(&SearchQueryFunction::OnQuery, weak_ptr_factory_.GetWeakPtr()),
       queryInfo);
   call_query_ = false;
@@ -66,9 +66,13 @@ ExtensionFunction::ResponseAction SearchQueryFunction::Run() {
     LOG(INFO) << "SearchQueryFunction did_respond";
     return AlreadyResponded();
   }
-  AddRef();
-  LOG(INFO) << "SearchQueryFunction AddRef";
-  return RespondLater();
+  if (success) {
+    AddRef();
+    LOG(INFO) << "SearchQueryFunction AddRef";
+    return RespondLater();
+  } else {
+    return RespondNow(Error("not support search.query"));
+  }
 }
  
 void SearchQueryFunction::OnQuery(
