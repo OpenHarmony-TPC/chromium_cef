@@ -237,6 +237,7 @@ void ArkWebInnerCreateThrottlesForNavigation(
 }
 
 void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
+    content::RenderFrameHost* render_frame_host,
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
 #if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
   auto* registry =
@@ -245,9 +246,22 @@ void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
     registry->GetBinders().ExposeInterfacesToRenderFrame(map);
   }
 #endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
+      render_frame_host, map);
+#endif
 }
 
 }  // namespace
+
+
+#if !BUILDFLAG(ARKWEB_NWEB_EX)
+// static
+void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
+    content::RenderFrameHost* render_frame_host,
+    mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_MULTI_WINDOW)
 bool ChromeContentBrowserClientCef::CanCreateWindow(

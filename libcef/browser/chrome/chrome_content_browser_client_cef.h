@@ -177,6 +177,10 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   void RegisterMojoBinderPoliciesForSameOriginPrerendering(
       content::MojoBinderPolicyMap& policy_map) override;
+
+  static void RegisterBrowserInterfaceBindersForNWebEx(
+      content::RenderFrameHost* render_frame_host,
+      mojo::BinderMapWithContext<content::RenderFrameHost*>* map);
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
