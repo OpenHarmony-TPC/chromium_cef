@@ -191,6 +191,12 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool GetScrollable() override { return scroll_enabled_; }
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
   void SendGestureEvent(const ui::GestureEventData& gesture);
+#if BUILDFLAG(ARKWEB_AI)
+  void ReportAIGestureEvent(const blink::WebGestureEvent& event);
+  std::string GetReportAIGestureEventJson(const blink::WebGestureEvent& event,
+                                          int node_id);
+  gfx::PointF AIGestureEventPoint(const blink::WebGestureEvent& event);
+#endif
   // TextInputManager::Observer implementation.
   void OnUpdateTextInputStateCalled(
       content::TextInputManager* text_input_manager,

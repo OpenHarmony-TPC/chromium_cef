@@ -51,6 +51,10 @@ static inline void setForInclude(const struct_type* src,
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(ARKWEB_AI)
+  target->arkweb_agent_enabled = src->arkweb_agent_enabled;
+#endif
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   target->native_embed_mode_enabled = src->native_embed_mode_enabled;
   target->intrinsic_size_enabled = src->intrinsic_size_enabled;

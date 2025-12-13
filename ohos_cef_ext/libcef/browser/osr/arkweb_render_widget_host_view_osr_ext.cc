@@ -92,6 +92,11 @@
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_AI)
+#include "cef/include/cef_parser.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
 const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
@@ -375,8 +380,124 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
     render_widget_host_->GetRenderInputRouter()->ForwardGestureEventWithLatencyInfo(web_event,
                                                             latency_info);
   }
+
+#if BUILDFLAG(ARKWEB_AI)
+  if (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap ||
+      web_event.GetType() == blink::WebInputEvent::Type::kGesturePinchEnd ||
+      web_event.GetType() == blink::WebInputEvent::Type::kGestureLongPress) {
+    ReportAIGestureEvent(web_event);
+  }
+#endif //BUILDFLAG(ARKWEB_AI)
+
 #endif //BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 }
+
+#if BUILDFLAG(ARKWEB_AI)
+void ArkWebRenderWidgetHostViewOSRExt::ReportAIGestureEvent(
+    const blink::WebGestureEvent& event) {
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "ReportAIGestureEvent browser or client invalid.";
+    return;
+  }
+
+  if (browser_impl_->settings().arkweb_agent_enabled != STATE_ENABLED) {
+    return;
+  }
+
+  auto frame = browser_impl_->GetMainFrame();
+  if (!frame || !frame->IsValid()) {
+    LOG(ERROR) << "ReportAIGestureEvent frame invalid.";
+    return;
+  }
+
+  int node_id;
+  static_cast<ArkwebFrameHostExtImpl*>(frame.get())
+      ->GetLastHitNodeId(node_id);
+
+  std::string json_result = GetReportAIGestureEventJson(event, node_id);
+  browser_impl_->client()->AsArkWebClient()->OnAgentEventReport(json_result);
+}
+
+std::string ArkWebRenderWidgetHostViewOSRExt::GetReportAIGestureEventJson(
+    const blink::WebGestureEvent& event, int node_id) {
+  CefRefPtr<CefDictionaryValue> reportDict = CefDictionaryValue::Create();
+  CefRefPtr<CefListValue> pointList = CefListValue::Create();
+  CefRefPtr<CefListValue> offsetList = CefListValue::Create();
+  gfx::PointF eventPoint;
+
+  switch(event.GetType()) {
+    case blink::WebInputEvent::Type::kGestureTap:
+      reportDict->SetString("EventType", "Tap");
+      reportDict->SetInt("id", node_id);
+      reportDict->SetInt("count", event.TapCount());
+
+      eventPoint = AIGestureEventPoint(event);
+      pointList->SetDouble(0, eventPoint.x());
+      pointList->SetDouble(1, eventPoint.y());
+      reportDict->SetList("point", pointList);
+      break;
+    case blink::WebInputEvent::Type::kGesturePinchEnd:
+      reportDict->SetString("EventType", "PinchEnd");
+      reportDict->SetInt("id", node_id);
+      reportDict->SetDouble("scale", GetPageScaleFactor());
+      break;
+    case blink::WebInputEvent::Type::kGestureLongPress:
+      reportDict->SetString("EventType", "LongPress");
+      reportDict->SetInt("id", node_id);
+
+      eventPoint = AIGestureEventPoint(event);
+      pointList->SetDouble(0, eventPoint.x());
+      pointList->SetDouble(1, eventPoint.y());
+      reportDict->SetList("point", pointList);
+      break;
+    case blink::WebInputEvent::Type::kGestureScrollBegin:
+      reportDict->SetString("EventType", "ScrollStart");
+      reportDict->SetInt("id", node_id);
+
+      offsetList->SetDouble(0, last_scroll_offset_.x());
+      offsetList->SetDouble(1, last_scroll_offset_.y());
+      reportDict->SetList("offset", offsetList);
+      break;
+    case blink::WebInputEvent::Type::kGestureScrollEnd:
+      reportDict->SetString("EventType", "ScrollEnd");
+      reportDict->SetInt("id", node_id);
+
+      offsetList->SetDouble(0, last_scroll_offset_.x());
+      offsetList->SetDouble(1, last_scroll_offset_.y());
+      reportDict->SetList("offset", offsetList);
+      break;
+    default:
+      break;
+  }
+
+  CefRefPtr<CefValue> reportValue = CefValue::Create();
+  reportValue->SetDictionary(reportDict);
+  std::string json_result = CefWriteJSON(reportValue, JSON_WRITER_DEFAULT);
+
+  return json_result;
+}
+
+gfx::PointF ArkWebRenderWidgetHostViewOSRExt::AIGestureEventPoint(
+    const blink::WebGestureEvent& event) {
+  gfx::PointF eventPoint(event.PositionInScreen().x(),
+                         event.PositionInScreen().y());
+
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+  if (!browser_impl_) {
+    LOG(ERROR) << "AIGestureEventPoint browser invalid.";
+    return eventPoint;
+  }
+
+  auto view_port_height = browser_impl_->GetShrinkViewportHeight();
+  view_port_height +=
+      view_port_height > 0 ? browser_impl_->GetTopControlsOffset() : 0;
+
+  eventPoint.set_y(event.PositionInScreen().y() + view_port_height);
+#endif //BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+
+  return eventPoint;
+}
+#endif //BUILDFLAG(ARKWEB_AI)
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
 void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
@@ -1558,6 +1679,10 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
       handler->AsArkWebRenderHandler()->OnScrollStart(
           browser_impl_.get(), gesture_event.data.scroll_begin.delta_x_hint,
           gesture_event.data.scroll_begin.delta_y_hint);
+
+#if BUILDFLAG(ARKWEB_AI)
+      ReportAIGestureEvent(gesture_event);
+#endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
 #if BUILDFLAG(ARKWEB_AI)
@@ -1569,6 +1694,10 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
                                                       false);
 #if BUILDFLAG(ARKWEB_AI)
       NotifyOverlayStateChanged();
+#endif
+
+#if BUILDFLAG(ARKWEB_AI)
+      ReportAIGestureEvent(gesture_event);
 #endif
     } else if (input_event.GetType() ==
                    blink::WebInputEvent::Type::kGestureScrollUpdate &&
