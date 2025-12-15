@@ -397,9 +397,8 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
   if (dock_mode_changed_ && can_dock_) {
     UpdateDockMode();
   }
-  delegate_->SetInspectedPageBounds(left, top, width, height);
  
-  return {true, {}};
+  return {delegate_->SetInspectedPageBounds(left, top, width, height), {}};
 }
  
 void CefDevToolsMessageHandler::UpdateDockMode() {
@@ -430,8 +429,7 @@ Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
 
   is_docked_ = dock_requested;
   if (!is_docked_) {
-    delegate_->SetDockMode((int)DockMode::UNDOCKED);
-    return {true, {}};
+    return {delegate_->SetDockMode((int)DockMode::UNDOCKED), {}};
   }
   dock_mode_changed_ = true;
  
