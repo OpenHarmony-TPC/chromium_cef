@@ -223,7 +223,7 @@ void UpdateHostContentSettingsMap();
   static int network_set_times_;
 #endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-  HostContentSettingsMap* host_content_settings_map_ = nullptr;
+  raw_ptr<HostContentSettingsMap> host_content_settings_map_ = nullptr;
 #endif
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   network::cors::OriginAccessList origin_access_list_;
