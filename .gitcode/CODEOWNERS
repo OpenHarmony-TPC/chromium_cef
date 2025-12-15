@@ -7,3 +7,31 @@
 /libcef/common/cdm_host_file_path.cc @yuzhouhang1
 /libcef/common/file_util_impl.cc @yuzhouhang1
 /libcef/common/resource_util.cc @yuzhouhang1
+
+# Build
+/bazel/ @ringking0
+/cmake/ @ringking0
+/libcef/features/ @ringking0
+
+# Multimedia
+/cef/libcef/browser/media_router/ @d0ub1eh @whuqincheng
+/cef/libcef/browser/audio_capturer.cc @d0ub1eh @whuqincheng
+/cef/libcef/browser/audio_loopback_stream_creator.cc @d0ub1eh @whuqincheng
+/cef/libcef/browser/image_impl.cc @d0ub1eh @whuqincheng
+/cef/libcef/browser/media_access_query.cc @d0ub1eh @whuqincheng
+/cef/libcef/browser/media_stream_registrar.cc @d0ub1eh @whuqincheng
+/cef/ohos_cef_ext/libcef/browser/alloy/*media* @d0ub1eh @whuqincheng
+
+# DFX
+/libcef/browser/hang_monitor.cc @StringChen
+/libcef/browser/trace_impl.cc @StringChen
+/libcef/browser/trace_subscriber.cc @StringChen
+/libcef/common/base_impl.cc @StringChen
+/libcef/common/cef_crash_report_upload_thread.cc @StringChen
+/libcef/common/cef_crash_report_utils.cc @StringChen
+/libcef/common/crash_reporter_client.cc @StringChen
+/libcef/common/crash_reporting.cc @StringChen
+
+# Compositor
+/libcef/browser/gpu/ @LXinJie1
+/libcef/browser/osr/ @LXinJie1

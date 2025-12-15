@@ -1,0 +1,40 @@
+{
+    "groups": {
+        "ringking0": [
+            "ringking0"
+        ],
+        "d0ub1eh": [
+            "d0ub1eh",
+            "whuqincheng"
+        ],
+        "LXinJie1": [
+            "LXinJie1"
+        ],
+        "yuzhouhang1": [
+            "yuzhouhang1"
+        ],
+        "StringChen": [
+            "StringChen"
+        ]
+    },
+    "userInfos": {
+        "ringking0": {
+            "info": "[构建工程]"
+        },
+        "d0ub1eh": {
+            "info": "[多媒体]"
+        },
+        "whuqincheng": {
+            "info": "[多媒体]"
+        },
+        "LXinJie1": {
+            "info": "[渲染合成]"
+        },
+        "yuzhouhang1": {
+            "info": "[JavaScript引擎]"
+        },
+        "StringChen": {
+            "info": "[DFX]"
+        }
+    }
+}
