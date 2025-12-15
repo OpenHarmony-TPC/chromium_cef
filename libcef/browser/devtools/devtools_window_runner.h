@@ -11,12 +11,13 @@
 #include "base/memory/weak_ptr.h"
 #include "cef/include/cef_client.h"
 
-class CefBrowserHostBase;
-class ChromeBrowserHostImpl;
-
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 class CefDevToolsFrontend;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+class CefBrowserHostBase;
+class ChromeBrowserHostImpl;
 
 // Parameters passed to ShowDevTools.
 struct CefShowDevToolsParams {
@@ -51,6 +52,13 @@ class CefDevToolsWindowRunner final {
       CefBrowserHostBase* inspected_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       const CefPoint& inspect_element_at);
+
+  void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefBrowserHostBase* inspected_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      const CefPoint& inspect_element_at,
+      const CefOpenDevToolsExtOpt& ext_opt);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   void CloseDevTools();
   bool HasDevTools();

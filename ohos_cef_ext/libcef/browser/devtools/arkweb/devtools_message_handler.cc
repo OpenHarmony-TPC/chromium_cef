@@ -18,7 +18,10 @@
 #include "base/datashare_uri_utils.h"
 #include "base/logging.h"
 #include "base/json/json_reader.h"
+#include "content/browser/web_contents/web_contents_impl_ext.h"
+#include "libcef/browser/devtools/arkweb/devtools_frontend.h"
 #include "libcef/browser/thread_util.h"
+#include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace {
@@ -128,9 +131,14 @@ using Result = CefDevToolsMessageHandler::Result;
 
 CefDevToolsMessageHandler::CefDevToolsMessageHandler(
     CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    Profile* profile)
-  : delegate_(std::move(delegate)),
-    settings_(profile) {
+    Profile* profile,
+    const CefOpenDevToolsExtOpt& extOpt)
+    : delegate_(std::move(delegate)),
+      settings_(profile),
+      can_dock_(extOpt.canDock),
+      is_docked_(false),
+      dock_mode_changed_(false) {
+  LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
   method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
       &CefDevToolsMessageHandler::HandleProtocolMessage, base::Unretained(this));
   method_handlers_["bringToFront"] = base::BindRepeating(
@@ -151,12 +159,23 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
       &CefDevToolsMessageHandler::RemovePreference, base::Unretained(this));
   method_handlers_["clearPreferences"] = base::BindRepeating(
       &CefDevToolsMessageHandler::ClearPreferences, base::Unretained(this));
+  method_handlers_["setInspectedPageBounds"] =
+      base::BindRepeating(&CefDevToolsMessageHandler::SetInspectedPageBounds,
+                          base::Unretained(this));
+  method_handlers_["setIsDocked"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::SetDockMode, base::Unretained(this));
 
   protocol_message_handlers_["Page.bringToFront"] = base::BindRepeating(
       &CefDevToolsMessageHandler::PageBringToFront, base::Unretained(this));
 }
 
 CefDevToolsMessageHandler::~CefDevToolsMessageHandler() {}
+
+void CefDevToolsMessageHandler::SetDevToolsFrontend(
+    CefDevToolsFrontend* frontend) {
+  DCHECK(frontend != nullptr && devtools_frontend_ == nullptr);
+  devtools_frontend_ = frontend;
+}
 
 CefFileDialogManager::RunFileChooserCallback
 CefDevToolsMessageHandler::ShowFileChooser(
@@ -352,6 +371,68 @@ Result CefDevToolsMessageHandler::RemovePreference(const base::Value::List& para
 
 Result CefDevToolsMessageHandler::ClearPreferences(const base::Value::List& params) {
   settings_.Clear();
+  return {true, {}};
+}
+
+Result CefDevToolsMessageHandler::SetInspectedPageBounds(
+    const base::Value::List& params) {
+  if (params.empty()) {
+    LOG(WARNING)
+        << "CefDevToolsMessageHandler::SetInspectedPageBounds params is empty.";
+    return {false, {}};
+  }
+ 
+  const auto& dict = params[0].GetDict();
+ 
+  int left = dict.FindInt("x").value_or(0);
+  int top = dict.FindInt("y").value_or(0);
+  int width = dict.FindInt("width").value_or(0);
+  int height = dict.FindInt("height").value_or(0);
+ 
+  const gfx::Rect rect(left, top, width, height);
+  CefResizingStrategy strategy(rect);
+  if (!resizing_strategy_.Equals(strategy)) {
+    resizing_strategy_.CopyFrom(strategy);
+  }
+  if (dock_mode_changed_ && can_dock_) {
+    UpdateDockMode();
+  }
+ 
+  return {delegate_->SetInspectedPageBounds(left, top, width, height), {}};
+}
+ 
+void CefDevToolsMessageHandler::UpdateDockMode() {
+  dock_mode_changed_ = false;
+  gfx::Rect inspected_page_bounds = resizing_strategy_.bounds();
+  if (inspected_page_bounds.x() > 0) {
+    delegate_->SetDockMode((int)DockMode::LEFT);
+    return;
+  }
+ 
+  gfx::Rect devtools_bounds = devtools_frontend_->web_contents()
+                                  ->GetRenderWidgetHostView()
+                                  ->GetViewBounds();
+  if (inspected_page_bounds.width() == devtools_bounds.width()) {
+    delegate_->SetDockMode((int)DockMode::BOTTOM);
+  } else {
+    delegate_->SetDockMode((int)DockMode::RIGHT);
+  }
+}
+ 
+Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
+  if (params.empty() || !can_dock_) {
+    LOG(WARNING) << "CefDevToolsMessageHandler::SetDockMode params is empty or "
+                    "not candock.";
+    return {false, {}};
+  }
+  bool dock_requested = params[0].is_bool() ? params[0].GetBool() : false;
+
+  is_docked_ = dock_requested;
+  if (!is_docked_) {
+    return {delegate_->SetDockMode((int)DockMode::UNDOCKED), {}};
+  }
+  dock_mode_changed_ = true;
+ 
   return {true, {}};
 }
 

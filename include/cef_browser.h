@@ -52,6 +52,7 @@
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 class CefDevToolsMessageHandlerDelegate;
+struct CefOpenDevToolsExtOpt;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 class CefBrowserHost;
@@ -634,6 +635,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at) = 0;
+
+  ///
+  /// Opend DevTools with frontend_browser.
+  ///
+  virtual void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at,
+      const CefOpenDevToolsExtOpt& ext_opt) = 0;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///

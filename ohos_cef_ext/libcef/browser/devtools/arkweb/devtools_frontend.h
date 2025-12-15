@@ -76,6 +76,14 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback);
+
+  static CefDevToolsFrontend* ShowWithByPb(
+      AlloyBrowserHostImpl* frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      content::WebContents* inspected_contents,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback,
+      const CefOpenDevToolsExtOpt& ext_opt);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   void Activate();

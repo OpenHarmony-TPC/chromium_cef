@@ -4188,6 +4188,16 @@ void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
   GetDevToolsWindowRunner()->ShowDevToolsWith(
       frontend_browser, this, delegate, inspect_element_at);
 }
+
+void ArkWebBrowserHostExtImpl::ShowDevToolsWithByPb(
+    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    const CefPoint& inspect_element_at,
+    const CefOpenDevToolsExtOpt& ext_opt) {
+  CEF_REQUIRE_UIT();
+  GetDevToolsWindowRunner()->ShowDevToolsWithByPb(
+      frontend_browser, this, delegate, inspect_element_at, ext_opt);
+}
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 #if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
