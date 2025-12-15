@@ -19,6 +19,7 @@
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/common/extensions/api/windows.h"
 #include "extensions/browser/event_router.h"
+#include "extensions/browser/extension_util.h"
 #include "extensions/common/features/feature.h"
 #include "extensions/common/mojom/context_type.mojom.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
@@ -45,6 +46,58 @@ bool WillDispatchWindowEvent(
     event_filtering_info_out->window_exposed_by_default = true;
     event_filtering_info_out->has_window_exposed_by_default = true;
   }
+  return true;
+}
+
+bool ControllerVisibleToListener(const std::string& window_type,
+                                 const base::Value::List* filter_value) {
+  if (!filter_value) {
+    return true;
+  }
+
+  auto filter = WindowController::kNoWindowFilter;
+  for (const base::Value& type : *filter_value) {
+    if (!type.is_string()) {
+      continue;
+    }
+    filter |= 1 << base::to_underlying(
+                  api::windows::ParseWindowType(type.GetString()));
+  }
+  auto type =
+      1 << base::to_underlying(api::windows::ParseWindowType(window_type));
+  return (type & filter) != 0;
+}
+
+bool WillDispatchWindowFocusedEvent(
+    const std::string& window_type,
+    content::BrowserContext* browser_context,
+    mojom::ContextType target_context,
+    const Extension* extension,
+    const base::Value::Dict* listener_filter,
+    std::optional<base::Value::List>& event_args_out,
+    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+  const base::Value::List* filter_value = nullptr;
+  if (listener_filter) {
+    filter_value = listener_filter->FindList(kWindowTypesKey);
+  }
+
+  event_filtering_info_out = mojom::EventFilteringInfo::New();
+  if (filter_value) {
+    event_filtering_info_out->window_type = window_type;
+  } else {
+    event_filtering_info_out->window_exposed_by_default = true;
+    event_filtering_info_out->has_window_exposed_by_default = true;
+  }
+
+  bool cant_cross_incognito =
+      !util::CanCrossIncognito(extension, browser_context);
+  bool visible_to_listener =
+      ControllerVisibleToListener(window_type, filter_value);
+  if (cant_cross_incognito || !visible_to_listener) {
+    event_args_out.emplace();
+    event_args_out->Append(extension_misc::kUnknownWindowId);
+  }
+
   return true;
 }
 
@@ -135,7 +188,8 @@ void CefWindowsEventRouter::DispatchWindowFocusChangedEvent(content::BrowserCont
                                        api::windows::OnFocusChanged::kEventName,
                                        std::move(args),
                                        browser_context);
-  event->will_dispatch_callback = base::BindRepeating(&WillDispatchWindowEvent, *window.type);
+  event->will_dispatch_callback =
+      base::BindRepeating(&WillDispatchWindowFocusedEvent, *window.type);
   EventRouter::Get(browser_context)->BroadcastEvent(std::move(event));
 }
  
