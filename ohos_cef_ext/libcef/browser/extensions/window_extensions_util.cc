@@ -94,14 +94,17 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
     }
     return tab->windowId;
   } else {
-    int nweb_id = -1;
+    auto host_base = CefBrowserHostBase::GetBrowserForContents(webcontents);
+    if (!host_base || host_base->IsChromeStyle()) {
+      return default_window_id;
+    }
 
     auto browser = AlloyBrowserHostImpl::GetBrowserForContents(webcontents);
     if (!browser) {
       return default_window_id;
     }
 
-    nweb_id = browser->AsAlloyBrowserHostImplExt()->GetNWebId();
+    int nweb_id = browser->AsAlloyBrowserHostImplExt()->GetNWebId();
     if (nweb_id < 0) {
       return default_window_id;
     }
