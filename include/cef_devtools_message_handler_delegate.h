@@ -86,17 +86,15 @@ class CefDevToolsMessageHandlerDelegate : public virtual CefBaseRefCounted {
   /// Called when devtools request to modify the size of the inspect page.
   ///
   /*--cef()--*/
-  virtual bool SetInspectedPageBounds(int left,
+  virtual void SetInspectedPageBounds(int left,
                                       int top,
                                       int width,
-                                      int height) {
-    return false;
-  }
+                                      int height) {}
   ///
   /// Called when devtools request to modify the dock side mode.
   ///
   /*--cef()--*/
-  virtual bool SetDockMode(int mode) { return false; }
+  virtual void SetDockMode(int mode) {}
 #endif
 };
 
