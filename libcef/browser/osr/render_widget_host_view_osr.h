@@ -280,11 +280,8 @@ class CefRenderWidgetHostViewOSR
   void SetFocus(bool focus);
   void UpdateFrameRate();
 
-#if BUILDFLAG(ARKWEB_DSS)
-  virtual gfx::Size SizeInPixels();
-#else
   gfx::Size SizeInPixels();
-#endif
+
   void OnPaint(const gfx::Rect& damage_rect,
                const gfx::Size& pixel_size,
                const void* pixels);

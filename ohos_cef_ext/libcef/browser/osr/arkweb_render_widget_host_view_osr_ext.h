@@ -229,10 +229,6 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       base::TimeTicks activation_time) override;
 #endif
 
-#if BUILDFLAG(ARKWEB_DSS)
-  gfx::Size SizeInPixels() override;
-#endif
-
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
   bool WebPageSnapshot(const char* id,
                        int width,

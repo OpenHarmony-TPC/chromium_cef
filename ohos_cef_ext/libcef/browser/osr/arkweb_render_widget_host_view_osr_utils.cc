@@ -653,6 +653,24 @@ ui::Compositor* ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
 }
 
 #if BUILDFLAG(ARKWEB_DSS)
+gfx::Size ArkWebRenderWidgetHostViewOSRUtils::SizeInPixels() {
+  if (view_->IsPopupWidget()) {
+    return gfx::ScaleToCeiledSize(view_->popup_position_.size(),
+                                  view_->GetDeviceScaleFactor());
+  }
+
+  CefSize size{};
+  if (view_->browser_impl_ && view_->browser_impl_->GetClient()) {
+    auto handler = view_->browser_impl_->GetClient()->GetRenderHandler();
+    if (handler) {
+      handler->GetDevicePixelSize(view_->browser_impl_.get(), size);
+      return gfx::Size(size.width, size.height);
+    }
+  }
+  LOG(WARNING) << "cannot get device pixel size, return zero";
+  return gfx::Size(size.width, size.height);
+}
+
 bool ArkWebRenderWidgetHostViewOSRUtils::SetCurrentSizeInPixel() {
   gfx::Size size_in_pixel = view_->SizeInPixels();
   if (size_in_pixel == current_size_in_pixel_) {
