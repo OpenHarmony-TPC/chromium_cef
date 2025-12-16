@@ -96,11 +96,8 @@ void ExtensionOmniboxEventRouter::OnInputEntered(
       ->NotifyInputEntered();
 }
 
-ExtensionFunction::ResponseAction OmniboxSendSuggestionsFunction::Run() {
-  params_ = SendSuggestions::Params::Create(args());
-  EXTENSION_FUNCTION_VALIDATE(params_);
-
-  if (is_from_service_worker() && !params_->suggest_results.empty()) {
+void OmniboxSendSuggestionsFunction::NotifySuggestionsReady() {
+  if (!params_->suggest_results.empty()) {
     std::vector<OHOS::NWeb::OmniboxSuggestResult> results;
     for (const auto& suggest_result : params_->suggest_results) {
       OHOS::NWeb::OmniboxSuggestResult result;
@@ -113,9 +110,14 @@ ExtensionFunction::ResponseAction OmniboxSendSuggestionsFunction::Run() {
     OHOS::NWeb::NWebExtensionOmniboxCefDelegate::GetInstance()
         .OnInputChangedCallback(results);
   }
+}
 
-  NotifySuggestionsReady();
-  return RespondNow(NoArguments());
+void OmniboxSetDefaultSuggestionFunction::SetDefaultSuggestion(
+    const omnibox::DefaultSuggestResult& suggestion) {
+  OHOS::NWeb::OmniboxSuggestResult result;
+  result.description = suggestion.description;
+  OHOS::NWeb::NWebExtensionOmniboxCefDelegate::GetInstance()
+      .SetDefaultSuggestionCallback(extension_id(), result);
 }
 
 }  // namespace extensions
