@@ -83,7 +83,7 @@ constexpr int32_t APPLICATION_API_10 = 10;
 
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_global_list_config.h"
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_reload_reason.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_auto_reloader.h"
 #include "cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_service.h"
 #include "components/error_page/content/browser/net_error_auto_reloader.h"
 #include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
