@@ -383,11 +383,13 @@ void FallbackProxyService::UpdateFallbackProxyStatus(
   }
 }
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
 void FallbackProxyService::SetFallbackProxyConfigData(
     const ohos_cloud_control::FallbackProxyConfigData& config_data) {
   LOG(DEBUG) << "Fallback proxy service set cloud control data";
   config_->SetFallbackProxyConfigData(config_data);
 }
+#endif
 
 void FallbackProxyService::UpdateProxyToken(const std::string& token,
                                             const std::string& token_info) {
