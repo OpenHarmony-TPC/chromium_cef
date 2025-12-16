@@ -81,7 +81,7 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "base/ohos/nweb_engine_event_logger_code.h"
 #endif
 
-+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_global_list_config.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_reload_reason.h"
 #include "cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_service.h"
