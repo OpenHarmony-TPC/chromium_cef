@@ -101,8 +101,8 @@ class NetErrorAutoReloader
     GURL url;
     net::Error error;
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
-    content::FallbackProxyReloadReason reason =
-        content::FallbackProxyReloadReason::INVALID;
+    content::ErrorPageReloadReason reason =
+        content::ErrorPageReloadReason::INVALID;
 #endif
   };
 
