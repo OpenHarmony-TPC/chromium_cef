@@ -48,8 +48,8 @@ void DispatchTabDetachedEvent(
     int old_window_id);
 
 void DispatchTabHighlightedEvent(
-    content::WebContents* contents,
-    NWebExtensionTabHighlightInfo& highlight_info);
+    content::BrowserContext* browserContext,
+    const NWebExtensionTabHighlightInfo& highlight_info);
 
 void DispatchTabMovedEvent(
     content::WebContents* contents,

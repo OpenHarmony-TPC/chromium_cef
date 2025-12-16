@@ -77,9 +77,11 @@ void TabsWindowsAPI::TabDetached(content::WebContents* contents, int tab_id,
   tabs_event_router()->DispatchTabDetachedEvent(contents, tab_id, oldPosition, oldWindowId);
 }
 
-void TabsWindowsAPI::TabHighlighted(content::WebContents* contents,
-    NWebExtensionTabHighlightInfo& highlightInfo) {
-  tabs_event_router()->DispatchTabHighlightedEvent(contents, highlightInfo);
+void TabsWindowsAPI::TabHighlighted(
+    content::BrowserContext* browserContext,
+    const NWebExtensionTabHighlightInfo& highlightInfo) {
+  tabs_event_router()->DispatchTabHighlightedEvent(browserContext,
+                                                   highlightInfo);
 }
 
 void TabsWindowsAPI::TabMoved(content::WebContents* contents, int tab_id,

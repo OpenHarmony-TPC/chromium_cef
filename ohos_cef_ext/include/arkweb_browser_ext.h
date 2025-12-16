@@ -1264,12 +1264,6 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
     const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {}
 
   ///
-  /// Receiving the tab highlighted notification.
-  ///
-  /*--cef()--*/
-  virtual void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) {}
-
-  ///
   /// Receiving the tab moved notification.
   ///
   /*--cef()--*/

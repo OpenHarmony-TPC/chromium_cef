@@ -1004,17 +1004,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabDetached(
       detachInfo->oldWindowId);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) {
-  content::BrowserContext* browser_context = nullptr;
-  content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabHighlighted", browser_context, web_contents)) {
-    return;
-  }
-
-  extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabHighlighted(web_contents, highlightInfo);
-}
-
 void AlloyBrowserHostImplExt::WebExtensionTabMoved(
     int tab_id,
     const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
