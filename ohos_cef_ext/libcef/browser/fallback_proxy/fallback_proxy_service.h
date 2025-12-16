@@ -82,9 +82,11 @@ class FallbackProxyService
   void SaveURLMaliciousTypeAndHwCode(const std::string& url,
                                      int type,
                                      int hw_code);
+#if BUILDFLAG(IS_ARKWEB_EXT)                                   
   // 通知proxy_delegate存放fallback proxy info，如proxyTunnelTimeout等.
   void SetFallbackProxyConfigData(
       const ohos_cloud_control::FallbackProxyConfigData& config_data);
+#endif
   void UpdateProxyToken(const std::string& token,
                         const std::string& token_info);
 
