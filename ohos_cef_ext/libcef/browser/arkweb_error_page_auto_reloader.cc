@@ -18,7 +18,7 @@
 #pragma allow_unsafe_buffers
 #endif
 
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_reload_reason.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_error_page_auto_reloader.h"
 
 #include <algorithm>
 
@@ -42,13 +42,13 @@ namespace OHOS::NWeb {
 
 namespace {
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
-content::FallbackProxyReloadReason SetFallbackProxyReloadReason(
+content::ErrorPageReloadReason SetErrorPageReloadReason(
     content::NavigationHandle* handle,
     int net_error) {
   if (handle->NeedsReloadWithFallbackProxy()) {
-    return content::FallbackProxyReloadReason::FALLBACK_PROXY;
+    return content::ErrorPageReloadReason::FALLBACK_PROXY;
   }
-  return content::FallbackProxyReloadReason::INVALID;
+  return content::ErrorPageReloadReason::INVALID;
 }
 #endif
 
@@ -160,7 +160,7 @@ void NetErrorAutoReloader::DidFinishNavigation(
 
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
   if (handle->GetCurrentReloadReason() !=
-      content::FallbackProxyReloadReason::INVALID) {
+      content::ErrorPageReloadReason::INVALID) {
     ReportFallProxyReloadErrorCodeInfo(
         handle->GetURL().spec(), (int)handle->GetCurrentReloadReason(),
         handle->GetOriginalNetErrorCode(), handle->GetNetErrorCode());
@@ -180,7 +180,7 @@ void NetErrorAutoReloader::DidFinishNavigation(
           ::switches::kEnableNwebEx) &&
         current_reloadable_error_page_info_ &&
         current_reloadable_error_page_info_->reason >
-            content::FallbackProxyReloadReason::INVALID &&
+            content::ErrorPageReloadReason::INVALID &&
         handle->HasBeenReloadedForThisReason(
             current_reloadable_error_page_info_->reason)) {
       return;
@@ -218,7 +218,7 @@ void NetErrorAutoReloader::DidFinishNavigation(
 
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
   current_reloadable_error_page_info_->reason =
-      SetFallbackProxyReloadReason(handle, net_error);
+      SetErrorPageReloadReason(handle, net_error);
 #endif
 
   // We only schedule a reload if there are no other pending navigations.
@@ -293,7 +293,7 @@ void NetErrorAutoReloader::ScheduleNextAutoReload() {
   }
 
   if (current_reloadable_error_page_info_->reason !=
-      content::FallbackProxyReloadReason::FALLBACK_PROXY) {
+      content::ErrorPageReloadReason::FALLBACK_PROXY) {
     return;
   }
 #endif
@@ -363,7 +363,7 @@ bool NetErrorAutoReloader::ShouldSuppressErrorPage(
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           ::switches::kEnableNwebEx) &&
       current_reloadable_error_page_info_->reason !=
-      content::FallbackProxyReloadReason::INVALID) {
+      content::ErrorPageReloadReason::INVALID) {
     return false;
   }
 #endif
