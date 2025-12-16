@@ -13,23 +13,20 @@
  * limitations under the License.
  */
 
+#include <map>
 #include <set>
 #include <string>
-#include <map>
 #include <utility>
-
-#include "chrome/browser/extensions/api/content_settings/content_settings_api.h"
-#include "extensions/browser/extension_function.h"
-#include "ohos_nweb/src/capi/browser_service/nweb_extension_content_settings_types.h"
-#include "ohos_nweb/src/cef_delegate/nweb_extension_content_settings_cef_delegate.h"
 
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/metrics/histogram_macros.h"
+#include "base/ohos/sys_info_utils_ext.h"
 #include "base/strings/stringprintf.h"
 #include "base/values.h"
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "chrome/browser/extensions/api/content_settings/content_settings_api.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/extensions/api/content_settings.h"
@@ -43,16 +40,20 @@
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/common/webplugininfo.h"
-#include "extensions/common/extension_id.h"
 #include "extensions/browser/api/content_settings/content_settings_helpers.h"
 #include "extensions/browser/api/content_settings/content_settings_service.h"
 #include "extensions/browser/api/content_settings/content_settings_store.h"
+#include "extensions/browser/extension_function.h"
 #include "extensions/browser/extension_util.h"
 #include "extensions/common/api/extension_types.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/error_utils.h"
+#include "extensions/common/extension_id.h"
 #include "net/cookies/site_for_cookies.h"
+#include "ohos_nweb/src/capi/browser_service/nweb_extension_content_settings_types.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_content_settings_cef_delegate.h"
 
 using content::BrowserThread;
 
@@ -422,6 +423,48 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
         cookie_settings = CookieSettingsFactory::GetForProfile(profile);
     }
 
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            ::switches::kEnableNwebEx) ||
+        !base::ohos::IsPcDevice()) {
+      // TODO(crbug.com/40247160): Consider whether the following check should
+      // somehow determine real CookieSettingOverrides rather than default to
+      // none.
+      net::SiteForCookies site_for_cookies =
+          net::SiteForCookies::FromUrl(secondary_url);
+      site_for_cookies.CompareWithFrameTreeSiteAndRevise(
+          net::SchemefulSite(primary_url));
+      ContentSetting setting =
+          content_type == ContentSettingsType::COOKIES
+              ? cookie_settings->GetCookieSetting(
+                    primary_url, site_for_cookies, secondary_url,
+                    net::CookieSettingOverrides(), nullptr)
+              : map->GetContentSetting(primary_url, secondary_url,
+                                       content_type);
+
+      base::Value::Dict result;
+      std::string setting_string =
+          content_settings::ContentSettingToString(setting);
+      DCHECK(!setting_string.empty());
+      result.Set(ContentSettingsStore::kContentSettingKey, setting_string);
+
+      return RespondNow(WithArguments(std::move(result)));
+    }
+
+    if (content_type == ContentSettingsType::COOKIES) {
+      net::SiteForCookies site_for_cookies =
+          net::SiteForCookies::FromUrl(secondary_url);
+      site_for_cookies.CompareWithFrameTreeSiteAndRevise(
+          net::SchemefulSite(primary_url));
+      ContentSetting setting = cookie_settings->GetCookieSetting(
+          primary_url, site_for_cookies, secondary_url,
+          net::CookieSettingOverrides(), nullptr);
+      base::Value::Dict result;
+      std::string setting_string =
+          content_settings::ContentSettingToString(setting);
+      result.Set(ContentSettingsStore::kContentSettingKey, setting_string);
+      return RespondNow(WithArguments(std::move(result)));
+    }
+
     NWebExtensionContentSettingsGetParam getParam = {0};
 
     if (!SetTypeToParam(&getParam, content_type) || !SetExtensionIdToParam(&getParam, extension_id) ||
@@ -446,22 +489,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
         LOG(INFO) << "ContentSettingsContentSettingGetFunction AddRef";
         return RespondLater();
     } else {
-        // TODO(crbug.com/40247160): Consider whether the following check should
-        // somehow determine real CookieSettingOverrides rather than default to none.
-        net::SiteForCookies site_for_cookies = net::SiteForCookies::FromUrl(secondary_url);
-        site_for_cookies.CompareWithFrameTreeSiteAndRevise(net::SchemefulSite(primary_url));
-        ContentSetting setting =
-            content_type == ContentSettingsType::COOKIES
-                ? cookie_settings->GetCookieSetting(
-                      primary_url, site_for_cookies, secondary_url, net::CookieSettingOverrides(), nullptr)
-                : map->GetContentSetting(primary_url, secondary_url, content_type);
-
-        base::Value::Dict result;
-        std::string setting_string = content_settings::ContentSettingToString(setting);
-        DCHECK(!setting_string.empty());
-        result.Set(ContentSettingsStore::kContentSettingKey, setting_string);
-
-        return RespondNow(WithArguments(std::move(result)));
+        return RespondNow(Error("method not supported"));
     }
 }
 
@@ -612,6 +640,18 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         return RespondNow(Error(extension_misc::kIncognitoSessionOnlyErrorMessage));
     }
 
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            ::switches::kEnableNwebEx) ||
+        !base::ohos::IsPcDevice()) {
+      scoped_refptr<ContentSettingsStore> store =
+          ContentSettingsService::Get(browser_context())
+              ->content_settings_store();
+      store->SetExtensionContentSetting(extension_id(), primary_pattern,
+                                        secondary_pattern, content_type,
+                                        setting, scope);
+      return RespondNow(NoArguments());
+    }
+
     NWebExtensionContentSettingsSetParam setParam = {0};
     std::string extension_id = this->extension_id();
 
@@ -622,23 +662,31 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         return RespondNow(BadMessage());
     }
 
+    if (content_type == ContentSettingsType::COOKIES) {
+      scoped_refptr<ContentSettingsStore> store =
+          ContentSettingsService::Get(browser_context())
+              ->content_settings_store();
+      store->SetExtensionContentSetting(extension_id, primary_pattern,
+                                        secondary_pattern, content_type,
+                                        setting, scope);
+    }
+
     call_set_content_settings_ = true;
     bool success = OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance().OnSet(&setParam,
         base::BindRepeating(&ContentSettingsContentSettingSetFunction::SetCallback, weak_ptr_factory_.GetWeakPtr()));
     call_set_content_settings_ = false;
     NWebExtensionContentSettingsSetParamRelease(&setParam);
 
+    if (did_respond()) {
+      return AlreadyResponded();
+    }
+
     if (success) {
         AddRef();
         LOG(INFO) << "ContentSettingsContentSettingSetFunction AddRef";
         return RespondLater();
     } else {
-        scoped_refptr<ContentSettingsStore> store =
-            ContentSettingsService::Get(browser_context())->content_settings_store();
-        store->SetExtensionContentSetting(
-            extension_id, primary_pattern, secondary_pattern, content_type, setting, scope);
-
-        return RespondNow(NoArguments());
+        return RespondNow(Error("method not supported"));
     }
 }
 
@@ -700,6 +748,17 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
        return RespondNow(BadMessage());
     }
 
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            ::switches::kEnableNwebEx) ||
+        !base::ohos::IsPcDevice()) {
+      scoped_refptr<ContentSettingsStore> store =
+          ContentSettingsService::Get(browser_context())
+              ->content_settings_store();
+      store->ClearContentSettingsForExtensionAndContentType(
+          extension_id(), scope, content_type);
+      return RespondNow(NoArguments());
+    }
+
     NWebExtensionContentSettingsClearParam clearParam = {0};
     std::string extension_id = this->extension_id();
 
@@ -710,6 +769,14 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
         return RespondNow(BadMessage());
       }
 
+    if (content_type == ContentSettingsType::COOKIES) {
+      scoped_refptr<ContentSettingsStore> store =
+          ContentSettingsService::Get(browser_context())
+              ->content_settings_store();
+      store->ClearContentSettingsForExtensionAndContentType(extension_id, scope,
+                                                            content_type);
+    }
+
     call_clear_content_settings_ = true;
     bool success = OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance().OnClear(&clearParam,
         base::BindRepeating(
@@ -717,16 +784,16 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
     call_clear_content_settings_ = false;
     NWebExtensionContentSettingsClearParamRelease(&clearParam);
 
+    if (did_respond()) {
+      return AlreadyResponded();
+    }
+
     if (success) {
         AddRef();
         LOG(INFO) << "ContentSettingsContentSettingClearFunction AddRef";
         return RespondLater();
     } else {
-        scoped_refptr<ContentSettingsStore> store =
-            ContentSettingsService::Get(browser_context())->content_settings_store();
-        store->ClearContentSettingsForExtensionAndContentType(extension_id, scope, content_type);
-
-        return RespondNow(NoArguments());
+        return RespondNow(Error("method not supported"));
     }
 }
 
