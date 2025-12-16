@@ -35,3 +35,9 @@
 # Compositor
 /libcef/browser/gpu/ @LXinJie1
 /libcef/browser/osr/ @LXinJie1
+
+# peripherals
+/libcef/browser/printing/ @zhang-yinglie
+/libcef/browser/geometry_util.cc @zhang-yinglie
+/libcef/browser/geometry_util_unittest.cc @zhang-yinglie
+/libcef/browser/print_settings_impl.cc @zhang-yinglie

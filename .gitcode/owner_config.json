@@ -15,6 +15,9 @@
         ],
         "StringChen": [
             "StringChen"
+        ],
+        "zhang-yinglie": [
+            "zhang-yinglie"
         ]
     },
     "userInfos": {
@@ -35,6 +38,9 @@
         },
         "StringChen": {
             "info": "[DFX]"
+        },
+        "zhang-yinglie": {
+            "info": "[外设服务]"
         }
     }
 }
