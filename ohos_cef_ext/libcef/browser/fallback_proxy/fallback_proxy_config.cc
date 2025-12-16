@@ -40,6 +40,7 @@ void FallbackProxyConfig::WriteCurrentConfigToLog() {
     << malicious_url_check_wait_time_;
 }
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
 void FallbackProxyConfig::SetFallbackProxyConfigData(
     const ohos_cloud_control::FallbackProxyConfigData& config_data) {
   config_enabled_ = config_data.is_fallback_proxy_enabled;
@@ -80,6 +81,7 @@ void FallbackProxyConfig::SetFallbackProxyConfigData(
     }
   }
 }
+#endif
 
 bool FallbackProxyConfig::HasProxyServer(const net::ProxyServer& proxy_server) {
   if (std::count(proxy_servers_.begin(), proxy_servers_.end(), proxy_server)) {
