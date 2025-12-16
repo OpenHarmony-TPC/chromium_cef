@@ -160,15 +160,6 @@ void NetErrorAutoReloader::DidFinishNavigation(
   if (!handle->IsInPrimaryMainFrame())
     return;
 
-#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
-  if (handle->GetCurrentReloadReason() !=
-      content::ErrorPageReloadReason::INVALID) {
-    ReportFallProxyReloadErrorCodeInfo(
-        handle->GetURL().spec(), (int)handle->GetCurrentReloadReason(),
-        handle->GetOriginalNetErrorCode(), handle->GetNetErrorCode());
-  }
-#endif
-
   pending_navigations_.erase(handle);
   if (!handle->HasCommitted()) {
     // This navigation was cancelled and not committed. If there are still other
