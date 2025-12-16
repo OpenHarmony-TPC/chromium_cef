@@ -123,6 +123,7 @@ class ArkWebRenderWidgetHostViewOSRUtils {
       accelerate_widget_map_;
 #if BUILDFLAG(ARKWEB_DSS)
   gfx::Size current_size_in_pixel_ = {0, 0};
+  gfx::Size SizeInPixels();
 #endif  // ARKWEB_DSS
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;

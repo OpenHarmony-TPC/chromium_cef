@@ -1767,7 +1767,11 @@ void CefRenderWidgetHostViewOSR::UpdateFrameRate() {
 }
 
 gfx::Size CefRenderWidgetHostViewOSR::SizeInPixels() {
+#if BUILDFLAG(ARKWEB_DSS)
+  return arkweb_rwhv_osr_utils_->SizeInPixels();
+#else
   return gfx::ScaleToCeiledSize(GetViewBounds().size(), GetDeviceScaleFactor());
+#endif
 }
 
 #if BUILDFLAG(IS_MAC)

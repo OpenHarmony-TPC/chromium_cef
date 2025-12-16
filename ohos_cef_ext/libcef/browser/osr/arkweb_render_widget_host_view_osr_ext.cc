@@ -1721,27 +1721,6 @@ void ArkWebRenderWidgetHostViewOSRExt::DynamicFrameLossEvent(
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_DSS)
-gfx::Size ArkWebRenderWidgetHostViewOSRExt::SizeInPixels() {
-  if (IsPopupWidget()) {
-    return gfx::ScaleToCeiledSize(popup_position_.size(),
-                                  GetDeviceScaleFactor());
-  }
-
-  CefSize size{};
-  if (browser_impl_ && browser_impl_->GetClient() &&
-      browser_impl_->GetClient()->GetRenderHandler()) {
-    auto handler =
-        browser_impl_->GetClient()->GetRenderHandler()->AsArkWebRenderHandler();
-    CHECK(handler);
-    handler->GetDevicePixelSize(browser_impl_.get(), size);
-  } else {
-    LOG(WARNING) << "cannot get device pixel size, return zero";
-  }
-  return gfx::Size(size.width, size.height);
-}
-#endif
-
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
 bool ArkWebRenderWidgetHostViewOSRExt::WebPageSnapshot(
     const char* id,
