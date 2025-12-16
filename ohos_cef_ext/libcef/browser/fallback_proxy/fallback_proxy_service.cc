@@ -24,7 +24,9 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/network_service_instance.h"
+#include "arkweb/chromium_ext/net/proxy_resolution/fallback_proxy_config.h"
 #include "arkweb/ohos_nweb/src/nweb_impl.h"
+
 
 namespace fallback_proxy {
 namespace {
@@ -355,9 +357,6 @@ void FallbackProxyService::Disable(DisabledReason reason, int reason_code) {
   net::FallbackProxyStatus status =
       GetFallbackProxyStatusByDisabledReason(reason);
   UpdateFallbackProxyStatus(status);
-  if (reason != CONFIG_DISABLED) {
-    net::ReportProxyExceptionReason(reason_code);
-  }
 }
 
 void FallbackProxyService::SaveURLMaliciousTypeAndHwCode(const std::string& url,
