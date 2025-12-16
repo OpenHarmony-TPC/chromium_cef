@@ -33,7 +33,9 @@
 
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 #include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/net/proxy_resolution/fallback_proxy_utils.h"
+#endif
 #include "base/command_line.h"
 #include "content/public/browser/browser_context.h"
 #endif
