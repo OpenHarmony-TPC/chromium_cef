@@ -25,7 +25,9 @@
 #include "net/base/proxy_server.h"
 #include "net/http/http_request_headers.h"
 #include "net/proxy_resolution/proxy_config.h"
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/browser_config/browser_cloud_control_global_config.h"
+#endif
 
 namespace fallback_proxy {
 
@@ -52,9 +54,11 @@ class FallbackProxyConfig {
     proxy_token_updated_callback_ = proxy_token_updated_callback;
   }
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
   // 云控更新整个fallbackProxyConfigData信息
   void SetFallbackProxyConfigData(
       const ohos_cloud_control::FallbackProxyConfigData& config_data);
+#endif
 
   bool ConfigEnabled() { return config_enabled_; }
   // 判断proxy_server是否是配置的server
