@@ -140,7 +140,7 @@ class OhosPrintManager : public printing::PrintManager,
       base::WeakPtr<content::WebContents> &web_contents, uint32_t data);
   void SetBackground(std::unique_ptr<printing::PrintSettings> &settings,
       uint32_t app_config, uint32_t user_config)
-  OHOS::NWeb::PrintAttributesAdapter GetCustomOption();
+  OHOS::NWeb::PrintAttributesAdapter CreateCustomOptions();
 
   scoped_refptr<base::TaskRunner> task_runner_;
   std::unique_ptr<printing::PrintSettings> settings_;
@@ -164,8 +164,8 @@ class OhosPrintManager : public printing::PrintManager,
   static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
   // last user choise for custom options
-  static bool display_header_footer_ = true;
-  static bool print_backgrounds_ = false;
+  static bool display_header_footer_;
+  static bool print_backgrounds_;
   base::WeakPtr<content::WebContents> weak_ptr_web_contents_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };
