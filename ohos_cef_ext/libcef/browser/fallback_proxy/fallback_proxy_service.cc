@@ -48,8 +48,8 @@ FallbackProxyService* FallbackProxyService::GetInstance() {
 }
 
 FallbackProxyService::FallbackProxyService()
-    : network_connection_tracker_(content::GetNetworkConnectionTracker()) {
-  config_ = std::make_unique<FallbackProxyConfig>();
+    : network_connection_tracker_(content::GetNetworkConnectionTracker()), 
+    config_(std::make_unique<FallbackProxyConfig>()) {
   config_->SetProxyServerUpdatedCallback(base::BindRepeating(
       &FallbackProxyService::OnProxyConfigUpdated, base::Unretained(this)));
   config_->SetProxyInfoUpdatedCallback(base::BindRepeating(
