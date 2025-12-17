@@ -221,7 +221,7 @@ class PrintDocumentAdapterImpl
         printManager->DidDispatchPrintEventImpl(true);
       }
       printManager->SetPrintAttrs(printAttrs);
-      printManager->PrintPageImpl(false);
+      printManager->PrintPageImpl(isApp);
     } else {
       LOG(ERROR) << "failed to get OhosPrintManager";
     }
@@ -254,7 +254,7 @@ class PrintDocumentAdapterImpl
 };
 
 class ApplicationPrintDocumentAdapterImpl
-    : public OHOS::NWeb::PrintDocumentAdapterAdapter {
+    : public OHOS::NWeb::NWebPrintDocumentAdapterAdapter {
  public:
   ApplicationPrintDocumentAdapterImpl(content::GlobalRenderFrameHostId rfhId)
       : adapter_(rfhId, true) {}
@@ -262,10 +262,10 @@ class ApplicationPrintDocumentAdapterImpl
 
   void OnStartLayoutWrite(
       const std::string& jobId,
-      const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
-      const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> oldAttrs,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> newAttrs,
       uint32_t fd,
-      std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback)
+      std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> callback)
       override {
     adapter_.OnStartLayoutWrite(jobId,
       TransformPrintAttrs(oldAttrs),
@@ -278,7 +278,7 @@ class ApplicationPrintDocumentAdapterImpl
     adapter_.OnJobStateChanged(jobId, state);
   }
 
-private:
+ private:
   PrintDocumentAdapterImpl adapter_;
 };
 
@@ -625,8 +625,12 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   margins.top = newAttrs.margin.top;
   margins.bottom = newAttrs.margin.bottom;
   settings->SetCustomMargins(margins);
-  settings->set_should_print_backgrounds(should_print_background_);
   settings->SetOrientation(newAttrs.isLandscape);
+
+  // set custom options
+  SetHeaderFooter(settings, weak_ptr_web_contents_,
+    newAttrs.display_header_footer);
+  SetBackground(settings, should_print_background_, newAttrs.print_backgrounds);
   return settings;
 }
 
@@ -755,7 +759,7 @@ void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
-  // no longer used, return nullptr;
+  // no longer used, return nullptr
   *webPrintDocumentAdapter = nullptr;
 }
 
@@ -780,7 +784,7 @@ void OhosPrintManager::SetPrintBackground(bool enable) {
 bool OhosPrintManager::GetPrintBackground() {
   LOG(INFO) << "OhosPrintManager::GetPrintBackground = "
             << should_print_background_;
-  return should_print_background_;
+  return !!should_print_background_;
 }
 
 void OhosPrintManager::CheckForCancel(int32_t preview_ui_id,
