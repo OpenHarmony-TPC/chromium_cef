@@ -303,6 +303,12 @@ void CefBrowserHostBase::DestroyWebContents(
     content::WebContents* web_contents) {
   CEF_REQUIRE_UIT();
 
+#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
+  if (!IsValid()) {
+    return;
+  }
+#endif
+
   // GetWebContents() should return nullptr at this point.
   DCHECK(!GetWebContents());
 
