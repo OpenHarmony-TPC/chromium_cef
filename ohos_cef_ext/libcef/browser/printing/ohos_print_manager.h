@@ -148,7 +148,7 @@ class OhosPrintManager : public printing::PrintManager,
   raw_ptr<void> token_ = nullptr;
   bool cancel_ = false;
   bool is_pdf_print_ = false;
-  bool should_print_background_ = true;
+  uint32_t should_print_background_ = UINT32_MAX;
   bool is_print_now_ = false;
   bool is_print_disable_ = false;
   content::GlobalRenderFrameHostId rfh_id_;
