@@ -200,7 +200,7 @@ void ArkwebFrameExtImpl::SetJsOnlineProperty(bool network_up) {
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+const int kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 16;
 // 2GB
 const int kNeedImageDownScaleSysMemKB = 2097152;
 
@@ -223,10 +223,6 @@ bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem, int32_t
     return false;
   }
 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
   return true;
 }
 
@@ -239,6 +235,8 @@ SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
   if (!NeedsDownscale(image_size, total_mem, command_id)) {
     return image;
   }
+
+
 
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
   if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
