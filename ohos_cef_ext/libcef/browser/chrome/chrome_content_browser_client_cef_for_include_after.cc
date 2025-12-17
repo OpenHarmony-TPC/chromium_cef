@@ -139,6 +139,25 @@ std::optional<bool> ArkWebInnerCanCreateWindow(content::RenderFrameHost* opener,
 }
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+void BindFallbackProxy(
+    network::mojom::NetworkContextParams* network_context_params) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx)) {
+    if (fallback_proxy::FallbackProxyService::GetInstance()) {
+      network_context_params->custom_proxy_connection_observer_remote =
+          fallback_proxy::FallbackProxyService::GetInstance()
+              ->NewProxyConnectionObserverRemote();
+      mojo::Remote<network::mojom::CustomProxyConfigClient> config_client;
+      network_context_params->custom_proxy_config_client_receiver =
+          config_client.BindNewPipeAndPassReceiver();
+      fallback_proxy::FallbackProxyService::GetInstance()
+          ->AddCustomProxyConfigClient(std::move(config_client));
+    }
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+
 void ArkWebInnerConfigureNetworkContextParamsBefore(
     content::BrowserContext* context,
     network::mojom::NetworkContextParams* network_context_params) {
@@ -188,6 +207,13 @@ void ArkWebInnerConfigureNetworkContextParamsBefore(
         ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
   }
 #endif  // BUILDFLAG(ARKWEB_COOKIE)
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    BindFallbackProxy(network_context_params);
+  }
+#endif  // BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 }
 
 void ArkWebInnerConfigureNetworkContextParamsAfter(

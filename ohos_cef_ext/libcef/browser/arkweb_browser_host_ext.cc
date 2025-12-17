@@ -192,6 +192,10 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #include "arkweb/chromium_ext/chrome/browser/ssl/ohos_https_upgrades_helper.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+#include "cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_service.h"
+#endif  // ARKWEB_EX_FALLBACK_PROXY
+
 #include "arkweb/ohos_adapter_ndk/inputmethodframework_adapter/imf_adapter_impl.h"
 
 const char kNWebId[] = "nweb_id";

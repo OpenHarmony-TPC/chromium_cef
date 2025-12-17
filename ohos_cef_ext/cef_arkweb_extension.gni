@@ -214,6 +214,18 @@ if (defined(arkweb_useragent) && arkweb_useragent) {
   ]
 }
 
+if (defined(arkweb_ex_fallback_proxy) && arkweb_ex_fallback_proxy) {
+  libcef_arkweb_sources += [
+    "//cef/ohos_cef_ext/libcef/browser/arkweb_global_list_config.cc",
+    "//cef/ohos_cef_ext/libcef/browser/arkweb_global_list_config.h",
+    "//cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_config.cc",
+    "//cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_config.h",
+    "//cef/ohos_cef_ext/libcef/browser/fallback_proxy/fallback_proxy_service.cc",
+    "//cef/ohos_cef_ext/libcef/browser/arkweb_error_page_auto_reloader.cc",
+    "//cef/ohos_cef_ext/libcef/browser/arkweb_error_page_auto_reloader.h",
+  ]
+}
+
 arkweb_url_trust_list_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.cc",
