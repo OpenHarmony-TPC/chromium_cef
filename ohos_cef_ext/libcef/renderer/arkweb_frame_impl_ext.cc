@@ -236,18 +236,16 @@ SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
     return image;
   }
 
-
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
+  }
 
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
-  }
-
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  double scale = static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte;
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
 
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,
