@@ -139,7 +139,7 @@ class OhosPrintManager : public printing::PrintManager,
   void SetHeaderFooter(std::unique_ptr<printing::PrintSettings> &settings,
       base::WeakPtr<content::WebContents> &web_contents, uint32_t data);
   void SetBackground(std::unique_ptr<printing::PrintSettings> &settings,
-      uint32_t app_config, uint32_t user_config)
+      uint32_t app, uint32_t user);
   OHOS::NWeb::PrintAttributesAdapter CreateCustomOptions();
 
   scoped_refptr<base::TaskRunner> task_runner_;

@@ -272,8 +272,8 @@ OhosPrintManager::~OhosPrintManager() = default;
 std::unordered_map<std::string, PrintAttrs> OhosPrintManager::printAttrsMap_{};
 std::string OhosPrintManager::print_job_id_ = "";
 std::unordered_map<uint32_t, void*> OhosPrintManager::printTokenMap_{};
-bool display_header_footer_ = true;
-bool print_backgrounds_ = false;
+bool OhosPrintManager::display_header_footer_ = true;
+bool OhosPrintManager::print_backgrounds_ = false;
 
 // static
 void OhosPrintManager::BindPrintManagerHost(
@@ -343,6 +343,9 @@ OHOS::NWeb::PrintAttributesAdapter OhosPrintManager::CreateCustomOptions()
   // other values : the default value for this option
   OHOS::NWeb::PrintAttributesAdapter printAttr;
 
+  // always show header footer option
+  printAttr.display_header_footer = display_header_footer_;
+
   // only show background option if should_print_background_ is not set
   bool printBackgroundOption = (should_print_background_ == UINT32_MAX);
   if (printBackgroundOption) {
@@ -351,12 +354,9 @@ OHOS::NWeb::PrintAttributesAdapter OhosPrintManager::CreateCustomOptions()
     printAttr.print_backgrounds = UINT32_MAX;
   }
 
-  // always show header footer option
-  printAttr.display_header_footer = display_header_footer_;
-
-  LOG(DEBUG) << "OhosPrintManager Create Custom Option" <<
-    " print_backgrounds = " << printAttr.print_backgrounds <<
-    " display_header_footer = " << printAttr.display_header_footer;
+  LOG(DEBUG) << "OhosPrintManager Create Custom Options" <<
+    " display_header_footer = " << printAttr.display_header_footer <<
+    " print_backgrounds = " << printAttr.print_backgrounds;
   return printAttr;
 }
 
