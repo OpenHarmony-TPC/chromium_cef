@@ -163,7 +163,7 @@ class PrintDocumentAdapterImpl
     : public OHOS::NWeb::PrintDocumentAdapterAdapter {
  public:
   PrintDocumentAdapterImpl(content::GlobalRenderFrameHostId rfhId, bool isApp)
-      : isApp_(isApp), rfhId_(rfhId) {}
+      : rfhId_(rfhId), isApp_(isApp) {}
   ~PrintDocumentAdapterImpl() = default;
 
   void OnStartLayoutWrite(
@@ -250,8 +250,8 @@ class PrintDocumentAdapterImpl
   }
   bool isFirstCallOnStartLayoutWrite_ = true;
   bool isFirstCallOnJobStateChanged_ = true;
-  bool isApp_;
   content::GlobalRenderFrameHostId rfhId_;
+  bool isApp_;
 };
 
 class ApplicationPrintDocumentAdapterImpl
