@@ -131,7 +131,11 @@ base::FilePath GetResourcesDir() {
 void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line) {
   const base::FilePath& user_data_path =
+#if BUILDFLAG(IS_ARKWEB)
+      command_line->GetSwitchValuePath(switches::kArkwebAppDataDir);
+#else
       GetUserDataPath(settings, command_line);
+#endif
 
 #if BUILDFLAG(IS_OHOS)
   const base::FilePath& cache_path =
