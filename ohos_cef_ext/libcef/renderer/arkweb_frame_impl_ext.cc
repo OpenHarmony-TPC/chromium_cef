@@ -243,7 +243,7 @@ SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
   }
 
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  double scale = static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte;
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
   scaled_size.Scale(scale);
   LOG(INFO) << "Copyimage downscale " << scale;
 
