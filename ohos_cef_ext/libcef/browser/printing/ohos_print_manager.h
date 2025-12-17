@@ -135,6 +135,12 @@ class OhosPrintManager : public printing::PrintManager,
   void OnScriptedPrint();
   std::string GetHtmlTitle();
   std::string RemoveProtocol(const std::string& url);
+  // functions for Custom Options
+  void SetHeaderFooter(std::unique_ptr<printing::PrintSettings> &settings,
+      base::WeakPtr<content::WebContents> &web_contents, uint32_t data);
+  void SetBackground(std::unique_ptr<printing::PrintSettings> &settings,
+      uint32_t app_config, uint32_t user_config)
+  OHOS::NWeb::PrintAttributesAdapter GetCustomOption();
 
   scoped_refptr<base::TaskRunner> task_runner_;
   std::unique_ptr<printing::PrintSettings> settings_;
@@ -157,7 +163,9 @@ class OhosPrintManager : public printing::PrintManager,
   static std::string print_job_id_;
   static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
-
+  // last user choise for custom options
+  static bool display_header_footer_ = true;
+  static bool print_backgrounds_ = false;
   base::WeakPtr<content::WebContents> weak_ptr_web_contents_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };

@@ -122,39 +122,6 @@ int32_t ConvertUint32ToInt32(uint32_t value)
   return -1;
 }
 
-void SetHeaderFooter(std::unique_ptr<printing::PrintSettings> &settings,
-    base::WeakPtr<content::WebContents> &web_contents, uint32_t data)
-{
-  LOG(DEBUG) << "OhosPrintManager header footer data = " << data;
-  // UINT32_MAX : no user config, default to false
-  // other values : user config
-  bool option = data == UINT32_MAX ? false : !!data;
-  settings->set_display_header_footer(option);
-
-  if (option) {
-    GURL display_url;
-    if (web_contents) {
-      display_url = web_contents->GetLastCommittedURL();
-      if (display_url.is_empty()) {
-        display_url = web_contents->GetVisibleURL();
-      }
-    }
-    settings->set_url(base::UTF8ToUTF16(display_url.spec()));
-  }
-}
-
-void SetBackground(std::unique_ptr<printing::PrintSettings> &settings,
-    uint32_t app_config, uint32_t user_config)
-{
-  LOG(DEBUG) << "OhosPrintManager backgrounds" <<
-    " app_config = " << app_config <<
-    " user_config = " << user_config;
-  // priority: app config > user config
-  bool option = app_config != UINT32_MAX ? !!app_config :
-                user_config != UINT32_MAX ? !!user_config : true;
-  settings->set_should_print_backgrounds(option);
-}
-
 }  // namespace
 
 class OhosPrintManager;
@@ -366,6 +333,29 @@ void OhosPrintManager::PdfWritingDone(int page_count) {
   fd_ = -1;
 }
 
+OHOS::NWeb::PrintAttributesAdapter OhosPrintManager::GetCustomOption()
+{
+  // UINT32_MAX : do not show this option
+  // other values : the default value for this option
+  OHOS::NWeb::PrintAttributesAdapter printAttr;
+
+  // only show background option if should_print_background_ is not set
+  bool printBackgroundOption = (should_print_background_ == UINT32_MAX);
+  if (printBackgroundOption) {
+    printAttr.print_backgrounds = print_backgrounds_;
+  } else {
+    printAttr.print_backgrounds = UINT32_MAX;
+  }
+
+  // always show header footer option
+  printAttr.display_header_footer = display_header_footer_;
+
+  LOG(DEBUG) << "OhosPrintManager::GetCustomOption" <<
+    " print_backgrounds = " << printAttr.print_backgrounds <<
+    " display_header_footer = " << printAttr.display_header_footer;
+  return printAttr;
+}
+
 bool OhosPrintManager::PrintNow() {
   if (is_print_now_) {
     LOG(ERROR) << "printing in progress.";
@@ -377,7 +367,7 @@ bool OhosPrintManager::PrintNow() {
   std::string printJobName = GetHtmlTitle();
   std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(GetRfhId(), false));
-  OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
+  auto printAttributesAdapter = GetCustomOption();
 
   if (!token_ && printTokenMap_.find(base::Process::Current().Pid()) !=
                      printTokenMap_.end()) {
@@ -631,7 +621,8 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   // set custom options
   SetHeaderFooter(settings, weak_ptr_web_contents_,
     newAttrs.display_header_footer);
-  SetBackground(settings, should_print_background_, newAttrs.print_backgrounds);
+  SetBackground(settings, should_print_background_,
+    newAttrs.print_backgrounds);
   return settings;
 }
 
@@ -724,6 +715,55 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
 void OhosPrintManager::SetToken(void* token) {
   printTokenMap_[base::Process::Current().Pid()] = token;
   token_ = token;
+}
+
+void OhosPrintManager::SetHeaderFooter(
+    std::unique_ptr<printing::PrintSettings> &settings,
+    base::WeakPtr<content::WebContents> &web_contents, uint32_t data)
+{
+  LOG(DEBUG) << "OhosPrintManager header footer" <<
+    " last = " << display_header_footer_ <<
+    " data = " << data;
+  // UINT32_MAX : no user config, default to false
+  // other values : user config
+  bool option = false;
+  if (data != UINT32_MAX) {
+    // use user config
+    display_header_footer_ = option = !!data;
+  }
+
+  settings->set_display_header_footer(option);
+
+  if (option) {
+    GURL display_url;
+    if (web_contents) {
+      display_url = web_contents->GetLastCommittedURL();
+      if (display_url.is_empty()) {
+        display_url = web_contents->GetVisibleURL();
+      }
+    }
+    settings->set_url(base::UTF8ToUTF16(display_url.spec()));
+  }
+}
+
+void OhosPrintManager::SetBackground(
+    std::unique_ptr<printing::PrintSettings> &settings,
+    uint32_t app, uint32_t user)
+{
+  LOG(DEBUG) << "OhosPrintManager backgrounds" <<
+    " last = " << print_backgrounds_ <<
+    " app = " << app <<
+    " user = " << user;
+  // priority: app config > user config
+  bool option = true;
+  if (app != UINT32_MAX) {
+    // use app config
+    option = !!app;
+  } else if (user != UINT32_MAX) {
+    // use user config
+    print_backgrounds_ = option = !!user;
+  }
+  settings->set_should_print_backgrounds(option);
 }
 
 void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
