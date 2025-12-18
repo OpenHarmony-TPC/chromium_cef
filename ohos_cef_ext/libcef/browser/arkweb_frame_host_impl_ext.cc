@@ -32,6 +32,7 @@
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
+#include "skia/ext/image_operations.h"
 #include "services/service_manager/public/cpp/interface_provider.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -61,7 +62,7 @@ bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
     return false;
   }
 
-  LOG(INFO) << "The origin image size width: " << original_image_size.width()
+  LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
              << ", height: " << original_image_size.height();
   return true;
 }
