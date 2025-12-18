@@ -52,20 +52,16 @@
 
 namespace {
 
-#ifdef OHOS_CLIPBOARD
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+const int kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 16;
  
 bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
   // only image copy need down scale
   if (command_id != MENU_ID_IMAGE_COPY) {
     return false;
   }
- 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
-  LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
+
+  LOG(INFO) << "The origin image size width: " << original_image_size.width()
              << ", height: " << original_image_size.height();
   return true;
 }
@@ -80,16 +76,16 @@ SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
     return image;
   }
  
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
+  }
+
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
-  }
- 
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
  
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,
