@@ -305,6 +305,8 @@ void CefBrowserHostBase::DestroyWebContents(
 
 #if BUILDFLAG(ARKWEB_MULTI_WINDOW)
   if (!IsValid()) {
+    LOG(ERROR) << "CefBrowserHostBase::DestroyWebContents: WebContents is "
+                  "already destroyed";
     return;
   }
 #endif
