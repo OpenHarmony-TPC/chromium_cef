@@ -185,6 +185,14 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_AI)
+  ///
+  /// Notify agent event report.
+  ///
+  /*--cef()--*/
+  virtual void OnAgentEventReport(const std::string& json) {}
+#endif
+
 #if BUILDFLAG(ARKWEB_READER_MODE)
   ///
   /// Notify the page is distillable.

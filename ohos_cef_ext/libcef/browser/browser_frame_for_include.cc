@@ -32,7 +32,7 @@ void ShouldOverrideUrlLoading(
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
+void UpdateHitTestData(int32_t type, const std::string& extra_data, int32_t node_id) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)

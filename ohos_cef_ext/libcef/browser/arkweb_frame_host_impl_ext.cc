@@ -515,14 +515,19 @@ void ArkwebFrameHostExtImpl::SetOverscrollMode(int mode) {
                         mode));
 }
 
-void ArkwebFrameHostExtImpl::UpdateHitTestData(int32_t type, const std::string& extra_data) {
+void ArkwebFrameHostExtImpl::UpdateHitTestData(int32_t type, const std::string& extra_data, int32_t node_id) {
   hit_data_.type = type;
   hit_data_.extra_data = extra_data;
+  hit_data_.node_id = node_id;
 }
 
 void ArkwebFrameHostExtImpl::GetLastHitData(int& type, CefString& extra_data) {
   type = hit_data_.type;
   extra_data = hit_data_.extra_data;
+}
+
+void ArkwebFrameHostExtImpl::GetLastHitNodeId(int& node_id) {
+  node_id = hit_data_.node_id;
 }
 
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)

@@ -226,7 +226,7 @@ interface BrowserFrame {
                            bool is_outermost_main_frame) => (bool result);
 
   [EnableIf=is_ohos]
-  UpdateHitTestData(int32 type, string extra_data);
+  UpdateHitTestData(int32 type, string extra_data, int32 node_id);
 
   [EnableIf=arkweb_error_page, Sync]
   OverrideErrorPage(string url,

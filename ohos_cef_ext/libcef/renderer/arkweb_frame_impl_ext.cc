@@ -654,14 +654,19 @@ void ArkwebFrameExtImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
+  auto webNode = result.GetNode();
+  if (webNode) {
+    cef_hit_data_.node_id = webNode.GetDomNodeId();
+    LOG(INFO) << "SendHitEvent webview nodeid: " << cef_hit_data_.node_id;
+  }
   is_update_ = true;
   SendToBrowserFrame(__FUNCTION__,
                      base::BindOnce(
-                         [](const int32_t type, const std::string extra_data,
+                         [](const int32_t type, const std::string extra_data, const int32_t node_id,
                             const BrowserFrameType& render_frame) {
-                           render_frame->UpdateHitTestData(type, extra_data);
+                           render_frame->UpdateHitTestData(type, extra_data, node_id);
                          },
-                         cef_hit_data_.type, cef_hit_data_.extra_data));
+                         cef_hit_data_.type, cef_hit_data_.extra_data, cef_hit_data_.node_id));
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 }
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -706,13 +711,16 @@ void ArkwebFrameExtImpl::OnFocusedNodeChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
+  cef_hit_data_.node_id = element.GetDomNodeId();
+  LOG(INFO) << "FocusedHitDataChange webview nodeid: " << cef_hit_data_.node_id;
+
   SendToBrowserFrame(__FUNCTION__,
                      base::BindOnce(
-                         [](const int32_t type, const std::string extra_data,
+                         [](const int32_t type, const std::string extra_data, const int32_t node_id,
                             const BrowserFrameType& render_frame) {
-                           render_frame->UpdateHitTestData(type, extra_data);
+                           render_frame->UpdateHitTestData(type, extra_data, node_id);
                          },
-                         cef_hit_data_.type, cef_hit_data_.extra_data));
+                         cef_hit_data_.type, cef_hit_data_.extra_data, cef_hit_data_.node_id));
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 }
 #endif  // BUILDFLAG(IS_ARKWEB)

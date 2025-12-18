@@ -138,7 +138,8 @@ std::string OverrideErrorPage(const CefString& url,
   struct CefHitData {
     int type;
     CefString extra_data;
-    CefHitData() : type(0), extra_data("") {}
+    int node_id;
+    CefHitData() : type(0), extra_data(""), node_id(-1) {}
   };
   void OnFocusedNodeChanged(const blink::WebElement& element);
   void GetHitData(

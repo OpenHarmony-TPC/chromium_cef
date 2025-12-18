@@ -744,6 +744,10 @@ typedef struct _cef_browser_settings_t {
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(ARKWEB_AI)
+  cef_state_t arkweb_agent_enabled;
+#endif
+
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   bool error_page_enabled;
 #endif
