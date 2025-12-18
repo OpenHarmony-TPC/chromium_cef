@@ -34,7 +34,8 @@ void TabCreated(int tab_id, content::BrowserContext* browserContext,
 void TabDetached(content::WebContents* web_contents, int tab_id,
     int old_position, int old_window_id);
 
-void TabHighlighted(content::WebContents* web_contents, NWebExtensionTabHighlightInfo& highlight_info);
+void TabHighlighted(content::BrowserContext* browser_context,
+                    const NWebExtensionTabHighlightInfo& highlight_info);
 
 void TabMoved(content::WebContents* web_contents, int tab_id,
     std::unique_ptr<NWebExtensionTabMoveInfo> move_info);

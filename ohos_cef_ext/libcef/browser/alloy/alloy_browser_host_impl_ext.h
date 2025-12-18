@@ -150,8 +150,6 @@ public:
   void WebExtensionTabDetached(int tab_id,
       const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
 
-  void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override;
-
   void WebExtensionTabMoved(int tab_id,
       const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override;
 

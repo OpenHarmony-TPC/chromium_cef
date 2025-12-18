@@ -753,8 +753,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   virtual void WebExtensionTabDetached(int tab_id,
     const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override {}
 
-  virtual void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override {}
-
   virtual void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override {}
 
   virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override {}

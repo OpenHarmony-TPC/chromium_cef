@@ -352,9 +352,9 @@ void TabsEventRouter::DispatchTabDetachedEvent(
 }
 
 void TabsEventRouter::DispatchTabHighlightedEvent(
-    content::WebContents* contents,
-    NWebExtensionTabHighlightInfo& highlightInfo) {
-  DCHECK(contents);
+    content::BrowserContext* browserContext,
+    const NWebExtensionTabHighlightInfo& highlightInfo) {
+  DCHECK(browserContext);
   base::Value::List all_tabs;
   for (int tab_id : highlightInfo.tabIds) {
     all_tabs.Append(tab_id);
@@ -367,7 +367,7 @@ void TabsEventRouter::DispatchTabHighlightedEvent(
   select_info.Set(kTabIdsKey, std::move(all_tabs));
   args.Append(std::move(select_info));
 
-  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  Profile* profile = Profile::FromBrowserContext(browserContext);
   DispatchEvent(profile, events::TABS_ON_HIGHLIGHTED,
                 api::tabs::OnHighlighted::kEventName, std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
