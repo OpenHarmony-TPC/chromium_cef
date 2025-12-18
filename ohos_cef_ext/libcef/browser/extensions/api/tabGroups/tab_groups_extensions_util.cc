@@ -34,7 +34,7 @@ base::Value::Dict GetTabGroupValue(const NWebExtensionTabGroup& tabGroup) {
 
 base::Value::List GetTabGroupValueList(const std::vector<NWebExtensionTabGroup>& tabGroups) {
   base::Value::List tab_group_list;
-  for (NWebExtensionTabGroup tabGroup : tabGroups) {
+  for (const NWebExtensionTabGroup& tabGroup : tabGroups) {
     tab_group_list.Append(GetTabGroupValue(tabGroup));
   }
   return tab_group_list;

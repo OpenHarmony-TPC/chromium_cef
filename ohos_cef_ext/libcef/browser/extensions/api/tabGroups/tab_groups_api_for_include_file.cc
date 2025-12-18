@@ -14,11 +14,12 @@
  */
 
 class TabGroupsGetFunction : public ExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("tabGroups.get", TAB_GROUPS_GET)
+ protected:
   ~TabGroupsGetFunction() override {}
   ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("tabGroups.get", TAB_GROUPS_GET)
 
+ private:
   static void OnGetTabGroup(const base::WeakPtr<TabGroupsGetFunction>& function,
                             const NWebExtensionTabGroup& tabGroup,
                             std::optional<std::string>& error);
@@ -27,11 +28,12 @@ class TabGroupsGetFunction : public ExtensionFunction {
 };
 
 class TabGroupsQueryFunction : public ExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("tabGroups.query", TAB_GROUPS_QUERY)
+ protected:
   ~TabGroupsQueryFunction() override {}
   ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("tabGroups.query", TAB_GROUPS_QUERY)
 
+ private:
   static void OnQueryTabGroup(const base::WeakPtr<TabGroupsQueryFunction>& function,
                               const std::vector<NWebExtensionTabGroup>& tabGroups,
                               std::optional<std::string>& error);
@@ -40,11 +42,12 @@ class TabGroupsQueryFunction : public ExtensionFunction {
 };
 
 class TabGroupsUpdateFunction : public ExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("tabGroups.update", TAB_GROUPS_UPDATE)
+ protected:
   ~TabGroupsUpdateFunction() override {}
   ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("tabGroups.update", TAB_GROUPS_UPDATE)
 
+ private:
   static void OnUpdateTabGroup(const base::WeakPtr<TabGroupsUpdateFunction>& function,
                                const NWebExtensionTabGroup& tabGroup,
                                std::optional<std::string>& error);
@@ -53,11 +56,12 @@ class TabGroupsUpdateFunction : public ExtensionFunction {
 };
 
 class TabGroupsMoveFunction : public ExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("tabGroups.move", TAB_GROUPS_MOVE)
+ protected:
   ~TabGroupsMoveFunction() override {}
   ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("tabGroups.move", TAB_GROUPS_MOVE)
 
+ private:
   static void OnMoveTabGroup(const base::WeakPtr<TabGroupsMoveFunction>& function,
                              const NWebExtensionTabGroup& tabGroup,
                              std::optional<std::string>& error);

@@ -77,7 +77,7 @@ ExtensionFunction::ResponseAction TabGroupsGetFunction::Run() {
   bool success = OHOS::NWeb::NWebExtensionTabGroupsCefDelegate::GetTabGroup(
       base::BindRepeating(&TabGroupsGetFunction::OnGetTabGroup, weak_ptr_factory_get_.GetWeakPtr()),
       group_id, function_context);
-  call_get_tab_group_ = true;
+  call_get_tab_group_ = false;
 
   if (did_respond()) {
     LOG(INFO) << "TabGroupsGetFunction did_respond";
@@ -103,7 +103,7 @@ void TabGroupsGetFunction::OnGetTabGroup(
     return;
   }
 
-  if (error) {
+  if (error && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->has_callback()
@@ -162,7 +162,7 @@ void TabGroupsMoveFunction::OnMoveTabGroup(
     return;
   }
 
-  if (error) {
+  if (error && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->has_callback()
@@ -231,7 +231,7 @@ void TabGroupsQueryFunction::OnQueryTabGroup(
     return;
   }
 
-  if (error) {
+  if (error && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->has_callback()
@@ -295,7 +295,7 @@ void TabGroupsUpdateFunction::OnUpdateTabGroup(
     return;
   }
 
-  if (error) {
+  if (error && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->has_callback()
