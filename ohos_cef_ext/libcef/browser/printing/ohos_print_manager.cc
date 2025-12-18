@@ -107,6 +107,10 @@ OHOS::NWeb::PrintAttributesAdapter TransformPrintAttrs(
       OHOS::NWeb::NWEB_PRINT_ATTR_ID_HAS_OPTION);
   attrs.option = newAttrs->GetString(
       OHOS::NWeb::NWEB_PRINT_ATTR_ID_OPTION);
+  attrs.display_header_footer = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_HEADER_FOOTER);
+  attrs.print_backgrounds = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PRINT_BACKGROUNDS);
   return attrs;
 }
 
@@ -125,8 +129,8 @@ class OhosPrintManager;
 class PrintDocumentAdapterImpl
     : public OHOS::NWeb::PrintDocumentAdapterAdapter {
  public:
-  PrintDocumentAdapterImpl(content::GlobalRenderFrameHostId rfhId)
-      : rfhId_(rfhId) {}
+  PrintDocumentAdapterImpl(content::GlobalRenderFrameHostId rfhId, bool isApp)
+      : rfhId_(rfhId), isApp_(isApp) {}
   ~PrintDocumentAdapterImpl() = default;
 
   void OnStartLayoutWrite(
@@ -136,7 +140,7 @@ class PrintDocumentAdapterImpl
       uint32_t fd,
       std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback)
       override {
-    LOG(INFO) << "OhosPrintManager onStartLayoutWrite.";
+    LOG(INFO) << "OhosPrintManager OnStartLayoutWrite. isApp = " << isApp_;
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
@@ -151,12 +155,14 @@ class PrintDocumentAdapterImpl
 
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnStartLayoutWriteOnUIThread,
-                                  rfhId_, printAttrs));
+                                  rfhId_, printAttrs,
+                                  isFirstCallOnStartLayoutWrite_,
+                                  isApp_));
+    isFirstCallOnStartLayoutWrite_ = false;
   }
 
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
-    LOG(INFO) << "OhosPrintManager onJobStateChanged.";
-    state_ = state;
+    LOG(INFO) << "OhosPrintManager OnJobStateChanged. isApp = " << isApp_;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
     if (!main_task_runner) {
@@ -166,21 +172,24 @@ class PrintDocumentAdapterImpl
 
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                                  jobId, state, isCalledOnJobStateChanged));
-    if (!isCalledOnJobStateChanged) {
-      isCalledOnJobStateChanged = true;
-    }
+                                  jobId, state, isFirstCallOnJobStateChanged_,
+                                  isApp_));
+    isFirstCallOnJobStateChanged_ = false;
   }
 
  private:
   static void OnStartLayoutWriteOnUIThread(
-      content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs) {
+      content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
+      bool isFirstCall, bool isApp) {
     LOG(INFO) << "OhosPrintManager OnStartLayoutWriteOnUIThread.";
 
-    auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
-    if (ohosPrintManager) {
-      ohosPrintManager->SetPrintAttrs(printAttrs);
-      ohosPrintManager->PrintPageImpl(false);
+    auto* printManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
+    if (printManager) {
+      if (isFirstCall && isApp) {
+        printManager->DidDispatchPrintEventImpl(true);
+      }
+      printManager->SetPrintAttrs(printAttrs);
+      printManager->PrintPageImpl(isApp);
     } else {
       LOG(ERROR) << "failed to get OhosPrintManager";
     }
@@ -188,121 +197,57 @@ class PrintDocumentAdapterImpl
 
   static void OnJobStateChangedOnUIThread(
       content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-      uint32_t state, bool isCalled) {
+      uint32_t state, bool isFirstCall, bool isApp) {
     LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
 
-    auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
-    if (ohosPrintManager) {
-      ohosPrintManager->SetPrintStatus(false, state);
-      if (!isCalled) {
-        ohosPrintManager->RunPrintRequestedCallbackImpl(jobId);
+    auto* printManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
+    if (printManager) {
+      printManager->SetPrintStatus(false, state);
+      if (isFirstCall) {
+        if (isApp) {
+          printManager->DidDispatchPrintEventImpl(false);
+        } else {
+          printManager->RunPrintRequestedCallbackImpl(jobId);
+        }
       }
-      if (state == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED) {
-        ohosPrintManager->ClearPrintAttrs(jobId);
-      }
+      printManager->ClearPrintAttrs(jobId);
     } else {
       LOG(ERROR) << "failed to get OhosPrintManager";
     }
   }
-  uint32_t state_ = 0;
-  bool isCalledOnJobStateChanged = false;
+  bool isFirstCallOnStartLayoutWrite_ = true;
+  bool isFirstCallOnJobStateChanged_ = true;
   content::GlobalRenderFrameHostId rfhId_;
+  bool isApp_;
 };
 
 class ApplicationPrintDocumentAdapterImpl
-    : public OHOS::NWeb::PrintDocumentAdapterAdapter {
+    : public OHOS::NWeb::NWebPrintDocumentAdapterAdapter {
  public:
   ApplicationPrintDocumentAdapterImpl(content::GlobalRenderFrameHostId rfhId)
-      : rfhId_(rfhId) {}
+      : adapter_(rfhId, true) {}
   ~ApplicationPrintDocumentAdapterImpl() = default;
 
   void OnStartLayoutWrite(
       const std::string& jobId,
-      const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
-      const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> oldAttrs,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> newAttrs,
       uint32_t fd,
-      std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback)
+      std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> callback)
       override {
-    LOG(INFO) << "Application OhosPrintManager onStartLayoutWrite.";
-    PrintAttrs printAttrs;
-    printAttrs.jobId = jobId;
-    printAttrs.attrs = newAttrs;
-    printAttrs.fd = ConvertUint32ToInt32(fd);
-    printAttrs.callback = callback;
-
-    auto main_task_runner = content::GetUIThreadTaskRunner({});
-    if (!main_task_runner) {
-      LOG(ERROR) << "failed to get main_task_runner";
-      return;
-    }
-
-    main_task_runner->PostTask(
-        FROM_HERE, base::BindOnce(&OnStartLayoutWriteOnUIThread, rfhId_,
-                                  printAttrs, isCalledBeforeEvent));
-    if (!isCalledBeforeEvent) {
-      isCalledBeforeEvent = true;
-    }
+    adapter_.OnStartLayoutWrite(jobId,
+      TransformPrintAttrs(oldAttrs),
+      TransformPrintAttrs(newAttrs),
+      fd,
+      std::make_shared<PrintWriteResultCallbackAdapterV2>(callback));
   }
 
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
-    LOG(INFO) << "Application OhosPrintManager onJobStateChanged.";
-    state_ = state;
-
-    auto main_task_runner = content::GetUIThreadTaskRunner({});
-    if (!main_task_runner) {
-      LOG(ERROR) << "failed to get main_task_runner";
-      return;
-    }
-
-    main_task_runner->PostTask(
-        FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                                  jobId, state, isCalledOnJobStateChanged));
-    if (!isCalledOnJobStateChanged) {
-      isCalledOnJobStateChanged = true;
-    }
+    adapter_.OnJobStateChanged(jobId, state);
   }
 
-  static void OnStartLayoutWriteOnUIThread(
-      content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
-      bool isCalled) {
-    LOG(INFO) << "Application OhosPrintManager OnStartLayoutWriteOnUIThread.";
-
-    auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
-    if (ohosPrintManager) {
-      if (!isCalled) {
-        ohosPrintManager->DidDispatchPrintEventImpl(true);
-      }
-      ohosPrintManager->SetPrintAttrs(printAttrs);
-      ohosPrintManager->PrintPageImpl(true);
-    } else {
-      LOG(ERROR) << "failed to get OhosPrintManager";
-    }
-  }
-
-  static void OnJobStateChangedOnUIThread(
-      content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-      uint32_t state, bool isCalled) {
-    LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
-
-    auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
-    if (ohosPrintManager) {
-      ohosPrintManager->SetPrintStatus(false, state);
-      if (!isCalled) {
-        ohosPrintManager->DidDispatchPrintEventImpl(false);
-      }
-      if (state == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED) {
-        ohosPrintManager->ClearPrintAttrs(jobId);
-      }
-    } else {
-      LOG(ERROR) << "failed to get OhosPrintManager";
-    }
-  }
-
-private:
-  uint32_t state_ = 0;
-  bool isCalledBeforeEvent = false;
-  bool isCalledOnJobStateChanged = false;
-  content::GlobalRenderFrameHostId rfhId_;
+ private:
+  PrintDocumentAdapterImpl adapter_;
 };
 
 void PrintWriteResultCallbackAdapterV2::WriteResultCallback(std::string jobId,
@@ -312,75 +257,6 @@ void PrintWriteResultCallbackAdapterV2::WriteResultCallback(std::string jobId,
     cb_->WriteResultCallback(jobId, code);
   }
 }
-
-class ApplicationPrintDocumentAdapterImplV2
-    : public OHOS::NWeb::NWebPrintDocumentAdapterAdapter {
- public:
-  explicit ApplicationPrintDocumentAdapterImplV2(
-      content::GlobalRenderFrameHostId rfhId) : rfhId_(rfhId) {}
-  ~ApplicationPrintDocumentAdapterImplV2() = default;
-
-  void OnStartLayoutWrite(
-      const std::string& jobId,
-      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> oldAttrs,
-      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> newAttrs,
-      uint32_t fd,
-      std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> callback)
-      override {
-    LOG(INFO) << "Application OhosPrintManager OnStartLayoutWrite V2.";
-    if (!newAttrs ||
-        !newAttrs->GetBool(OHOS::NWeb::NWEB_PRINT_ATTR_ID_IS_VALID)) {
-      LOG(ERROR) << "invalid print attr";
-      return;
-    }
-
-    PrintAttrs printAttrs;
-    printAttrs.jobId = jobId;
-    printAttrs.attrs = TransformPrintAttrs(newAttrs);
-    printAttrs.fd = ConvertUint32ToInt32(fd);
-    printAttrs.callback =
-      std::make_shared<PrintWriteResultCallbackAdapterV2>(callback);
-
-    auto main_task_runner = content::GetUIThreadTaskRunner({});
-    if (!main_task_runner) {
-      LOG(ERROR) << "failed to get main_task_runner";
-      return;
-    }
-
-    main_task_runner->PostTask(
-      FROM_HERE, base::BindOnce(
-      &ApplicationPrintDocumentAdapterImpl::OnStartLayoutWriteOnUIThread,
-      rfhId_, printAttrs, isCalledBeforeEvent));
-    if (!isCalledBeforeEvent) {
-      isCalledBeforeEvent = true;
-    }
-  }
-
-  void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
-    LOG(INFO) << "Application OhosPrintManager OnJobStateChanged V2.";
-    state_ = state;
-
-    auto main_task_runner = content::GetUIThreadTaskRunner({});
-    if (!main_task_runner) {
-      LOG(ERROR) << "failed to get main_task_runner";
-      return;
-    }
-
-    main_task_runner->PostTask(
-        FROM_HERE, base::BindOnce(
-        &ApplicationPrintDocumentAdapterImpl::OnJobStateChangedOnUIThread,
-        rfhId_, jobId, state, isCalledOnJobStateChanged));
-    if (!isCalledOnJobStateChanged) {
-      isCalledOnJobStateChanged = true;
-    }
-  }
-
- private:
-  uint32_t state_ = 0;
-  bool isCalledBeforeEvent = false;
-  bool isCalledOnJobStateChanged = false;
-  content::GlobalRenderFrameHostId rfhId_;
-};
 
 OhosPrintManager::OhosPrintManager(content::WebContents* contents)
     : PrintManager(contents),
@@ -392,9 +268,13 @@ OhosPrintManager::OhosPrintManager(content::WebContents* contents)
 
 OhosPrintManager::~OhosPrintManager() = default;
 
+// init static values
 std::unordered_map<std::string, PrintAttrs> OhosPrintManager::printAttrsMap_{};
 std::string OhosPrintManager::print_job_id_ = "";
 std::unordered_map<uint32_t, void*> OhosPrintManager::printTokenMap_{};
+bool OhosPrintManager::display_header_footer_ = true;
+bool OhosPrintManager::print_backgrounds_ = false;
+
 // static
 void OhosPrintManager::BindPrintManagerHost(
     mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost> receiver,
@@ -457,6 +337,29 @@ void OhosPrintManager::PdfWritingDone(int page_count) {
   fd_ = -1;
 }
 
+OHOS::NWeb::PrintAttributesAdapter OhosPrintManager::CreateCustomOptions()
+{
+  // UINT32_MAX : do not show this option
+  // other values : the default value for this option
+  OHOS::NWeb::PrintAttributesAdapter printAttr;
+
+  // always show header footer option
+  printAttr.display_header_footer = display_header_footer_;
+
+  // only show background option if should_print_background_ is not set
+  bool printBackgroundOption = (should_print_background_ == UINT32_MAX);
+  if (printBackgroundOption) {
+    printAttr.print_backgrounds = print_backgrounds_;
+  } else {
+    printAttr.print_backgrounds = UINT32_MAX;
+  }
+
+  LOG(DEBUG) << "OhosPrintManager Create Custom Options" <<
+    " display_header_footer = " << printAttr.display_header_footer <<
+    " print_backgrounds = " << printAttr.print_backgrounds;
+  return printAttr;
+}
+
 bool OhosPrintManager::PrintNow() {
   if (is_print_now_) {
     LOG(ERROR) << "printing in progress.";
@@ -467,8 +370,8 @@ bool OhosPrintManager::PrintNow() {
 
   std::string printJobName = GetHtmlTitle();
   std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
-      printDocumentAdapterImpl(new PrintDocumentAdapterImpl(GetRfhId()));
-  OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
+      printDocumentAdapterImpl(new PrintDocumentAdapterImpl(GetRfhId(), false));
+  auto customOptions = CreateCustomOptions();
 
   if (!token_ && printTokenMap_.find(base::Process::Current().Pid()) !=
                      printTokenMap_.end()) {
@@ -477,7 +380,7 @@ bool OhosPrintManager::PrintNow() {
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
                     .Print(printJobName, printDocumentAdapterImpl,
-                           printAttributesAdapter, token_);
+                           customOptions, token_);
   LOG(INFO) << "OhosPrintManager::PrintNow ret = " << ret;
   if (ret == -1) {
     LOG(ERROR) << "print failed";
@@ -717,9 +620,62 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   margins.top = newAttrs.margin.top;
   margins.bottom = newAttrs.margin.bottom;
   settings->SetCustomMargins(margins);
-  settings->set_should_print_backgrounds(should_print_background_);
   settings->SetOrientation(newAttrs.isLandscape);
+
+  // set custom options
+  SetHeaderFooter(settings, weak_ptr_web_contents_,
+    newAttrs.display_header_footer);
+  SetBackground(settings, should_print_background_, newAttrs.print_backgrounds);
   return settings;
+}
+
+void OhosPrintManager::SetHeaderFooter(
+    std::unique_ptr<printing::PrintSettings> &settings,
+    base::WeakPtr<content::WebContents> &web_contents, uint32_t data)
+{
+  LOG(DEBUG) << "OhosPrintManager header footer" <<
+    " last = " << display_header_footer_ <<
+    " data = " << data;
+  // UINT32_MAX : no user config, default to false
+  // other values : user config
+  bool option = false;
+  if (data != UINT32_MAX) {
+    // use user config
+    display_header_footer_ = option = !!data;
+  }
+
+  settings->set_display_header_footer(option);
+
+  if (option) {
+    GURL display_url;
+    if (web_contents) {
+      display_url = web_contents->GetLastCommittedURL();
+      if (display_url.is_empty()) {
+        display_url = web_contents->GetVisibleURL();
+      }
+    }
+    settings->set_url(base::UTF8ToUTF16(display_url.spec()));
+  }
+}
+
+void OhosPrintManager::SetBackground(
+    std::unique_ptr<printing::PrintSettings> &settings,
+    uint32_t app, uint32_t user)
+{
+  LOG(DEBUG) << "OhosPrintManager backgrounds" <<
+    " last = " << print_backgrounds_ <<
+    " app = " << app <<
+    " user = " << user;
+  // priority: app config > user config
+  bool option = true;
+  if (app != UINT32_MAX) {
+    // use app config
+    option = !!app;
+  } else if (user != UINT32_MAX) {
+    // use user config
+    print_backgrounds_ = option = !!user;
+  }
+  settings->set_should_print_backgrounds(option);
 }
 
 void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
@@ -847,14 +803,8 @@ void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
-  if (is_print_now_) {
-    LOG(ERROR) << "Application printing in progress.";
-    return;
-  }
-  cancel_ = false;
-  is_print_now_ = true;
-  *webPrintDocumentAdapter =
-      static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(GetRfhId()));
+  // no longer used, return nullptr
+  *webPrintDocumentAdapter = nullptr;
 }
 
 void OhosPrintManager::CreateWebPrintDocumentAdapterV2(
@@ -867,7 +817,7 @@ void OhosPrintManager::CreateWebPrintDocumentAdapterV2(
   cancel_ = false;
   is_print_now_ = true;
   *adapter =
-    static_cast<void*>(new ApplicationPrintDocumentAdapterImplV2(GetRfhId()));
+    static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(GetRfhId()));
 }
 
 void OhosPrintManager::SetPrintBackground(bool enable) {
@@ -878,7 +828,7 @@ void OhosPrintManager::SetPrintBackground(bool enable) {
 bool OhosPrintManager::GetPrintBackground() {
   LOG(INFO) << "OhosPrintManager::GetPrintBackground = "
             << should_print_background_;
-  return should_print_background_;
+  return !!should_print_background_;
 }
 
 void OhosPrintManager::CheckForCancel(int32_t preview_ui_id,
