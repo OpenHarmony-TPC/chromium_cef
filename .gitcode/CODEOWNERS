@@ -41,3 +41,57 @@
 /libcef/browser/geometry_util.cc @zhang-yinglie
 /libcef/browser/geometry_util_unittest.cc @zhang-yinglie
 /libcef/browser/print_settings_impl.cc @zhang-yinglie
+
+# CCS
+/libcef/browser/devtools/ @shawshank
+/libcef/browser/download_item_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/download_manager_delegate_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/download_manager_delegate.cc @chenjiadong @fredranking @aohui
+/libcef/browser/navigation_entry_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/net_service/ @chenjiadong @fredranking @aohui
+/libcef/browser/net/ @chenjiadong @fredranking @aohui
+/libcef/browser/origin_whitelist_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/scheme_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/server_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/ssl_info_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/ssl_status_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/stream_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/x509_cert_principal_impl.cc @chenjiadong @fredranking @aohui
+/libcef/browser/x509_certificate_impl.cc @chenjiadong @fredranking @aohui
+/libcef/common/net_service/ @chenjiadong @fredranking @aohui
+/libcef/common/net/ @chenjiadong @fredranking @aohui
+/libcef/common/parser_impl.cc @chenjiadong @fredranking @aohui
+/libcef/common/request_impl.cc @chenjiadong @fredranking @aohui
+/libcef/common/response_impl.cc @chenjiadong @fredranking @aohui
+/libcef/common/scheme_registrar_impl.cc @chenjiadong @fredranking @aohui
+/libcef/common/urlrequest_impl.cc @chenjiadong @fredranking @aohui
+/libcef/resources/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/adsblock_manager_impl.cc @shawshank
+/ohos_cef_ext/browser/alloy/alloy_client_cert_identity.h @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/alloy/alloy_client_cert_lookup_table.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/alloy/alloy_client_cert_lookup_table.h @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/alloy/alloy_ssl_platform_key_ohos.h @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/alloy/alloy_ssl_platform_key.h @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/anti_tracking/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_context_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_download_manager_delegate_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_download_resume_util.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_icon_helper_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_navigation_state_serializer_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/arkweb_received_slice_helper_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/cef_download_item_impl_ext.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/content_settings/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/devtools/ @shawshank
+/ohos_cef_ext/browser/javascript/ @shawshank
+/ohos_cef_ext/browser/load_committed_details_impl.cc @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/net_database/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/net_service/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/net/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/ohos_safe_browsing/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/policy/ @zhangyanchuan
+/ohos_cef_ext/browser/predictors/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/browser/subresource_filter/ @shawshank
+/ohos_cef_ext/common/net/ @chenjiadong @fredranking @aohui
+/ohos_cef_ext/libcef/browser/adblock/ @shawshank
+/ohos_cef_ext/libcef/common/javascript/ @shawshank
+/ohos_cef_ext/libcef/common/net/ @chenjiadong @fredranking @aohui
