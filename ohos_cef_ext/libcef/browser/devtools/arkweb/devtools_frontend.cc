@@ -100,14 +100,10 @@ constexpr int kMaxLogLineLength = 1024;
 static const char kTitleFormat[] = "DevTools - %s";
 static std::string GetFrontendURL(bool can_dock) {
   LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
-  if (can_dock) {
-    return base::StringPrintf("%s://%s/devtools_app.html?can_dock=true&dockSide=undocked",
-                            content::kChromeDevToolsScheme,
-                            scheme::kChromeDevToolsHost);
-  }
-  return base::StringPrintf("%s://%s/devtools_app.html",
-                            content::kChromeDevToolsScheme,
-                            scheme::kChromeDevToolsHost);
+  return base::StringPrintf("%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked",
+                          content::kChromeDevToolsScheme,
+                          scheme::kChromeDevToolsHost,
+                          can_dock ? "true" : "false");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
