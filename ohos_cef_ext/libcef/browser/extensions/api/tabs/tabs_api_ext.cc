@@ -47,7 +47,6 @@ namespace tabs = api::tabs;
 
 namespace {
 
-const char kNotImplementedError[] = "Not implemented";
 const char kJavaScriptUrlsNotAllowedInTabsUpdate[] =
     "JavaScript URLs are not allowed in chrome.tabs.update. Use "
     "chrome.tabs.executeScript instead.";
@@ -413,8 +412,7 @@ ExtensionFunction::ResponseAction TabsDetectLanguageFunction::Run() {
 
   std::string language = alloy_browser_host->GetCurrentLanguage();
   if (language.empty()) {
-    return RespondNow(
-        Error("failed to get language of tab"));
+    LOG(INFO) << "language is empty";
   }
 
   return RespondNow(WithArguments(language));
@@ -544,7 +542,9 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
           tab_id, OHOS::NWeb::GetExtensionContextType(browser_context()),
           include_incognito_information());
   if (!web_extension_tab) {
-    return RespondNow(Error(kNotImplementedError));
+    std::string error = ErrorUtils::FormatErrorMessage(
+        ExtensionTabUtil::kTabNotFoundError, base::NumberToString(tab_id));
+    return RespondNow(Error(error));
   }
 
   GURL gurl(web_extension_tab->url.value_or(""));
