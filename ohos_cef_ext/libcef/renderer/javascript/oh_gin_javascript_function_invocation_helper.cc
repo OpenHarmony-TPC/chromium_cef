@@ -25,7 +25,6 @@
 #include "base/command_line.h"
 #include "content/public/common/content_switches.h"
 #include "third_party/blink/renderer/core/render_mojom/render_mojom_client.h"
-const int MAIN_PROCESS_ID_MIN = 20000000;
 #endif  // BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
 
 namespace {
@@ -236,7 +235,12 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
 
 #if BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
   uid_t uid = getuid();
-  if (uid < MAIN_PROCESS_ID_MIN) {
+  auto app_mgr_client_adapter =
+      OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateAafwkAdapter();
+  if (app_mgr_client_adapter == nullptr) {
+    return;
+  }
+  if (app_mgr_client_adapter->IsRenderProcessByUid(static_cast<int>(uid))) {
     blink::ResSchedReportClient report_client;
     report_client.StartPerformanceBoost();
   } else {
