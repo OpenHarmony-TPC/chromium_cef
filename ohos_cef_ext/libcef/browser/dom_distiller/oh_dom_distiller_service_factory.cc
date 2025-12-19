@@ -102,4 +102,8 @@ OhDomDistillerServiceFactory::BuildServiceInstanceForBrowserContext(
       std::move(distilled_page_prefs), std::move(distiller_ui_handle));
 }
 
+content::BrowserContext* OhDomDistillerServiceFactory::GetBrowserContextToUse(
+    content::BrowserContext* context) const {
+  return context;
+}
 } // namespace oh_dom_distiller
