@@ -326,7 +326,7 @@ void ArkwebFrameHostExtImpl::OnGetImageFromCache(
     if (sk_image) {
       SkBitmap bitmap;
       if (sk_image->asLegacyBitmap(&bitmap)) {
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
         SkBitmap resize_image = DownScale(bitmap, command_id);
         if (resize_image.colorType() == kBGRA_8888_SkColorType ||
             resize_image.colorType() == kRGBA_8888_SkColorType) {
