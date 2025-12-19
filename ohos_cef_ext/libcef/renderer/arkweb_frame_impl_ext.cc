@@ -657,7 +657,6 @@ void ArkwebFrameExtImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
   auto webNode = result.GetNode();
   if (webNode) {
     cef_hit_data_.node_id = webNode.GetDomNodeId();
-    LOG(INFO) << "SendHitEvent webview nodeid: " << cef_hit_data_.node_id;
   }
   is_update_ = true;
   SendToBrowserFrame(__FUNCTION__,
@@ -712,7 +711,6 @@ void ArkwebFrameExtImpl::OnFocusedNodeChanged(
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
   cef_hit_data_.node_id = element.GetDomNodeId();
-  LOG(INFO) << "FocusedHitDataChange webview nodeid: " << cef_hit_data_.node_id;
 
   SendToBrowserFrame(__FUNCTION__,
                      base::BindOnce(

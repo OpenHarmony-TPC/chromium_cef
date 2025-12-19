@@ -401,6 +401,7 @@ void ArkWebRenderWidgetHostViewOSRExt::ReportAIGestureEvent(
   }
 
   if (browser_impl_->settings().arkweb_agent_enabled != STATE_ENABLED) {
+    LOG(DEBUG) << "ReportAIGestureEvent is disabled.";
     return;
   }
 
@@ -416,6 +417,7 @@ void ArkWebRenderWidgetHostViewOSRExt::ReportAIGestureEvent(
 
   std::string json_result = GetReportAIGestureEventJson(event, node_id);
   browser_impl_->client()->AsArkWebClient()->OnAgentEventReport(json_result);
+  LOG(DEBUG) << "ReportAIGestureEvent report json.";
 }
 
 std::string ArkWebRenderWidgetHostViewOSRExt::GetReportAIGestureEventJson(
