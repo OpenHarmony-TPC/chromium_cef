@@ -295,7 +295,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event)
             << ", handles_hidden_by_selection_ui = "
-            << handles_hidden_by_selection_ui_;
+            << handles_hidden_by_selection_ui_
             << ", quick_menu_requested_ = "
             << quick_menu_requested_;
 #else
