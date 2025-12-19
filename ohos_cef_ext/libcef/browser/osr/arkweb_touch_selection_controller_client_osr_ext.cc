@@ -159,6 +159,7 @@ bool ArkWebTouchSelectionControllerClientOSRExt::HandleContextMenu(
     return false;
   }
 #endif
+  LOG(INFO) << "HandleContextMenu IsQuickMenuAvailable:"<<IsQuickMenuAvailable();
   if ((params.source_type == ui::mojom::MenuSourceType::kLongPress ||
        params.source_type == ui::mojom::MenuSourceType::kLongTap) &&
       params.is_editable && params.selection_text.empty() &&
@@ -295,6 +296,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event)
             << ", handles_hidden_by_selection_ui = "
             << handles_hidden_by_selection_ui_;
+            << ", quick_menu_requested_ = "
+            << quick_menu_requested_;
 #else
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
 #endif
@@ -334,6 +337,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
         quick_menu_requested_ =
             rwhv_->browser_impl()->AsAlloyBrowserHostImplExt()->GetTouchInsertHandleMenuShow();
       }
+      LOG(INFO) << "OnSelectionEvent INSERTION_HANDLE_SHOWN quick_menu_requested_ " << quick_menu_requested_;
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
         if (controller && !controller->AsTouchSelectionControllerExt()->IsTapEvent() &&
@@ -838,6 +842,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     bottom_right.SetToMin(client_bounds.bottom_right());
 #if !BUILDFLAG(ARKWEB_CLIPBOARD)
     if (origin.x() > bottom_right.x() || origin.y() > bottom_right.y()) {
+      LOG(INFO) << "ShowQuickMenu return origin.x() > bottom_right.x() " << origin.x() > bottom_right.x();
+                << "origin.y() > bottom_right.y() " << origin.y() > bottom_right.y();
       return;
     }
 #endif  // !BUILDFLAG(ARKWEB_CLIPBOARD)
@@ -898,6 +904,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
         }
       }
       CloseQuickMenu();
+      LOG(INFO) << "Show Handle Quick Menu Failed";
 #endif  // BUILDFLAG(ARKWEB_VIBRATE)
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     } else {
