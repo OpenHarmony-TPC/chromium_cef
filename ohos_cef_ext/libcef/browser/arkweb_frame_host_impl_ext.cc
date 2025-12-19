@@ -54,7 +54,8 @@
 namespace {
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-const int kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 16;
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
  
 bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
   // only image copy need down scale
@@ -68,7 +69,7 @@ bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
 }
  
 SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
  

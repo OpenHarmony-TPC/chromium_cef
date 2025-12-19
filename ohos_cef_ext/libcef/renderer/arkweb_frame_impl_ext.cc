@@ -200,7 +200,8 @@ void ArkwebFrameExtImpl::SetJsOnlineProperty(bool network_up) {
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-const int kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 16;
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
 // 2GB
 const int kNeedImageDownScaleSysMemKB = 2097152;
 
@@ -227,7 +228,7 @@ bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem, int32_t
 }
 
 SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
 
