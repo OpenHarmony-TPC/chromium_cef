@@ -29,13 +29,16 @@ const char kOhGinJavascriptBridgeMessageFilterKey[] =
 
 }  // namespace
 
+// The routing id of the RenderFrameHost whose request we are processing.
+// Used on the background thread.
+thread_local int32_t current_routing_id = MSG_ROUTING_NONE;
+
 namespace NWEB {
 OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
     base::PassKey<OhGinJavascriptBridgeMessageFilter> pass_key,
     content::AgentSchedulingGroupHost& agent_scheduling_group)
     : BrowserMessageFilter(OhGinJavascriptBridgeMsgStart),
-      agent_scheduling_group_(agent_scheduling_group),
-      current_routing_id_(MSG_ROUTING_NONE) {
+      agent_scheduling_group_(agent_scheduling_group) {
   async_task_runner_ = base::ThreadPool::CreateSingleThreadTaskRunner(
       {base::TaskPriority::USER_BLOCKING},
       base::SingleThreadTaskRunnerThreadMode::DEDICATED);
@@ -65,9 +68,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
     std::string url;
     std::string method_name;
     if (iter.ReadString(&url) && iter.ReadString(&method_name)) {
-      base::AutoReset<int32_t> routingId(&current_routing_id_,
-                                         message.routing_id());
-      scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+      scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost(message.routing_id());
       if (host) {
         host->OnHasAsyncThreadMethod(object_id, method_name, &isAsyncThread);
       }
@@ -124,7 +125,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
     const IPC::Message& message) {
-  base::AutoReset<int32_t> routing_id(&current_routing_id_,
+  base::AutoReset<int32_t> routing_id(&current_routing_id,
                                       message.routing_id());
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(OhGinJavascriptBridgeMessageFilter, message)
@@ -143,7 +144,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
 
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     const IPC::Message& message) {
-  base::AutoReset<int32_t> routing_id(&current_routing_id_,
+  base::AutoReset<int32_t> routing_id(&current_routing_id,
                                       message.routing_id());
   bool handled = true;
   base::PickleIterator iter(message);
@@ -182,6 +183,8 @@ void OhGinJavascriptBridgeMessageFilter::AddRoutingIdForHost(
     content::RenderFrameHost* render_frame_host) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   base::AutoLock locker(hosts_lock_);
+  LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::AddRoutingIdForHost, routingID:"
+             << render_frame_host->GetRoutingID();
   hosts_[render_frame_host->GetRoutingID()] = host;
 }
 
@@ -192,6 +195,8 @@ void OhGinJavascriptBridgeMessageFilter::RemoveHost(
   auto iter = hosts_.begin();
   while (iter != hosts_.end()) {
     if (iter->second == host) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::RemoveHost, routingID:"
+               << iter->first;
       hosts_.erase(iter++);
     } else {
       ++iter;
@@ -246,11 +251,24 @@ OhGinJavascriptBridgeMessageFilter::FromHost(
 scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
 OhGinJavascriptBridgeMessageFilter::FindHost() {
   base::AutoLock locker(hosts_lock_);
-  auto iter = hosts_.find(current_routing_id_);
+  LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::FindHost, routingID:"
+             << current_routing_id;
+  auto iter = hosts_.find(current_routing_id);
   if (iter != hosts_.end()) {
     return iter->second;
   }
-  LOG(WARNING) << "JSBridge host not found, routingID:" << current_routing_id_;
+  LOG(WARNING) << "JSBridge host not found, routingID:" << current_routing_id;
+  return nullptr;
+}
+
+scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
+OhGinJavascriptBridgeMessageFilter::FindHost(int32_t routing_id) {
+  base::AutoLock locker(hosts_lock_);
+  auto iter = hosts_.find(routing_id);
+  if (iter != hosts_.end()) {
+    return iter->second;
+  }
+  LOG(WARNING) << "JSBridge host not found, routingID:" << routing_id;
   return nullptr;
 }
 
@@ -329,7 +347,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
   }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host && is_same_site) {
-    host->OnInvokeMethod(current_routing_id_, object_id, document_url,
+    host->OnInvokeMethod(current_routing_id, object_id, document_url,
                          method_name, arguments, wrapped_result, error_code);
   } else {
     wrapped_result->Append(base::Value());
@@ -348,7 +366,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodAsync(
   }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host && is_same_site) {
-    host->OnInvokeMethodAsync(current_routing_id_, object_id, document_url,
+    host->OnInvokeMethodAsync(current_routing_id, object_id, document_url,
                               method_name, arguments);
   }
 }
@@ -367,7 +385,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
   }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host && is_same_site) {
-    host->OnInvokeMethodFlowbuf(current_routing_id_, object_id, document_url,
+    host->OnInvokeMethodFlowbuf(current_routing_id, object_id, document_url,
                                 method_name, arguments, *fd, wrapped_result,
                                 error_code);
   } else {
@@ -388,7 +406,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
   }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host && is_same_site) {
-    host->OnInvokeMethodFlowbufAsync(current_routing_id_, object_id,
+    host->OnInvokeMethodFlowbufAsync(current_routing_id, object_id,
                                      document_url, method_name, arguments, *fd);
   }
 }
@@ -396,7 +414,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host) {
-    host->OnObjectWrapperDeleted(current_routing_id_, object_id);
+    host->OnObjectWrapperDeleted(current_routing_id, object_id);
   }
 }
 }  // namespace NWEB

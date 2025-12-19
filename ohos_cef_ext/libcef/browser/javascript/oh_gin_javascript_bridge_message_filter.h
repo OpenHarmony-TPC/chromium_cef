@@ -73,6 +73,7 @@ class OhGinJavascriptBridgeMessageFilter
 
   // Called on the background thread.
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost();
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost(int32_t routing_id);
 
   void OnGetMethods(int32_t object_id,
                     std::set<std::string>* returned_method_names);
@@ -112,10 +113,6 @@ class OhGinJavascriptBridgeMessageFilter
   // The `AgentSchedulingGroupHost` that this object is associated with. This
   // filter is installed on the host's channel.
   raw_ref<content::AgentSchedulingGroupHost> agent_scheduling_group_;
-
-  // The routing id of the RenderFrameHost whose request we are processing.
-  // Used on the background thread.
-  int32_t current_routing_id_;
 
   scoped_refptr<base::SingleThreadTaskRunner> async_task_runner_;
 
