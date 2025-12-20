@@ -2498,7 +2498,9 @@ bool ArkWebRenderWidgetHostViewOSRExt::HasFocus() {
 
 void ArkWebRenderWidgetHostViewOSRExt::UpdateBackgroundColor() {
 #if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
-  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx) || 
+      SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
 #ifdef DISABLE_GPU
     if (compositor_) {
       compositor_->SetBackgroundColor(background_color_);
