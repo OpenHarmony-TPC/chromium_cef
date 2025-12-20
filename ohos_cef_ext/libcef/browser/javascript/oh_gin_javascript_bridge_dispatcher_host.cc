@@ -1348,6 +1348,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     int fd,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf: "
+                "method name: "
+             << method_name;
   if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
       !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
     *error_code =
@@ -1415,6 +1418,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
     const std::string& method_name,
     const base::Value::List& arguments,
     int fd) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync: "
+                "method name: "
+             << method_name;
   if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
       !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
