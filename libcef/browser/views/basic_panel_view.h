@@ -6,11 +6,12 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_BASIC_PANEL_VIEW_H_
 #pragma once
 
-#include "include/views/cef_panel_delegate.h"
-
-#include "libcef/browser/views/panel_view.h"
+#include "cef/include/views/cef_panel_delegate.h"
+#include "cef/libcef/browser/views/panel_view.h"
 
 class CefBasicPanelView : public CefPanelView<views::View, CefPanelDelegate> {
+  METADATA_HEADER(CefBasicPanelView, views::View)
+
  public:
   using ParentClass = CefPanelView<views::View, CefPanelDelegate>;
 

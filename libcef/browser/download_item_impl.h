@@ -6,8 +6,8 @@
 #define CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_
 #pragma once
 
-#include "include/cef_download_item.h"
-#include "libcef/common/value_base.h"
+#include "cef/include/cef_download_item.h"
+#include "cef/libcef/common/value_base.h"
 
 namespace download {
 class DownloadItem;
@@ -18,44 +18,31 @@ class CefDownloadItemImpl
     : public CefValueBase<CefDownloadItem, download::DownloadItem> {
  public:
   explicit CefDownloadItemImpl(download::DownloadItem* value);
-#if BUILDFLAG(IS_OHOS)
-  explicit CefDownloadItemImpl(download::DownloadItem* value, int nweb_id);
-#endif  //  BUILDFLAG(IS_OHOS)
+
   CefDownloadItemImpl(const CefDownloadItemImpl&) = delete;
   CefDownloadItemImpl& operator=(const CefDownloadItemImpl&) = delete;
-#if BUILDFLAG(IS_OHOS)
+
   // CefDownloadItem methods.
   bool IsValid() override;
   bool IsInProgress() override;
   bool IsComplete() override;
   bool IsCanceled() override;
-  int64 GetCurrentSpeed() override;
+  bool IsInterrupted() override;
+  bool IsPaused() override;
+  cef_download_interrupt_reason_t GetInterruptReason() override;
+  int64_t GetCurrentSpeed() override;
   int GetPercentComplete() override;
-  int64 GetTotalBytes() override;
-  int64 GetReceivedBytes() override;
-  CefTime GetStartTime() override;
-  CefTime GetEndTime() override;
+  int64_t GetTotalBytes() override;
+  int64_t GetReceivedBytes() override;
+  CefBaseTime GetStartTime() override;
+  CefBaseTime GetEndTime() override;
   CefString GetFullPath() override;
-  uint32 GetId() override;
+  uint32_t GetId() override;
   CefString GetURL() override;
   CefString GetOriginalUrl() override;
   CefString GetSuggestedFileName() override;
   CefString GetContentDisposition() override;
   CefString GetMimeType() override;
-  CefString GetOriginalMimeType() override;
-  CefString GetGuid() override;
-
-  // additional methods
-  int GetState() override;
-  bool IsPaused() override;
-  CefString GetMethod() override;
-  int GetLastErrorCode() override;
-  bool IsPending() override;
-  CefString GetLastModifiedTime() override;
-  CefString GetETag() override;
-  CefString GetReceivedSlices() override;
-  int GetNWebId() override;
-#endif  //  BUILDFLAG(IS_OHOS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_

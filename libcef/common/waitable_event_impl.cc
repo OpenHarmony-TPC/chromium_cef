@@ -2,18 +2,18 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/common/waitable_event_impl.h"
-
-#include "include/cef_task.h"
+#include "cef/libcef/common/waitable_event_impl.h"
 
 #include "base/notreached.h"
 #include "base/time/time.h"
+#include "cef/libcef/common/task_util.h"
 
 namespace {
 
 bool AllowWait() {
-  if (CefCurrentlyOn(TID_UI) || CefCurrentlyOn(TID_IO)) {
-    NOTREACHED() << "waiting is not allowed on the current thread";
+  // Use internal variant that doesn't log before CefInitialize.
+  if (cef::CurrentlyOnThread(TID_UI) || cef::CurrentlyOnThread(TID_IO)) {
+    DCHECK(false) << "waiting is not allowed on the current thread";
     return false;
   }
   return true;
@@ -49,13 +49,15 @@ bool CefWaitableEventImpl::IsSignaled() {
 }
 
 void CefWaitableEventImpl::Wait() {
-  if (!AllowWait())
+  if (!AllowWait()) {
     return;
+  }
   event_.Wait();
 }
 
-bool CefWaitableEventImpl::TimedWait(int64 max_ms) {
-  if (!AllowWait())
+bool CefWaitableEventImpl::TimedWait(int64_t max_ms) {
+  if (!AllowWait()) {
     return false;
+  }
   return event_.TimedWait(base::Milliseconds(max_ms));
 }

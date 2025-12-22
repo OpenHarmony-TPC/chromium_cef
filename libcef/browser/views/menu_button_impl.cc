@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/menu_button_impl.h"
+#include "cef/libcef/browser/views/menu_button_impl.h"
 
-#include "libcef/browser/views/menu_button_view.h"
-#include "libcef/browser/views/window_impl.h"
-
+#include "cef/libcef/browser/views/menu_button_view.h"
+#include "cef/libcef/browser/views/window_impl.h"
 #include "ui/gfx/canvas.h"
 
 // static
@@ -22,12 +21,14 @@ CefRefPtr<CefMenuButtonImpl> CefMenuButtonImpl::Create(
     const CefString& text) {
   CEF_REQUIRE_UIT_RETURN(nullptr);
   DCHECK(delegate);
-  if (!delegate)
+  if (!delegate) {
     return nullptr;
+  }
   CefRefPtr<CefMenuButtonImpl> menu_button = new CefMenuButtonImpl(delegate);
   menu_button->Initialize();
-  if (!text.empty())
+  if (!text.empty()) {
     menu_button->SetText(text);
+  }
   return menu_button;
 }
 

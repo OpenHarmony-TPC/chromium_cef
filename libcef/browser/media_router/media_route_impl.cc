@@ -2,12 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/media_router/media_route_impl.h"
+#include "cef/libcef/browser/media_router/media_route_impl.h"
 
-#include "libcef/browser/media_router/media_router_manager.h"
-#include "libcef/browser/media_router/media_sink_impl.h"
-#include "libcef/browser/media_router/media_source_impl.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/media_router/media_router_manager.h"
+#include "cef/libcef/browser/media_router/media_sink_impl.h"
+#include "cef/libcef/browser/media_router/media_source_impl.h"
+#include "cef/libcef/browser/thread_util.h"
 
 namespace {
 
@@ -70,8 +70,9 @@ void CefMediaRouteImpl::Terminate() {
   }
 
   auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context)
+  if (!browser_context) {
     return;
+  }
 
   browser_context->GetMediaRouterManager()->TerminateRoute(
       route_.media_route_id());
@@ -79,8 +80,9 @@ void CefMediaRouteImpl::Terminate() {
 
 void CefMediaRouteImpl::SendRouteMessageInternal(std::string message) {
   auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context)
+  if (!browser_context) {
     return;
+  }
 
   browser_context->GetMediaRouterManager()->SendRouteMessage(
       route_.media_route_id(), message);

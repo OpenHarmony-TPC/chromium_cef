@@ -6,11 +6,8 @@
 #define CEF_LIBCEF_COMMON_PROCESS_MESSAGE_IMPL_H_
 #pragma once
 
-#include "include/cef_process_message.h"
-
-namespace base {
-class ListValue;
-}
+#include "base/values.h"
+#include "cef/include/cef_process_message.h"
 
 // CefProcessMessage implementation.
 class CefProcessMessageImpl : public CefProcessMessage {
@@ -22,7 +19,7 @@ class CefProcessMessageImpl : public CefProcessMessage {
   // Constructor for creating a new CefListValue that takes ownership of
   // |arguments|.
   CefProcessMessageImpl(const CefString& name,
-                        base::ListValue arguments,
+                        base::Value::List arguments,
                         bool read_only);
 
   CefProcessMessageImpl(const CefProcessMessageImpl&) = delete;
@@ -34,7 +31,7 @@ class CefProcessMessageImpl : public CefProcessMessage {
   // a copy if the argument list is already owned by something else.
   // TODO: Pass by reference instead of ownership if/when Mojo adds support
   // for that.
-  base::ListValue TakeArgumentList() WARN_UNUSED_RESULT;
+  [[nodiscard]] base::Value::List TakeArgumentList();
 
   // CefProcessMessage methods.
   bool IsValid() override;
@@ -42,6 +39,9 @@ class CefProcessMessageImpl : public CefProcessMessage {
   CefRefPtr<CefProcessMessage> Copy() override;
   CefString GetName() override;
   CefRefPtr<CefListValue> GetArgumentList() override;
+  CefRefPtr<CefSharedMemoryRegion> GetSharedMemoryRegion() override {
+    return nullptr;
+  }
 
  private:
   const CefString name_;

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/osr/osr_accessibility_util.h"
+#include "cef/libcef/browser/osr/osr_accessibility_util.h"
 
 #include <algorithm>
 #include <string>
@@ -12,11 +12,13 @@
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
-#include "content/public/browser/ax_event_notification_details.h"
 #include "ui/accessibility/ax_enum_util.h"
 #include "ui/accessibility/ax_enums.mojom.h"
+#include "ui/accessibility/ax_location_and_scroll_updates.h"
 #include "ui/accessibility/ax_text_utils.h"
+#include "ui/accessibility/ax_tree_id.h"
 #include "ui/accessibility/ax_tree_update.h"
+#include "ui/accessibility/ax_updates_and_events.h"
 #include "ui/gfx/geometry/transform.h"
 
 namespace {
@@ -28,8 +30,9 @@ CefRefPtr<CefListValue> ToCefValue(const std::vector<T>& vecData);
 template <>
 CefRefPtr<CefListValue> ToCefValue<int>(const std::vector<int>& vecData) {
   CefRefPtr<CefListValue> value = CefListValue::Create();
-  for (size_t i = 0; i < vecData.size(); i++)
+  for (size_t i = 0; i < vecData.size(); i++) {
     value->SetInt(i, vecData[i]);
+  }
 
   return value;
 }
@@ -43,8 +46,9 @@ CefRefPtr<CefListValue> ToCefValue(uint32_t state) {
   // Iterate and find which states are set.
   for (unsigned i = static_cast<unsigned>(ax::mojom::Role::kMinValue) + 1;
        i <= static_cast<unsigned>(ax::mojom::Role::kMaxValue); i++) {
-    if (state & (1 << i))
+    if (state & (1 << i)) {
       value->SetString(index++, ToString(static_cast<ax::mojom::State>(i)));
+    }
   }
   return value;
 }
@@ -69,11 +73,14 @@ struct PopulateAxNodeAttributes {
 
   // Int Attributes
   void operator()(const std::pair<ax::mojom::IntAttribute, int32_t> attr) {
-    if (attr.first == ax::mojom::IntAttribute::kNone)
+    if (attr.first == ax::mojom::IntAttribute::kNone) {
       return;
+    }
 
     switch (attr.first) {
       case ax::mojom::IntAttribute::kNone:
+      case ax::mojom::IntAttribute::kMaxLength:
+      case ax::mojom::IntAttribute::kPaintOrder:
         break;
       case ax::mojom::IntAttribute::kScrollX:
       case ax::mojom::IntAttribute::kScrollXMin:
@@ -82,6 +89,7 @@ struct PopulateAxNodeAttributes {
       case ax::mojom::IntAttribute::kScrollYMin:
       case ax::mojom::IntAttribute::kScrollYMax:
       case ax::mojom::IntAttribute::kHasPopup:
+      case ax::mojom::IntAttribute::kIsPopup:
       case ax::mojom::IntAttribute::kHierarchicalLevel:
       case ax::mojom::IntAttribute::kTextSelStart:
       case ax::mojom::IntAttribute::kTextSelEnd:
@@ -102,13 +110,15 @@ struct PopulateAxNodeAttributes {
       case ax::mojom::IntAttribute::kTableRowIndex:
       case ax::mojom::IntAttribute::kActivedescendantId:
       case ax::mojom::IntAttribute::kInPageLinkTargetId:
-      case ax::mojom::IntAttribute::kErrormessageId:
-      case ax::mojom::IntAttribute::kDOMNodeId:
-      case ax::mojom::IntAttribute::kDropeffect:
+      case ax::mojom::IntAttribute::kErrormessageIdDeprecated:
+      case ax::mojom::IntAttribute::kDOMNodeIdDeprecated:
+      case ax::mojom::IntAttribute::kDropeffectDeprecated:
       case ax::mojom::IntAttribute::kMemberOfId:
       case ax::mojom::IntAttribute::kNextFocusId:
+      case ax::mojom::IntAttribute::kNextWindowFocusId:
       case ax::mojom::IntAttribute::kNextOnLineId:
       case ax::mojom::IntAttribute::kPreviousFocusId:
+      case ax::mojom::IntAttribute::kPreviousWindowFocusId:
       case ax::mojom::IntAttribute::kPreviousOnLineId:
       case ax::mojom::IntAttribute::kSetSize:
       case ax::mojom::IntAttribute::kPosInSet:
@@ -178,6 +188,20 @@ struct PopulateAxNodeAttributes {
           attributes->SetString(ToString(attr.first), ToString(state));
         }
       } break;
+      case ax::mojom::IntAttribute::kAriaNotificationInterruptDeprecated: {
+        auto state =
+            static_cast<ax::mojom::AriaNotificationInterrupt>(attr.second);
+        if (ax::mojom::AriaNotificationInterrupt::kNone != state) {
+          attributes->SetString(ToString(attr.first), ToString(state));
+        }
+      } break;
+      case ax::mojom::IntAttribute::kAriaNotificationPriorityDeprecated: {
+        auto state =
+            static_cast<ax::mojom::AriaNotificationPriority>(attr.second);
+        if (ax::mojom::AriaNotificationPriority::kNormal != state) {
+          attributes->SetString(ToString(attr.first), ToString(state));
+        }
+      } break;
       case ax::mojom::IntAttribute::kTextDirection: {
         auto state = static_cast<ax::mojom::WritingDirection>(attr.second);
         if (ax::mojom::WritingDirection::kNone != state) {
@@ -200,9 +224,10 @@ struct PopulateAxNodeAttributes {
         CefRefPtr<CefListValue> list = CefListValue::Create();
         int index = 0;
         // Iterate and find which states are set.
-        for (unsigned i = 0; i < base::size(textStyleArr); i++) {
-          if (attr.second & static_cast<int>(textStyleArr[i]))
-            list->SetString(index++, ToString(textStyleArr[i]));
+        for (auto& i : textStyleArr) {
+          if (attr.second & static_cast<int>(i)) {
+            list->SetString(index++, ToString(i));
+          }
         }
         attributes->SetList(ToString(attr.first), list);
       } break;
@@ -213,6 +238,11 @@ struct PopulateAxNodeAttributes {
         if (ax::mojom::TextDecorationStyle::kNone != state) {
           attributes->SetString(ToString(attr.first), ToString(state));
         }
+      } break;
+      case ax::mojom::IntAttribute::kDetailsFrom: {
+        attributes->SetString(
+            ToString(attr.first),
+            ToString(static_cast<ax::mojom::DetailsFrom>(attr.second)));
       } break;
       case ax::mojom::IntAttribute::kAriaCellColumnSpan:
       case ax::mojom::IntAttribute::kAriaCellRowSpan:
@@ -225,19 +255,22 @@ struct PopulateAxNodeAttributes {
 
   // Set Bool Attributes.
   void operator()(const std::pair<ax::mojom::BoolAttribute, bool> attr) {
-    if (attr.first != ax::mojom::BoolAttribute::kNone)
+    if (attr.first != ax::mojom::BoolAttribute::kNone) {
       attributes->SetBool(ToString(attr.first), attr.second);
+    }
   }
   // Set String Attributes.
   void operator()(
       const std::pair<ax::mojom::StringAttribute, std::string>& attr) {
-    if (attr.first != ax::mojom::StringAttribute::kNone)
+    if (attr.first != ax::mojom::StringAttribute::kNone) {
       attributes->SetString(ToString(attr.first), attr.second);
+    }
   }
   // Set Float attributes.
   void operator()(const std::pair<ax::mojom::FloatAttribute, float>& attr) {
-    if (attr.first != ax::mojom::FloatAttribute::kNone)
+    if (attr.first != ax::mojom::FloatAttribute::kNone) {
       attributes->SetDouble(ToString(attr.first), attr.second);
+    }
   }
 
   // Set Int list attributes.
@@ -249,20 +282,22 @@ struct PopulateAxNodeAttributes {
       if (ax::mojom::IntListAttribute::kMarkerTypes == attr.first) {
         list = CefListValue::Create();
         int index = 0;
-        for (size_t i = 0; i < attr.second.size(); ++i) {
-          auto type = static_cast<ax::mojom::MarkerType>(attr.second[i]);
+        for (int i : attr.second) {
+          auto type = static_cast<ax::mojom::MarkerType>(i);
 
-          if (type == ax::mojom::MarkerType::kNone)
+          if (type == ax::mojom::MarkerType::kNone) {
             continue;
+          }
 
           static ax::mojom::MarkerType marktypeArr[] = {
               ax::mojom::MarkerType::kSpelling, ax::mojom::MarkerType::kGrammar,
               ax::mojom::MarkerType::kTextMatch};
 
           // Iterate and find which markers are set.
-          for (unsigned j = 0; j < base::size(marktypeArr); j++) {
-            if (attr.second[i] & static_cast<int>(marktypeArr[j]))
-              list->SetString(index++, ToString(marktypeArr[j]));
+          for (auto& j : marktypeArr) {
+            if (i & static_cast<int>(j)) {
+              list->SetString(index++, ToString(j));
+            }
           }
         }
       } else {
@@ -277,11 +312,12 @@ struct PopulateAxNodeAttributes {
 CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXNodeData& node) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (node.id != -1)
+  if (node.id != -1) {
     value->SetInt("id", node.id);
+  }
 
   value->SetString("role", ToString(node.role));
-  value->SetList("state", ToCefValue(node.state));
+  value->SetList("state", ToCefValue(node.state.value()));
 
   if (node.relative_bounds.offset_container_id != -1) {
     value->SetInt("offset_container_id",
@@ -308,13 +344,15 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXNodeData& node) {
        ++action_index) {
     auto action = static_cast<ax::mojom::Action>(action_index);
     if (node.HasAction(action)) {
-      if (!actions_strings)
+      if (!actions_strings) {
         actions_strings = CefListValue::Create();
+      }
       actions_strings->SetString(actions_idx++, ToString(action));
     }
   }
-  if (actions_strings)
+  if (actions_strings) {
     value->SetList("actions", actions_strings);
+  }
 
   CefRefPtr<CefDictionaryValue> attributes = CefDictionaryValue::Create();
   PopulateAxNodeAttributes func(attributes);
@@ -331,7 +369,10 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXNodeData& node) {
                 func);
 
   // Poupulate Bool Attributes.
-  std::for_each(node.bool_attributes.begin(), node.bool_attributes.end(), func);
+  node.bool_attributes.ForEach(
+      [&func](ax::mojom::BoolAttribute attr, bool value) {
+        func(std::make_pair(attr, value));
+      });
 
   // Populate int list attributes.
   std::for_each(node.intlist_attributes.begin(), node.intlist_attributes.end(),
@@ -346,29 +387,37 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXNodeData& node) {
 CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXTreeData& treeData) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (!treeData.tree_id.ToString().empty())
+  if (!treeData.tree_id.ToString().empty()) {
     value->SetString("tree_id", treeData.tree_id.ToString());
+  }
 
-  if (!treeData.parent_tree_id.ToString().empty())
+  if (!treeData.parent_tree_id.ToString().empty()) {
     value->SetString("parent_tree_id", treeData.parent_tree_id.ToString());
+  }
 
-  if (!treeData.focused_tree_id.ToString().empty())
+  if (!treeData.focused_tree_id.ToString().empty()) {
     value->SetString("focused_tree_id", treeData.focused_tree_id.ToString());
+  }
 
-  if (!treeData.doctype.empty())
+  if (!treeData.doctype.empty()) {
     value->SetString("doctype", treeData.doctype);
+  }
 
   value->SetBool("loaded", treeData.loaded);
 
-  if (treeData.loading_progress != 0.0)
+  if (treeData.loading_progress != 0.0) {
     value->SetDouble("loading_progress", treeData.loading_progress);
+  }
 
-  if (!treeData.mimetype.empty())
+  if (!treeData.mimetype.empty()) {
     value->SetString("mimetype", treeData.mimetype);
-  if (!treeData.url.empty())
+  }
+  if (!treeData.url.empty()) {
     value->SetString("url", treeData.url);
-  if (!treeData.title.empty())
+  }
+  if (!treeData.title.empty()) {
     value->SetString("title", treeData.title);
+  }
 
   if (treeData.sel_anchor_object_id != -1) {
     value->SetInt("sel_anchor_object_id", treeData.sel_anchor_object_id);
@@ -383,8 +432,9 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXTreeData& treeData) {
                      ToString(treeData.sel_anchor_affinity));
   }
 
-  if (treeData.focus_id != -1)
+  if (treeData.focus_id != -1) {
     value->SetInt("focus_id", treeData.focus_id);
+  }
 
   return value;
 }
@@ -398,11 +448,13 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXTreeUpdate& update) {
     value->SetDictionary("tree_data", ToCefValue(update.tree_data));
   }
 
-  if (update.node_id_to_clear != 0)
+  if (update.node_id_to_clear != 0) {
     value->SetInt("node_id_to_clear", update.node_id_to_clear);
+  }
 
-  if (update.root_id != 0)
+  if (update.root_id != 0) {
     value->SetInt("root_id", update.root_id);
+  }
 
   value->SetList("nodes", ToCefValue(update.nodes));
 
@@ -413,28 +465,33 @@ CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXTreeUpdate& update) {
 CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXEvent& event) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (event.event_type != ax::mojom::Event::kNone)
+  if (event.event_type != ax::mojom::Event::kNone) {
     value->SetString("event_type", ToString(event.event_type));
+  }
 
-  if (event.id != -1)
+  if (event.id != -1) {
     value->SetInt("id", event.id);
+  }
 
-  if (event.event_from != ax::mojom::EventFrom::kNone)
+  if (event.event_from != ax::mojom::EventFrom::kNone) {
     value->SetString("event_from", ToString(event.event_from));
+  }
 
-  if (event.action_request_id != -1)
+  if (event.action_request_id != -1) {
     value->SetInt("action_request_id", event.action_request_id);
+  }
 
   return value;
 }
 
 // Convert AXEventNotificationDetails to CefDictionaryValue.
 CefRefPtr<CefDictionaryValue> ToCefValue(
-    const content::AXEventNotificationDetails& eventData) {
+    const ui::AXUpdatesAndEvents& eventData) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (!eventData.ax_tree_id.ToString().empty())
+  if (!eventData.ax_tree_id.ToString().empty()) {
     value->SetString("ax_tree_id", eventData.ax_tree_id.ToString());
+  }
 
   if (eventData.updates.size() > 0) {
     CefRefPtr<CefListValue> updates = CefListValue::Create();
@@ -464,32 +521,46 @@ CefRefPtr<CefDictionaryValue> ToCefValue(
 CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXRelativeBounds& location) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (location.offset_container_id != -1)
+  if (location.offset_container_id != -1) {
     value->SetInt("offset_container_id", location.offset_container_id);
+  }
 
   value->SetDictionary("bounds", ToCefValue(location.bounds));
 
   // Transform matrix is private, so we set the string that Clients can parse
   // and use if needed.
-  if (location.transform && !location.transform->IsIdentity())
+  if (location.transform && !location.transform->IsIdentity()) {
     value->SetString("transform", location.transform->ToString());
+  }
 
   return value;
 }
 
 // Convert AXLocationChangeNotificationDetails to CefDictionaryValue.
-CefRefPtr<CefDictionaryValue> ToCefValue(
-    const content::AXLocationChangeNotificationDetails& locData) {
+CefRefPtr<CefDictionaryValue> ToCefValue(const ui::AXTreeID& tree_id,
+                                         const ui::AXLocationChange& locData) {
   CefRefPtr<CefDictionaryValue> value = CefDictionaryValue::Create();
 
-  if (locData.id != -1)
+  if (locData.id != -1) {
     value->SetInt("id", locData.id);
+  }
 
-  if (!locData.ax_tree_id.ToString().empty())
-    value->SetString("ax_tree_id", locData.ax_tree_id.ToString());
+  if (auto ax_tree_id = tree_id.ToString(); !ax_tree_id.empty()) {
+    value->SetString("ax_tree_id", ax_tree_id);
+  }
 
   value->SetDictionary("new_location", ToCefValue(locData.new_location));
 
+  return value;
+}
+
+CefRefPtr<CefListValue> ToCefValue(
+    const ui::AXTreeID& tree_id,
+    const std::vector<ui::AXLocationChange>& location_changes) {
+  CefRefPtr<CefListValue> value = CefListValue::Create();
+  for (size_t i = 0; i < location_changes.size(); i++) {
+    value->SetDictionary(i, ToCefValue(tree_id, location_changes[i]));
+  }
   return value;
 }
 
@@ -497,8 +568,9 @@ template <typename T>
 CefRefPtr<CefListValue> ToCefValue(const std::vector<T>& vecData) {
   CefRefPtr<CefListValue> value = CefListValue::Create();
 
-  for (size_t i = 0; i < vecData.size(); i++)
+  for (size_t i = 0; i < vecData.size(); i++) {
     value->SetDictionary(i, ToCefValue(vecData[i]));
+  }
 
   return value;
 }
@@ -508,16 +580,17 @@ CefRefPtr<CefListValue> ToCefValue(const std::vector<T>& vecData) {
 namespace osr_accessibility_util {
 
 CefRefPtr<CefValue> ParseAccessibilityEventData(
-    const content::AXEventNotificationDetails& data) {
+    const ui::AXUpdatesAndEvents& details) {
   CefRefPtr<CefValue> value = CefValue::Create();
-  value->SetDictionary(ToCefValue(data));
+  value->SetDictionary(ToCefValue(details));
   return value;
 }
 
 CefRefPtr<CefValue> ParseAccessibilityLocationData(
-    const std::vector<content::AXLocationChangeNotificationDetails>& data) {
+    const ui::AXTreeID& tree_id,
+    const ui::AXLocationAndScrollUpdates& details) {
   CefRefPtr<CefValue> value = CefValue::Create();
-  value->SetList(ToCefValue(data));
+  value->SetList(ToCefValue(tree_id, details.location_changes));
   return value;
 }
 

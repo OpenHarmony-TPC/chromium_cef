@@ -2,34 +2,29 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/browser_context.h"
+#include "cef/libcef/browser/browser_context.h"
 
 #include <map>
+#include <memory>
 #include <utility>
-
-#include "libcef/browser/context.h"
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/common/frame_util.h"
-#include "libcef/features/runtime.h"
 
 #include "base/files/file_util.h"
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/no_destructor.h"
-#include "base/path_service.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/media_router/media_router_manager.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "cef/libcef/common/frame_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
-
-#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
-#include "libcef/browser/media_router/media_router_manager.h"
-#endif
 
 using content::BrowserThread;
 
@@ -40,7 +35,7 @@ class ImplManager {
  public:
   using Vector = std::vector<CefBrowserContext*>;
 
-  ImplManager() {}
+  ImplManager() = default;
 
   ImplManager(const ImplManager&) = delete;
   ImplManager& operator=(const ImplManager&) = delete;
@@ -59,15 +54,18 @@ class ImplManager {
   void RemoveImpl(CefBrowserContext* impl, const base::FilePath& path) {
     CEF_REQUIRE_UIT();
 
-    Vector::iterator it = GetImplPos(impl);
-    DCHECK(it != all_.end());
-    all_.erase(it);
+    {
+      Vector::iterator it = GetImplPos(impl);
+      DCHECK(it != all_.end());
+      all_.erase(it);
+    }
 
     if (!path.empty()) {
       PathMap::iterator it = map_.find(path);
       DCHECK(it != map_.end());
-      if (it != map_.end())
+      if (it != map_.end()) {
         map_.erase(it);
+      }
     }
   }
 
@@ -91,12 +89,14 @@ class ImplManager {
   CefBrowserContext* GetImplFromBrowserContext(
       const content::BrowserContext* context) {
     CEF_REQUIRE_UIT();
-    if (!context)
+    if (!context) {
       return nullptr;
+    }
 
     for (const auto& bc : all_) {
-      if (bc->AsBrowserContext() == context)
+      if (bc->AsBrowserContext() == context) {
         return bc;
+      }
     }
     return nullptr;
   }
@@ -113,8 +113,9 @@ class ImplManager {
     CEF_REQUIRE_UIT();
     DCHECK(!path.empty());
     PathMap::const_iterator it = map_.find(path);
-    if (it != map_.end())
+    if (it != map_.end()) {
       return it->second;
+    }
     return nullptr;
   }
 
@@ -124,13 +125,14 @@ class ImplManager {
   Vector::iterator GetImplPos(const CefBrowserContext* impl) {
     Vector::iterator it = all_.begin();
     for (; it != all_.end(); ++it) {
-      if (*it == impl)
+      if (*it == impl) {
         return it;
+      }
     }
     return all_.end();
   }
 
-  using PathMap = std::map<base::FilePath, CefBrowserContext*>;
+  using PathMap = std::map<base::FilePath, raw_ptr<CefBrowserContext>>;
   PathMap map_;
 
   Vector all_;
@@ -152,6 +154,11 @@ CefBrowserContext* GetSelf(base::WeakPtr<CefBrowserContext> self) {
 CefBrowserContext::CookieableSchemes MakeSupportedSchemes(
     const CefString& schemes_list,
     bool include_defaults) {
+  if (schemes_list.empty() && include_defaults) {
+    // No explicit registration of schemes.
+    return std::nullopt;
+  }
+
   std::vector<std::string> all_schemes;
   if (!schemes_list.empty()) {
     all_schemes =
@@ -168,7 +175,13 @@ CefBrowserContext::CookieableSchemes MakeSupportedSchemes(
     all_schemes.push_back("wss");
   }
 
-  return absl::make_optional(all_schemes);
+  return std::make_optional(all_schemes);
+}
+
+template <typename T>
+CefBrowserContext::CookieableSchemes MakeSupportedSchemes(const T& settings) {
+  return MakeSupportedSchemes(CefString(&settings.cookieable_schemes_list),
+                              !settings.cookieable_schemes_exclude_defaults);
 }
 
 }  // namespace
@@ -187,19 +200,14 @@ CefBrowserContext::~CefBrowserContext() {
 }
 
 void CefBrowserContext::Initialize() {
-  base::PathService::Get(base::DIR_CACHE, &cache_path_);
+  cache_path_ = base::FilePath(CefString(&settings_.cache_path));
 
-  if (!cache_path_.empty())
+  if (!cache_path_.empty()) {
     g_manager.Get().SetImplPath(this, cache_path_);
+  }
 
   iothread_state_ = base::MakeRefCounted<CefIOThreadState>();
-
-  if (settings_.cookieable_schemes_list.length > 0 ||
-      settings_.cookieable_schemes_exclude_defaults) {
-    cookieable_schemes_ =
-        MakeSupportedSchemes(CefString(&settings_.cookieable_schemes_list),
-                             !settings_.cookieable_schemes_exclude_defaults);
-  }
+  cookieable_schemes_ = MakeSupportedSchemes(settings_);
 }
 
 void CefBrowserContext::Shutdown() {
@@ -215,10 +223,8 @@ void CefBrowserContext::Shutdown() {
   // Unregister the context first to avoid re-entrancy during shutdown.
   g_manager.Get().RemoveImpl(this, cache_path_);
 
-#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   // Destroy objects that may hold references to the MediaRouter.
   media_router_manager_.reset();
-#endif
 
   // Invalidate any Getter references to this object.
   weak_ptr_factory_.InvalidateWeakPtrs();
@@ -240,7 +246,8 @@ void CefBrowserContext::RemoveCefRequestContext(
     Shutdown();
 
     // Allow the current call stack to unwind before deleting |this|.
-    content::BrowserThread::DeleteSoon(CEF_UIT, FROM_HERE, this);
+    content::BrowserThread::GetTaskRunnerForThread(CEF_UIT)->DeleteSoon(
+        FROM_HERE, this);
   }
 }
 
@@ -265,23 +272,7 @@ CefBrowserContext* CefBrowserContext::FromBrowserContext(
 
 // static
 CefBrowserContext* CefBrowserContext::FromProfile(const Profile* profile) {
-  auto* cef_context = FromBrowserContext(profile);
-  if (cef_context)
-    return cef_context;
-
-#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
-  if (cef::IsChromeRuntimeEnabled()) {
-    auto* original_profile = profile->GetOriginalProfile();
-    if (original_profile != profile) {
-      // With the Chrome runtime if the user launches an incognito window via
-      // the UI we might be associated with the original Profile instead of the
-      // (current) incognito profile.
-      return FromBrowserContext(original_profile);
-    }
-  }
-#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
-
-  return nullptr;
+  return FromBrowserContext(profile);
 }
 
 // static
@@ -292,8 +283,7 @@ std::vector<CefBrowserContext*> CefBrowserContext::GetAll() {
 void CefBrowserContext::OnRenderFrameCreated(
     CefRequestContextImpl* request_context,
     const content::GlobalRenderFrameHostId& global_id,
-    bool is_main_frame,
-    bool is_guest_view) {
+    bool is_main_frame) {
   CEF_REQUIRE_UIT();
   DCHECK(frame_util::IsValidGlobalId(global_id));
 
@@ -311,14 +301,14 @@ void CefBrowserContext::OnRenderFrameCreated(
 void CefBrowserContext::OnRenderFrameDeleted(
     CefRequestContextImpl* request_context,
     const content::GlobalRenderFrameHostId& global_id,
-    bool is_main_frame,
-    bool is_guest_view) {
+    bool is_main_frame) {
   CEF_REQUIRE_UIT();
   DCHECK(frame_util::IsValidGlobalId(global_id));
 
   auto it1 = render_id_set_.find(global_id);
-  if (it1 != render_id_set_.end())
+  if (it1 != render_id_set_.end()) {
     render_id_set_.erase(it1);
+  }
 
   CefRefPtr<CefRequestContextHandler> handler = request_context->GetHandler();
   if (handler) {
@@ -343,15 +333,17 @@ bool CefBrowserContext::IsAssociatedContext(
 
   if (frame_util::IsValidGlobalId(global_id)) {
     const auto it1 = render_id_set_.find(global_id);
-    if (it1 != render_id_set_.end())
+    if (it1 != render_id_set_.end()) {
       return true;
+    }
   }
 
   if (frame_util::IsValidChildId(global_id.child_id) && !require_frame_match) {
     // Choose an arbitrary handler for the same process.
     for (const auto& render_ids : render_id_set_) {
-      if (render_ids.child_id == global_id.child_id)
+      if (render_ids.child_id == global_id.child_id) {
         return true;
+      }
     }
   }
 
@@ -374,59 +366,43 @@ void CefBrowserContext::ClearSchemeHandlerFactories() {
                                iothread_state_));
 }
 
-void CefBrowserContext::LoadExtension(
-    const CefString& root_directory,
-    CefRefPtr<CefDictionaryValue> manifest,
-    CefRefPtr<CefExtensionHandler> handler,
-    CefRefPtr<CefRequestContext> loader_context) {
-  NOTIMPLEMENTED();
-  if (handler)
-    handler->OnExtensionLoadFailed(ERR_ABORTED);
-}
-
-bool CefBrowserContext::GetExtensions(std::vector<CefString>& extension_ids) {
-  NOTIMPLEMENTED();
-  return false;
-}
-
-CefRefPtr<CefExtension> CefBrowserContext::GetExtension(
-    const CefString& extension_id) {
-  NOTIMPLEMENTED();
-  return nullptr;
-}
-
-bool CefBrowserContext::UnloadExtension(const CefString& extension_id) {
-  NOTIMPLEMENTED();
-  return false;
-}
-
-bool CefBrowserContext::IsPrintPreviewSupported() const {
-  return true;
-}
-
 network::mojom::NetworkContext* CefBrowserContext::GetNetworkContext() {
   CEF_REQUIRE_UIT();
   auto browser_context = AsBrowserContext();
   return browser_context->GetDefaultStoragePartition()->GetNetworkContext();
 }
 
-#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 CefMediaRouterManager* CefBrowserContext::GetMediaRouterManager() {
   CEF_REQUIRE_UIT();
   if (!media_router_manager_) {
-    media_router_manager_.reset(new CefMediaRouterManager(AsBrowserContext()));
+    media_router_manager_ =
+        std::make_unique<CefMediaRouterManager>(AsBrowserContext());
   }
   return media_router_manager_.get();
 }
-#endif
+
+CefRefPtr<CefRequestContextImpl> CefBrowserContext::GetAnyRequestContext(
+    bool prefer_no_handler) const {
+  CEF_REQUIRE_UIT();
+  if (request_context_set_.empty()) {
+    return nullptr;
+  }
+
+  if (prefer_no_handler) {
+    for (const auto& request_context : request_context_set_) {
+      if (!request_context->GetHandler()) {
+        return request_context.get();
+      }
+    }
+  }
+
+  return request_context_set_.begin()->get();
+}
 
 CefBrowserContext::CookieableSchemes CefBrowserContext::GetCookieableSchemes()
     const {
   CEF_REQUIRE_UIT();
-  if (cookieable_schemes_)
-    return cookieable_schemes_;
-
-  return GetGlobalCookieableSchemes();
+  return cookieable_schemes_;
 }
 
 // static
@@ -435,15 +411,6 @@ CefBrowserContext::GetGlobalCookieableSchemes() {
   CEF_REQUIRE_UIT();
 
   static base::NoDestructor<CookieableSchemes> schemes(
-      []() -> CookieableSchemes {
-        const auto& settings = CefContext::Get()->settings();
-        if (settings.cookieable_schemes_list.length > 0 ||
-            settings.cookieable_schemes_exclude_defaults) {
-          return MakeSupportedSchemes(
-              CefString(&settings.cookieable_schemes_list),
-              !settings.cookieable_schemes_exclude_defaults);
-        }
-        return absl::nullopt;
-      }());
+      []() { return MakeSupportedSchemes(CefContext::Get()->settings()); }());
   return *schemes;
 }

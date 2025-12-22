@@ -9,6 +9,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/task/sequenced_task_runner_helpers.h"
+#include "services/network/public/cpp/url_loader_factory_builder.h"
 #include "services/network/public/mojom/url_loader_factory.mojom.h"
 
 namespace content {
@@ -50,19 +51,16 @@ class URLLoaderFactoryGetter
                                           URLLoaderFactoryGetterDeleter>;
   friend struct URLLoaderFactoryGetterDeleter;
 
-  URLLoaderFactoryGetter(
-      std::unique_ptr<network::PendingSharedURLLoaderFactory>
-          loader_factory_info,
-      network::mojom::URLLoaderFactoryPtrInfo proxy_factory_ptr_info,
-      network::mojom::URLLoaderFactoryRequest proxy_factory_request);
+  URLLoaderFactoryGetter(std::unique_ptr<network::PendingSharedURLLoaderFactory>
+                             loader_factory_info,
+                         network::URLLoaderFactoryBuilder factory_builder);
   ~URLLoaderFactoryGetter();
 
   void DeleteOnCorrectThread() const;
 
   std::unique_ptr<network::PendingSharedURLLoaderFactory> loader_factory_info_;
   scoped_refptr<network::SharedURLLoaderFactory> lazy_factory_;
-  network::mojom::URLLoaderFactoryPtrInfo proxy_factory_ptr_info_;
-  network::mojom::URLLoaderFactoryRequest proxy_factory_request_;
+  network::URLLoaderFactoryBuilder factory_builder_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
 };
 

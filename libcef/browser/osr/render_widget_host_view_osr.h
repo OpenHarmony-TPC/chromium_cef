@@ -1,29 +1,25 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
-// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that can
-// be found in the LICENSE file.
+// Copyright (c) 2014 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
-#include <string>
 #pragma once
 
 #include <map>
 #include <set>
-#include <unordered_map>
 #include <vector>
 
-#include "include/cef_base.h"
-#include "include/cef_browser.h"
-
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/osr/host_display_client_osr.h"
-#include "libcef/browser/osr/motion_event_osr.h"
-
-#include "base/containers/circular_deque.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "build/build_config.h"
 #include "cc/layers/deadline_policy.h"
+#include "cef/include/cef_base.h"
+#include "cef/include/cef_browser.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/osr/host_display_client_osr.h"
+#include "cef/libcef/browser/osr/motion_event_osr.h"
 #include "components/viz/common/frame_sinks/begin_frame_source.h"
 #include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
 #include "content/browser/renderer_host/input/mouse_wheel_phase_handler.h"
@@ -31,7 +27,6 @@
 #include "content/browser/renderer_host/text_input_manager.h"
 #include "content/public/browser/render_frame_metadata_provider.h"
 #include "content/public/common/widget_type.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
 #include "third_party/blink/public/mojom/widget/record_content_to_visible_time_request.mojom-forward.h"
 #include "ui/base/cursor/cursor.h"
 #include "ui/base/cursor/mojom/cursor_type.mojom-shared.h"
@@ -40,7 +35,7 @@
 #include "ui/events/base_event_utils.h"
 #include "ui/events/gesture_detection/filtered_gesture_provider.h"
 #include "ui/events/gesture_detection/gesture_configuration.h"
-#include "ui/events/gesture_detection/motion_event_generic.h"
+#include "ui/events/velocity_tracker/motion_event_generic.h"
 #include "ui/gfx/geometry/rect.h"
 
 #if BUILDFLAG(IS_MAC)
@@ -56,14 +51,17 @@ class TouchSelectionController;
 }  // namespace ui
 
 namespace content {
+class BackingStore;
 class DelegatedFrameHost;
 class DelegatedFrameHostClient;
 class RenderWidgetHost;
 class RenderWidgetHostImpl;
 class RenderWidgetHostViewGuest;
-class BackingStore;
-class CursorManager;
 }  // namespace content
+
+namespace input {
+class CursorManager;
+}
 
 class CefCopyFrameGenerator;
 class CefSoftwareOutputDeviceOSR;
@@ -126,28 +124,22 @@ class CefRenderWidgetHostViewOSR
       content::PageVisibilityState page_visibility) override;
   void Hide() override;
   bool IsShowing() override;
-#if BUILDFLAG(IS_OHOS)
-  void WasOccluded() override;
-  void SetEnableLowerFrameRate(bool enabled);
-  gfx::Rect GetPhysicalViewBounds();
-  int GetShrinkViewportHeight();
-#endif
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*
   GetTouchSelectionControllerClientManager() override;
   gfx::Rect GetViewBounds() override;
   void SetBackgroundColor(SkColor color) override;
-  absl::optional<SkColor> GetBackgroundColor() override;
+  std::optional<SkColor> GetBackgroundColor() override;
   void UpdateBackgroundColor() override;
-  absl::optional<content::DisplayFeature> GetDisplayFeature() override;
-  void SetDisplayFeatureForTesting(
+  std::optional<content::DisplayFeature> GetDisplayFeature() override;
+  void DisableDisplayFeatureOverrideForEmulation() override;
+  void OverrideDisplayFeatureForEmulation(
       const content::DisplayFeature* display_feature) override;
-  blink::mojom::PointerLockResult LockMouse(
+  blink::mojom::PointerLockResult LockPointer(
       bool request_unadjusted_movement) override;
-  blink::mojom::PointerLockResult ChangeMouseLock(
+  blink::mojom::PointerLockResult ChangePointerLock(
       bool request_unadjusted_movement) override;
-  void UnlockMouse() override;
-  bool IsMouseLocked() override;
+  void UnlockPointer() override;
   void TakeFallbackContentFrom(content::RenderWidgetHostView* view) override;
 
 #if BUILDFLAG(IS_MAC)
@@ -158,87 +150,72 @@ class CefRenderWidgetHostViewOSR
   void ShowSharePicker(
       const std::string& title,
       const std::string& text,
-      const std::string& url,
+      const GURL& url,
       const std::vector<std::string>& file_paths,
       blink::mojom::ShareService::ShareCallback callback) override;
+  uint64_t GetNSViewId() const override;
 #endif  // BUILDFLAG(IS_MAC)
 
   // RenderWidgetHostViewBase implementation.
+  void InvalidateLocalSurfaceIdAndAllocationGroup() override;
+  void ClearFallbackSurfaceForCommitPending() override;
   void ResetFallbackToFirstNavigationSurface() override;
+  void OnUnconfirmedTapConvertedToTap() override;
   void InitAsPopup(content::RenderWidgetHostView* parent_host_view,
                    const gfx::Rect& bounds,
                    const gfx::Rect& anchor_rect) override;
-  void UpdateCursor(const content::WebCursor& cursor) override;
+  void UpdateCursor(const ui::Cursor& cursor) override;
   void SetIsLoading(bool is_loading) override;
   void RenderProcessGone() override;
   void Destroy() override;
   void UpdateTooltipUnderCursor(const std::u16string& tooltip_text) override;
-  content::CursorManager* GetCursorManager() override;
+  input::CursorManager* GetCursorManager() override;
   gfx::Size GetCompositorViewportPixelSize() override;
   void CopyFromSurface(
       const gfx::Rect& src_rect,
       const gfx::Size& output_size,
-      base::OnceCallback<void(const SkBitmap&)> callback) override;
+      base::OnceCallback<void(const viz::CopyOutputBitmapWithMetadata&)>
+          callback) override;
   display::ScreenInfos GetNewScreenInfosForUpdate() override;
   void TransformPointToRootSurface(gfx::PointF* point) override;
   gfx::Rect GetBoundsInRootWindow() override;
-#if BUILDFLAG(IS_OHOS)
-  void SendInternalBeginFrame() override;
-#endif
 
 #if !BUILDFLAG(IS_MAC)
   viz::ScopedSurfaceIdAllocator DidUpdateVisualProperties(
       const cc::RenderFrameMetadata& metadata) override;
-      void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
-      bool ShouldVirtualKeyboardOverlayContent() override;
 #endif
 
-  void SetShouldFrameSubmissionBeforeDraw(bool should);
-  void SetDrawMode(int mode);
-  void SetDrawRect(const gfx::Rect& rect);
-  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
       const gfx::Range& range,
-      const std::vector<gfx::Rect>& character_bounds) override;
+      const std::optional<std::vector<gfx::Rect>>& character_bounds) override;
   std::unique_ptr<content::SyntheticGestureTarget>
   CreateSyntheticGestureTarget() override;
   bool TransformPointToCoordSpaceForView(
       const gfx::PointF& point,
-      RenderWidgetHostViewBase* target_view,
+      input::RenderWidgetHostViewInput* target_view,
       gfx::PointF* transformed_point) override;
   void DidNavigate() override;
   void SelectionChanged(const std::u16string& text,
                         size_t offset,
                         const gfx::Range& range) override;
-  void SelectionBoundsChanged(const gfx::Rect& anchor_rect,
-                              base::i18n::TextDirection anchor_dir,
-                              const gfx::Rect& focus_rect,
-                              base::i18n::TextDirection focus_dir,
-                              const gfx::Rect& bounding_box,
-                              bool is_anchor_first) override;
   const viz::LocalSurfaceId& GetLocalSurfaceId() const override;
+  void UpdateFrameSinkIdRegistration() override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
   viz::FrameSinkId GetRootFrameSinkId() override;
   void NotifyHostAndDelegateOnWasShown(
       blink::mojom::RecordContentToVisibleTimeRequestPtr visible_time_request)
       override;
-  void RequestPresentationTimeFromHostOrDelegate(
+  void RequestSuccessfulPresentationTimeFromHostOrDelegate(
       blink::mojom::RecordContentToVisibleTimeRequestPtr visible_time_request)
       override;
-  void CancelPresentationTimeRequestForHostAndDelegate() override;
+  void CancelSuccessfulPresentationTimeRequestForHostAndDelegate() override;
 
   void OnFrameComplete(const viz::BeginFrameAck& ack);
 
   // RenderFrameMetadataProvider::Observer implementation.
-
-#if BUILDFLAG(IS_OHOS)
-  void OnRenderFrameMetadataChangedBeforeActivation(
-      const cc::RenderFrameMetadata& metadata) override;
-#else
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override {}
-#endif
   void OnRenderFrameMetadataChangedAfterActivation(
       base::TimeTicks activation_time) override;
   void OnRenderFrameSubmission() override {}
@@ -247,6 +224,7 @@ class CefRenderWidgetHostViewOSR
 
   // ui::CompositorDelegate implementation.
   std::unique_ptr<viz::HostDisplayClient> CreateHostDisplayClient() override;
+  bool UseProxyOutputDevice() override;
 
   // TextInputManager::Observer implementation.
   void OnUpdateTextInputStateCalled(
@@ -254,43 +232,22 @@ class CefRenderWidgetHostViewOSR
       RenderWidgetHostViewBase* updated_view,
       bool did_update_state) override;
 
-  void FocusedNodeChanged(bool is_editable_node,
-                          const gfx::Rect& node_bounds_in_screen) override;
-
   // ui::GestureProviderClient implementation.
   void ProcessAckedTouchEvent(
-      const content::TouchEventWithLatencyInfo& touch,
+      const input::TouchEventWithLatencyInfo& touch,
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
-  void DidOverscroll(const ui::DidOverscrollParams& params) override;
-  void DidStopFlinging() override;
-  blink::mojom::InputEventResultState FilterInputEvent(
-      const blink::WebInputEvent& input_event) override;
-
-#if BUILDFLAG(IS_OHOS)
-  void OnVsync();
-
-  void SendGestureEvent(const ui::GestureEventData& gesture);
-  std::u16string GetSelectedText() override;
-  std::u16string GetText();
-  void WasKeyboardResized();
-#endif
 
   bool InstallTransparency();
 
   void WasResized();
   void SynchronizeVisualProperties(
       const cc::DeadlinePolicy& deadline_policy,
-#if BUILDFLAG(IS_OHOS)
-      const absl::optional<viz::LocalSurfaceId>& child_local_surface_id,
-      bool isKeyboard = false);
-#else
-      const absl::optional<viz::LocalSurfaceId>& child_local_surface_id);
-#endif
+      const std::optional<viz::LocalSurfaceId>& child_local_surface_id);
   void OnScreenInfoChanged();
   void Invalidate(CefBrowserHost::PaintElementType type);
   void SendExternalBeginFrame();
-  void SendKeyEvent(const content::NativeWebKeyboardEvent& event);
+  void SendKeyEvent(const input::NativeWebKeyboardEvent& event);
   void SendMouseEvent(const blink::WebMouseEvent& event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
@@ -302,6 +259,9 @@ class CefRenderWidgetHostViewOSR
   void OnPaint(const gfx::Rect& damage_rect,
                const gfx::Size& pixel_size,
                const void* pixels);
+  void OnAcceleratedPaint(const gfx::Rect& damage_rect,
+                          const gfx::Size& pixel_size,
+                          const CefAcceleratedPaintInfo& info);
 
   void OnBeginFame(base::TimeTicks frame_time);
 
@@ -325,8 +285,9 @@ class CefRenderWidgetHostViewOSR
   }
 
   void set_popup_host_view(CefRenderWidgetHostViewOSR* popup_view) {
-    if (popup_view != popup_host_view_)
+    if (popup_view != popup_host_view_) {
       forward_touch_to_popup_ = false;
+    }
     popup_host_view_ = popup_view;
   }
   void set_child_host_view(CefRenderWidgetHostViewOSR* popup_view) {
@@ -345,12 +306,10 @@ class CefRenderWidgetHostViewOSR
 
   void ReleaseCompositor();
 
-  void SetDoubleTapSupportEnabled(bool enabled);
-  void SetMultiTouchZoomSupportEnabled(bool enabled);
-
-  static void AddCompositor(gfx::AcceleratedWidget widget,
-                            ui::Compositor* compositor);
-  static ui::Compositor* GetCompositor(gfx::AcceleratedWidget widget);
+  // Marks the current viz::LocalSurfaceId as invalid. AllocateLocalSurfaceId
+  // must be called before submitting new CompositorFrames. May be called by
+  // content::DelegatedFrameHostClient::InvalidateLocalSurfaceIdOnEviction.
+  void InvalidateLocalSurfaceId();
 
   ui::TouchSelectionController* selection_controller() const {
     return selection_controller_.get();
@@ -362,17 +321,7 @@ class CefRenderWidgetHostViewOSR
 
   ui::TextInputType GetTextInputType();
 
-  void OnTouchSelectionChanged(
-      const CefTouchHandleState& insert_handle,
-      const CefTouchHandleState& start_selection_handle,
-      const CefTouchHandleState& end_selection_handle,
-      bool need_report);
-  bool NeedPopupInsertTouchHandleQuickMenu();
-
-  // Marks the current viz::LocalSurfaceId as invalid. AllocateLocalSurfaceId
-  // must be called before submitting new CompositorFrames. May be called by
-  // content::DelegatedFrameHostClient::InvalidateLocalSurfaceIdOnEviction.
-  void InvalidateLocalSurfaceId();
+  bool is_hidden() const { return !is_showing_; }
 
  private:
   void SetFrameRate();
@@ -390,17 +339,6 @@ class CefRenderWidgetHostViewOSR
   void CreateSelectionController();
 
   void OnScrollOffsetChanged();
-
-#if BUILDFLAG(IS_OHOS)
-  void OnRootLayerChanged();
-  void GestureEventAck(const blink::WebGestureEvent& event,
-                       blink::mojom::InputEventResultState ack_result) override;
-  void UpdateEditBounds();
-  std::pair<int, int> HandleCursorOffset();
-  void OnTopControlsChanged(float top_controls_offset,
-                            float top_content_offset);
-  void FilterScrollEventImpl(const ui::GestureEventData& gesture);
-#endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
   void RemoveGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
@@ -429,7 +367,7 @@ class CefRenderWidgetHostViewOSR
   // has allocated one. Also sets child sequence number component of the
   // viz::LocalSurfaceId allocator.
   void UpdateLocalSurfaceIdFromEmbeddedClient(
-      const absl::optional<viz::LocalSurfaceId>& local_surface_id);
+      const std::optional<viz::LocalSurfaceId>& local_surface_id);
 
   // Returns the current viz::LocalSurfaceIdAllocation.
   const viz::LocalSurfaceId& GetOrCreateLocalSurfaceId();
@@ -439,8 +377,6 @@ class CefRenderWidgetHostViewOSR
   // Applies background color without notifying the RenderWidget about
   // opaqueness changes.
   void UpdateBackgroundColorFromRenderer(SkColor color);
-
-  void OnScaleChanged(float old_page_scale_factor, float nwe_page_scale_factor);
 
   // The last selection bounds reported to the view.
   gfx::SelectionBound selection_start_;
@@ -466,18 +402,19 @@ class CefRenderWidgetHostViewOSR
       parent_local_surface_id_allocator_;
   viz::ParentLocalSurfaceIdAllocator compositor_local_surface_id_allocator_;
 
-  std::unique_ptr<content::CursorManager> cursor_manager_;
+  std::unique_ptr<input::CursorManager> cursor_manager_;
 
   // Provides |source_id| for BeginFrameArgs that we create.
   viz::StubBeginFrameSource begin_frame_source_;
   uint64_t begin_frame_number_ = viz::BeginFrameArgs::kStartingFrameNumber;
   bool begin_frame_pending_ = false;
 
+  bool use_shared_texture_ = false;
   bool sync_frame_rate_ = false;
   bool external_begin_frame_enabled_ = false;
   bool needs_external_begin_frames_ = false;
 
-  CefHostDisplayClientOSR* host_display_client_ = nullptr;
+  raw_ptr<CefHostDisplayClientOSR> host_display_client_ = nullptr;
   std::unique_ptr<CefVideoConsumerOSR> video_consumer_;
 
   bool hold_resize_ = false;
@@ -488,33 +425,13 @@ class CefRenderWidgetHostViewOSR
   // The associated Model.  While |this| is being Destroyed,
   // |render_widget_host_| is NULL and the message loop is run one last time
   // Message handlers must check for a NULL |render_widget_host_|.
-  content::RenderWidgetHostImpl* render_widget_host_;
+  raw_ptr<content::RenderWidgetHostImpl> render_widget_host_;
 
   bool has_parent_;
-  CefRenderWidgetHostViewOSR* parent_host_view_;
-  CefRenderWidgetHostViewOSR* popup_host_view_ = nullptr;
-  CefRenderWidgetHostViewOSR* child_host_view_ = nullptr;
-  std::set<CefRenderWidgetHostViewOSR*> guest_host_views_;
-#if BUILDFLAG(IS_OHOS)
-  gfx::SizeF root_layer_size_;
-  double focus_rect_x_ = 0;
-  double focus_rect_y_ = 0;
-  double focus_rect_width_ = 0;
-  double focus_rect_height_ = 0;
-  int edit_bounds_x_ = 0;
-  int edit_bounds_y_ = 0;
-  int edit_bounds_width_ = 0;
-  int edit_bounds_height_ = 0;
-  bool should_wait_ = false;
-  bool is_select_text_ = false;
-  bool is_editable_node_ = false;
-  int last_key_code_ = -1;
-  gfx::Size viewport_size_in_pixels_;
-  float device_scale_factor_ = 1.0f;
-  float prev_top_controls_offset_ = 0.f;
-  float prev_top_content_offset_ = 0.f;
-  bool for_browser_ = false;
-#endif
+  raw_ptr<CefRenderWidgetHostViewOSR> parent_host_view_;
+  raw_ptr<CefRenderWidgetHostViewOSR> popup_host_view_ = nullptr;
+  raw_ptr<CefRenderWidgetHostViewOSR> child_host_view_ = nullptr;
+  std::set<raw_ptr<CefRenderWidgetHostViewOSR>> guest_host_views_;
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
 
@@ -548,24 +465,6 @@ class CefRenderWidgetHostViewOSR
   bool forward_touch_to_popup_ = false;
 
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
-
-  static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
-      compositor_map_;
-
-  static std::unordered_map<gfx::AcceleratedWidget, uint32_t>
-      accelerate_widget_map_;
-
-  float page_scale_factor_ = 0.f;
-
-  bool is_mouse_locked_ = false;
-
-#if BUILDFLAG(IS_OHOS)
-  base::circular_deque<ui::GestureEventData> gesture_event_queue_;
-
-  size_t gesture_update_count_ = 0;
-  bool is_scroll_consumed_ = false;
-  bool is_mouse_wheel_scroll_ = false;
-#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_

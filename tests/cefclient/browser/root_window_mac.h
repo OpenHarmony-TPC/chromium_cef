@@ -14,6 +14,7 @@
 
 namespace client {
 
+struct OsrRendererSettings;
 class RootWindowMacImpl;
 
 // OS X implementation of a top-level native window in the browser process.
@@ -22,11 +23,12 @@ class RootWindowMacImpl;
 class RootWindowMac : public RootWindow, public BrowserWindow::Delegate {
  public:
   // Constructor may be called on any thread.
-  RootWindowMac();
+  explicit RootWindowMac(bool use_alloy_style);
   ~RootWindowMac();
 
   BrowserWindow* browser_window() const;
   RootWindow::Delegate* delegate() const;
+  const OsrRendererSettings* osr_settings() const;
 
   // RootWindow methods.
   void Init(RootWindow::Delegate* delegate,
@@ -41,22 +43,31 @@ class RootWindowMac : public RootWindow, public BrowserWindow::Delegate {
                    CefBrowserSettings& settings) override;
   void Show(ShowMode mode) override;
   void Hide() override;
-  void SetBounds(int x, int y, size_t width, size_t height) override;
+  void SetBounds(int x,
+                 int y,
+                 size_t width,
+                 size_t height,
+                 bool content_bounds) override;
+  bool DefaultToContentBounds() const override;
   void Close(bool force) override;
   void SetDeviceScaleFactor(float device_scale_factor) override;
-  float GetDeviceScaleFactor() const override;
+  std::optional<float> GetDeviceScaleFactor() const override;
   CefRefPtr<CefBrowser> GetBrowser() const override;
   ClientWindowHandle GetWindowHandle() const override;
   bool WithWindowlessRendering() const override;
-  bool WithExtension() const override;
 
   // BrowserWindow::Delegate methods.
+  bool UseAlloyStyle() const override { return IsAlloyStyle(); }
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser) override;
   void OnBrowserWindowDestroyed() override;
   void OnSetAddress(const std::string& url) override;
   void OnSetTitle(const std::string& title) override;
   void OnSetFullscreen(bool fullscreen) override;
   void OnAutoResize(const CefSize& new_size) override;
+  void OnContentsBounds(const CefRect& new_bounds) override {
+    RootWindow::SetBounds(new_bounds,
+                          /*content_bounds=*/DefaultToContentBounds());
+  }
   void OnSetLoadingState(bool isLoading,
                          bool canGoBack,
                          bool canGoForward) override;

@@ -7,6 +7,9 @@
 #include "tests/ceftests/test_handler.h"
 #include "tests/gtest/include/gtest/gtest.h"
 
+// Set to 1 to enable verbose debugging info logging.
+#define VERBOSE_DEBUGGING 0
+
 namespace {
 
 const char kTestHTMLWithRegions[] =
@@ -100,10 +103,26 @@ class DraggableRegionsTestHandler : public TestHandler,
 
     draggable_regions_changed_ct_++;
 
+#if VERBOSE_DEBUGGING
+    LOG(INFO) << "step " << step_ << " regions.size " << regions.size()
+              << " url " << frame->GetURL().ToString();
+    if (regions.size() == 2) {
+      LOG(INFO) << "  region[0] x " << regions[0].bounds.x << " y "
+                << regions[0].bounds.y << " width " << regions[0].bounds.width
+                << " height " << regions[0].bounds.height;
+      LOG(INFO) << "  region[1] x " << regions[1].bounds.x << " y "
+                << regions[1].bounds.y << " width " << regions[1].bounds.width
+                << " height " << regions[1].bounds.height;
+    }
+#endif  // VERBOSE_DEBUGGING
+
     switch (step_) {
       case kStepWithRegions:
       case kStepWithChangingRegions2:
-        EXPECT_EQ(2U, regions.size());
+        EXPECT_EQ(2U, regions.size()) << step_;
+        if (regions.size() != 2U) {
+          break;
+        }
         EXPECT_NEAR(50, regions[0].bounds.x, 1);
         EXPECT_NEAR(50, regions[0].bounds.y, 1);
         EXPECT_NEAR(200, regions[0].bounds.width, 1);
@@ -117,7 +136,10 @@ class DraggableRegionsTestHandler : public TestHandler,
         break;
       case kStepWithChangingRegions:
       case kStepWithChangingRegions3:
-        EXPECT_EQ(2U, regions.size());
+        EXPECT_EQ(2U, regions.size()) << step_;
+        if (regions.size() != 2U) {
+          break;
+        }
         EXPECT_EQ(0, regions[0].bounds.x);
         EXPECT_EQ(0, regions[0].bounds.y);
         EXPECT_NEAR(200, regions[0].bounds.width, 1);
@@ -131,7 +153,7 @@ class DraggableRegionsTestHandler : public TestHandler,
         break;
       case kStepWithoutRegions:
       case kStepWithoutRegions2:
-        EXPECT_TRUE(regions.empty());
+        EXPECT_TRUE(regions.empty()) << step_;
         break;
     }
 
@@ -201,16 +223,16 @@ class DraggableRegionsTestHandler : public TestHandler,
     // When |same_origin_| is true every other URL gets a different origin.
     switch (step) {
       case kStepWithRegions:
-        return same_origin_ ? "http://test.com/regions"
-                            : "http://test2.com/regions";
+        return same_origin_ ? "https://test.com/regions"
+                            : "https://test2.com/regions";
       case kStepWithChangingRegions:
       case kStepWithChangingRegions2:
       case kStepWithChangingRegions3:
-        return "http://test.com/changing-regions";
+        return "https://test.com/changing-regions";
       case kStepWithoutRegions:
       case kStepWithoutRegions2:
-        return same_origin_ ? "http://test.com/no-regions"
-                            : "http://test2.com/no-regions";
+        return same_origin_ ? "https://test.com/no-regions"
+                            : "https://test2.com/no-regions";
     }
 
     NOTREACHED();

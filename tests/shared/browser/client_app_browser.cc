@@ -33,8 +33,9 @@ void ClientAppBrowser::PopulateSettings(CefRefPtr<CefCommandLine> command_line,
   if (!cookieable_schemes.empty()) {
     std::string list_str;
     for (const auto& scheme : cookieable_schemes) {
-      if (!list_str.empty())
+      if (!list_str.empty()) {
         list_str += ",";
+      }
       list_str += scheme;
     }
     CefString(&settings.cookieable_schemes_list) = list_str;
@@ -52,7 +53,7 @@ void ClientAppBrowser::OnBeforeCommandLineProcessing(
       // Use software rendering and compositing (disable GPU) for increased FPS
       // and decreased CPU usage. This will also disable WebGL so remove these
       // switches if you need that capability.
-      // See https://bitbucket.org/chromiumembedded/cef/issues/1257 for details.
+      // See https://github.com/chromiumembedded/cef/issues/1257 for details.
       if (!command_line->HasSwitch(switches::kEnableGPU)) {
         command_line->AppendSwitch("disable-gpu");
         command_line->AppendSwitch("disable-gpu-compositing");
@@ -67,45 +68,84 @@ void ClientAppBrowser::OnBeforeCommandLineProcessing(
       command_line->AppendSwitchWithValue("top-chrome-md", "non-material");
     }
 
-    if (!command_line->HasSwitch(switches::kCachePath) &&
-        !command_line->HasSwitch("disable-gpu-shader-disk-cache")) {
-      // Don't create a "GPUCache" directory when cache-path is unspecified.
-      command_line->AppendSwitch("disable-gpu-shader-disk-cache");
-    }
-
-    // Disable popup blocking for the chrome runtime.
-    command_line->AppendSwitch("disable-popup-blocking");
-
 #if defined(OS_MAC)
     // Disable the toolchain prompt on macOS.
     command_line->AppendSwitch("use-mock-keychain");
 #endif
 
+#if defined(OS_LINUX)
+    // On Linux, in off screen rendering (OSR) shared texture mode, we must
+    // ensure that ANGLE uses the EGL backend. Without this, DMABUF based
+    // rendering will fail. The Chromium fallback path uses X11 pixmaps,
+    // which are only supported by Mesa drivers (e.g., AMD and Intel).
+    //
+    // While Mesa supports DMABUFs via both EGL and pixmaps, the EGL based
+    // DMA BUF import path is more robust and required for compatibility with
+    // drivers like NVIDIA that do not support pixmaps.
+    //
+    // We also append the kOzonePlatform switch with value x11 to ensure
+    // that X11 semantics are preserved, which is necessary for compatibility
+    // with some GDK/X11 integrations (e.g. Wayland with AMD).
+    if (command_line->HasSwitch(switches::kOffScreenRenderingEnabled) &&
+        command_line->HasSwitch(switches::kSharedTextureEnabled)) {
+      if (!command_line->HasSwitch(switches::kUseAngle)) {
+        command_line->AppendSwitchWithValue(switches::kUseAngle, "gl-egl");
+      }
+      if (!command_line->HasSwitch(switches::kOzonePlatform)) {
+        command_line->AppendSwitchWithValue(switches::kOzonePlatform, "x11");
+      }
+    }
+#endif
+
     DelegateSet::iterator it = delegates_.begin();
-    for (; it != delegates_.end(); ++it)
+    for (; it != delegates_.end(); ++it) {
       (*it)->OnBeforeCommandLineProcessing(this, command_line);
+    }
+  }
+}
+
+void ClientAppBrowser::OnRegisterCustomPreferences(
+    cef_preferences_type_t type,
+    CefRawPtr<CefPreferenceRegistrar> registrar) {
+  for (auto& delegate : delegates_) {
+    delegate->OnRegisterCustomPreferences(this, type, registrar);
   }
 }
 
 void ClientAppBrowser::OnContextInitialized() {
-  DelegateSet::iterator it = delegates_.begin();
-  for (; it != delegates_.end(); ++it)
-    (*it)->OnContextInitialized(this);
+  for (auto& delegate : delegates_) {
+    delegate->OnContextInitialized(this);
+  }
 }
 
-void ClientAppBrowser::OnBeforeChildProcessLaunch(
-    CefRefPtr<CefCommandLine> command_line) {
-  DelegateSet::iterator it = delegates_.begin();
-  for (; it != delegates_.end(); ++it)
-    (*it)->OnBeforeChildProcessLaunch(this, command_line);
+bool ClientAppBrowser::OnAlreadyRunningAppRelaunch(
+    CefRefPtr<CefCommandLine> command_line,
+    const CefString& current_directory) {
+  for (auto& delegate : delegates_) {
+    if (delegate->OnAlreadyRunningAppRelaunch(this, command_line,
+                                              current_directory)) {
+      return true;
+    }
+  }
+  return false;
 }
 
-void ClientAppBrowser::OnScheduleMessagePumpWork(int64 delay) {
+void ClientAppBrowser::OnScheduleMessagePumpWork(int64_t delay) {
   // Only used when `--external-message-pump` is passed via the command-line.
   MainMessageLoopExternalPump* message_pump =
       MainMessageLoopExternalPump::Get();
-  if (message_pump)
+  if (message_pump) {
     message_pump->OnScheduleMessagePumpWork(delay);
+  }
+}
+
+CefRefPtr<CefClient> ClientAppBrowser::GetDefaultClient() {
+  for (auto& delegate : delegates_) {
+    if (auto client = delegate->GetDefaultClient(this)) {
+      return client;
+    }
+  }
+  return nullptr;
 }
 
 }  // namespace client

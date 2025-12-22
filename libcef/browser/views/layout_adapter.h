@@ -6,7 +6,7 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_LAYOUT_ADAPTER_H_
 #pragma once
 
-#include "include/views/cef_layout.h"
+#include "cef/include/views/cef_layout.h"
 
 namespace views {
 class LayoutManager;
@@ -17,7 +17,7 @@ class LayoutManager;
 // usage overview.
 class CefLayoutAdapter {
  public:
-  CefLayoutAdapter() {}
+  CefLayoutAdapter() = default;
 
   // Returns the CefLayoutAdapter for the specified |layout|.
   static CefLayoutAdapter* GetFor(CefRefPtr<CefLayout> layout);
@@ -32,7 +32,7 @@ class CefLayoutAdapter {
   virtual void Detach() = 0;
 
  protected:
-  virtual ~CefLayoutAdapter() {}
+  virtual ~CefLayoutAdapter() = default;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_VIEWS_LAYOUT_ADAPTER_H_

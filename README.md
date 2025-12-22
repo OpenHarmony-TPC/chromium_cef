@@ -9,8 +9,8 @@ The Chromium Embedded Framework (CEF) is a simple framework for embedding Chromi
 * Branches and Building - https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding
 * Announcements - https://groups.google.com/forum/#!forum/cef-announce
 * Support Forum - http://www.magpcss.org/ceforum/
-* CEF1 C++ API Docs - http://magpcss.org/ceforum/apidocs/
-* CEF3 C++ API Docs - http://magpcss.org/ceforum/apidocs3/
+* Issue Tracker - https://github.com/chromiumembedded/cef/issues
+* C++ API Docs - [Stable release docs](https://cef-builds.spotifycdn.com/docs/stable.html) / [Beta release docs](https://cef-builds.spotifycdn.com/docs/beta.html)
 * Downloads - https://cef-builds.spotifycdn.com/index.html
 * Donations - http://www.magpcss.org/ceforum/donate.php
 
@@ -29,7 +29,7 @@ Numerous individuals and organizations contribute time and resources to support 
 
 # Getting Started
 
-Users new to CEF development should start by reading the [Tutorial](https://bitbucket.org/chromiumembedded/cef/wiki/Tutorial) Wiki page for an overview of CEF usage and then proceed to the [GeneralUsage](https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage) Wiki page for a more in-depth discussion or architectural and usage issues. Complete API documentation is available [here](http://magpcss.org/ceforum/apidocs3/). CEF support and related discussion is available on the [CEF Forum](http://www.magpcss.org/ceforum/).
+Users new to CEF development should start by reading the [Tutorial](https://bitbucket.org/chromiumembedded/cef/wiki/Tutorial) Wiki page for an overview of CEF usage and then proceed to the [GeneralUsage](https://bitbucket.org/chromiumembedded/cef/wiki/GeneralUsage) Wiki page for a more in-depth discussion or architectural and usage issues. Complete API documentation is available [here](https://cef-builds.spotifycdn.com/docs/stable.html). CEF support and related discussion is available on the [CEF Forum](http://www.magpcss.org/ceforum/).
 
 # Binary Distributions
 
@@ -49,6 +49,7 @@ The base CEF framework includes support for the C and C++ programming languages.
 * Delphi - https://github.com/hgourvest/dcef3
 * Delphi - https://github.com/salvadordf/CEF4Delphi
 * Go - https://github.com/CzarekTomczak/cef2go
+* Go - https://github.com/energye/energy
 * Java - https://bitbucket.org/chromiumembedded/java-cef
 * Python - http://code.google.com/p/cefpython/
 
@@ -58,7 +59,7 @@ If you're the maintainer of a project not listed above and would like your proje
 
 CEF is still very much a work in progress. Some ways that you can help out:
 
-\- Vote for issues in the [CEF issue tracker](https://bitbucket.org/chromiumembedded/cef/issues?status=new&status=open) that are important to you. This helps with development prioritization.
+\- Vote for issues in the [CEF issue tracker](https://github.com/chromiumembedded/cef/issues) that are important to you. This helps with development prioritization.
 
 \- Report any bugs that you find or feature requests that are important to you. Make sure to first search for existing issues before creating new ones. Please use the [CEF Forum](http://magpcss.org/ceforum) and not the issue tracker for usage questions. Each CEF issue should:
 
@@ -69,7 +70,7 @@ CEF is still very much a work in progress. Some ways that you can help out:
 
 \- Write unit tests for new or existing functionality.
 
-\- Pull requests and patches are welcome. View open issues in the [CEF issue tracker](https://bitbucket.org/chromiumembedded/cef/issues?status=new&status=open) or search for TODO(cef) in the source code for ideas.
+\- Pull requests and patches are welcome. View open issues in the [CEF issue tracker](https://github.com/chromiumembedded/cef/issues) or search for TODO(cef) in the source code for ideas.
 
 If you would like to contribute source code changes to CEF please follow the below guidelines:
 
@@ -78,6 +79,6 @@ If you would like to contribute source code changes to CEF please follow the bel
 \- Submit a [pull request](https://bitbucket.org/chromiumembedded/cef/wiki/ContributingWithGit) or create a patch with your changes and attach it to the CEF issue. Changes should:
 
 * Be submitted against the current [CEF master branch](https://bitbucket.org/chromiumembedded/cef/src/?at=master) unless explicitly fixing a bug in a CEF release branch.
-* Follow the style of existing CEF source files. In general CEF uses the [Chromium coding style](http://www.chromium.org/developers/coding-style).
+* Follow the style of existing CEF source files. In general CEF uses the [Chromium C++ style guide](https://chromium.googlesource.com/chromium/src/+/master/styleguide/c++/c++.md).
 * Include new or modified unit tests as appropriate to the functionality.
 * Not include unnecessary or unrelated changes.

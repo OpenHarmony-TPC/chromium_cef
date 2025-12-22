@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/basic_label_button_impl.h"
+#include "cef/libcef/browser/views/basic_label_button_impl.h"
 
-#include "libcef/browser/views/basic_label_button_view.h"
+#include "cef/libcef/browser/views/basic_label_button_view.h"
 
 // static
 CefRefPtr<CefLabelButton> CefLabelButton::CreateLabelButton(
@@ -21,8 +21,9 @@ CefRefPtr<CefBasicLabelButtonImpl> CefBasicLabelButtonImpl::Create(
   CefRefPtr<CefBasicLabelButtonImpl> label_button =
       new CefBasicLabelButtonImpl(delegate);
   label_button->Initialize();
-  if (!text.empty())
+  if (!text.empty()) {
     label_button->SetText(text);
+  }
   return label_button;
 }
 

@@ -2,10 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/print_settings_impl.h"
+#include "cef/libcef/browser/print_settings_impl.h"
 
 #include "base/logging.h"
-
 #include "printing/mojom/print.mojom.h"
 
 CefPrintSettingsImpl::CefPrintSettingsImpl(
@@ -90,13 +89,14 @@ size_t CefPrintSettingsImpl::GetPageRangesCount() {
 
 void CefPrintSettingsImpl::GetPageRanges(PageRangeList& ranges) {
   CEF_VALUE_VERIFY_RETURN_VOID(false);
-  if (!ranges.empty())
+  if (!ranges.empty()) {
     ranges.clear();
+  }
   const printing::PageRanges& page_ranges = const_value().ranges();
   printing::PageRanges::const_iterator it = page_ranges.begin();
   for (; it != page_ranges.end(); ++it) {
     const printing::PageRange& range = *it;
-    ranges.push_back(CefRange(range.from, range.to));
+    ranges.emplace_back(range.from, range.to);
   }
 }
 

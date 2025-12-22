@@ -6,47 +6,63 @@ the "required" section must be redistributed with all applications using CEF.
 Components listed under the "optional" section may be excluded if the related
 features will not be used.
 
-Applications using CEF on OS X must follow a specific app bundle structure.
+Applications using CEF on MacOS must follow a specific app bundle structure.
 Replace "cefclient" in the below example with your application name.
 
-cefclient.app/
-  Contents/
-    Frameworks/
-      Chromium Embedded Framework.framework/
-        Chromium Embedded Framework <= main application library
-        Libraries/
-          libEGL.dylib <= ANGLE support libraries
-          libGLESv2.dylib <=^
-          libswiftshader_libEGL.dylib <= SwiftShader support libraries
-          libswiftshader_libGLESv2.dylib <=^
-          libvk_swiftshader.dylib <= SwANGLE support libraries
-          vk_swiftshader_icd.json <=^
-        Resources/
-          chrome_100_percent.pak <= non-localized resources and strings
-          chrome_200_percent.pak <=^
-          resources.pak          <=^
-          icudtl.dat <= unicode support
-          snapshot_blob.bin, v8_context_snapshot.[x86_64|arm64].bin <= V8 initial snapshot
-          en.lproj/, ... <= locale-specific resources and strings
-          Info.plist
-      cefclient Helper.app/
-        Contents/
-          Info.plist
-          MacOS/
-            cefclient Helper <= helper executable
-          Pkginfo
-      Info.plist
-    MacOS/
-      cefclient <= cefclient application executable
-    Pkginfo
-    Resources/
-      binding.html, ... <= cefclient application resources
+cefclient.app
+└── Contents
+    ├── Frameworks
+    │   ├── Chromium Embedded Framework.framework
+    │   │   ├── Chromium Embedded Framework <= main application library
+    │   │   ├── Libraries
+    │   │   │   ├── libEGL.dylib <= ANGLE support libraries
+    │   │   │   ├── libGLESv2.dylib <=^
+    │   │   │   ├── libvk_swiftshader.dylib <= SwANGLE support libraries
+    │   │   │   └── vk_swiftshader_icd.json <=^
+    │   │   └── Resources
+    │   │       ├── chrome_100_percent.pak <= non-localized resources and strings
+    │   │       ├── chrome_200_percent.pak <=^
+    │   │       ├── resources.pak          <=^
+    │   │       ├── gpu_shader_cache.bin <= ANGLE-Metal shader cache
+    │   │       ├── icudtl.dat <= unicode support
+    │   │       ├── v8_context_snapshot.[x86_64|arm64].bin <= V8 initial snapshot
+    │   │       ├── en.lproj/, ... <= locale-specific resources and strings
+    │   │       └── Info.plist
+    │   ├── cefclient Helper.app
+    │   │   └── Contents
+    │   │       ├── Info.plist
+    │   │       ├── MacOS
+    │   │       │   └── cefclient Helper <= helper executable
+    │   │       └── Pkginfo
+    │   └── Info.plist
+    ├── MacOS
+    │   └── cefclient <= cefclient application executable
+    ├── Pkginfo
+    └── Resources
+        └── binding.html, ... <= cefclient application resources
 
 The "Chromium Embedded Framework.framework" is an unversioned framework that
 contains CEF binaries and resources. Executables (cefclient, cefclient Helper,
 etc) must load this framework dynamically at runtime instead of linking it
 directly. See the documentation in include/wrapper/cef_library_loader.h for
 more information.
+
+Newer Xcode versions (specifically Xcode 26) require a versioned framework
+directory structure using relative symlinks as follows:
+
+  Chromium Embedded Framework.framework
+  ├── Chromium Embedded Framework -> Versions/A/Chromium Embedded Framework
+  ├── Libraries -> Versions/A/Libraries
+  ├── Resources -> Versions/A/Resources
+  └── Versions
+     ├── A  (actual framework contents)
+     │   ├── Chromium Embedded Framework
+     │   ├── Libraries
+     │   └── Resources
+     └── Current -> A
+
+This structure can be created while constructing the final app bundle as
+demonstrated by the supplied CMake and Bazel configurations.
 
 The "cefclient Helper" app is used for executing separate processes (renderer,
 plugin, etc) with different characteristics. It needs to have a separate app
@@ -64,7 +80,6 @@ The following components are required. CEF will not function without them.
   * Chromium Embedded Framework.framework/Resources/icudtl.dat
 
 * V8 snapshot data.
-  * Chromium Embedded Framework.framework/Resources/snapshot_blob.bin
   * Chromium Embedded Framework.framework/Resources/v8_context_snapshot.bin
 
 Optional components:
@@ -96,6 +111,7 @@ run but any related functionality may become broken or disabled.
 * ANGLE support.
   * Chromium Embedded Framework.framework/Libraries/libEGL.dylib
   * Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib
+  * Chromium Embedded Framework.framework/Resources/gpu_shader_cache.bin
   Support for rendering of HTML5 content like 2D canvas, 3D CSS and WebGL.
   Without these files the aforementioned capabilities may fail.
 
@@ -106,10 +122,3 @@ run but any related functionality may become broken or disabled.
   WebGL using SwiftShader's Vulkan library as ANGLE's Vulkan backend. Without
   these files the aforementioned capabilities may fail when GPU acceleration is
   disabled or unavailable.
-
-* SwiftShader support
-  * Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib
-  * Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib
-  Deprecated support for software rendering using SwiftShader's GL libraries.
-  Used as an alternative to SwANGLE when the `--use-gl=swiftshader-webgl`
-  command-line flag is specified.

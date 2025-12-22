@@ -10,9 +10,10 @@
 namespace client {
 
 BrowserWindowStdWin::BrowserWindowStdWin(Delegate* delegate,
+                                         bool with_controls,
                                          const std::string& startup_url)
     : BrowserWindow(delegate) {
-  client_handler_ = new ClientHandlerStd(this, startup_url);
+  client_handler_ = new ClientHandlerStd(this, with_controls, startup_url);
 }
 
 void BrowserWindowStdWin::CreateBrowser(
@@ -31,6 +32,10 @@ void BrowserWindowStdWin::CreateBrowser(
     window_info.ex_style |= WS_EX_NOACTIVATE;
   }
 
+  if (delegate_->UseAlloyStyle()) {
+    window_info.runtime_style = CEF_RUNTIME_STYLE_ALLOY;
+  }
+
   CefBrowserHost::CreateBrowser(window_info, client_handler_,
                                 client_handler_->startup_url(), settings,
                                 extra_info, request_context);
@@ -47,6 +52,10 @@ void BrowserWindowStdWin::GetPopupConfig(CefWindowHandle temp_handle,
 
   // Don't activate the hidden browser window on creation.
   windowInfo.ex_style |= WS_EX_NOACTIVATE;
+
+  if (delegate_->UseAlloyStyle()) {
+    windowInfo.runtime_style = CEF_RUNTIME_STYLE_ALLOY;
+  }
 
   client = client_handler_;
 }
@@ -74,8 +83,9 @@ void BrowserWindowStdWin::Show() {
   REQUIRE_MAIN_THREAD();
 
   HWND hwnd = GetWindowHandle();
-  if (hwnd && !::IsWindowVisible(hwnd))
+  if (hwnd && !::IsWindowVisible(hwnd)) {
     ShowWindow(hwnd, SW_SHOW);
+  }
 }
 
 void BrowserWindowStdWin::Hide() {
@@ -104,15 +114,17 @@ void BrowserWindowStdWin::SetBounds(int x, int y, size_t width, size_t height) {
 void BrowserWindowStdWin::SetFocus(bool focus) {
   REQUIRE_MAIN_THREAD();
 
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->SetFocus(focus);
+  }
 }
 
 ClientWindowHandle BrowserWindowStdWin::GetWindowHandle() const {
   REQUIRE_MAIN_THREAD();
 
-  if (browser_)
+  if (browser_) {
     return browser_->GetHost()->GetWindowHandle();
+  }
   return nullptr;
 }
 

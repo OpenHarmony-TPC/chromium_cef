@@ -9,23 +9,22 @@
 #include <map>
 #include <memory>
 
-#include "include/cef_server.h"
-
 #include "base/task/single_thread_task_runner.h"
+#include "cef/include/cef_server.h"
 #include "net/server/http_server.h"
 
 namespace base {
 class Thread;
 }
 
-class CefServerImpl : public CefServer, net::HttpServer::Delegate {
+class CefServerImpl : public CefServer, public net::HttpServer::Delegate {
  public:
   explicit CefServerImpl(CefRefPtr<CefServerHandler> handler);
 
   CefServerImpl(const CefServerImpl&) = delete;
   CefServerImpl& operator=(const CefServerImpl&) = delete;
 
-  void Start(const std::string& address, uint16 port, int backlog);
+  void Start(const std::string& address, uint16_t port, int backlog);
 
   // CefServer methods:
   CefRefPtr<CefTaskRunner> GetTaskRunner() override;
@@ -44,7 +43,7 @@ class CefServerImpl : public CefServer, net::HttpServer::Delegate {
   void SendHttpResponse(int connection_id,
                         int response_code,
                         const CefString& content_type,
-                        int64 content_length,
+                        int64_t content_length,
                         const HeaderMap& extra_headers) override;
   void SendRawData(int connection_id,
                    const void* data,
@@ -77,9 +76,9 @@ class CefServerImpl : public CefServer, net::HttpServer::Delegate {
   void OnWebSocketMessage(int connection_id, std::string data) override;
   void OnClose(int connection_id) override;
 
-  void StartOnUIThread(const std::string& address, uint16 port, int backlog);
+  void StartOnUIThread(const std::string& address, uint16_t port, int backlog);
   void StartOnHandlerThread(const std::string& address,
-                            uint16 port,
+                            uint16_t port,
                             int backlog);
 
   void ShutdownOnHandlerThread();

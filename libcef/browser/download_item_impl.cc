@@ -2,17 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/download_item_impl.h"
+#include "cef/libcef/browser/download_item_impl.h"
 
-#include "libcef/common/time_util.h"
+#include "cef/libcef/common/time_util.h"
+#include "components/download/public/common/download_item.h"
 #include "url/gurl.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "cef/libcef/browser/received_slice_helper.h"
-#include "components/download/public/common/download_item_impl.h"
-const char kNWebId[] = "nweb_id";
-const char kRequestMethod[] = "request_method";
-#endif
 
 CefDownloadItemImpl::CefDownloadItemImpl(download::DownloadItem* value)
     : CefValueBase<CefDownloadItem, download::DownloadItem>(
@@ -23,24 +17,6 @@ CefDownloadItemImpl::CefDownloadItemImpl(download::DownloadItem* value)
           new CefValueControllerNonThreadSafe()) {
   // Indicate that this object owns the controller.
   SetOwnsController();
-}
-
-#if BUILDFLAG(IS_OHOS)
-CefDownloadItemImpl::CefDownloadItemImpl(download::DownloadItem* value,
-                                         int nweb_id)
-    : CefValueBase<CefDownloadItem, download::DownloadItem>(
-          value,
-          nullptr,
-          kOwnerNoDelete,
-          true,
-          new CefValueControllerNonThreadSafe()) {
-  // Indicate that this object owns the controller.
-  SetOwnsController();
-  download::DownloadItemImpl* item_impl =
-      static_cast<download::DownloadItemImpl*>(mutable_value());
-  item_impl->SetUserData(
-      kNWebId,
-      std::make_unique<download::DownloadItemImpl::NWebIdData>(nweb_id));
 }
 
 bool CefDownloadItemImpl::IsValid() {
@@ -62,7 +38,23 @@ bool CefDownloadItemImpl::IsCanceled() {
   return const_value().GetState() == download::DownloadItem::CANCELLED;
 }
 
-int64 CefDownloadItemImpl::GetCurrentSpeed() {
+bool CefDownloadItemImpl::IsInterrupted() {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  return const_value().GetState() == download::DownloadItem::INTERRUPTED;
+}
+
+bool CefDownloadItemImpl::IsPaused() {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  return const_value().IsPaused();
+}
+
+cef_download_interrupt_reason_t CefDownloadItemImpl::GetInterruptReason() {
+  CEF_VALUE_VERIFY_RETURN(false, CEF_DOWNLOAD_INTERRUPT_REASON_NONE);
+  return static_cast<cef_download_interrupt_reason_t>(
+      const_value().GetLastReason());
+}
+
+int64_t CefDownloadItemImpl::GetCurrentSpeed() {
   CEF_VALUE_VERIFY_RETURN(false, 0);
   return const_value().CurrentSpeed();
 }
@@ -72,28 +64,24 @@ int CefDownloadItemImpl::GetPercentComplete() {
   return const_value().PercentComplete();
 }
 
-int64 CefDownloadItemImpl::GetTotalBytes() {
+int64_t CefDownloadItemImpl::GetTotalBytes() {
   CEF_VALUE_VERIFY_RETURN(false, 0);
   return const_value().GetTotalBytes();
 }
 
-int64 CefDownloadItemImpl::GetReceivedBytes() {
+int64_t CefDownloadItemImpl::GetReceivedBytes() {
   CEF_VALUE_VERIFY_RETURN(false, 0);
   return const_value().GetReceivedBytes();
 }
 
-CefTime CefDownloadItemImpl::GetStartTime() {
-  CefTime time;
-  CEF_VALUE_VERIFY_RETURN(false, time);
-  cef_time_from_basetime(const_value().GetStartTime(), time);
-  return time;
+CefBaseTime CefDownloadItemImpl::GetStartTime() {
+  CEF_VALUE_VERIFY_RETURN(false, CefBaseTime());
+  return const_value().GetStartTime();
 }
 
-CefTime CefDownloadItemImpl::GetEndTime() {
-  CefTime time;
-  CEF_VALUE_VERIFY_RETURN(false, time);
-  cef_time_from_basetime(const_value().GetEndTime(), time);
-  return time;
+CefBaseTime CefDownloadItemImpl::GetEndTime() {
+  CEF_VALUE_VERIFY_RETURN(false, CefBaseTime());
+  return const_value().GetEndTime();
 }
 
 CefString CefDownloadItemImpl::GetFullPath() {
@@ -101,7 +89,7 @@ CefString CefDownloadItemImpl::GetFullPath() {
   return const_value().GetFullPath().value();
 }
 
-uint32 CefDownloadItemImpl::GetId() {
+uint32_t CefDownloadItemImpl::GetId() {
   CEF_VALUE_VERIFY_RETURN(false, 0);
   return const_value().GetId();
 }
@@ -130,90 +118,3 @@ CefString CefDownloadItemImpl::GetMimeType() {
   CEF_VALUE_VERIFY_RETURN(false, CefString());
   return const_value().GetMimeType();
 }
-
-CefString CefDownloadItemImpl::GetOriginalMimeType() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  return const_value().GetOriginalMimeType();
-}
-
-CefString CefDownloadItemImpl::GetGuid() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  return const_value().GetGuid();
-}
-
-int CefDownloadItemImpl::GetState() {
-  CEF_VALUE_VERIFY_RETURN(false, -1);
-  int state = static_cast<int>(const_value().GetState());
-  return state;
-}
-
-bool CefDownloadItemImpl::IsPaused() {
-  CEF_VALUE_VERIFY_RETURN(false, false);
-  bool paused = const_value().IsPaused();
-  return paused;
-}
-
-CefString CefDownloadItemImpl::GetMethod() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
-  void* data_raw_ptr = item_impl.GetUserData(kRequestMethod);
-  std::string request_method;
-  if (data_raw_ptr) {
-    download::DownloadItemImpl::RequestMethodData* request_method_data_ptr =
-        (download::DownloadItemImpl::RequestMethodData*)data_raw_ptr;
-    if (request_method_data_ptr) {
-      request_method = request_method_data_ptr->request_method_;
-    }
-  }
-  return request_method;
-}
-
-int CefDownloadItemImpl::GetLastErrorCode() {
-  CEF_VALUE_VERIFY_RETURN(false, -1);
-  download::DownloadInterruptReason reason = const_value().GetLastReason();
-  return static_cast<int>(reason);
-}
-
-bool CefDownloadItemImpl::IsPending() {
-  CEF_VALUE_VERIFY_RETURN(false, false);
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
-  bool pending = item_impl.IsBeforeInProgress();
-  return pending;
-}
-
-CefString CefDownloadItemImpl::GetLastModifiedTime() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  return const_value().GetLastModifiedTime();
-}
-
-CefString CefDownloadItemImpl::GetETag() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  return const_value().GetETag();
-}
-
-CefString CefDownloadItemImpl::GetReceivedSlices() {
-  CEF_VALUE_VERIFY_RETURN(false, CefString());
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
-  return received_slice_helper::SerializeToString(
-      item_impl.GetReceivedSlices());
-}
-
-int CefDownloadItemImpl::GetNWebId() {
-  CEF_VALUE_VERIFY_RETURN(false, -1);
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
-  void* data_raw_ptr = item_impl.GetUserData(kNWebId);
-  if (data_raw_ptr) {
-    download::DownloadItemImpl::NWebIdData* nweb_id_data_ptr =
-        (download::DownloadItemImpl::NWebIdData*)data_raw_ptr;
-    if (nweb_id_data_ptr) {
-      return nweb_id_data_ptr->nweb_id_;
-    }
-  }
-  return 0;
-}
-
-#endif

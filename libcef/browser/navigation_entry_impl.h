@@ -6,8 +6,8 @@
 #define CEF_LIBCEF_BROWSER_NAVIGATION_ENTRY_IMPL_H_
 #pragma once
 
-#include "include/cef_navigation_entry.h"
-#include "libcef/common/value_base.h"
+#include "cef/include/cef_navigation_entry.h"
+#include "cef/libcef/common/value_base.h"
 
 namespace content {
 class NavigationEntry;
@@ -30,14 +30,9 @@ class CefNavigationEntryImpl
   CefString GetTitle() override;
   TransitionType GetTransitionType() override;
   bool HasPostData() override;
-  CefTime GetCompletionTime() override;
+  CefBaseTime GetCompletionTime() override;
   int GetHttpStatusCode() override;
   CefRefPtr<CefSSLStatus> GetSSLStatus() override;
-  bool GetFavicon(void** pixel_data,
-                  int& color_type,
-                  int& alpha_type,
-                  int& pixel_width,
-                  int& pixel_height) override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NAVIGATION_ENTRY_IMPL_H_

@@ -2,12 +2,13 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_task.h"
-#include "libcef/common/task_runner_impl.h"
-
-#include "base/bind.h"
+#include "base/functional/bind.h"
 #include "base/location.h"
 #include "base/logging.h"
+#include "base/time/time.h"
+#include "cef/include/cef_task.h"
+#include "cef/libcef/common/task_runner_impl.h"
+#include "cef/libcef/common/task_util.h"
 
 bool CefCurrentlyOn(CefThreadId threadId) {
   scoped_refptr<base::SequencedTaskRunner> task_runner =
@@ -34,7 +35,7 @@ bool CefPostTask(CefThreadId threadId, CefRefPtr<CefTask> task) {
 
 bool CefPostDelayedTask(CefThreadId threadId,
                         CefRefPtr<CefTask> task,
-                        int64 delay_ms) {
+                        int64_t delay_ms) {
   scoped_refptr<base::SequencedTaskRunner> task_runner =
       CefTaskRunnerImpl::GetTaskRunner(threadId);
   if (task_runner.get()) {
@@ -46,3 +47,19 @@ bool CefPostDelayedTask(CefThreadId threadId,
   LOG(WARNING) << "No task runner for threadId " << threadId;
   return false;
 }
+
+namespace cef {
+
+bool CurrentlyOnThread(CefThreadId thread_id) {
+  scoped_refptr<base::SequencedTaskRunner> task_runner =
+      CefTaskRunnerImpl::GetTaskRunner(thread_id);
+  if (task_runner.get()) {
+    return task_runner->RunsTasksInCurrentSequence();
+  }
+
+  // Return false silently when task runners are not initialized (before
+  // CefInitialize). This avoids logging that cannot be configured.
+  return false;
+}
+
+}  // namespace cef

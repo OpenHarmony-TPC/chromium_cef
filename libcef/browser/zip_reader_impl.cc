@@ -2,11 +2,14 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/zip_reader_impl.h"
+#include "cef/libcef/browser/zip_reader_impl.h"
+
 #include <time.h>
+
 #include "base/logging.h"
 #include "base/notreached.h"
-#include "include/cef_stream.h"
+#include "base/time/time.h"
+#include "cef/include/cef_stream.h"
 
 // Static functions
 
@@ -14,8 +17,9 @@
 CefRefPtr<CefZipReader> CefZipReader::Create(
     CefRefPtr<CefStreamReader> stream) {
   CefRefPtr<CefZipReaderImpl> impl(new CefZipReaderImpl());
-  if (!impl->Initialize(stream))
+  if (!impl->Initialize(stream)) {
     return nullptr;
+  }
   return impl.get();
 }
 
@@ -56,7 +60,7 @@ OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin)) {
       whence = SEEK_SET;
       break;
     default:
-      NOTREACHED();
+      DCHECK(false);
       return -1;
   }
   return reader->Seek(offset, whence);
@@ -76,20 +80,16 @@ int ZCALLBACK zlib_error_callback OF((voidpf opaque, voidpf stream)) {
 }  // namespace
 
 CefZipReaderImpl::CefZipReaderImpl()
-    : supported_thread_id_(base::PlatformThread::CurrentId()),
-      reader_(nullptr),
-      has_fileopen_(false),
-      has_fileinfo_(false),
-      filesize_(0),
-      filemodified_(0) {}
+    : supported_thread_id_(base::PlatformThread::CurrentId()) {}
 
 CefZipReaderImpl::~CefZipReaderImpl() {
   if (reader_ != nullptr) {
     if (!VerifyContext()) {
       // Close() is supposed to be called directly. We'll try to free the reader
       // now on the wrong thread but there's no guarantee this call won't crash.
-      if (has_fileopen_)
+      if (has_fileopen_) {
         unzCloseCurrentFile(reader_);
+      }
       unzClose(reader_);
     } else {
       Close();
@@ -116,11 +116,13 @@ bool CefZipReaderImpl::Initialize(CefRefPtr<CefStreamReader> stream) {
 }
 
 bool CefZipReaderImpl::MoveToFirstFile() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
 
-  if (has_fileopen_)
+  if (has_fileopen_) {
     CloseFile();
+  }
 
   has_fileinfo_ = false;
 
@@ -128,11 +130,13 @@ bool CefZipReaderImpl::MoveToFirstFile() {
 }
 
 bool CefZipReaderImpl::MoveToNextFile() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
 
-  if (has_fileopen_)
+  if (has_fileopen_) {
     CloseFile();
+  }
 
   has_fileinfo_ = false;
 
@@ -141,11 +145,13 @@ bool CefZipReaderImpl::MoveToNextFile() {
 
 bool CefZipReaderImpl::MoveToFile(const CefString& fileName,
                                   bool caseSensitive) {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
 
-  if (has_fileopen_)
+  if (has_fileopen_) {
     CloseFile();
+  }
 
   has_fileinfo_ = false;
 
@@ -155,11 +161,13 @@ bool CefZipReaderImpl::MoveToFile(const CefString& fileName,
 }
 
 bool CefZipReaderImpl::Close() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
 
-  if (has_fileopen_)
+  if (has_fileopen_) {
     CloseFile();
+  }
 
   int result = unzClose(reader_);
   reader_ = nullptr;
@@ -167,34 +175,37 @@ bool CefZipReaderImpl::Close() {
 }
 
 CefString CefZipReaderImpl::GetFileName() {
-  if (!VerifyContext() || !GetFileInfo())
+  if (!VerifyContext() || !GetFileInfo()) {
     return CefString();
+  }
 
   return filename_;
 }
 
-int64 CefZipReaderImpl::GetFileSize() {
-  if (!VerifyContext() || !GetFileInfo())
+int64_t CefZipReaderImpl::GetFileSize() {
+  if (!VerifyContext() || !GetFileInfo()) {
     return -1;
+  }
 
   return filesize_;
 }
 
-CefTime CefZipReaderImpl::GetFileLastModified() {
-  CefTime time;
-  if (!VerifyContext() || !GetFileInfo())
-    return time;
+CefBaseTime CefZipReaderImpl::GetFileLastModified() {
+  if (!VerifyContext() || !GetFileInfo()) {
+    return CefBaseTime();
+  }
 
-  cef_time_from_timet(filemodified_, &time);
-  return time;
+  return base::Time::FromTimeT(filemodified_);
 }
 
 bool CefZipReaderImpl::OpenFile(const CefString& password) {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
 
-  if (has_fileopen_)
+  if (has_fileopen_) {
     CloseFile();
+  }
 
   bool ret;
 
@@ -205,14 +216,16 @@ bool CefZipReaderImpl::OpenFile(const CefString& password) {
     ret = (unzOpenCurrentFilePassword(reader_, passwordStr.c_str()) == UNZ_OK);
   }
 
-  if (ret)
+  if (ret) {
     has_fileopen_ = true;
+  }
   return ret;
 }
 
 bool CefZipReaderImpl::CloseFile() {
-  if (!VerifyContext() || !has_fileopen_)
+  if (!VerifyContext() || !has_fileopen_) {
     return false;
+  }
 
   has_fileopen_ = false;
   has_fileinfo_ = false;
@@ -221,36 +234,40 @@ bool CefZipReaderImpl::CloseFile() {
 }
 
 int CefZipReaderImpl::ReadFile(void* buffer, size_t bufferSize) {
-  if (!VerifyContext() || !has_fileopen_)
+  if (!VerifyContext() || !has_fileopen_) {
     return -1;
+  }
 
   return unzReadCurrentFile(reader_, buffer, bufferSize);
 }
 
-int64 CefZipReaderImpl::Tell() {
-  if (!VerifyContext() || !has_fileopen_)
+int64_t CefZipReaderImpl::Tell() {
+  if (!VerifyContext() || !has_fileopen_) {
     return -1;
+  }
 
   return unztell64(reader_);
 }
 
 bool CefZipReaderImpl::Eof() {
-  if (!VerifyContext() || !has_fileopen_)
+  if (!VerifyContext() || !has_fileopen_) {
     return true;
+  }
 
   return (unzeof(reader_) == 1 ? true : false);
 }
 
 bool CefZipReaderImpl::GetFileInfo() {
-  if (has_fileinfo_)
+  if (has_fileinfo_) {
     return true;
+  }
 
   char file_name[512] = {0};
   unz_file_info file_info;
   memset(&file_info, 0, sizeof(file_info));
 
   if (unzGetCurrentFileInfo(reader_, &file_info, file_name, sizeof(file_name),
-                            NULL, 0, NULL, 0) != UNZ_OK) {
+                            nullptr, 0, nullptr, 0) != UNZ_OK) {
     return false;
   }
 
@@ -275,7 +292,7 @@ bool CefZipReaderImpl::GetFileInfo() {
 bool CefZipReaderImpl::VerifyContext() {
   if (base::PlatformThread::CurrentId() != supported_thread_id_) {
     // This object should only be accessed from the thread that created it.
-    NOTREACHED();
+    DCHECK(false);
     return false;
   }
 

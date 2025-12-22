@@ -2,8 +2,9 @@
 // 2016 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/common/crash_reporter_client.h"
+#include "cef/libcef/common/crash_reporter_client.h"
 
+#include <string_view>
 #include <utility>
 
 #if BUILDFLAG(IS_WIN)
@@ -14,7 +15,6 @@
 #include "base/logging.h"
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
-#include "base/strings/string_piece.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
@@ -23,7 +23,7 @@
 #include "third_party/crashpad/crashpad/client/annotation.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "libcef/common/util_mac.h"
+#include "cef/libcef/common/util_mac.h"
 #endif
 
 #if BUILDFLAG(IS_POSIX)
@@ -39,8 +39,8 @@
 #endif
 
 #if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+#include "cef/libcef/common/cef_crash_report_utils.h"
 #include "content/public/common/content_switches.h"
-#include "libcef/common/cef_crash_report_utils.h"
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -62,16 +62,18 @@ PathString GetCrashConfigPath() {
 #if BUILDFLAG(IS_WIN)
   // Start with the path to the running executable.
   wchar_t module_path[MAX_PATH];
-  if (GetModuleFileName(nullptr, module_path, MAX_PATH) == 0)
+  if (GetModuleFileName(nullptr, module_path, MAX_PATH) == 0) {
     return PathString();
+  }
 
   PathString config_path = module_path;
 
   // Remove the executable file name.
   PathString::size_type last_backslash =
       config_path.rfind(kPathSep, config_path.size());
-  if (last_backslash != PathString::npos)
+  if (last_backslash != PathString::npos) {
     config_path.erase(last_backslash + 1);
+  }
 
   config_path += L"crash_reporter.cfg";
   return config_path;
@@ -86,8 +88,9 @@ PathString GetCrashConfigPath() {
 
   if (config_path.empty()) {
     // Start with the path to the running executable.
-    if (!base::PathService::Get(base::DIR_EXE, &config_path))
+    if (!base::PathService::Get(base::DIR_EXE, &config_path)) {
       return PathString();
+    }
   }
 
   return config_path.Append(FILE_PATH_LITERAL("crash_reporter.cfg")).value();
@@ -106,11 +109,13 @@ const unsigned maxFilenameLength = 255;
 const char kInvalidFileChars[] = "<>:\"/\\|?*";
 
 bool isInvalidFileCharacter(unsigned char c) {
-  if (c < ' ' || c == 0x7F)
+  if (c < ' ' || c == 0x7F) {
     return true;
-  for (size_t i = 0; i < sizeof(kInvalidFileChars); ++i) {
-    if (c == kInvalidFileChars[i])
+  }
+  for (char kInvalidFileChar : kInvalidFileChars) {
+    if (c == kInvalidFileChar) {
       return true;
+    }
   }
   return false;
 }
@@ -124,8 +129,9 @@ bool isAbsolutePath(const std::string& s) {
 }
 
 std::string extractAbsolutePathStart(std::string& s) {
-  if (!isAbsolutePath(s))
+  if (!isAbsolutePath(s)) {
     return std::string();
+  }
 
   std::string start;
   if (s[0] == kPathSep) {
@@ -141,14 +147,16 @@ std::string extractAbsolutePathStart(std::string& s) {
 }
 
 std::string sanitizePathComponentPart(const std::string& s) {
-  if (s.empty())
+  if (s.empty()) {
     return std::string();
+  }
 
   std::string result;
   result.reserve(s.length());
   for (size_t i = 0; i < s.length(); ++i) {
-    if (!isInvalidFileCharacter(s[i]))
+    if (!isInvalidFileCharacter(s[i])) {
       result.push_back(s[i]);
+    }
   }
   return result;
 }
@@ -170,13 +178,15 @@ std::string sanitizePathComponent(const std::string& s) {
   ext = sanitizePathComponentPart(ext);
 
   // Remove a ridiculously-long extension.
-  if (ext.length() >= maxFilenameLength)
+  if (ext.length() >= maxFilenameLength) {
     ext = std::string();
+  }
 
   // Truncate an overly-long filename, reserving one character for a dot.
   std::string::size_type max_name_len = maxFilenameLength - ext.length() - 1;
-  if (name.length() > max_name_len)
+  if (name.length() > max_name_len) {
     name = name.substr(0, max_name_len);
+  }
 
   return ext.empty() ? name : name + "." + ext;
 }
@@ -191,12 +201,13 @@ std::string sanitizePath(const std::string& s) {
   std::vector<std::string> parts =
       base::SplitString(path, std::string() + kPathSep, base::KEEP_WHITESPACE,
                         base::SPLIT_WANT_NONEMPTY);
-  for (size_t i = 0; i < parts.size(); ++i) {
-    std::string part = parts[i];
-    if (part != "." && part != "..")
+  for (auto part : parts) {
+    if (part != "." && part != "..") {
       part = sanitizePathComponent(part);
-    if (!result.empty() && result[result.length() - 1] != kPathSep)
+    }
+    if (!result.empty() && result[result.length() - 1] != kPathSep) {
       result += kPathSep;
+    }
     result += part;
   }
 
@@ -204,25 +215,31 @@ std::string sanitizePath(const std::string& s) {
 }
 
 std::string joinPath(const std::string& s1, const std::string& s2) {
-  if (s1.empty() && s2.empty())
+  if (s1.empty() && s2.empty()) {
     return std::string();
-  if (s1.empty())
+  }
+  if (s1.empty()) {
     return s2;
-  if (s2.empty())
+  }
+  if (s2.empty()) {
     return s1;
+  }
 
   // Don't try to join absolute paths on Windows.
   // Skip this check on POSIX where it's more difficult to differentiate.
-  if (isAbsolutePath(s2))
+  if (isAbsolutePath(s2)) {
     return s2;
+  }
 
   std::string result = s1;
-  if (result[result.size() - 1] != kPathSep)
+  if (result[result.size() - 1] != kPathSep) {
     result += kPathSep;
-  if (s2[0] == kPathSep)
+  }
+  if (s2[0] == kPathSep) {
     result += s2.substr(1);
-  else
+  } else {
     result += s2;
+  }
   return result;
 }
 
@@ -233,7 +250,7 @@ CefCrashReporterClient* g_crash_reporter_client = nullptr;
 
 const char kKeyMapDelim = ',';
 
-std::string NormalizeCrashKey(const base::StringPiece& key) {
+std::string NormalizeCrashKey(const std::string_view& key) {
   std::string str(key);
   std::replace(str.begin(), str.end(), kKeyMapDelim, '-');
   if (str.length() > crashpad::Annotation::kNameMaxLength) {
@@ -260,8 +277,9 @@ bool ParseBool(const std::string& value) {
 
 int ParseZeroBasedInt(const std::string& value) {
   int int_val;
-  if (base::StringToInt(value, &int_val) && int_val > 0)
+  if (base::StringToInt(value, &int_val) && int_val > 0) {
     return int_val;
+  }
   return 0;
 }
 
@@ -279,7 +297,7 @@ int __declspec(dllexport) __cdecl SetCrashKeyValueImpl(const char* key,
                                                        size_t value_size) {
   if (g_crash_reporter_client) {
     return g_crash_reporter_client->SetCrashKeyValue(
-        base::StringPiece(key, key_size), base::StringPiece(value, value_size));
+        std::string_view(key, key_size), std::string_view(value, value_size));
   }
   return 0;
 }
@@ -309,18 +327,21 @@ bool GetDefaultUserDataDirectory(std::wstring* result,
   if (user_data_dir.empty()) {
     // LOCALAPPDATA was not set; fallback to the temporary files path.
     DWORD size = ::GetTempPath(0, nullptr);
-    if (!size)
+    if (!size) {
       return false;
+    }
     user_data_dir.resize(size + 1);
     size = ::GetTempPath(size + 1, &user_data_dir[0]);
-    if (!size || size >= user_data_dir.size())
+    if (!size || size >= user_data_dir.size()) {
       return false;
+    }
     user_data_dir.resize(size);
   }
 
   result->swap(user_data_dir);
-  if ((*result)[result->length() - 1] != L'\\')
+  if ((*result)[result->length() - 1] != L'\\') {
     result->push_back(L'\\');
+  }
   result->append(install_sub_directory);
   result->push_back(L'\\');
   result->append(kUserDataDirname);
@@ -334,38 +355,43 @@ bool GetDefaultCrashDumpLocation(std::wstring* crash_dir,
   // In order to be able to start crash handling very early, we do not rely on
   // chrome's PathService entries (for DIR_CRASH_DUMPS) being available on
   // Windows. See https://crbug.com/564398.
-  if (!GetDefaultUserDataDirectory(crash_dir, install_sub_directory))
+  if (!GetDefaultUserDataDirectory(crash_dir, install_sub_directory)) {
     return false;
+  }
 
   // We have to make sure the user data dir exists on first run. See
   // http://crbug.com/591504.
-  if (!install_static::RecursiveDirectoryCreate(*crash_dir))
+  if (!install_static::RecursiveDirectoryCreate(*crash_dir)) {
     return false;
+  }
   crash_dir->append(L"\\Crashpad");
   return true;
 }
 
 #endif  // OS_WIN
 
-CefCrashReporterClient::CefCrashReporterClient() {}
-CefCrashReporterClient::~CefCrashReporterClient() {}
+CefCrashReporterClient::CefCrashReporterClient() = default;
+CefCrashReporterClient::~CefCrashReporterClient() = default;
 
 // Be aware that logging is not initialized at the time this method is called.
 bool CefCrashReporterClient::ReadCrashConfigFile() {
-  if (has_crash_config_file_)
+  if (has_crash_config_file_) {
     return true;
+  }
 
   PathString config_path = GetCrashConfigPath();
-  if (config_path.empty())
+  if (config_path.empty()) {
     return false;
+  }
 
 #if BUILDFLAG(IS_WIN)
   FILE* fp = _wfopen(config_path.c_str(), L"r");
 #else
   FILE* fp = fopen(config_path.c_str(), "r");
 #endif
-  if (!fp)
+  if (!fp) {
     return false;
+  }
 
   char line[1000];
 
@@ -383,8 +409,9 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
   while (fgets(line, sizeof(line) - 1, fp) != nullptr) {
     std::string str = line;
     base::TrimString(str, base::kWhitespaceASCII, &str);
-    if (str.empty() || str[0] == '#')
+    if (str.empty() || str[0] == '#') {
       continue;
+    }
 
     if (str == "[Config]") {
       current_section = kConfigSection;
@@ -397,19 +424,22 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
       continue;
     }
 
-    if (current_section == kNoSection)
+    if (current_section == kNoSection) {
       continue;
+    }
 
     size_t div = str.find('=');
-    if (div == std::string::npos)
+    if (div == std::string::npos) {
       continue;
+    }
 
     std::string name_str = str.substr(0, div);
     base::TrimString(name_str, base::kWhitespaceASCII, &name_str);
     std::string val_str = str.substr(div + 1);
     base::TrimString(val_str, base::kWhitespaceASCII, &val_str);
-    if (name_str.empty())
+    if (name_str.empty()) {
       continue;
+    }
 
     if (current_section == kConfigSection) {
       if (name_str == "ServerURL") {
@@ -429,13 +459,15 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
       }
 #if BUILDFLAG(IS_WIN)
       else if (name_str == "ExternalHandler") {
-        if (!val_str.empty())
+        if (!val_str.empty()) {
           external_handler_ = sanitizePath(val_str);
+        }
       } else if (name_str == "AppName") {
         if (!val_str.empty()) {
           val_str = sanitizePathComponent(val_str);
-          if (!val_str.empty())
+          if (!val_str.empty()) {
             app_name_ = val_str;
+          }
         }
       }
 #elif BUILDFLAG(IS_MAC)
@@ -495,33 +527,33 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
     };
 
     // Make sure we can fit all possible name/value pairs.
-    static_assert(base::size(ids) * crashpad::Annotation::kValueMaxSize >=
+    static_assert(std::size(ids) * crashpad::Annotation::kValueMaxSize >=
                       3 * 26 /* sizes (small, medium, large) * slots (A to Z) */
                           * (3 + 2 /* key size ("S-A") + delim size ("=,") */
                              + crashpad::Annotation::kNameMaxLength),
                   "Not enough storage for key map");
 
     size_t offset = 0;
-    for (size_t i = 0; i < base::size(ids); ++i) {
+    for (auto& id : ids) {
       size_t length = std::min(map_keys.size() - offset,
                                crashpad::Annotation::kValueMaxSize);
-      ids[i].Set(base::StringPiece(map_keys.data() + offset, length));
+      id.Set(std::string_view(map_keys.data() + offset, length));
       offset += length;
-      if (offset >= map_keys.size())
+      if (offset >= map_keys.size()) {
         break;
+      }
     }
   }
 
   // Allow override of some values via environment variables.
   {
     std::unique_ptr<base::Environment> env(base::Environment::Create());
-    std::string val_str;
-
-    if (env->GetVar("CEF_CRASH_REPORTER_SERVER_URL", &val_str)) {
-      ParseURL(val_str, &server_url_);
+    if (const auto& var_str = env->GetVar("CEF_CRASH_REPORTER_SERVER_URL")) {
+      ParseURL(*var_str, &server_url_);
     }
-    if (env->GetVar("CEF_CRASH_REPORTER_RATE_LIMIT_ENABLED", &val_str)) {
-      rate_limit_ = ParseBool(val_str);
+    if (const auto& var_str =
+            env->GetVar("CEF_CRASH_REPORTER_RATE_LIMIT_ENABLED")) {
+      rate_limit_ = ParseBool(*var_str);
     }
   }
 
@@ -537,16 +569,18 @@ bool CefCrashReporterClient::HasCrashConfigFile() const {
 
 // static
 void CefCrashReporterClient::InitializeCrashReportingForProcess() {
-  if (g_crash_reporter_client)
+  if (g_crash_reporter_client) {
     return;
+  }
 
   g_crash_reporter_client = new CefCrashReporterClient();
   ANNOTATE_LEAKING_OBJECT_PTR(g_crash_reporter_client);
 
-  if (!g_crash_reporter_client->ReadCrashConfigFile())
+  if (!g_crash_reporter_client->ReadCrashConfigFile()) {
     return;
+  }
 
-  std::wstring process_type = install_static::GetSwitchValueFromCommandLine(
+  std::wstring process_type = install_static::GetCommandLineSwitchValue(
       ::GetCommandLineW(), install_static::kProcessType);
   if (process_type != install_static::kCrashpadHandler) {
     crash_reporter::SetCrashReporterClient(g_crash_reporter_client);
@@ -589,57 +623,27 @@ void CefCrashReporterClient::GetProductNameAndVersion(
 bool CefCrashReporterClient::GetCrashDumpLocation(std::wstring* crash_dir) {
   // By setting the BREAKPAD_DUMP_LOCATION environment variable, an alternate
   // location to write breakpad crash dumps can be set.
-  if (GetAlternativeCrashDumpLocation(crash_dir))
+  if (GetAlternativeCrashDumpLocation(crash_dir)) {
     return true;
+  }
 
   return GetDefaultCrashDumpLocation(crash_dir, base::UTF8ToWide(app_name_));
 }
 
-bool CefCrashReporterClient::GetCrashMetricsLocation(
-    std::wstring* metrics_dir) {
-  return GetDefaultUserDataDirectory(metrics_dir, base::UTF8ToWide(app_name_));
-}
-
 #elif BUILDFLAG(IS_POSIX)
 
-void CefCrashReporterClient::GetProductNameAndVersion(const char** product_name,
-                                                      const char** version) {
-  *product_name = product_name_.c_str();
-  *version = product_version_.c_str();
+void CefCrashReporterClient::GetProductInfo(ProductInfo* product_info) {
+  product_info->product_name = product_name_;
+  product_info->version = product_version_;
 }
-
-void CefCrashReporterClient::GetProductNameAndVersion(std::string* product_name,
-                                                      std::string* version,
-                                                      std::string* channel) {
-  *product_name = product_name_;
-  *version = product_version_;
-}
-
-#if !BUILDFLAG(IS_MAC)
-
-base::FilePath CefCrashReporterClient::GetReporterLogFilename() {
-  return base::FilePath(FILE_PATH_LITERAL("uploads.log"));
-}
-
-bool CefCrashReporterClient::EnableBreakpadForProcess(
-    const std::string& process_type) {
-  return process_type == switches::kRendererProcess ||
-         process_type == switches::kPpapiPluginProcess ||
-         process_type == switches::kZygoteProcess ||
-         process_type == switches::kGpuProcess;
-}
-
-#endif  // !BUILDFLAG(IS_MAC)
 
 bool CefCrashReporterClient::GetCrashDumpLocation(base::FilePath* crash_dir) {
   // By setting the BREAKPAD_DUMP_LOCATION environment variable, an alternate
   // location to write breakpad crash dumps can be set.
   std::unique_ptr<base::Environment> env(base::Environment::Create());
-  std::string alternate_crash_dump_location;
-  if (env->GetVar("BREAKPAD_DUMP_LOCATION", &alternate_crash_dump_location)) {
-    base::FilePath crash_dumps_dir_path =
-        base::FilePath::FromUTF8Unsafe(alternate_crash_dump_location);
-    base::PathService::Override(chrome::DIR_CRASH_DUMPS, crash_dumps_dir_path);
+  if (const auto& val = env->GetVar("BREAKPAD_DUMP_LOCATION")) {
+    base::PathService::Override(chrome::DIR_CRASH_DUMPS,
+                                base::FilePath::FromUTF8Unsafe(*val));
   }
   return base::PathService::Get(chrome::DIR_CRASH_DUMPS, crash_dir);
 }
@@ -654,21 +658,11 @@ bool CefCrashReporterClient::GetCollectStatsInSample() {
   return true;
 }
 
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC)
 bool CefCrashReporterClient::ReportingIsEnforcedByPolicy(
     bool* crashpad_enabled) {
   *crashpad_enabled = true;
   return true;
 }
-#endif
-
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
-bool CefCrashReporterClient::IsRunningUnattended() {
-  // Crash upload will only be enabled with Breakpad on Linux if this method
-  // returns false.
-  return false;
-}
-#endif
 
 std::string CefCrashReporterClient::GetUploadUrl() {
   return server_url_;
@@ -678,8 +672,9 @@ std::string CefCrashReporterClient::GetUploadUrl() {
 // for supported arguments.
 void CefCrashReporterClient::GetCrashOptionalArguments(
     std::vector<std::string>* arguments) {
-  if (!rate_limit_)
-    arguments->push_back(std::string("--no-rate-limit"));
+  if (!rate_limit_) {
+    arguments->emplace_back("--no-rate-limit");
+  }
 
   if (max_uploads_ > 0) {
     arguments->push_back(std::string("--max-uploads=") +
@@ -701,10 +696,12 @@ void CefCrashReporterClient::GetCrashOptionalArguments(
 
 std::wstring CefCrashReporterClient::GetCrashExternalHandler(
     const std::wstring& exe_dir) {
-  if (external_handler_.empty())
+  if (external_handler_.empty()) {
     return CrashReporterClient::GetCrashExternalHandler(exe_dir);
-  if (isAbsolutePath(external_handler_))
+  }
+  if (isAbsolutePath(external_handler_)) {
     return base::UTF8ToWide(external_handler_);
+  }
   return base::UTF8ToWide(
       joinPath(base::WideToUTF8(exe_dir), external_handler_));
 }
@@ -721,20 +718,12 @@ bool CefCrashReporterClient::EnableBrowserCrashForwarding() {
 }
 #endif
 
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
-CefCrashReporterClient::ParameterMap CefCrashReporterClient::FilterParameters(
-    const ParameterMap& parameters) {
-  return crash_report_utils::FilterParameters(parameters);
-}
-#endif
-
 // The new Crashpad Annotation API requires that annotations be declared using
 // static storage. We work around this limitation by defining a fixed amount of
 // storage for each key size and later substituting the actual key name during
 // crash dump processing.
 
-#define IDKEY(name) \
-  { name, IDKey::Tag::kArray }
+#define IDKEY(name) {name, IDKey::Tag::kArray}
 
 #define IDKEY_ENTRIES(n)                                                     \
   IDKEY(n "-A"), IDKEY(n "-B"), IDKEY(n "-C"), IDKEY(n "-D"), IDKEY(n "-E"), \
@@ -745,21 +734,21 @@ CefCrashReporterClient::ParameterMap CefCrashReporterClient::FilterParameters(
       IDKEY(n "-V"), IDKEY(n "-W"), IDKEY(n "-X"), IDKEY(n "-Y"),            \
       IDKEY(n "-Z")
 
-#define IDKEY_FUNCTION(name, size_)                                          \
-  static_assert(size_ <= crashpad::Annotation::kValueMaxSize,                \
-                "Annotation size is too large.");                            \
-  bool Set##name##Annotation(size_t index, const base::StringPiece& value) { \
-    using IDKey = crash_reporter::CrashKeyString<size_>;                     \
-    static IDKey ids[] = {IDKEY_ENTRIES(#name)};                             \
-    if (index < base::size(ids)) {                                           \
-      if (value.empty()) {                                                   \
-        ids[index].Clear();                                                  \
-      } else {                                                               \
-        ids[index].Set(value);                                               \
-      }                                                                      \
-      return true;                                                           \
-    }                                                                        \
-    return false;                                                            \
+#define IDKEY_FUNCTION(name, size_)                                         \
+  static_assert(size_ <= crashpad::Annotation::kValueMaxSize,               \
+                "Annotation size is too large.");                           \
+  bool Set##name##Annotation(size_t index, const std::string_view& value) { \
+    using IDKey = crash_reporter::CrashKeyString<size_>;                    \
+    static IDKey ids[] = {IDKEY_ENTRIES(#name)};                            \
+    if (index < std::size(ids)) {                                           \
+      if (value.empty()) {                                                  \
+        ids[index].Clear();                                                 \
+      } else {                                                              \
+        ids[index].Set(value);                                              \
+      }                                                                     \
+      return true;                                                          \
+    }                                                                       \
+    return false;                                                           \
   }
 
 // The first argument must be kept synchronized with the logic in
@@ -769,14 +758,16 @@ IDKEY_FUNCTION(S, 64)
 IDKEY_FUNCTION(M, 256)
 IDKEY_FUNCTION(L, 1024)
 
-bool CefCrashReporterClient::SetCrashKeyValue(const base::StringPiece& key,
-                                              const base::StringPiece& value) {
-  if (key.empty() || crash_keys_.empty())
+bool CefCrashReporterClient::SetCrashKeyValue(const std::string_view& key,
+                                              const std::string_view& value) {
+  if (key.empty() || crash_keys_.empty()) {
     return false;
+  }
 
   KeyMap::const_iterator it = crash_keys_.find(NormalizeCrashKey(key));
-  if (it == crash_keys_.end())
+  if (it == crash_keys_.end()) {
     return false;
+  }
 
   const KeySize size = it->second.first;
   const size_t index = it->second.second;

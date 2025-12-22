@@ -264,6 +264,18 @@ TEST(ParserTest, ParseURLNonStandard) {
   EXPECT_STREQ("ref", ref.ToString().c_str());
 }
 
+// Combine and parse an absolute and relative URL.
+TEST(ParserTest, ParseAbsoluteAndRelativeURL) {
+  CefString base_url;
+  base_url.FromASCII("https://www.example.com");
+  CefString relative_url;
+  relative_url.FromASCII("/example");
+  CefString resolved_url;
+  EXPECT_TRUE(CefResolveURL(base_url, relative_url, resolved_url));
+  EXPECT_STREQ("https://www.example.com/example",
+               resolved_url.ToString().c_str());
+}
+
 TEST(ParserTest, FormatUrlForSecurityDisplay) {
   CefString result;
 
@@ -467,7 +479,7 @@ TEST(ParserTest, ParseJSONAndReturnErrorInvalid) {
   CefString error_msg;
   CefRefPtr<CefValue> value =
       CefParseJSONAndReturnError(data, JSON_PARSER_RFC, error_msg);
-  CefString expect_error_msg = "Line: 1, column: 1, Unexpected token.";
+  CefString expect_error_msg = "expected value at line 1 column 1";
   EXPECT_FALSE(value.get());
   EXPECT_EQ(expect_error_msg, error_msg);
 }
@@ -477,8 +489,7 @@ TEST(ParserTest, ParseJSONAndReturnErrorTrailingComma) {
   CefString error_msg;
   CefRefPtr<CefValue> value =
       CefParseJSONAndReturnError(data, JSON_PARSER_RFC, error_msg);
-  CefString expect_error_msg =
-      "Line: 1, column: 13, Trailing comma not allowed.";
+  CefString expect_error_msg = "trailing comma at line 1 column 13";
   EXPECT_FALSE(value.get());
   EXPECT_EQ(expect_error_msg, error_msg);
 }

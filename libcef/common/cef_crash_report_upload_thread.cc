@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/cef_crash_report_upload_thread.h"
+#include "cef/libcef/common/cef_crash_report_upload_thread.h"
 
 #include "base/notreached.h"
-#include "libcef/common/cef_crash_report_utils.h"
+#include "cef/libcef/common/cef_crash_report_utils.h"
 #include "third_party/crashpad/crashpad/client/settings.h"
 
 using namespace crashpad;
@@ -14,11 +14,12 @@ CefCrashReportUploadThread::CefCrashReportUploadThread(
     CrashReportDatabase* database,
     const std::string& url,
     const Options& options,
+    ProcessPendingReportsObservationCallback callback,
     int max_uploads)
-    : CrashReportUploadThread(database, url, options),
+    : CrashReportUploadThread(database, url, options, std::move(callback)),
       max_uploads_(max_uploads) {}
 
-CefCrashReportUploadThread::~CefCrashReportUploadThread() {}
+CefCrashReportUploadThread::~CefCrashReportUploadThread() = default;
 
 void CefCrashReportUploadThread::ProcessPendingReports() {
   if (BackoffPending()) {
@@ -44,8 +45,9 @@ void CefCrashReportUploadThread::ProcessPendingReports() {
     // Count how many reports have completed in the last 24 hours.
     recent_upload_ct_ = 0;
     for (const CrashReportDatabase::Report& report : reports) {
-      if (report.last_upload_attempt_time > now - kSeconds)
+      if (report.last_upload_attempt_time > now - kSeconds) {
         recent_upload_ct_++;
+      }
     }
   }
 
@@ -58,8 +60,8 @@ void CefCrashReportUploadThread::ProcessPendingReport(
   // Always allow upload if it's been explicitly requested by the user.
   if (!report.upload_explicitly_requested) {
     if (!UploadsEnabled()) {
-      // Don’t attempt an upload if there’s no URL or if uploads have been
-      // disabled in the database’s settings.
+      // Don't attempt an upload if there's no URL or if uploads have been
+      // disabled in the database's settings.
       database_->SkipReportUpload(
           report.uuid, Metrics::CrashSkippedReason::kUploadsDisabled);
       return;
@@ -91,14 +93,14 @@ void CefCrashReportUploadThread::ProcessPendingReport(
     case CrashReportDatabase::kReportNotFound:
     case CrashReportDatabase::kFileSystemError:
     case CrashReportDatabase::kDatabaseError:
-      // In these cases, SkipReportUpload() might not work either, but it’s best
+      // In these cases, SkipReportUpload() might not work either, but it's best
       // to at least try to get the report out of the way.
       database_->SkipReportUpload(report.uuid,
                                   Metrics::CrashSkippedReason::kDatabaseError);
       return;
 
     case CrashReportDatabase::kCannotRequestUpload:
-      NOTREACHED();
+      DCHECK(false);
       return;
   }
 
@@ -109,8 +111,9 @@ void CefCrashReportUploadThread::ProcessPendingReport(
     case UploadResult::kSuccess:
       // The upload completed successfully.
       database_->RecordUploadComplete(std::move(upload_report), response_body);
-      if (MaxUploadsEnabled())
+      if (MaxUploadsEnabled()) {
         recent_upload_ct_++;
+      }
       ResetBackoff();
       break;
     case UploadResult::kPermanentFailure:
@@ -147,8 +150,9 @@ bool CefCrashReportUploadThread::MaxUploadsExceeded() const {
 }
 
 bool CefCrashReportUploadThread::BackoffPending() const {
-  if (!options_.rate_limit)
+  if (!options_.rate_limit) {
     return false;
+  }
 
   Settings* const settings = database_->GetSettings();
 
@@ -156,16 +160,18 @@ bool CefCrashReportUploadThread::BackoffPending() const {
   if (settings->GetNextUploadAttemptTime(&next_upload_time) &&
       next_upload_time > 0) {
     const time_t now = time(nullptr);
-    if (now < next_upload_time)
+    if (now < next_upload_time) {
       return true;
+    }
   }
 
   return false;
 }
 
 void CefCrashReportUploadThread::IncreaseBackoff() {
-  if (!options_.rate_limit)
+  if (!options_.rate_limit) {
     return;
+  }
 
   const int kHour = 60 * 60;  // 1 hour
   const int kBackoffSchedule[] = {
@@ -182,10 +188,12 @@ void CefCrashReportUploadThread::IncreaseBackoff() {
   Settings* settings = database_->GetSettings();
 
   int backoff_step = 0;
-  if (settings->GetBackoffStep(&backoff_step) && backoff_step < 0)
+  if (settings->GetBackoffStep(&backoff_step) && backoff_step < 0) {
     backoff_step = 0;
-  if (++backoff_step > kBackoffScheduleSize)
+  }
+  if (++backoff_step > kBackoffScheduleSize) {
     backoff_step = kBackoffScheduleSize;
+  }
 
   time_t next_upload_time = time(nullptr);  // now
   next_upload_time += kBackoffSchedule[backoff_step - 1];
@@ -202,8 +210,9 @@ void CefCrashReportUploadThread::IncreaseBackoff() {
 }
 
 void CefCrashReportUploadThread::ResetBackoff() {
-  if (!options_.rate_limit)
+  if (!options_.rate_limit) {
     return;
+  }
 
   Settings* settings = database_->GetSettings();
   settings->SetBackoffStep(0);

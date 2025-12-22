@@ -1,6 +1,8 @@
-// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
 #pragma once
@@ -9,38 +11,25 @@
 #include <string>
 #include <vector>
 
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "include/cef_frame.h"
-#include "include/internal/cef_types.h"
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/browser_info.h"
-#include "libcef/browser/file_dialog_manager.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/javascript_dialog_manager.h"
-#include "libcef/browser/menu_manager.h"
-#include "libcef/browser/request_context_impl.h"
-
 #include "base/synchronization/lock.h"
-#include "base/synchronization/waitable_event.h"
-#include "components/autofill/core/browser/ui/suggestion.h"
+#include "cef/include/cef_browser.h"
+#include "cef/include/cef_client.h"
+#include "cef/include/cef_frame.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/menu_manager.h"
+#include "cef/libcef/browser/request_context_impl.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
-#include "extensions/common/mojom/view_type.mojom-forward.h"
-#include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
-
-#ifdef OHOS_NWEB_EX
-#include "components/zoom/zoom_controller.h"
-#include "components/zoom/zoom_observer.h"
-#endif
 
 class CefAudioCapturer;
 class CefBrowserInfo;
 class SiteInstance;
 
-// CefBrowser implementation for the alloy runtime. Method calls are delegated
-// to the CefPlatformDelegate or the WebContents as appropriate. All methods are
+// CefBrowser implementation for Alloy style. Method calls are delegated to the
+// CefPlatformDelegate or the WebContents as appropriate. All methods are
 // thread-safe unless otherwise indicated.
 //
 // WebContentsDelegate: Interface for handling WebContents delegations. There is
@@ -56,11 +45,7 @@ class SiteInstance;
 // WebContentsObserver::routing_id() when sending IPC messages.
 class AlloyBrowserHostImpl : public CefBrowserHostBase,
                              public content::WebContentsDelegate,
-                             public content::WebContentsObserver
-#ifdef OHOS_NWEB_EX
-                             , public zoom::ZoomObserver
-#endif
-{
+                             public content::WebContentsObserver {
  public:
   // Used for handling the response to command messages.
   class CommandResponseHandler : public virtual CefBaseRefCounted {
@@ -73,6 +58,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // Create a new AlloyBrowserHostImpl instance with owned WebContents.
   static CefRefPtr<AlloyBrowserHostImpl> Create(
       CefBrowserCreateParams& create_params);
+
+  // Safe (checked) conversion from CefBrowserHostBase to AlloyBrowserHostImpl.
+  // Use this method instead of static_cast.
+  static CefRefPtr<AlloyBrowserHostImpl> FromBaseChecked(
+      CefRefPtr<CefBrowserHostBase> host_base);
 
   // Returns the browser associated with the specified RenderViewHost.
   static CefRefPtr<AlloyBrowserHostImpl> GetBrowserForHost(
@@ -90,50 +80,15 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // CefBrowserHost methods.
   void CloseBrowser(bool force_close) override;
   bool TryCloseBrowser() override;
-  void SetFocus(bool focus) override;
   CefWindowHandle GetWindowHandle() override;
   CefWindowHandle GetOpenerWindowHandle() override;
-  double GetZoomLevel() override;
-  void GetZoomLevelCallback();
-  void SetZoomLevel(double zoomLevel) override;
-
-  void SetBrowserZoomLevel(double zoom_factor) override;
-
-  void RunFileDialog(FileDialogMode mode,
-                     const CefString& title,
-                     const CefString& default_file_path,
-                     const std::vector<CefString>& accept_filters,
-                     int selected_accept_filter,
-                     CefRefPtr<CefRunFileDialogCallback> callback) override;
-  void Print() override;
-  void PrintToPDF(const CefString& path,
-                  const CefPdfPrintSettings& settings,
-                  CefRefPtr<CefPdfPrintCallback> callback) override;
-  void Find(const CefString& searchText,
-            bool forward,
-            bool matchCase,
-            bool findNext,
-            bool newSession) override;
-  void StopFinding(bool clearSelection) override;
-  void ShowDevTools(const CefWindowInfo& windowInfo,
-                    CefRefPtr<CefClient> client,
-                    const CefBrowserSettings& settings,
-                    const CefPoint& inspect_element_at) override;
-  void CloseDevTools() override;
-  bool HasDevTools() override;
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
-#if BUILDFLAG(IS_OHOS)
-  void WasOccluded(bool occluded) override;
-  void SetEnableLowerFrameRate(bool enabled) override;
-#endif
-  void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
   void SendCaptureLostEvent() override;
-  void NotifyMoveOrResizeStarted() override;
   int GetWindowlessFrameRate() override;
   void SetWindowlessFrameRate(int frame_rate) override;
   void ImeSetComposition(const CefString& text,
@@ -154,27 +109,22 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DragTargetDrop(const CefMouseEvent& event) override;
   void DragSourceSystemDragEnded() override;
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
-  void SetAudioMuted(bool mute) override;
-  bool IsAudioMuted() override;
-  void SetAudioResumeInterval(int resumeInterval) override;
-  void SetAudioExclusive(bool audioExclusive) override;
-  void SetAccessibilityState(cef_state_t accessibility_state) override;
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
-  void SetAutoResizeEnabled(bool enabled,
-                            const CefSize& min_size,
-                            const CefSize& max_size) override;
-  CefRefPtr<CefExtension> GetExtension() override;
-  bool IsBackgroundHost() override;
-  SkColor GetBackgroundColor() const;
+  bool CanExecuteChromeCommand(int command_id) override;
+  void ExecuteChromeCommand(int command_id,
+                            cef_window_open_disposition_t disposition) override;
 
-  // Returns true if windowless rendering is enabled.
+  // CefBrowserHostBase methods:
   bool IsWindowless() const override;
+  bool IsAlloyStyle() const override { return true; }
+  bool IsVisible() const override;
 
   // Returns true if this browser supports picture-in-picture.
   bool IsPictureInPictureSupported() const;
 
   // Called when the OS window hosting the browser is destroyed.
   void WindowDestroyed() override;
+
+  bool WillBeDestroyed() const override;
 
   // Destroy the browser members. This method should only be called after the
   // native browser window is not longer processing messages.
@@ -184,12 +134,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void CancelContextMenu();
 
   bool MaybeAllowNavigation(content::RenderFrameHost* opener,
-                            bool is_guest_view,
                             const content::OpenURLParams& params) override;
 
-  // Convert from view coordinates to screen coordinates. Potential display
-  // scaling will be applied to the result.
-  gfx::Point GetScreenPoint(const gfx::Point& view) const;
+  // Convert from view DIP coordinates to screen coordinates. If
+  // |want_dip_coords| is true return DIP instead of device (pixel) coordinates
+  // on Windows/Linux.
+  gfx::Point GetScreenPoint(const gfx::Point& view, bool want_dip_coords) const;
 
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
@@ -197,34 +147,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
                      const gfx::Vector2d& image_offset,
                      const blink::mojom::DragEventSourceInfo& event_info,
                      content::RenderWidgetHostImpl* source_rwh);
-  void UpdateDragCursor(ui::mojom::DragOperation operation);
-
-  // Accessors that must be called on the UI thread.
-  extensions::ExtensionHost* GetExtensionHost() const;
+  void UpdateDragOperation(ui::mojom::DragOperation operation,
+                           bool document_is_handling_drag);
 
   void OnSetFocus(cef_focus_source_t source) override;
 
-  // Run the file chooser dialog specified by |params|. Only a single dialog may
-  // be pending at any given time. |callback| will be executed asynchronously
-  // after the dialog is dismissed or if another dialog is already pending.
-  void RunFileChooser(const CefFileDialogRunner::FileChooserParams& params,
-                      CefFileDialogRunner::RunFileChooserCallback callback);
-#if BUILDFLAG(IS_OHOS)
   bool ShowContextMenu(const content::ContextMenuParams& params);
-  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-  void SetDrawRect(int x, int y, int width, int height) override;
-  void SetDrawMode(int mode) override;
-  void SetWindowId(int window_id, int nweb_id) override;
-  void WasKeyboardResized() override;
-  void SetToken(void* token) override;
-  void ContentsZoomChange(bool zoom_in) override;
-  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
-  bool ShouldVirtualKeyboardOverlay() override;
-  void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) override;
-#else
-  bool HandleContextMenu(content::WebContents* web_contents,
-                         const content::ContextMenuParams& params);
-#endif
 
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
@@ -234,61 +162,49 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   };
   DestructionState destruction_state() const { return destruction_state_; }
 
-  /* ohos webview begin */
-  void SetBackgroundColor(int color) override;
-  void SetTouchInsertHandleMenuShow(bool show) {
-    web_contents()->SetTouchInsertHandleMenuShow(show);
-  }
-  bool GetTouchInsertHandleMenuShow() {
-    return web_contents()->GetTouchInsertHandleMenuShow();
-  }
-  void ShowPopupMenu(
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection);
-  /* ohos webview end */
-
   // content::WebContentsDelegate methods.
+  void PrintCrossProcessSubframe(
+      content::WebContents* web_contents,
+      const gfx::Rect& rect,
+      int document_cookie,
+      content::RenderFrameHost* subframe_host) const override;
   content::WebContents* OpenURLFromTab(
       content::WebContents* source,
-      const content::OpenURLParams& params) override;
-  bool ShouldAllowRendererInitiatedCrossProcessNavigation(
-      bool is_main_frame_navigation) override;
-  void AddNewContents(content::WebContents* source,
-                      std::unique_ptr<content::WebContents> new_contents,
-                      const GURL& target_url,
-                      WindowOpenDisposition disposition,
-                      const gfx::Rect& initial_rect,
-                      bool user_gesture,
-                      bool* was_blocked) override;
+      const content::OpenURLParams& params,
+      base::OnceCallback<void(content::NavigationHandle&)>
+          navigation_handle_callback) override;
+  content::WebContents* AddNewContents(
+      content::WebContents* source,
+      std::unique_ptr<content::WebContents> new_contents,
+      const GURL& target_url,
+      WindowOpenDisposition disposition,
+      const blink::mojom::WindowFeatures& window_features,
+      bool user_gesture,
+      bool* was_blocked) override;
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void CloseContents(content::WebContents* source) override;
+  void SetContentsBounds(content::WebContents* source,
+                         const gfx::Rect& bounds) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
+  void ContentsZoomChange(bool zoom_in) override;
   void BeforeUnloadFired(content::WebContents* source,
                          bool proceed,
                          bool* proceed_to_fire_unload) override;
   bool TakeFocus(content::WebContents* source, bool reverse) override;
-  bool HandleContextMenu(content::RenderFrameHost& render_frame_host,
-                         const content::ContextMenuParams& params) override;
+  void CanDownload(const GURL& url,
+                   const std::string& request_method,
+                   base::OnceCallback<void(bool)> callback) override;
   content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
       content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool HandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool PreHandleGestureEvent(content::WebContents* source,
-                             const blink::WebGestureEvent& event) override;
+      const input::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(content::WebContents* source,
+                           const input::NativeWebKeyboardEvent& event) override;
   bool CanDragEnter(content::WebContents* source,
                     const content::DropData& data,
                     blink::DragOperationsMask operations_allowed) override;
@@ -297,16 +213,21 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       const GURL& target_url,
       int opener_render_process_id,
       int opener_render_frame_id,
-      content::WebContentsView** view,
-      content::RenderViewHostDelegateView** delegate_view) override;
+      raw_ptr<content::WebContentsView>* view,
+      raw_ptr<content::RenderViewHostDelegateView>* delegate_view) override;
   void WebContentsCreated(content::WebContents* source_contents,
                           int opener_render_process_id,
                           int opener_render_frame_id,
                           const std::string& frame_name,
                           const GURL& target_url,
                           content::WebContents* new_contents) override;
-  void DidNavigatePrimaryMainFramePostCommit(
-      content::WebContents* web_contents) override;
+  void RendererUnresponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter) override;
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
   content::JavaScriptDialogManager* GetJavaScriptDialogManager(
       content::WebContents* source) override;
   void RunFileChooser(content::RenderFrameHost* render_frame_host,
@@ -335,64 +256,28 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       const content::MediaStreamRequest& request,
       content::MediaResponseCallback callback) override;
   bool CheckMediaAccessPermission(content::RenderFrameHost* render_frame_host,
-                                  const GURL& security_origin,
+                                  const url::Origin& security_origin,
                                   blink::mojom::MediaStreamType type) override;
-  bool IsNeverComposited(content::WebContents* web_contents) override;
   content::PictureInPictureResult EnterPictureInPicture(
-      content::WebContents* web_contents,
-      const viz::SurfaceId& surface_id,
-      const gfx::Size& natural_size) override;
+      content::WebContents* web_contents) override;
   void ExitPictureInPicture() override;
-  bool IsBackForwardCacheSupported() override;
-  bool IsPrerender2Supported() override;
-  void RequestToLockMouse(content::WebContents* web_contents,
-                          bool user_gesture,
-                          bool last_unlocked_by_target) override;
-  void LostMouseLock() override;
-
-#if BUILDFLAG(IS_OHOS)
-  // Shows the repost form confirmation dialog box.
-  void ShowRepostFormWarningDialog(content::WebContents* source) override;
-#endif
-
-#if defined(OHOS_NWEB_EX)
-  void ShowPasswordDialog(bool is_update, const std::string& url) override;
-  void OnShowAutofillPopup(
-      const gfx::RectF& element_bounds,
-      bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions) override;
-  void OnHideAutofillPopup() override;
-  void OnZoomChanged(
-      const zoom::ZoomController::ZoomChangedEventData& data) override;
-#endif
+  bool IsBackForwardCacheSupported(content::WebContents& web_contents) override;
+  content::PreloadingEligibility IsPrerender2Supported(
+      content::WebContents& web_contents,
+      content::PreloadingTriggerType trigger_type) override;
+  void DraggableRegionsChanged(
+      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
+      content::WebContents* contents) override;
 
   // content::WebContentsObserver methods.
   using content::WebContentsObserver::BeforeUnloadFired;
-  void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
-  void RenderViewReady() override;
-  void DidFinishNavigation(
-      content::NavigationHandle* navigation_handle) override;
   void OnAudioStateChanged(bool audible) override;
-  void OnFormEditingStateChanged(bool state, uint64_t form_id) override;
-  void MediaStartedPlaying(const content::WebContentsObserver::MediaPlayerInfo& video_type,
-                           const content::MediaPlayerId& id) override;
-  void MediaStoppedPlaying(
-    const content::WebContentsObserver::MediaPlayerInfo& video_type,
-    const content::MediaPlayerId& id,
-    content::WebContentsObserver::MediaStoppedReason reason) override;
   void AccessibilityEventReceived(
-      const content::AXEventNotificationDetails& content_event_bundle) override;
+      const ui::AXUpdatesAndEvents& details) override;
   void AccessibilityLocationChangesReceived(
-      const std::vector<content::AXLocationChangeNotificationDetails>& locData)
-      override;
+      const ui::AXTreeID& tree_id,
+      ui::AXLocationAndScrollUpdates& details) override;
   void WebContentsDestroyed() override;
-  void AddVisitedLinks(const std::vector<CefString>& urls) override;
-  bool Discard() override;
-  bool Restore() override;
-#if BUILDFLAG(IS_OHOS)
-  void OpenDateTimeChooser() override;
-  void CloseDateTimeChooser() override;
-#endif
 
  private:
   friend class CefBrowserPlatformDelegateAlloy;
@@ -404,10 +289,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       bool own_web_contents,
       scoped_refptr<CefBrowserInfo> browser_info,
       CefRefPtr<AlloyBrowserHostImpl> opener,
-      bool is_devtools_popup,
       CefRefPtr<CefRequestContextImpl> request_context,
-      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
-      CefRefPtr<CefExtension> extension);
+      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate);
 
   AlloyBrowserHostImpl(
       const CefBrowserSettings& settings,
@@ -416,32 +299,17 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       scoped_refptr<CefBrowserInfo> browser_info,
       CefRefPtr<AlloyBrowserHostImpl> opener,
       CefRefPtr<CefRequestContextImpl> request_context,
-      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
-      CefRefPtr<CefExtension> extension);
+      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate);
 
   // Give the platform delegate an opportunity to create the host window.
   bool CreateHostWindow();
 
-  // Create the CefFileDialogManager if it doesn't already exist.
-  void EnsureFileDialogManager();
-
   void StartAudioCapturer();
   void OnRecentlyAudibleTimerFired();
 
-  void SetFocusInternal(bool focus);
-
-  void UpdateBackgroundColor(int color);
-
-  void UpdateZoomSupportEnabled();
-#if BUILDFLAG(IS_OHOS)
-  void ReportWindowStatus(bool first_view_ready);
-#endif
-
-  CefWindowHandle opener_;
+  CefWindowHandle opener_window_handle_ = kNullWindowHandle;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
-  CefRefPtr<CefExtension> extension_;
-  bool is_background_host_ = false;
 
   // Represents the current browser destruction state. Only accessed on the UI
   // thread.
@@ -450,12 +318,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // True if the OS window hosting the browser has been destroyed. Only accessed
   // on the UI thread.
   bool window_destroyed_ = false;
-
-  // Used for creating and managing file dialogs.
-  std::unique_ptr<CefFileDialogManager> file_dialog_manager_;
-
-  // Used for creating and managing JavaScript dialogs.
-  std::unique_ptr<CefJavaScriptDialogManager> javascript_dialog_manager_;
 
   // Used for creating and managing context menus.
   std::unique_ptr<CefMenuManager> menu_manager_;
@@ -467,21 +329,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // starts running when a tab stops being audible, and is canceled if it starts
   // being audible again before it fires.
   std::unique_ptr<base::OneShotTimer> recently_audible_timer_;
-
-  int base_background_color_ = 0xffffffff;
-
-  bool touch_insert_handle_menu_show_ = false;
-
-  double curFactor_ = 0.0;
-
-  std::shared_ptr<base::WaitableEvent> event_ = nullptr;
-#if BUILDFLAG(IS_OHOS)
-  int window_id_ = -1;
-  int nweb_id_ = -1;
-  bool is_hidden_ = false;
-#endif
-
-  bool start_play_ = false;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

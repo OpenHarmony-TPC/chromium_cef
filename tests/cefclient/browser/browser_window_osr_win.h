@@ -20,6 +20,7 @@ class BrowserWindowOsrWin : public BrowserWindow,
   // Constructor may be called on any thread.
   // |delegate| must outlive this object.
   BrowserWindowOsrWin(BrowserWindow::Delegate* delegate,
+                      bool with_controls,
                       const std::string& startup_url,
                       const OsrRendererSettings& settings);
 
@@ -55,9 +56,9 @@ class BrowserWindowOsrWin : public BrowserWindow,
 
   // The below members are only accessed on the main thread.
   scoped_refptr<OsrWindowWin> osr_window_;
-  HWND osr_hwnd_;
+  HWND osr_hwnd_ = nullptr;
 
-  float device_scale_factor_;
+  float device_scale_factor_ = 0;
 
   DISALLOW_COPY_AND_ASSIGN(BrowserWindowOsrWin);
 };

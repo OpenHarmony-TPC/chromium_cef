@@ -18,9 +18,9 @@
 namespace {
 
 const char kTestDomain[] = "test-download.com";
-const char kTestStartUrl[] = "http://test-download.com/test.html";
-const char kTestDownloadUrl[] = "http://test-download.com/download.txt";
-const char kTestNavUrl[] = "http://test-download-nav.com/nav.html";
+const char kTestStartUrl[] = "https://test-download.com/test.html";
+const char kTestDownloadUrl[] = "https://test-download.com/download.txt";
+const char kTestNavUrl[] = "https://test-download-nav.com/nav.html";
 const char kTestFileName[] = "download_test.txt";
 const char kTestContentDisposition[] =
     "attachment; filename=\"download_test.txt\"";
@@ -34,9 +34,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
   DownloadSchemeHandler(DelayCallback delay_callback,
                         TrackCallback* got_download_request)
       : delay_callback_(std::move(delay_callback)),
-        got_download_request_(got_download_request),
-        should_delay_(false),
-        offset_(0) {}
+        got_download_request_(got_download_request) {}
 
   bool Open(CefRefPtr<CefRequest> request,
             bool& handle_request,
@@ -51,7 +49,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
       content_disposition_ = kTestContentDisposition;
       should_delay_ = true;
     } else {
-      EXPECT_TRUE(false);  // Not reached.
+      EXPECT_TRUE(IgnoreURL(url)) << url;
 
       // Cancel immediately.
       handle_request = true;
@@ -64,7 +62,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     response_length = content_.size();
 
@@ -128,11 +126,11 @@ class DownloadSchemeHandler : public CefResourceHandler {
 
   DelayCallback delay_callback_;
   TrackCallback* got_download_request_;
-  bool should_delay_;
+  bool should_delay_ = false;
   std::string content_;
   std::string mime_type_;
   std::string content_disposition_;
-  size_t offset_;
+  size_t offset_ = 0;
   CefRefPtr<CefResourceReadCallback> read_callback_;
 
   IMPLEMENT_REFCOUNTING(DownloadSchemeHandler);
@@ -169,11 +167,12 @@ class DownloadSchemeHandlerFactory : public CefSchemeHandlerFactory {
 class DownloadTestHandler : public TestHandler {
  public:
   enum TestMode {
-    PROGAMMATIC,
+    PROGRAMMATIC,
     NAVIGATED,
     PENDING,
     CLICKED,
-    CLICKED_REJECTED,
+    CLICKED_INVALID,
+    CLICKED_BLOCKED,
   };
 
   DownloadTestHandler(TestMode test_mode,
@@ -181,15 +180,41 @@ class DownloadTestHandler : public TestHandler {
                       const std::string& rc_cache_path)
       : test_mode_(test_mode),
         rc_mode_(rc_mode),
-        rc_cache_path_(rc_cache_path),
-        download_id_(0),
-        verified_results_(false) {}
+        rc_cache_path_(rc_cache_path) {}
 
   bool is_clicked() const {
-    return test_mode_ == CLICKED || test_mode_ == CLICKED_REJECTED;
+    return test_mode_ == CLICKED || test_mode_ == CLICKED_INVALID ||
+           test_mode_ == CLICKED_BLOCKED;
+  }
+
+  bool is_clicked_invalid() const { return test_mode_ == CLICKED_INVALID; }
+
+  bool is_clicked_and_downloaded() const { return test_mode_ == CLICKED; }
+
+  bool is_downloaded() const {
+    return test_mode_ == PROGRAMMATIC || test_mode_ == NAVIGATED ||
+           is_clicked_and_downloaded();
   }
 
   void RunTest() override {
+    if (!is_clicked() || is_clicked_and_downloaded()) {
+      // Create a new temporary directory.
+      EXPECT_TRUE(temp_dir_.CreateUniqueTempDir());
+      test_path_ =
+          client::file_util::JoinPath(temp_dir_.GetPath(), kTestFileName);
+    }
+
+    CreateTestRequestContext(
+        rc_mode_, rc_cache_path_,
+        base::BindOnce(&DownloadTestHandler::RunTestContinue, this));
+
+    // Time out the test after a reasonable period of time.
+    SetTestTimeout();
+  }
+
+  void RunTestContinue(CefRefPtr<CefRequestContext> request_context) {
+    EXPECT_UI_THREAD();
+
     DelayCallbackVendor delay_callback_vendor;
     if (test_mode_ == NAVIGATED || test_mode_ == PENDING) {
       delay_callback_vendor = base::BindRepeating(
@@ -203,20 +228,11 @@ class DownloadTestHandler : public TestHandler {
         new DownloadSchemeHandlerFactory(delay_callback_vendor,
                                          &got_download_request_);
 
-    CefRefPtr<CefRequestContext> request_context =
-        CreateTestRequestContext(rc_mode_, rc_cache_path_);
     if (request_context) {
-      request_context->RegisterSchemeHandlerFactory("http", kTestDomain,
+      request_context->RegisterSchemeHandlerFactory("https", kTestDomain,
                                                     scheme_factory);
     } else {
-      CefRegisterSchemeHandlerFactory("http", kTestDomain, scheme_factory);
-    }
-
-    if (test_mode_ != CLICKED_REJECTED) {
-      // Create a new temporary directory.
-      EXPECT_TRUE(temp_dir_.CreateUniqueTempDir());
-      test_path_ =
-          client::file_util::JoinPath(temp_dir_.GetPath(), kTestFileName);
+      CefRegisterSchemeHandlerFactory("https", kTestDomain, scheme_factory);
     }
 
     if (test_mode_ == NAVIGATED) {
@@ -226,28 +242,25 @@ class DownloadTestHandler : public TestHandler {
     }
 
     if (is_clicked()) {
-      std::string url;
-      if (test_mode_ == CLICKED) {
-        url = kTestDownloadUrl;
-      } else if (test_mode_ == CLICKED_REJECTED) {
-        url = "invalid:foo@example.com";
+      if (test_mode_ == CLICKED || test_mode_ == CLICKED_BLOCKED) {
+        download_url_ = kTestDownloadUrl;
+      } else if (test_mode_ == CLICKED_INVALID) {
+        download_url_ = "invalid:foo@example.com";
       } else {
         EXPECT_TRUE(false);  // Not reached.
       }
-      AddResource(
-          kTestStartUrl,
-          "<html><body><a href=\"" + url + "\">CLICK ME</a></body></html>",
-          "text/html");
+      AddResource(kTestStartUrl,
+                  "<html><body><a href=\"" + download_url_ +
+                      "\">CLICK ME</a></body></html>",
+                  "text/html");
     } else {
+      download_url_ = kTestStartUrl;
       AddResource(kTestStartUrl, "<html><body>Download Test</body></html>",
                   "text/html");
     }
 
     // Create the browser
     CreateBrowser(kTestStartUrl, request_context);
-
-    // Time out the test after a reasonable period of time.
-    SetTestTimeout();
   }
 
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
@@ -264,9 +277,9 @@ class DownloadTestHandler : public TestHandler {
       // Begin the download by clicking a link.
       // ALT key will trigger download of custom protocol links.
       SendClick(browser,
-                test_mode_ == CLICKED_REJECTED ? EVENTFLAG_ALT_DOWN : 0);
+                test_mode_ == CLICKED_INVALID ? EVENTFLAG_ALT_DOWN : 0);
 
-      if (test_mode_ == CLICKED_REJECTED) {
+      if (is_clicked_invalid()) {
         // Destroy the test after a bit because there will be no further
         // callbacks.
         CefPostDelayedTask(
@@ -316,13 +329,43 @@ class DownloadTestHandler : public TestHandler {
     }
   }
 
-  void OnBeforeDownload(
+  bool CanDownload(CefRefPtr<CefBrowser> browser,
+                   const CefString& url,
+                   const CefString& request_method) override {
+    EXPECT_TRUE(CefCurrentlyOn(TID_UI));
+    EXPECT_FALSE(got_can_download_);
+    EXPECT_FALSE(got_on_before_download_);
+    EXPECT_TRUE(is_clicked());
+
+    got_can_download_.yes();
+
+    EXPECT_TRUE(browser->IsSame(GetBrowser()));
+    EXPECT_STREQ(download_url_.c_str(), url.ToString().c_str());
+    EXPECT_STREQ("GET", request_method.ToString().c_str());
+
+    if (is_clicked() && !is_clicked_and_downloaded()) {
+      // Destroy the test after a bit because there will be no further
+      // callbacks.
+      CefPostDelayedTask(
+          TID_UI, base::BindOnce(&DownloadTestHandler::DestroyTest, this), 200);
+    }
+
+    return test_mode_ != CLICKED_BLOCKED;
+  }
+
+  bool OnBeforeDownload(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefDownloadItem> download_item,
       const CefString& suggested_name,
       CefRefPtr<CefBeforeDownloadCallback> callback) override {
     EXPECT_TRUE(CefCurrentlyOn(TID_UI));
     EXPECT_FALSE(got_on_before_download_);
+
+    if (is_clicked()) {
+      EXPECT_TRUE(got_can_download_);
+    } else {
+      EXPECT_FALSE(got_can_download_);
+    }
 
     got_on_before_download_.yes();
 
@@ -338,7 +381,10 @@ class DownloadTestHandler : public TestHandler {
     EXPECT_TRUE(download_item->IsInProgress());
     EXPECT_FALSE(download_item->IsComplete());
     EXPECT_FALSE(download_item->IsCanceled());
-    EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+    EXPECT_FALSE(download_item->IsInterrupted());
+    EXPECT_EQ(CEF_DOWNLOAD_INTERRUPT_REASON_NONE,
+              download_item->GetInterruptReason());
+    EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
               download_item->GetTotalBytes());
     EXPECT_EQ(0UL, download_item->GetFullPath().length());
     EXPECT_STREQ(kTestDownloadUrl, download_item->GetURL().ToString().c_str());
@@ -357,6 +403,8 @@ class DownloadTestHandler : public TestHandler {
     } else if (test_mode_ == PENDING) {
       ContinuePendingIfReady();
     }
+
+    return true;
   }
 
   void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
@@ -364,8 +412,9 @@ class DownloadTestHandler : public TestHandler {
                          CefRefPtr<CefDownloadItemCallback> callback) override {
     EXPECT_TRUE(CefCurrentlyOn(TID_UI));
 
-    if (destroyed_)
+    if (destroyed_) {
       return;
+    }
 
     got_on_download_updated_.yes();
 
@@ -382,6 +431,9 @@ class DownloadTestHandler : public TestHandler {
 
     EXPECT_TRUE(download_item->IsValid());
     EXPECT_FALSE(download_item->IsCanceled());
+    EXPECT_FALSE(download_item->IsInterrupted());
+    EXPECT_EQ(CEF_DOWNLOAD_INTERRUPT_REASON_NONE,
+              download_item->GetInterruptReason());
     EXPECT_STREQ(kTestDownloadUrl, download_item->GetURL().ToString().c_str());
     EXPECT_STREQ(kTestContentDisposition,
                  download_item->GetContentDisposition().ToString().c_str());
@@ -399,9 +451,9 @@ class DownloadTestHandler : public TestHandler {
 
       EXPECT_FALSE(download_item->IsInProgress());
       EXPECT_EQ(100, download_item->GetPercentComplete());
-      EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
                 download_item->GetReceivedBytes());
-      EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
                 download_item->GetTotalBytes());
 
       DestroyTest();
@@ -453,29 +505,46 @@ class DownloadTestHandler : public TestHandler {
     }
 
     if (request_context_) {
-      request_context_->RegisterSchemeHandlerFactory("http", kTestDomain,
+      request_context_->RegisterSchemeHandlerFactory("https", kTestDomain,
                                                      nullptr);
       request_context_ = nullptr;
     } else {
-      CefRegisterSchemeHandlerFactory("http", kTestDomain, nullptr);
+      CefRegisterSchemeHandlerFactory("https", kTestDomain, nullptr);
     }
 
-    if (test_mode_ == CLICKED_REJECTED) {
+    if (is_clicked_invalid()) {
+      // No CanDownload for invalid protocol links.
+      EXPECT_FALSE(got_can_download_);
+    } else if (is_clicked()) {
+      EXPECT_TRUE(got_can_download_);
+    } else {
+      EXPECT_FALSE(got_can_download_);
+    }
+
+    if (test_mode_ == CLICKED_INVALID) {
+      // The invalid protocol request is not handled.
       EXPECT_FALSE(got_download_request_);
+    } else {
+      EXPECT_TRUE(got_download_request_);
+    }
+
+    if (is_clicked() && !is_clicked_and_downloaded()) {
+      // The download never proceeds.
       EXPECT_FALSE(got_on_before_download_);
       EXPECT_FALSE(got_on_download_updated_);
     } else {
-      EXPECT_TRUE(got_download_request_);
       EXPECT_TRUE(got_on_before_download_);
       EXPECT_TRUE(got_on_download_updated_);
     }
 
-    if (test_mode_ == NAVIGATED)
+    if (test_mode_ == NAVIGATED) {
       EXPECT_TRUE(got_nav_load_);
-    else
+    } else {
       EXPECT_FALSE(got_nav_load_);
+    }
 
-    if (test_mode_ == PENDING || test_mode_ == CLICKED_REJECTED) {
+    if (!is_downloaded()) {
+      // The download never completes.
       EXPECT_FALSE(got_download_complete_);
       EXPECT_FALSE(got_full_path_);
     } else {
@@ -493,18 +562,7 @@ class DownloadTestHandler : public TestHandler {
     mouse_event.x = 20;
     mouse_event.y = 20;
     mouse_event.modifiers = modifiers;
-
-    // Add some delay to avoid having events dropped or rate limited.
-    CefPostDelayedTask(
-        TID_UI,
-        base::BindOnce(&CefBrowserHost::SendMouseClickEvent, browser->GetHost(),
-                       mouse_event, MBT_LEFT, false, 1),
-        50);
-    CefPostDelayedTask(
-        TID_UI,
-        base::BindOnce(&CefBrowserHost::SendMouseClickEvent, browser->GetHost(),
-                       mouse_event, MBT_LEFT, true, 1),
-        100);
+    SendJavaScriptClickEvent(browser, mouse_event);
   }
 
   const TestMode test_mode_;
@@ -519,13 +577,15 @@ class DownloadTestHandler : public TestHandler {
   // Used with PENDING test mode.
   CefRefPtr<CefDownloadItemCallback> download_item_callback_;
 
+  std::string download_url_;
   CefScopedTempDir temp_dir_;
   std::string test_path_;
-  uint32 download_id_;
-  bool verified_results_;
+  uint32_t download_id_ = 0;
+  bool verified_results_ = false;
   bool destroyed_ = false;
 
   TrackCallback got_download_request_;
+  TrackCallback got_can_download_;
   TrackCallback got_on_before_download_;
   TrackCallback got_on_download_updated_;
   TrackCallback got_full_path_;
@@ -542,17 +602,262 @@ class DownloadTestHandler : public TestHandler {
   RC_TEST_GROUP_ALL(DownloadTest, test_name, DownloadTestHandler, test_mode)
 
 // Test a programmatic download.
-DOWNLOAD_TEST_GROUP(Programmatic, PROGAMMATIC)
+DOWNLOAD_TEST_GROUP(Programmatic, PROGRAMMATIC)
 
 // Test a clicked download.
 DOWNLOAD_TEST_GROUP(Clicked, CLICKED)
 
 // Test a clicked download where the protocol is invalid and therefore rejected.
 // There will be no resulting CefDownloadHandler callbacks.
-DOWNLOAD_TEST_GROUP(ClickedRejected, CLICKED_REJECTED)
+DOWNLOAD_TEST_GROUP(ClickedInvalid, CLICKED_INVALID)
+
+// Test a clicked download where CanDownload returns false.
+// There will be no resulting CefDownloadHandler callbacks.
+DOWNLOAD_TEST_GROUP(ClickedBlocked, CLICKED_BLOCKED)
 
 // Test where the download completes after cross-origin navigation.
 DOWNLOAD_TEST_GROUP(Navigated, NAVIGATED)
 
 // Test where the download is still pending when the browser is destroyed.
 DOWNLOAD_TEST_GROUP(Pending, PENDING)
+
+namespace {
+
+// Test handler for Pause/Resume functionality
+class DownloadPauseResumeTestHandler : public TestHandler {
+ public:
+  DownloadPauseResumeTestHandler() = default;
+
+  void RunTest() override {
+    // Create a new temporary directory.
+    EXPECT_TRUE(temp_dir_.CreateUniqueTempDir());
+    test_path_ =
+        client::file_util::JoinPath(temp_dir_.GetPath(), kTestFileName);
+
+    // Use an in-memory request context to avoid caching the download between
+    // test runs.
+    CreateTestRequestContext(
+        TEST_RC_MODE_CUSTOM_WITH_HANDLER, /*cache_path=*/"",
+        base::BindOnce(&DownloadPauseResumeTestHandler::RunTestContinue, this));
+
+    // Time out the test after a reasonable period of time.
+    SetTestTimeout();
+  }
+
+  void RunTestContinue(CefRefPtr<CefRequestContext> request_context) {
+    EXPECT_UI_THREAD();
+    EXPECT_TRUE(request_context);
+
+    request_context_ = request_context;
+
+    // Use a delay callback to slow down the download, giving us time to pause
+    // and resume it.
+    DelayCallbackVendor delay_callback_vendor = base::BindRepeating(
+        [](CefRefPtr<DownloadPauseResumeTestHandler> self) {
+          return base::BindOnce(
+              &DownloadPauseResumeTestHandler::OnDelayCallback, self);
+        },
+        CefRefPtr<DownloadPauseResumeTestHandler>(this));
+
+    CefRefPtr<CefSchemeHandlerFactory> scheme_factory =
+        new DownloadSchemeHandlerFactory(delay_callback_vendor,
+                                         &got_download_request_);
+
+    request_context->RegisterSchemeHandlerFactory("https", kTestDomain,
+                                                  scheme_factory);
+
+    AddResource(kTestStartUrl, "<html><body>Download Test</body></html>",
+                "text/html");
+    CreateBrowser(kTestStartUrl, request_context);
+  }
+
+  CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
+
+  void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                 CefRefPtr<CefFrame> frame,
+                 int httpStatusCode) override {
+    // Start the download programmatically
+    browser->GetHost()->StartDownload(kTestDownloadUrl);
+  }
+
+  bool OnBeforeDownload(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefDownloadItem> download_item,
+      const CefString& suggested_name,
+      CefRefPtr<CefBeforeDownloadCallback> callback) override {
+    EXPECT_TRUE(CefCurrentlyOn(TID_UI));
+    EXPECT_FALSE(got_on_before_download_);
+    got_on_before_download_.yes();
+
+    EXPECT_TRUE(browser->IsSame(GetBrowser()));
+    EXPECT_STREQ(kTestDownloadUrl, download_item->GetURL().ToString().c_str());
+    EXPECT_STREQ(kTestFileName, suggested_name.ToString().c_str());
+
+    download_id_ = download_item->GetId();
+    EXPECT_LT(0U, download_id_);
+
+    // Continue the download
+    callback->Continue(test_path_, false);
+
+    // Immediately pause the download (it hasn't started receiving data yet)
+    // This will be saved as the callback from the first OnDownloadUpdated
+    return true;
+  }
+
+  void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefDownloadItem> download_item,
+                         CefRefPtr<CefDownloadItemCallback> callback) override {
+    EXPECT_TRUE(CefCurrentlyOn(TID_UI));
+
+    got_on_download_updated_.yes();
+
+    EXPECT_TRUE(browser->IsSame(GetBrowser()));
+    EXPECT_TRUE(download_item.get());
+    EXPECT_TRUE(callback.get());
+
+    if (got_on_before_download_) {
+      EXPECT_EQ(download_id_, download_item->GetId());
+    }
+
+    // Pause on the very first OnDownloadUpdated call, before any bytes received
+    if (!got_paused_ && download_item->IsInProgress()) {
+      got_paused_.yes();
+      callback->Pause();
+
+      // Resume after a short delay
+      CefPostDelayedTask(
+          TID_UI,
+          base::BindOnce(&DownloadPauseResumeTestHandler::ResumeDownload, this,
+                         callback),
+          50);
+      return;
+    }
+
+    // Wait for the download to actually be paused before continuing
+    if (got_paused_ && !got_paused_confirmed_ && download_item->IsPaused()) {
+      got_paused_confirmed_.yes();
+      // Continue the delayed download now that pause has taken effect.
+      ContinueDelayedDownloadIfReady();
+      return;
+    }
+
+    // Check if download completed after resume
+    if (download_item->IsComplete()) {
+      got_download_complete_.yes();
+
+      EXPECT_FALSE(download_item->IsInProgress());
+      EXPECT_FALSE(download_item->IsCanceled());
+      EXPECT_EQ(100, download_item->GetPercentComplete());
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
+                download_item->GetReceivedBytes());
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
+                download_item->GetTotalBytes());
+      EXPECT_STREQ(test_path_.c_str(),
+                   download_item->GetFullPath().ToString().c_str());
+
+      DestroyTest();
+    }
+  }
+
+  void VerifyResultsOnFileThread() {
+    EXPECT_TRUE(CefCurrentlyOn(TID_FILE_USER_VISIBLE));
+
+    // Verify the file contents.
+    std::string contents;
+    EXPECT_TRUE(client::file_util::ReadFileToString(test_path_, &contents));
+    EXPECT_STREQ(kTestContent, contents.c_str());
+
+    EXPECT_TRUE(temp_dir_.Delete());
+    EXPECT_TRUE(temp_dir_.IsEmpty());
+
+    CefPostTask(
+        TID_UI,
+        base::BindOnce(&DownloadPauseResumeTestHandler::DestroyTest, this));
+  }
+
+  void DestroyTest() override {
+    if (!verified_results_ && !temp_dir_.IsEmpty()) {
+      // Avoid an endless failure loop.
+      verified_results_ = true;
+      // Clean up temp_dir_ on the FILE thread before destroying the test.
+      CefPostTask(
+          TID_FILE_USER_VISIBLE,
+          base::BindOnce(
+              &DownloadPauseResumeTestHandler::VerifyResultsOnFileThread,
+              this));
+      return;
+    }
+
+    EXPECT_TRUE(request_context_);
+    request_context_->RegisterSchemeHandlerFactory("https", kTestDomain,
+                                                   nullptr);
+    request_context_ = nullptr;
+
+    EXPECT_TRUE(got_on_before_download_);
+    EXPECT_TRUE(got_on_download_updated_);
+    EXPECT_TRUE(got_paused_);
+    EXPECT_TRUE(got_paused_confirmed_);
+    EXPECT_TRUE(got_resumed_);
+    EXPECT_TRUE(got_download_complete_);
+
+    TestHandler::DestroyTest();
+  }
+
+ private:
+  // Callback from the scheme handler to delay the download response.
+  void OnDelayCallback(base::OnceClosure callback) {
+    if (!CefCurrentlyOn(TID_UI)) {
+      CefPostTask(TID_UI, base::BindOnce(
+                              &DownloadPauseResumeTestHandler::OnDelayCallback,
+                              this, std::move(callback)));
+      return;
+    }
+
+    // Store the callback and wait for the pause to be initiated before
+    // continuing the download.
+    delay_callback_ = std::move(callback);
+    ContinueDelayedDownloadIfReady();
+  }
+
+  void ContinueDelayedDownloadIfReady() {
+    // Continue the download once we've confirmed the pause has taken effect.
+    if (got_paused_confirmed_ && !delay_callback_.is_null()) {
+      std::move(delay_callback_).Run();
+    }
+  }
+
+  void ResumeDownload(CefRefPtr<CefDownloadItemCallback> callback) {
+    got_resumed_.yes();
+    callback->Resume();
+  }
+
+  CefRefPtr<CefRequestContext> request_context_;
+  CefScopedTempDir temp_dir_;
+  std::string test_path_;
+  uint32_t download_id_ = 0;
+  bool verified_results_ = false;
+
+  // Used to delay the download response until pause is initiated.
+  base::OnceClosure delay_callback_;
+
+  TrackCallback got_download_request_;
+  TrackCallback got_on_before_download_;
+  TrackCallback got_on_download_updated_;
+  TrackCallback got_paused_;
+  TrackCallback got_paused_confirmed_;
+  TrackCallback got_resumed_;
+  TrackCallback got_download_complete_;
+
+  IMPLEMENT_REFCOUNTING(DownloadPauseResumeTestHandler);
+  DISALLOW_COPY_AND_ASSIGN(DownloadPauseResumeTestHandler);
+};
+
+}  // namespace
+
+// Test pause and resume functionality.
+TEST(DownloadTest, PauseResume) {
+  CefRefPtr<DownloadPauseResumeTestHandler> handler =
+      new DownloadPauseResumeTestHandler();
+  handler->ExecuteTest();
+  ReleaseAndWaitForDestructor(handler);
+}

@@ -9,10 +9,15 @@
 #include "include/base/cef_callback.h"
 #include "include/cef_app.h"
 #include "include/cef_application_mac.h"
+#include "include/views/cef_display.h"
 #include "tests/cefclient/browser/browser_window_osr_mac.h"
 #include "tests/cefclient/browser/browser_window_std_mac.h"
+#include "tests/cefclient/browser/client_prefs.h"
 #include "tests/cefclient/browser/main_context.h"
+#include "tests/cefclient/browser/osr_renderer_settings.h"
+#include "tests/cefclient/browser/root_window_manager.h"
 #include "tests/cefclient/browser/temp_window.h"
+#include "tests/cefclient/browser/util_mac.h"
 #include "tests/cefclient/browser/window_test_runner_mac.h"
 #include "tests/shared/browser/main_message_loop.h"
 #include "tests/shared/common/client_switches.h"
@@ -23,10 +28,12 @@
  @private
   NSWindow* window_;
   client::RootWindowMac* root_window_;
+  std::optional<CefRect> last_visible_bounds_;
   bool force_close_;
 }
 
 @property(nonatomic, readonly) client::RootWindowMac* root_window;
+@property(nonatomic, readwrite) std::optional<CefRect> last_visible_bounds;
 @property(nonatomic, readwrite) bool force_close;
 
 - (id)initWithWindow:(NSWindow*)window
@@ -54,18 +61,107 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   [button autorelease];
 #endif  // !__has_feature(objc_arc)
   [button setTitle:title];
-  [button setBezelStyle:NSSmallSquareBezelStyle];
+  [button setBezelStyle:NSBezelStyleSmallSquare];
   [button setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
   [parent addSubview:button];
   rect->origin.x += BUTTON_WIDTH;
   return button;
 }
 
-NSRect GetScreenRectForWindow(NSWindow* window) {
-  NSScreen* screen = [window screen];
-  if (screen == nil)
-    screen = [NSScreen mainScreen];
-  return [screen visibleFrame];
+// Keep the frame bounds inside the display work area.
+NSRect ClampNSBoundsToWorkArea(const NSRect& frame_bounds,
+                               const CefRect& display_bounds,
+                               const CefRect& work_area) {
+  NSRect bounds = frame_bounds;
+
+  // Convert from DIP coordinates (top-left origin) to macOS coordinates
+  // (bottom-left origin).
+  const int work_area_y =
+      display_bounds.height - work_area.height - work_area.y;
+
+  if (bounds.size.width > work_area.width) {
+    bounds.size.width = work_area.width;
+  }
+  if (bounds.size.height > work_area.height) {
+    bounds.size.height = work_area.height;
+  }
+
+  if (bounds.origin.x < work_area.x) {
+    bounds.origin.x = work_area.x;
+  } else if (bounds.origin.x + bounds.size.width >=
+             work_area.x + work_area.width) {
+    bounds.origin.x = work_area.x + work_area.width - bounds.size.width;
+  }
+
+  if (bounds.origin.y < work_area_y) {
+    bounds.origin.y = work_area_y;
+  } else if (bounds.origin.y + bounds.size.height >=
+             work_area_y + work_area.height) {
+    bounds.origin.y = work_area_y + work_area.height - bounds.size.height;
+  }
+
+  return bounds;
+}
+
+// Get frame and content area rects matching the input DIP screen bounds. The
+// resulting window frame will be kept inside the closest display work area. If
+// |input_content_bounds| is true the input size is used for the content area
+// and the input origin is used for the frame. Otherwise, both input size and
+// origin are used for the frame.
+void GetNSBoundsInDisplay(const CefRect& dip_bounds,
+                          bool input_content_bounds,
+                          NSWindowStyleMask style_mask,
+                          bool add_controls,
+                          NSRect& frame_rect,
+                          NSRect& content_rect) {
+  // Identify the closest display.
+  auto display =
+      CefDisplay::GetDisplayMatchingBounds(dip_bounds,
+                                           /*input_pixel_coords=*/false);
+  const auto display_bounds = display->GetBounds();
+  const auto display_work_area = display->GetWorkArea();
+
+  // Convert from DIP coordinates (top-left origin) to macOS coordinates
+  // (bottom-left origin).
+  NSRect requested_rect = NSMakeRect(dip_bounds.x, dip_bounds.y,
+                                     dip_bounds.width, dip_bounds.height);
+  requested_rect.origin.y = display_bounds.height - requested_rect.size.height -
+                            requested_rect.origin.y;
+
+  bool changed_content_bounds = false;
+
+  // Calculate the equivalent frame and content bounds.
+  if (input_content_bounds) {
+    // Compute frame rect from content rect. Keep the requested origin.
+    content_rect = requested_rect;
+    frame_rect = [NSWindow frameRectForContentRect:content_rect
+                                         styleMask:style_mask];
+    if (add_controls) {
+      frame_rect.size.height += URLBAR_HEIGHT;
+    }
+    frame_rect.origin = requested_rect.origin;
+  } else {
+    // Compute content rect from frame rect.
+    frame_rect = requested_rect;
+    content_rect = [NSWindow contentRectForFrameRect:frame_rect
+                                           styleMask:style_mask];
+    changed_content_bounds = true;
+  }
+
+  // Keep the frame inside the display work area.
+  const NSRect new_frame_rect =
+      ClampNSBoundsToWorkArea(frame_rect, display_bounds, display_work_area);
+  if (!NSEqualRects(frame_rect, new_frame_rect)) {
+    frame_rect = new_frame_rect;
+    content_rect = [NSWindow contentRectForFrameRect:frame_rect
+                                           styleMask:style_mask];
+    changed_content_bounds = true;
+  }
+
+  if (changed_content_bounds && add_controls) {
+    content_rect.origin.y -= URLBAR_HEIGHT;
+    content_rect.size.height -= URLBAR_HEIGHT;
+  }
 }
 
 }  // namespace
@@ -97,14 +193,18 @@ class RootWindowMacImpl
                    CefBrowserSettings& settings);
   void Show(RootWindow::ShowMode mode);
   void Hide();
-  void SetBounds(int x, int y, size_t width, size_t height);
+  void SetBounds(int x,
+                 int y,
+                 size_t width,
+                 size_t height,
+                 bool content_bounds);
+  bool DefaultToContentBounds() const;
   void Close(bool force);
   void SetDeviceScaleFactor(float device_scale_factor);
-  float GetDeviceScaleFactor() const;
+  std::optional<float> GetDeviceScaleFactor() const;
   CefRefPtr<CefBrowser> GetBrowser() const;
   ClientWindowHandle GetWindowHandle() const;
   bool WithWindowlessRendering() const;
-  bool WithExtension() const;
 
   // BrowserWindow::Delegate methods.
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser);
@@ -121,45 +221,33 @@ class RootWindowMacImpl
   // After initialization all members are only accessed on the main thread.
   // Members set during initialization.
   RootWindowMac& root_window_;
-  bool with_controls_;
-  bool with_osr_;
-  bool with_extension_;
-  bool is_popup_;
-  CefRect start_rect_;
+  bool with_controls_ = false;
+  bool with_osr_ = false;
+  OsrRendererSettings osr_settings_;
+  bool is_popup_ = false;
+  CefRect initial_bounds_;
+  cef_show_state_t initial_show_state_ = CEF_SHOW_STATE_NORMAL;
   std::unique_ptr<BrowserWindow> browser_window_;
-  bool initialized_;
 
   // Main window.
-  NSWindow* window_;
-  RootWindowDelegate* window_delegate_;
+  NSWindow* window_ = nil;
+  RootWindowDelegate* window_delegate_ = nil;
 
   // Buttons.
-  NSButton* back_button_;
-  NSButton* forward_button_;
-  NSButton* reload_button_;
-  NSButton* stop_button_;
+  NSButton* back_button_ = nil;
+  NSButton* forward_button_ = nil;
+  NSButton* reload_button_ = nil;
+  NSButton* stop_button_ = nil;
 
   // URL text field.
-  NSTextField* url_textfield_;
+  NSTextField* url_textfield_ = nil;
 
-  bool window_destroyed_;
-  bool browser_destroyed_;
+  bool window_destroyed_ = false;
+  bool browser_destroyed_ = false;
 };
 
 RootWindowMacImpl::RootWindowMacImpl(RootWindowMac& root_window)
-    : root_window_(root_window),
-      with_controls_(false),
-      with_osr_(false),
-      is_popup_(false),
-      initialized_(false),
-      window_(nil),
-      back_button_(nil),
-      forward_button_(nil),
-      reload_button_(nil),
-      stop_button_(nil),
-      url_textfield_(nil),
-      window_destroyed_(false),
-      browser_destroyed_(false) {}
+    : root_window_(root_window) {}
 
 RootWindowMacImpl::~RootWindowMacImpl() {
   REQUIRE_MAIN_THREAD();
@@ -172,24 +260,30 @@ RootWindowMacImpl::~RootWindowMacImpl() {
 void RootWindowMacImpl::Init(RootWindow::Delegate* delegate,
                              std::unique_ptr<RootWindowConfig> config,
                              const CefBrowserSettings& settings) {
-  DCHECK(!initialized_);
+  DCHECK(!root_window_.initialized_);
 
   with_controls_ = config->with_controls;
   with_osr_ = config->with_osr;
-  with_extension_ = config->with_extension;
-  start_rect_ = config->bounds;
+
+  if (!config->bounds.IsEmpty()) {
+    // Initial state was specified via the config object.
+    initial_bounds_ = config->bounds;
+    initial_show_state_ = config->show_state;
+  } else {
+    // Initial state may be specified via the command-line or global
+    // preferences.
+    std::optional<CefRect> bounds;
+    if (prefs::LoadWindowRestorePreferences(initial_show_state_, bounds) &&
+        bounds) {
+      initial_bounds_ = *bounds;
+    }
+  }
 
   CreateBrowserWindow(config->url);
 
-  initialized_ = true;
+  root_window_.initialized_ = true;
 
-  // Create the native root window on the main thread.
-  if (CURRENTLY_ON_MAIN_THREAD()) {
-    CreateRootWindow(settings, config->initially_hidden);
-  } else {
-    MAIN_POST_CLOSURE(base::BindOnce(&RootWindowMacImpl::CreateRootWindow, this,
-                                     settings, config->initially_hidden));
-  }
+  CreateRootWindow(settings, config->initially_hidden);
 }
 
 void RootWindowMacImpl::InitAsPopup(RootWindow::Delegate* delegate,
@@ -200,24 +294,28 @@ void RootWindowMacImpl::InitAsPopup(RootWindow::Delegate* delegate,
                                     CefRefPtr<CefClient>& client,
                                     CefBrowserSettings& settings) {
   DCHECK(delegate);
-  DCHECK(!initialized_);
+  DCHECK(!root_window_.initialized_);
 
   with_controls_ = with_controls;
   with_osr_ = with_osr;
   is_popup_ = true;
 
-  if (popupFeatures.xSet)
-    start_rect_.x = popupFeatures.x;
-  if (popupFeatures.ySet)
-    start_rect_.y = popupFeatures.y;
-  if (popupFeatures.widthSet)
-    start_rect_.width = popupFeatures.width;
-  if (popupFeatures.heightSet)
-    start_rect_.height = popupFeatures.height;
+  if (popupFeatures.xSet) {
+    initial_bounds_.x = popupFeatures.x;
+  }
+  if (popupFeatures.ySet) {
+    initial_bounds_.y = popupFeatures.y;
+  }
+  if (popupFeatures.widthSet) {
+    initial_bounds_.width = popupFeatures.width;
+  }
+  if (popupFeatures.heightSet) {
+    initial_bounds_.height = popupFeatures.height;
+  }
 
   CreateBrowserWindow(std::string());
 
-  initialized_ = true;
+  root_window_.initialized_ = true;
 
   // The new popup is initially parented to a temporary window. The native root
   // window will be created after the browser is created and the popup window
@@ -229,8 +327,9 @@ void RootWindowMacImpl::InitAsPopup(RootWindow::Delegate* delegate,
 void RootWindowMacImpl::Show(RootWindow::ShowMode mode) {
   REQUIRE_MAIN_THREAD();
 
-  if (!window_)
+  if (!window_) {
     return;
+  }
 
   const bool is_visible = [window_ isVisible];
   const bool is_minimized = [window_ isMiniaturized];
@@ -244,56 +343,75 @@ void RootWindowMacImpl::Show(RootWindow::ShowMode mode) {
   }
 
   // Undo the previous state since it's not the desired state.
-  if (is_minimized)
+  if (is_minimized) {
     [window_ deminiaturize:nil];
-  else if (is_maximized)
+  } else if (is_maximized) {
     [window_ performZoom:nil];
+  }
 
   // Window visibility may change after (for example) deminiaturizing the
   // window.
-  if (![window_ isVisible])
+  if (![window_ isVisible]) {
     [window_ makeKeyAndOrderFront:nil];
+  }
 
-  if (mode == RootWindow::ShowMinimized)
+  if (mode == RootWindow::ShowMinimized) {
     [window_ performMiniaturize:nil];
-  else if (mode == RootWindow::ShowMaximized)
+  } else if (mode == RootWindow::ShowMaximized) {
     [window_ performZoom:nil];
+  }
 }
 
 void RootWindowMacImpl::Hide() {
   REQUIRE_MAIN_THREAD();
 
-  if (!window_)
+  if (!window_) {
     return;
+  }
 
   // Undo miniaturization, if any, so the window will actually be hidden.
-  if ([window_ isMiniaturized])
+  if ([window_ isMiniaturized]) {
     [window_ deminiaturize:nil];
+  }
 
   // Hide the window.
   [window_ orderOut:nil];
 }
 
-void RootWindowMacImpl::SetBounds(int x, int y, size_t width, size_t height) {
+void RootWindowMacImpl::SetBounds(int x,
+                                  int y,
+                                  size_t width,
+                                  size_t height,
+                                  bool content_bounds) {
   REQUIRE_MAIN_THREAD();
 
-  if (!window_)
+  if (!window_) {
     return;
+  }
 
-  NSRect screen_rect = GetScreenRectForWindow(window_);
+  const CefRect dip_bounds(x, y, static_cast<int>(width),
+                           static_cast<int>(height));
+  const bool add_controls = WithWindowlessRendering() || with_controls_;
 
-  // Desired content rectangle.
-  NSRect content_rect;
-  content_rect.size.width = static_cast<int>(width);
-  content_rect.size.height =
-      static_cast<int>(height) + (with_controls_ ? URLBAR_HEIGHT : 0);
-
-  // Convert to a frame rectangle.
-  NSRect frame_rect = [window_ frameRectForContentRect:content_rect];
-  frame_rect.origin.x = x;
-  frame_rect.origin.y = screen_rect.size.height - y;
+  // Calculate the equivalent frame and content area bounds.
+  NSRect frame_rect, content_rect;
+  GetNSBoundsInDisplay(dip_bounds, content_bounds, [window_ styleMask],
+                       add_controls, frame_rect, content_rect);
 
   [window_ setFrame:frame_rect display:YES];
+}
+
+bool RootWindowMacImpl::DefaultToContentBounds() const {
+  if (!WithWindowlessRendering()) {
+    // The root NSWindow will be queried by default.
+    return false;
+  }
+  if (osr_settings_.real_screen_bounds) {
+    // Root NSWindow bounds are provided via GetRootWindowRect.
+    return false;
+  }
+  // The root NSWindow will not be queried by default.
+  return true;
 }
 
 void RootWindowMacImpl::Close(bool force) {
@@ -309,25 +427,27 @@ void RootWindowMacImpl::Close(bool force) {
 void RootWindowMacImpl::SetDeviceScaleFactor(float device_scale_factor) {
   REQUIRE_MAIN_THREAD();
 
-  if (browser_window_ && with_osr_)
+  if (browser_window_ && with_osr_) {
     browser_window_->SetDeviceScaleFactor(device_scale_factor);
+  }
 }
 
-float RootWindowMacImpl::GetDeviceScaleFactor() const {
+std::optional<float> RootWindowMacImpl::GetDeviceScaleFactor() const {
   REQUIRE_MAIN_THREAD();
 
-  if (browser_window_ && with_osr_)
+  if (browser_window_ && with_osr_) {
     return browser_window_->GetDeviceScaleFactor();
+  }
 
-  NOTREACHED();
-  return 0.0f;
+  return std::nullopt;
 }
 
 CefRefPtr<CefBrowser> RootWindowMacImpl::GetBrowser() const {
   REQUIRE_MAIN_THREAD();
 
-  if (browser_window_)
+  if (browser_window_) {
     return browser_window_->GetBrowser();
+  }
   return nullptr;
 }
 
@@ -338,12 +458,8 @@ ClientWindowHandle RootWindowMacImpl::GetWindowHandle() const {
 
 bool RootWindowMacImpl::WithWindowlessRendering() const {
   REQUIRE_MAIN_THREAD();
+  DCHECK(root_window_.initialized_);
   return with_osr_;
-}
-
-bool RootWindowMacImpl::WithExtension() const {
-  REQUIRE_MAIN_THREAD();
-  return with_extension_;
 }
 
 void RootWindowMacImpl::OnNativeWindowClosed() {
@@ -354,12 +470,12 @@ void RootWindowMacImpl::OnNativeWindowClosed() {
 
 void RootWindowMacImpl::CreateBrowserWindow(const std::string& startup_url) {
   if (with_osr_) {
-    OsrRendererSettings settings = {};
-    MainContext::Get()->PopulateOsrSettings(&settings);
-    browser_window_.reset(
-        new BrowserWindowOsrMac(&root_window_, startup_url, settings));
+    MainContext::Get()->PopulateOsrSettings(&osr_settings_);
+    browser_window_.reset(new BrowserWindowOsrMac(&root_window_, with_controls_,
+                                                  startup_url, osr_settings_));
   } else {
-    browser_window_.reset(new BrowserWindowStdMac(&root_window_, startup_url));
+    browser_window_.reset(
+        new BrowserWindowStdMac(&root_window_, with_controls_, startup_url));
   }
 }
 
@@ -370,35 +486,38 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
 
   // TODO(port): If no x,y position is specified the window will always appear
   // in the upper-left corner. Maybe there's a better default place to put it?
-  int x = start_rect_.x;
-  int y = start_rect_.y;
-  int width, height;
-  if (start_rect_.IsEmpty()) {
-    // TODO(port): Also, maybe there's a better way to choose the default size.
-    width = 800;
-    height = 600;
-  } else {
-    width = start_rect_.width;
-    height = start_rect_.height;
+  CefRect dip_bounds = initial_bounds_;
+
+  // TODO(port): Also, maybe there's a better way to choose the default size.
+  if (dip_bounds.width <= 0) {
+    dip_bounds.width = 800;
+  }
+  if (dip_bounds.height <= 0) {
+    dip_bounds.height = 600;
   }
 
+  // For popups, the requested bounds are for the content area and the requested
+  // origin is for the window.
+  if (is_popup_ && with_controls_) {
+    dip_bounds.height += URLBAR_HEIGHT;
+  }
+
+  const NSWindowStyleMask style_mask =
+      (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+       NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
+
+  // Calculate the equivalent frame and content area bounds. Controls, if any,
+  // are already included in the desired size.
+  NSRect frame_rect, content_rect;
+  GetNSBoundsInDisplay(dip_bounds, /*input_content_bounds=*/is_popup_,
+                       style_mask, /*add_controls=*/false, frame_rect,
+                       content_rect);
+
   // Create the main window.
-  NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
-  NSRect window_rect =
-      NSMakeRect(x, screen_rect.size.height - y, width, height);
-
-  // The CEF framework library is loaded at runtime so we need to use this
-  // mechanism for retrieving the class.
-  Class window_class = NSClassFromString(@"UnderlayOpenGLHostingWindow");
-  CHECK(window_class);
-
-  window_ = [[window_class alloc]
-      initWithContentRect:window_rect
-                styleMask:(NSTitledWindowMask | NSClosableWindowMask |
-                           NSMiniaturizableWindowMask | NSResizableWindowMask |
-                           NSUnifiedTitleAndToolbarWindowMask)
-                  backing:NSBackingStoreBuffered
-                    defer:NO];
+  window_ = [[NSWindow alloc] initWithContentRect:content_rect
+                                        styleMask:style_mask
+                                          backing:NSBackingStoreBuffered
+                                            defer:NO];
   [window_ setTitle:@"cefclient"];
   // No dark mode, please
   window_.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
@@ -406,6 +525,12 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
   // Create the delegate for control and browser window events.
   window_delegate_ = [[RootWindowDelegate alloc] initWithWindow:window_
                                                   andRootWindow:&root_window_];
+
+  if (!initial_bounds_.IsEmpty()) {
+    // Remember the bounds from the previous application run in case the user
+    // does not move or resize the window during this application run.
+    window_delegate_.last_visible_bounds = initial_bounds_;
+  }
 
   // Rely on the window delegate to clean us up rather than immediately
   // releasing when the window gets closed. We use the delegate to do
@@ -438,15 +563,16 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
   }
 
   if (with_controls_) {
+    // Reduce the browser height by the URL bar height.
+    contentBounds.size.height -= URLBAR_HEIGHT;
+
     // Create the buttons.
     NSRect button_rect = contentBounds;
-    button_rect.origin.y = window_rect.size.height - URLBAR_HEIGHT +
-                           (URLBAR_HEIGHT - BUTTON_HEIGHT) / 2;
+    button_rect.origin.y =
+        contentBounds.size.height + (URLBAR_HEIGHT - BUTTON_HEIGHT) / 2;
     button_rect.size.height = BUTTON_HEIGHT;
     button_rect.origin.x += BUTTON_MARGIN;
     button_rect.size.width = BUTTON_WIDTH;
-
-    contentBounds.size.height -= URLBAR_HEIGHT;
 
     back_button_ = MakeButton(&button_rect, @"Back", contentView);
     [back_button_ setTarget:window_delegate_];
@@ -483,12 +609,35 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
     [[url_textfield_ cell] setScrollable:YES];
   }
 
+  // Place the window at the target point. This is required for proper placement
+  // if the point is on a secondary display.
+  [window_ setFrameOrigin:frame_rect.origin];
+
+  if (with_osr_) {
+    std::optional<float> parent_scale_factor;
+    if (is_popup_) {
+      if (auto parent_window =
+              MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(
+                  root_window_.opener_browser_id())) {
+        parent_scale_factor = parent_window->GetDeviceScaleFactor();
+      }
+    }
+
+    if (parent_scale_factor) {
+      browser_window_->SetDeviceScaleFactor(*parent_scale_factor);
+    } else {
+      auto display = CefDisplay::GetDisplayMatchingBounds(
+          dip_bounds, /*input_pixel_coords=*/false);
+      browser_window_->SetDeviceScaleFactor(display->GetDeviceScaleFactor());
+    }
+  }
+
   if (!is_popup_) {
     // Create the browser window.
     browser_window_->CreateBrowser(
         CAST_NSVIEW_TO_CEF_WINDOW_HANDLE(contentView),
-        CefRect(0, 0, width, height), settings, nullptr,
-        root_window_.delegate_->GetRequestContext(&root_window_));
+        CefRect(0, 0, contentBounds.size.width, contentBounds.size.height),
+        settings, nullptr, root_window_.delegate_->GetRequestContext());
   } else {
     // With popups we already have a browser window. Parent the browser window
     // to the root window and show it in the correct location.
@@ -498,12 +647,18 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
   }
 
   if (!initially_hidden) {
-    // Show the window.
-    Show(RootWindow::ShowNormal);
+    auto mode = RootWindow::ShowNormal;
+    if (initial_show_state_ == CEF_SHOW_STATE_MAXIMIZED) {
+      mode = RootWindow::ShowMaximized;
+    } else if (initial_show_state_ == CEF_SHOW_STATE_MINIMIZED) {
+      mode = RootWindow::ShowMinimized;
+    }
 
-    // Size the window.
-    SetBounds(x, y, width, height);
+    // Show the window.
+    Show(mode);
   }
+
+  root_window_.window_created_ = true;
 }
 
 void RootWindowMacImpl::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
@@ -511,10 +666,9 @@ void RootWindowMacImpl::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
 
   // For popup browsers create the root window once the browser has been
   // created.
-  if (is_popup_)
+  if (is_popup_) {
     CreateRootWindow(CefBrowserSettings(), false);
-
-  root_window_.delegate_->OnBrowserCreated(&root_window_, browser);
+  }
 }
 
 void RootWindowMacImpl::OnBrowserWindowDestroyed() {
@@ -566,27 +720,35 @@ void RootWindowMacImpl::OnSetFullscreen(bool fullscreen) {
   if (browser) {
     std::unique_ptr<window_test::WindowTestRunnerMac> test_runner(
         new window_test::WindowTestRunnerMac());
-    if (fullscreen)
+    if (fullscreen) {
       test_runner->Maximize(browser);
-    else
+    } else {
       test_runner->Restore(browser);
+    }
   }
 }
 
 void RootWindowMacImpl::OnAutoResize(const CefSize& new_size) {
   REQUIRE_MAIN_THREAD();
 
-  if (!window_)
+  if (!window_) {
     return;
+  }
 
-  // Desired content rectangle.
-  NSRect content_rect;
-  content_rect.size.width = static_cast<int>(new_size.width);
-  content_rect.size.height =
-      static_cast<int>(new_size.height) + (with_controls_ ? URLBAR_HEIGHT : 0);
+  CefRect dip_bounds(0, 0, static_cast<int>(new_size.width),
+                     static_cast<int>(new_size.height));
 
-  // Convert to a frame rectangle.
-  NSRect frame_rect = [window_ frameRectForContentRect:content_rect];
+  if (auto screen_bounds = GetWindowBoundsInScreen(window_)) {
+    dip_bounds.x = (*screen_bounds).x;
+    dip_bounds.y = (*screen_bounds).y;
+  }
+
+  // Calculate the equivalent frame and content area bounds.
+  NSRect frame_rect, content_rect;
+  GetNSBoundsInDisplay(dip_bounds, /*input_content_bounds=*/true,
+                       [window_ styleMask], with_controls_, frame_rect,
+                       content_rect);
+
   // Don't change the origin.
   frame_rect.origin = window_.frame.origin;
 
@@ -625,11 +787,13 @@ void RootWindowMacImpl::OnSetLoadingState(bool isLoading,
 
 void RootWindowMacImpl::NotifyDestroyedIfDone() {
   // Notify once both the window and the browser have been destroyed.
-  if (window_destroyed_ && browser_destroyed_)
+  if (window_destroyed_ && browser_destroyed_) {
     root_window_.delegate_->OnRootWindowDestroyed(&root_window_);
+  }
 }
 
-RootWindowMac::RootWindowMac() {
+RootWindowMac::RootWindowMac(bool use_alloy_style)
+    : RootWindow(use_alloy_style) {
   impl_ = new RootWindowMacImpl(*this);
 }
 
@@ -641,6 +805,10 @@ BrowserWindow* RootWindowMac::browser_window() const {
 
 RootWindow::Delegate* RootWindowMac::delegate() const {
   return delegate_;
+}
+
+const OsrRendererSettings* RootWindowMac::osr_settings() const {
+  return &impl_->osr_settings_;
 }
 
 void RootWindowMac::Init(RootWindow::Delegate* delegate,
@@ -672,8 +840,16 @@ void RootWindowMac::Hide() {
   impl_->Hide();
 }
 
-void RootWindowMac::SetBounds(int x, int y, size_t width, size_t height) {
-  impl_->SetBounds(x, y, width, height);
+void RootWindowMac::SetBounds(int x,
+                              int y,
+                              size_t width,
+                              size_t height,
+                              bool content_bounds) {
+  impl_->SetBounds(x, y, width, height, content_bounds);
+}
+
+bool RootWindowMac::DefaultToContentBounds() const {
+  return impl_->DefaultToContentBounds();
 }
 
 void RootWindowMac::Close(bool force) {
@@ -684,7 +860,7 @@ void RootWindowMac::SetDeviceScaleFactor(float device_scale_factor) {
   impl_->SetDeviceScaleFactor(device_scale_factor);
 }
 
-float RootWindowMac::GetDeviceScaleFactor() const {
+std::optional<float> RootWindowMac::GetDeviceScaleFactor() const {
   return impl_->GetDeviceScaleFactor();
 }
 
@@ -698,10 +874,6 @@ ClientWindowHandle RootWindowMac::GetWindowHandle() const {
 
 bool RootWindowMac::WithWindowlessRendering() const {
   return impl_->WithWindowlessRendering();
-}
-
-bool RootWindowMac::WithExtension() const {
-  return impl_->WithExtension();
 }
 
 void RootWindowMac::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
@@ -743,18 +915,12 @@ void RootWindowMac::OnNativeWindowClosed() {
   impl_->OnNativeWindowClosed();
 }
 
-// static
-scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
-  RootWindowDelegate* delegate =
-      static_cast<RootWindowDelegate*>([window delegate]);
-  return [delegate root_window];
-}
-
 }  // namespace client
 
 @implementation RootWindowDelegate
 
 @synthesize root_window = root_window_;
+@synthesize last_visible_bounds = last_visible_bounds_;
 @synthesize force_close = force_close_;
 
 - (id)initWithWindow:(NSWindow*)window
@@ -789,40 +955,46 @@ scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
 
 - (IBAction)goBack:(id)sender {
   CefRefPtr<CefBrowser> browser = root_window_->GetBrowser();
-  if (browser.get())
+  if (browser.get()) {
     browser->GoBack();
+  }
 }
 
 - (IBAction)goForward:(id)sender {
   CefRefPtr<CefBrowser> browser = root_window_->GetBrowser();
-  if (browser.get())
+  if (browser.get()) {
     browser->GoForward();
+  }
 }
 
 - (IBAction)reload:(id)sender {
   CefRefPtr<CefBrowser> browser = root_window_->GetBrowser();
-  if (browser.get())
+  if (browser.get()) {
     browser->Reload();
+  }
 }
 
 - (IBAction)stopLoading:(id)sender {
   CefRefPtr<CefBrowser> browser = root_window_->GetBrowser();
-  if (browser.get())
+  if (browser.get()) {
     browser->StopLoad();
+  }
 }
 
 - (IBAction)takeURLStringValueFrom:(NSTextField*)sender {
   CefRefPtr<CefBrowser> browser = root_window_->GetBrowser();
-  if (!browser.get())
+  if (!browser.get()) {
     return;
+  }
 
   NSString* url = [sender stringValue];
 
   // if it doesn't already have a prefix, add http. If we can't parse it,
   // just don't bother rather than making things worse.
   NSURL* tempUrl = [NSURL URLWithString:url];
-  if (tempUrl && ![tempUrl scheme])
+  if (tempUrl && ![tempUrl scheme]) {
     url = [@"http://" stringByAppendingString:url];
+  }
 
   std::string urlStr = [url UTF8String];
   browser->GetMainFrame()->LoadURL(urlStr);
@@ -831,30 +1003,62 @@ scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
 // Called when we are activated (when we gain focus).
 - (void)windowDidBecomeKey:(NSNotification*)notification {
   client::BrowserWindow* browser_window = root_window_->browser_window();
-  if (browser_window)
+  if (browser_window) {
     browser_window->SetFocus(true);
+  }
   root_window_->delegate()->OnRootWindowActivated(root_window_);
 }
 
 // Called when we are deactivated (when we lose focus).
 - (void)windowDidResignKey:(NSNotification*)notification {
   client::BrowserWindow* browser_window = root_window_->browser_window();
-  if (browser_window)
+  if (browser_window) {
     browser_window->SetFocus(false);
+  }
 }
 
 // Called when we have been minimized.
 - (void)windowDidMiniaturize:(NSNotification*)notification {
   client::BrowserWindow* browser_window = root_window_->browser_window();
-  if (browser_window)
+  if (browser_window) {
     browser_window->Hide();
+  }
 }
 
 // Called when we have been unminimized.
 - (void)windowDidDeminiaturize:(NSNotification*)notification {
   client::BrowserWindow* browser_window = root_window_->browser_window();
-  if (browser_window)
+  if (browser_window) {
     browser_window->Show();
+  }
+}
+
+// Called when we have been resized.
+- (void)windowDidResize:(NSNotification*)notification {
+  // Track the last visible bounds for window restore purposes.
+  const auto dip_bounds = client::GetWindowBoundsInScreen(window_);
+  if (dip_bounds) {
+    last_visible_bounds_ = dip_bounds;
+  }
+}
+
+// Called when we have been moved.
+- (void)windowDidMove:(NSNotification*)notification {
+  // Track the last visible bounds for window restore purposes.
+  const auto dip_bounds = client::GetWindowBoundsInScreen(window_);
+  if (dip_bounds) {
+    last_visible_bounds_ = dip_bounds;
+  }
+
+  if (root_window_->WithWindowlessRendering() &&
+      root_window_->osr_settings()->real_screen_bounds) {
+    // Send the new root window bounds to the renderer.
+    if (auto* browser_window = root_window_->browser_window()) {
+      if (auto browser = browser_window->GetBrowser()) {
+        browser->GetHost()->NotifyScreenInfoChanged();
+      }
+    }
+  }
 }
 
 // Called when the application has been hidden.
@@ -862,8 +1066,9 @@ scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
   // If the window is miniaturized then nothing has really changed.
   if (![window_ isMiniaturized]) {
     client::BrowserWindow* browser_window = root_window_->browser_window();
-    if (browser_window)
+    if (browser_window) {
       browser_window->Hide();
+    }
   }
 }
 
@@ -872,8 +1077,9 @@ scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
   // If the window is miniaturized then nothing has really changed.
   if (![window_ isMiniaturized]) {
     client::BrowserWindow* browser_window = root_window_->browser_window();
-    if (browser_window)
+    if (browser_window) {
       browser_window->Show();
+    }
   }
 }
 
@@ -896,6 +1102,23 @@ scoped_refptr<RootWindow> RootWindow::GetForNSWindow(NSWindow* window) {
       }
     }
   }
+
+  // Save window restore position.
+  std::optional<CefRect> dip_bounds;
+  cef_show_state_t show_state = CEF_SHOW_STATE_NORMAL;
+  if ([window_ isMiniaturized]) {
+    show_state = CEF_SHOW_STATE_MINIMIZED;
+  } else if ([window_ isZoomed]) {
+    show_state = CEF_SHOW_STATE_MAXIMIZED;
+  } else {
+    dip_bounds = client::GetWindowBoundsInScreen(window_);
+  }
+
+  if (!dip_bounds) {
+    dip_bounds = last_visible_bounds_;
+  }
+
+  client::prefs::SaveWindowRestorePreferences(show_state, dip_bounds);
 
   // Clean ourselves up after clearing the stack of anything that might have the
   // window on it.

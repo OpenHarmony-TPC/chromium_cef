@@ -6,9 +6,12 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_VIEW_UTIL_H_
 #pragma once
 
-#include "include/views/cef_view.h"
-#include "include/views/cef_window.h"
+#include <optional>
 
+#include "cef/include/views/cef_view.h"
+#include "cef/include/views/cef_window.h"
+#include "ui/color/color_id.h"
+#include "ui/gfx/native_ui_types.h"
 #include "ui/views/view.h"
 
 namespace display {
@@ -20,8 +23,15 @@ class Point;
 }
 
 namespace views {
+class NativeWidget;
+class View;
 class Widget;
+namespace internal {
+class NativeWidgetDelegate;
 }
+}  // namespace views
+
+class CefWindowDelegate;
 
 #define CEF_REQUIRE_VALID_RETURN(ret) \
   if (!ParentClass::IsValid())        \
@@ -37,7 +47,6 @@ class Widget;
 namespace view_util {
 
 // Default values.
-extern const SkColor kDefaultBackgroundColor;
 extern const char kDefaultFontList[];
 
 // Called when a CefView is initialized to create the initial association
@@ -61,8 +70,8 @@ views::View* GetFor(CefRefPtr<CefView> view);
 // views::View will keep a ref-counted reference to |view|, and |view| will keep
 // an un-owned reference to the views::View. These references will reset when
 // the views::View object is deleted or when ResumeOwnership() is called.
-std::unique_ptr<views::View> PassOwnership(CefRefPtr<CefView> view)
-    WARN_UNUSED_RESULT;
+[[nodiscard]] std::unique_ptr<views::View> PassOwnership(
+    CefRefPtr<CefView> view);
 
 // Causes |view| to resume ownership of the views::View object. Should be called
 // after removing the views::View object from its previous parent.
@@ -84,11 +93,25 @@ display::Display GetDisplayMatchingBounds(const gfx::Rect& bounds,
 
 // Convert |point| from pixel coordinates to density independent pixels (DIP)
 // using |device_scale_factor|.
-void ConvertPointFromPixels(gfx::Point* point, int device_scale_factor);
+void ConvertPointFromPixels(gfx::Point* point, float device_scale_factor);
 
 // Convert |point| to pixel coordinates from density independent pixels (DIP)
 // using |device_scale_factor|.
-void ConvertPointToPixels(gfx::Point* point, int device_scale_factor);
+void ConvertPointToPixels(gfx::Point* point, float device_scale_factor);
+
+#if BUILDFLAG(IS_WIN)
+// Convert |point| from pixel screen coordinates to DIP screen coordinates.
+gfx::Point ConvertPointFromPixels(const gfx::Point& point);
+
+// Convert |point| from DIP screen coordinates to pixel screen coordinates.
+gfx::Point ConvertPointToPixels(const gfx::Point& point);
+
+// Convert |rect| from pixel screen coordinates to DIP screen coordinates.
+gfx::Rect ConvertRectFromPixels(const gfx::Rect& rect);
+
+// Convert |rect| from DIP screen coordinates to pixel screen coordinates.
+gfx::Rect ConvertRectToPixels(const gfx::Rect& rect);
+#endif  // BUILDFLAG(IS_WIN)
 
 // Convert |point| from |view| to screen coordinates. If |output_pixel_coords|
 // is true then |point| will be output in pixel coordinates instead of density
@@ -122,6 +145,48 @@ gfx::NativeView GetNativeView(views::Widget* widget);
 
 // Returns the platform window handle for |widget|. May return nullptr.
 CefWindowHandle GetWindowHandle(views::Widget* widget);
+
+// Returns the platform window handle for |window|. May return nullptr.
+CefWindowHandle GetWindowHandle(gfx::NativeWindow window);
+
+views::NativeWidget* CreateNativeWidget(
+    views::internal::NativeWidgetDelegate* delegate,
+    CefRefPtr<CefWindow> window,
+    CefWindowDelegate* window_delegate);
+
+// Called from CefOverlayViewHost::Init to associate |host_view| with |widget|.
+// This is necessary for GetWindowFor() to correctly return the CefWindow
+// associated with the host Widget. On Aura platforms, |host_view| is the view
+// whose position in the view hierarchy determines the z-order of the widget
+// relative to views with layers and views with associated NativeViews.
+void SetHostView(views::Widget* widget, views::View* host_view);
+views::View* GetHostView(const views::Widget* widget);
+
+#if BUILDFLAG(IS_MAC)
+float GetNSWindowTitleBarHeight(views::Widget* widget);
+#endif
+
+// Returns the mixer color for |id|. If |view| has been added to a Widget it
+// will use the Widget's ColorProvider, otherwise it will use the global theme
+// ColorProvider. Returns gfx::kPlaceholderColor if |id| cannot be constructed.
+SkColor GetColor(const views::View* view, ui::ColorId id);
+
+// Sets the color associated with |id|. If |view| has been added to a Widget it
+// will use the Widget's ColorProvider, otherwise it will use the global theme
+// ColorProvider.
+void SetColor(views::View* view, ui::ColorId id, SkColor color);
+
+// Returns the currently configured background color for |view|. If
+// |allow_transparent| is true then it may return an empty value to indicate
+// transparency.
+std::optional<SkColor> GetBackgroundColor(const views::View* view,
+                                          bool allow_transparent);
+
+// Returns true if dark theme should be used for |widget|.
+bool ShouldUseDarkTheme(views::Widget* widget);
+
+// Updates the titlebar light/dark theme for |widget|.
+void UpdateTitlebarTheme(views::Widget* widget);
 
 }  // namespace view_util
 

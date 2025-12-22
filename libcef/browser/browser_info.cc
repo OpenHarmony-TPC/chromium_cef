@@ -2,14 +2,16 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/browser_info.h"
+#include "cef/libcef/browser/browser_info.h"
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/frame_util.h"
-#include "libcef/common/values_impl.h"
+#include <memory>
 
 #include "base/logging.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/frame_util.h"
+#include "cef/libcef/common/values_impl.h"
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_process_host.h"
@@ -19,20 +21,30 @@ CefBrowserInfo::FrameInfo::~FrameInfo() {
 #if DCHECK_IS_ON()
   if (frame_ && !IsCurrentMainFrame()) {
     // Should already be Detached.
-    DCHECK(!frame_->GetRenderFrameHost());
+    DCHECK(frame_->IsDetached());
   }
 #endif
 }
 
 CefBrowserInfo::CefBrowserInfo(int browser_id,
                                bool is_popup,
-                               bool is_windowless,
+                               const cef::BrowserConfig& config,
                                CefRefPtr<CefDictionaryValue> extra_info)
     : browser_id_(browser_id),
       is_popup_(is_popup),
-      is_windowless_(is_windowless),
+      config_(config),
       extra_info_(extra_info) {
   DCHECK_GT(browser_id, 0);
+
+  if (extra_info_ && !extra_info_->IsReadOnly()) {
+    // |extra_info_| should always be read-only to avoid accidental future
+    // modification. Take a copy instead of modifying the passed-in object for
+    // backwards compatibility.
+    extra_info_ = extra_info_->Copy(/*exclude_empty_children=*/false);
+    auto extra_info_impl =
+        static_cast<CefDictionaryValueImpl*>(extra_info_.get());
+    extra_info_impl->MarkReadOnly();
+  }
 }
 
 CefBrowserInfo::~CefBrowserInfo() {
@@ -41,47 +53,84 @@ CefBrowserInfo::~CefBrowserInfo() {
 
 CefRefPtr<CefBrowserHostBase> CefBrowserInfo::browser() const {
   base::AutoLock lock_scope(lock_);
-  if (!is_closing_)
-    return browser_;
-  return nullptr;
+  return browser_;
+}
+
+bool CefBrowserInfo::IsValid() const {
+  base::AutoLock lock_scope(lock_);
+  return browser_ && !is_closing_;
+}
+
+bool CefBrowserInfo::IsClosing() const {
+  base::AutoLock lock_scope(lock_);
+  return is_closing_;
 }
 
 void CefBrowserInfo::SetBrowser(CefRefPtr<CefBrowserHostBase> browser) {
-  NotificationStateLock lock_scope(this);
+  base::AutoLock lock_scope(lock_);
+  DCHECK(browser);
+  DCHECK(!browser_);
 
-  if (browser) {
-    DCHECK(!browser_);
-
-    // Cache the associated frame handler.
-    if (auto client = browser->GetClient()) {
-      frame_handler_ = client->GetFrameHandler();
-    }
-  } else {
-    DCHECK(browser_);
-  }
-
-  auto old_browser = browser_;
   browser_ = browser;
 
-  if (!browser_) {
-    RemoveAllFrames(old_browser);
-
-    // Any future calls to MaybeExecuteFrameNotification will now fail.
-    // NotificationStateLock already took a reference for the delivery of any
-    // notifications that are currently queued due to RemoveAllFrames.
-    frame_handler_ = nullptr;
+  // Cache the associated frame handler.
+  if (auto client = browser->GetClient()) {
+    frame_handler_ = client->GetFrameHandler();
   }
 }
 
 void CefBrowserInfo::SetClosing() {
   base::AutoLock lock_scope(lock_);
-  DCHECK(!is_closing_);
-  is_closing_ = true;
+
+  // In most cases WebContentsDestroyed will be called first, except if the
+  // browser still exits at CefShitdown.
+  if (!is_closing_) {
+    is_closing_ = true;
+  }
 }
 
-void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host,
-                                      bool is_guest_view) {
+void CefBrowserInfo::WebContentsDestroyed() {
+  NotificationStateLock lock_scope(this);
+
+  // Always called before BrowserDestroyed.
+  DCHECK(browser_);
+
+  // We want GetMainFrame() to return nullptr at this point, but browser()
+  // should still be valid so as not to interfere with the net_service
+  // DestructionObserver.
+  if (!is_closing_) {
+    is_closing_ = true;
+  }
+
+  RemoveAllFrames(browser_);
+
+  // Any future calls to MaybeExecuteFrameNotification will now fail.
+  // NotificationStateLock already took a reference for the delivery of any
+  // notifications that are currently queued due to RemoveAllFrames.
+  frame_handler_ = nullptr;
+}
+
+void CefBrowserInfo::BrowserDestroyed() {
+  base::AutoLock lock_scope(lock_);
+
+  // Always called after SetClosing and WebContentsDestroyed.
+  DCHECK(is_closing_);
+  DCHECK(frame_info_set_.empty());
+
+  DCHECK(browser_);
+  browser_ = nullptr;
+}
+
+void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host) {
   CEF_REQUIRE_UIT();
+
+  if (CefBrowserInfoManager::IsExcludedFrameHost(host)) {
+    // Don't create a FrameHost for an excluded type.
+    return;
+  }
+
+  DVLOG(1) << __func__ << ": "
+           << frame_util::GetFrameDebugString(host->GetGlobalFrameToken());
 
   const auto global_id = host->GetGlobalId();
   const bool is_main_frame = (host->GetParent() == nullptr);
@@ -98,40 +147,39 @@ void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host,
                                    ->render_manager()
                                    ->current_frame_host() != host);
 
-  NotificationStateLock lock_scope(this);
-  DCHECK(browser_);
+  {
+    NotificationStateLock lock_scope(this);
+    DCHECK(browser_);
 
-  const auto it = frame_id_map_.find(global_id);
-  if (it != frame_id_map_.end()) {
-    auto info = it->second;
+    const auto it = frame_id_map_.find(global_id);
+    if (it != frame_id_map_.end()) {
+      auto info = it->second;
 
 #if DCHECK_IS_ON()
-    // Check that the frame info hasn't changed unexpectedly.
-    DCHECK_EQ(info->global_id_, global_id);
-    DCHECK_EQ(info->is_guest_view_, is_guest_view);
-    DCHECK_EQ(info->is_main_frame_, is_main_frame);
+      // Check that the frame info hasn't changed unexpectedly.
+      DCHECK_EQ(info->global_id_, global_id);
+      DCHECK_EQ(info->is_main_frame_, is_main_frame);
 #endif
 
-    if (!info->is_guest_view_ && info->is_speculative_ && !is_speculative) {
-      // Upgrade the frame info from speculative to non-speculative.
-      if (info->is_main_frame_) {
-        // Set the main frame object.
-        SetMainFrame(browser_, info->frame_);
+      // Update the associated RFH, which may have changed.
+      info->frame_->MaybeAttach(this, host);
+
+      if (info->is_speculative_ && !is_speculative) {
+        // Upgrade the frame info from speculative to non-speculative.
+        if (info->is_main_frame_) {
+          // Set the main frame object.
+          SetMainFrame(browser_, info->frame_);
+        }
+        info->is_speculative_ = false;
       }
-      info->is_speculative_ = false;
+      return;
     }
-    return;
-  }
 
-  auto frame_info = new FrameInfo;
-  frame_info->host_ = host;
-  frame_info->global_id_ = global_id;
-  frame_info->is_guest_view_ = is_guest_view;
-  frame_info->is_main_frame_ = is_main_frame;
-  frame_info->is_speculative_ = is_speculative;
+    auto frame_info = new FrameInfo;
+    frame_info->global_id_ = global_id;
+    frame_info->is_main_frame_ = is_main_frame;
+    frame_info->is_speculative_ = is_speculative;
 
-  // Guest views don't get their own CefBrowser or CefFrame objects.
-  if (!is_guest_view) {
     // Create a new frame object.
     frame_info->frame_ = new CefFrameHostImpl(this, host);
     MaybeNotifyFrameCreated(frame_info->frame_);
@@ -141,20 +189,28 @@ void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host,
 
 #if DCHECK_IS_ON()
     // Check that the frame info hasn't changed unexpectedly.
-    DCHECK_EQ(frame_util::MakeFrameId(global_id),
-              frame_info->frame_->GetIdentifier());
+    DCHECK(host->GetGlobalFrameToken() == *frame_info->frame_->frame_token());
     DCHECK_EQ(frame_info->is_main_frame_, frame_info->frame_->IsMain());
 #endif
+
+    browser_->request_context()->OnRenderFrameCreated(global_id, is_main_frame);
+
+    // Populate the lookup maps.
+    frame_id_map_.insert(std::make_pair(global_id, frame_info));
+    frame_token_to_id_map_.insert(
+        std::make_pair(host->GetGlobalFrameToken(), global_id));
+
+    // And finally set the ownership.
+    frame_info_set_.insert(base::WrapUnique(frame_info));
   }
 
-  browser_->request_context()->OnRenderFrameCreated(global_id, is_main_frame,
-                                                    is_guest_view);
-
-  // Populate the lookup maps.
-  frame_id_map_.insert(std::make_pair(global_id, frame_info));
-
-  // And finally set the ownership.
-  frame_info_set_.insert(base::WrapUnique(frame_info));
+  // Don't call this under NotificationStateLockas it may cause a deadlock.
+  if (is_main_frame) {
+    if (auto* manager = CefBrowserInfoManager::GetInstance()) {
+      manager->OnMainFrameCreated(host->GetGlobalFrameToken(),
+                                  scoped_refptr<CefBrowserInfo>(this));
+    }
+  }
 }
 
 void CefBrowserInfo::FrameHostStateChanged(
@@ -163,20 +219,20 @@ void CefBrowserInfo::FrameHostStateChanged(
     content::RenderFrameHost::LifecycleState new_state) {
   CEF_REQUIRE_UIT();
 
+  DVLOG(1) << __func__ << ": "
+           << frame_util::GetFrameDebugString(host->GetGlobalFrameToken());
+
   if ((old_state == content::RenderFrameHost::LifecycleState::kPrerendering ||
        old_state ==
            content::RenderFrameHost::LifecycleState::kInBackForwardCache) &&
       new_state == content::RenderFrameHost::LifecycleState::kActive) {
     if (auto frame = GetFrameForHost(host)) {
-      // Should only occur for the main frame.
-      CHECK(frame->IsMain());
-
       // Update the associated RFH, which may have changed.
-      frame->MaybeReAttach(this, host);
+      frame->MaybeAttach(this, host);
 
-      {
-        // Update the main frame object.
+      if (frame->IsMain()) {
         NotificationStateLock lock_scope(this);
+        // Update the main frame object.
         SetMainFrame(browser_, frame);
       }
 
@@ -192,44 +248,67 @@ void CefBrowserInfo::FrameHostStateChanged(
   bool removed_from_bfcache =
       old_state ==
       content::RenderFrameHost::LifecycleState::kInBackForwardCache;
-  if (!added_to_bfcache && !removed_from_bfcache)
+  if (!added_to_bfcache && !removed_from_bfcache) {
     return;
+  }
 
   base::AutoLock lock_scope(lock_);
 
   auto it = frame_id_map_.find(host->GetGlobalId());
-  DCHECK(it != frame_id_map_.end());
-  DCHECK((!it->second->is_in_bfcache_ && added_to_bfcache) ||
-         (it->second->is_in_bfcache_ && removed_from_bfcache));
-  it->second->is_in_bfcache_ = added_to_bfcache;
+  if (it != frame_id_map_.end()) {
+    DCHECK((!it->second->is_in_bfcache_ && added_to_bfcache) ||
+           (it->second->is_in_bfcache_ && removed_from_bfcache));
+    it->second->is_in_bfcache_ = added_to_bfcache;
+  }
 }
 
 void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
   CEF_REQUIRE_UIT();
 
+  DVLOG(1) << __func__ << ": "
+           << frame_util::GetFrameDebugString(host->GetGlobalFrameToken());
+
   NotificationStateLock lock_scope(this);
 
   const auto global_id = host->GetGlobalId();
   auto it = frame_id_map_.find(global_id);
-  DCHECK(it != frame_id_map_.end());
+  if (it == frame_id_map_.end()) {
+    return;
+  }
 
   auto frame_info = it->second;
 
-  browser_->request_context()->OnRenderFrameDeleted(
-      global_id, frame_info->is_main_frame_, frame_info->is_guest_view_);
+  browser_->request_context()->OnRenderFrameDeleted(global_id,
+                                                    frame_info->is_main_frame_);
 
   // Remove from the lookup maps.
   frame_id_map_.erase(it);
+
+  {
+    auto it2 = frame_token_to_id_map_.find(host->GetGlobalFrameToken());
+    DCHECK(it2 != frame_token_to_id_map_.end());
+    frame_token_to_id_map_.erase(it2);
+  }
 
   // And finally delete the frame info.
   {
     auto it2 = frame_info_set_.find(frame_info);
 
-    // Explicitly Detach everything but the current main frame.
-    const auto& frame_info = *it2;
-    if (frame_info->frame_ && !frame_info->IsCurrentMainFrame()) {
-      if (frame_info->frame_->Detach())
-        MaybeNotifyFrameDetached(browser_, frame_info->frame_);
+    // Explicitly Detach everything.
+    const auto& other_frame_info = *it2;
+    if (other_frame_info->frame_) {
+      const bool is_current_main_frame = other_frame_info->IsCurrentMainFrame();
+      const auto [frame_detached, frame_destroyed] =
+          other_frame_info->frame_->Detach(
+              CefFrameHostImpl::DetachReason::RENDER_FRAME_DELETED,
+              is_current_main_frame);
+      if (frame_detached) {
+        MaybeNotifyFrameDetached(browser_, other_frame_info->frame_);
+      }
+      if (frame_destroyed) {
+        DCHECK(!is_current_main_frame);
+        MaybeNotifyFrameDestroyed(browser_, other_frame_info->frame_);
+      }
     }
 
     frame_info_set_.erase(it2);
@@ -239,8 +318,9 @@ void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
 CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetMainFrame() {
   base::AutoLock lock_scope(lock_);
   // Early exit if called post-destruction.
-  if (!browser_ || is_closing_)
+  if (!browser_ || is_closing_) {
     return nullptr;
+  }
 
   CHECK(main_frame_);
   return main_frame_;
@@ -249,48 +329,37 @@ CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetMainFrame() {
 CefRefPtr<CefFrameHostImpl> CefBrowserInfo::CreateTempSubFrame(
     const content::GlobalRenderFrameHostId& parent_global_id) {
   CefRefPtr<CefFrameHostImpl> parent = GetFrameForGlobalId(parent_global_id);
-  if (!parent)
+  if (!parent) {
     parent = GetMainFrame();
+  }
   // Intentionally not notifying for temporary frames.
-  return new CefFrameHostImpl(this, parent->GetIdentifier());
+  return new CefFrameHostImpl(this, parent->frame_token());
 }
 
 CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetFrameForHost(
     const content::RenderFrameHost* host,
-    bool* is_guest_view,
     bool prefer_speculative) const {
-  if (is_guest_view)
-    *is_guest_view = false;
-
-  if (!host)
+  if (!host) {
     return nullptr;
+  }
 
   return GetFrameForGlobalId(
-      const_cast<content::RenderFrameHost*>(host)->GetGlobalId(), is_guest_view,
+      const_cast<content::RenderFrameHost*>(host)->GetGlobalId(),
       prefer_speculative);
 }
 
 CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetFrameForGlobalId(
     const content::GlobalRenderFrameHostId& global_id,
-    bool* is_guest_view,
     bool prefer_speculative) const {
-  if (is_guest_view)
-    *is_guest_view = false;
-
-  if (!frame_util::IsValidGlobalId(global_id))
+  if (!frame_util::IsValidGlobalId(global_id)) {
     return nullptr;
+  }
 
   base::AutoLock lock_scope(lock_);
 
   const auto it = frame_id_map_.find(global_id);
   if (it != frame_id_map_.end()) {
     const auto info = it->second;
-
-    if (info->is_guest_view_) {
-      if (is_guest_view)
-        *is_guest_view = true;
-      return nullptr;
-    }
 
     if (info->is_speculative_ && !prefer_speculative) {
       if (info->is_main_frame_ && main_frame_) {
@@ -307,6 +376,27 @@ CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetFrameForGlobalId(
   }
 
   return nullptr;
+}
+
+CefRefPtr<CefFrameHostImpl> CefBrowserInfo::GetFrameForGlobalToken(
+    const content::GlobalRenderFrameHostToken& global_token,
+    bool prefer_speculative) const {
+  if (!frame_util::IsValidGlobalToken(global_token)) {
+    return nullptr;
+  }
+
+  content::GlobalRenderFrameHostId global_id;
+
+  {
+    base::AutoLock lock_scope(lock_);
+    const auto it = frame_token_to_id_map_.find(global_token);
+    if (it == frame_token_to_id_map_.end()) {
+      return nullptr;
+    }
+    global_id = it->second;
+  }
+
+  return GetFrameForGlobalId(global_id, prefer_speculative);
 }
 
 CefBrowserInfo::FrameHostList CefBrowserInfo::GetAllFrames() const {
@@ -382,8 +472,9 @@ void CefBrowserInfo::MaybeNotifyDraggableRegionsChanged(
   CEF_REQUIRE_UIT();
   DCHECK(frame->IsMain());
 
-  if (draggable_regions == draggable_regions_)
+  if (draggable_regions == draggable_regions_) {
     return;
+  }
 
   draggable_regions_ = std::move(draggable_regions);
 
@@ -408,11 +499,21 @@ void CefBrowserInfo::SetMainFrame(CefRefPtr<CefBrowserHostBase> browser,
     return;
   }
 
+  DVLOG(1) << __func__ << ": "
+           << (frame ? frame->GetIdentifier().ToString() : "null");
+
   CefRefPtr<CefFrameHostImpl> old_frame;
   if (main_frame_) {
     old_frame = main_frame_;
-    if (old_frame->Detach())
+    const auto [frame_detached, frame_destroyed] =
+        old_frame->Detach(CefFrameHostImpl::DetachReason::NEW_MAIN_FRAME,
+                          /*is_current_main_frame=*/false);
+    if (frame_detached) {
       MaybeNotifyFrameDetached(browser, old_frame);
+    }
+    if (frame_destroyed) {
+      MaybeNotifyFrameDestroyed(browser, old_frame);
+    }
   }
 
   main_frame_ = frame;
@@ -456,6 +557,24 @@ void CefBrowserInfo::MaybeNotifyFrameDetached(
 }
 
 // Passing in |browser| here because |browser_| may already be cleared.
+void CefBrowserInfo::MaybeNotifyFrameDestroyed(
+    CefRefPtr<CefBrowserHostBase> browser,
+    CefRefPtr<CefFrameHostImpl> frame) {
+  CEF_REQUIRE_UIT();
+
+  // Never notify for temporary objects.
+  DCHECK(!frame->is_temporary());
+
+  MaybeExecuteFrameNotification(base::BindOnce(
+      [](CefRefPtr<CefBrowserHostBase> browser,
+         CefRefPtr<CefFrameHostImpl> frame,
+         CefRefPtr<CefFrameHandler> handler) {
+        handler->OnFrameDestroyed(browser, frame);
+      },
+      browser, frame));
+}
+
+// Passing in |browser| here because |browser_| may already be cleared.
 void CefBrowserInfo::MaybeNotifyMainFrameChanged(
     CefRefPtr<CefBrowserHostBase> browser,
     CefRefPtr<CefFrameHostImpl> old_frame,
@@ -483,22 +602,28 @@ void CefBrowserInfo::RemoveAllFrames(
   // Make sure any callbacks will see the correct state (e.g. like
   // CefBrowser::GetMainFrame returning nullptr and CefBrowser::IsValid
   // returning false).
-  DCHECK(!browser_);
-  DCHECK(old_browser);
+  DCHECK(is_closing_);
 
   // Clear the lookup maps.
   frame_id_map_.clear();
+  frame_token_to_id_map_.clear();
 
-  // Explicitly Detach everything but the current main frame.
+  // Explicitly Detach everything.
   for (auto& info : frame_info_set_) {
-    if (info->frame_ && !info->IsCurrentMainFrame()) {
-      if (info->frame_->Detach())
-        MaybeNotifyFrameDetached(old_browser, info->frame_);
+    if (info->frame_) {
+      [[maybe_unused]] const auto [frame_detached, frame_destroyed] =
+          info->frame_->Detach(
+              CefFrameHostImpl::DetachReason::BROWSER_DESTROYED,
+              info->IsCurrentMainFrame());
+      // Shouldn't need to trigger any notifications at this point.
+      DCHECK(!frame_detached);
+      DCHECK(!frame_destroyed);
     }
   }
 
-  if (main_frame_)
+  if (main_frame_) {
     SetMainFrame(old_browser, nullptr);
+  }
 
   // And finally delete the frame info.
   frame_info_set_.clear();
@@ -519,7 +644,8 @@ CefBrowserInfo::NotificationStateLock::NotificationStateLock(
   }
 
   // Take the browser info state lock.
-  browser_info_lock_scope_.reset(new base::AutoLock(browser_info_->lock_));
+  browser_info_lock_scope_ =
+      std::make_unique<base::MovableAutoLock>(browser_info_->lock_);
 }
 
 CefBrowserInfo::NotificationStateLock::~NotificationStateLock() {

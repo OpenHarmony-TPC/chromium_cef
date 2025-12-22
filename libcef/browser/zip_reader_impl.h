@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "base/threading/platform_thread.h"
-#include "include/cef_zip_reader.h"
+#include "cef/include/cef_zip_reader.h"
 #include "third_party/zlib/contrib/minizip/unzip.h"
 
 // Implementation of CefZipReader
@@ -26,12 +26,12 @@ class CefZipReaderImpl : public CefZipReader {
   bool MoveToFile(const CefString& fileName, bool caseSensitive) override;
   bool Close() override;
   CefString GetFileName() override;
-  int64 GetFileSize() override;
-  CefTime GetFileLastModified() override;
+  int64_t GetFileSize() override;
+  CefBaseTime GetFileLastModified() override;
   bool OpenFile(const CefString& password) override;
   bool CloseFile() override;
   int ReadFile(void* buffer, size_t bufferSize) override;
-  int64 Tell() override;
+  int64_t Tell() override;
   bool Eof() override;
 
   bool GetFileInfo();
@@ -42,12 +42,12 @@ class CefZipReaderImpl : public CefZipReader {
 
  protected:
   base::PlatformThreadId supported_thread_id_;
-  unzFile reader_;
-  bool has_fileopen_;
-  bool has_fileinfo_;
+  unzFile reader_ = nullptr;
+  bool has_fileopen_ = false;
+  bool has_fileinfo_ = false;
   CefString filename_;
-  int64 filesize_;
-  time_t filemodified_;
+  int64_t filesize_ = 0;
+  time_t filemodified_ = 0;
 
   IMPLEMENT_REFCOUNTING(CefZipReaderImpl);
 };

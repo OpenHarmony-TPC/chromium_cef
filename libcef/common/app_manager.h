@@ -8,11 +8,10 @@
 
 #include <list>
 
-#include "include/cef_app.h"
-#include "include/cef_request_context.h"
-
-#include "base/callback.h"
+#include "base/functional/callback.h"
 #include "build/build_config.h"
+#include "cef/include/cef_app.h"
+#include "cef/include/cef_request_context.h"
 #include "content/public/common/content_client.h"
 
 class CefBrowserContext;
@@ -36,7 +35,7 @@ class CefAppManager {
   // (url/url_util.h) via ContentClient::AddAdditionalSchemes which calls
   // AddCustomScheme, and second with Blink (SchemeRegistry) via
   // ContentRendererClient::WebKitInitialized which calls GetCustomSchemes.
-  void AddCustomScheme(CefSchemeInfo* scheme_info);
+  void AddCustomScheme(const CefSchemeInfo* scheme_info);
   bool HasCustomScheme(const std::string& scheme_name);
 
   using SchemeInfoList = std::list<CefSchemeInfo>;
@@ -64,7 +63,6 @@ class CefAppManager {
   virtual ~CefAppManager();
 
  private:
-  std::vector<std::string> CustomSchemeCmdLineSplit(std::string str, const char split);
   // Custom schemes handled by the client.
   SchemeInfoList scheme_info_list_;
   bool scheme_info_list_locked_ = false;

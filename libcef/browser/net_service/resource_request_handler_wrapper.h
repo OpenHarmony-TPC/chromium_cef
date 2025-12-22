@@ -1,12 +1,11 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
-// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that can
-// be found in the LICENSE file.
+// Copyright (c) 2019 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that
+// can be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_RESOURCE_REQUEST_HANDLER_WRAPPER_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_RESOURCE_REQUEST_HANDLER_WRAPPER_H_
 
-#include "base/callback_forward.h"
+#include "base/functional/callback_forward.h"
 #include "content/public/browser/web_contents.h"
 
 namespace content {
@@ -39,10 +38,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
 // Create an InterceptedRequestHandler that will delegate to a
 // CefResourceRequestHandler. The resulting object should be passed to
-// ProxyURLLoaderFactory::CreateProxy. Called on the UI thread only.
+// ProxyURLLoaderFactory::CreateProxyForWebContents. Called on the UI thread
+// only.
 std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     content::WebContents::Getter web_contents_getter,
-    int frame_tree_node_id,
+    content::FrameTreeNodeId frame_tree_node_id,
     const network::ResourceRequest& request,
     const base::RepeatingClosure& unhandled_request_callback);
 

@@ -2,12 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/net_service/cookie_helper.h"
+#include "cef/libcef/browser/net_service/cookie_helper.h"
 
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-
-#include "base/bind.h"
+#include "base/functional/bind.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/common/url_constants.h"
@@ -17,8 +16,7 @@
 #include "services/network/cookie_manager.h"
 #include "services/network/public/cpp/resource_request.h"
 
-namespace net_service {
-namespace cookie_helper {
+namespace net_service::cookie_helper {
 
 namespace {
 
@@ -40,7 +38,7 @@ network::mojom::CookieManager* GetCookieManager(
 }
 
 net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
-                                    bool is_save) {
+                                    bool for_loading_cookies) {
   // Match the logic from InterceptionJob::FetchCookies and
   // ChromeContentBrowserClient::ShouldIgnoreSameSiteCookieRestrictionsWhenTopLevel.
   bool should_treat_as_first_party =
@@ -51,21 +49,36 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
       request.trusted_params->isolation_info.request_type() ==
           net::IsolationInfo::RequestType::kMainFrame;
 
-  // Match the logic from URLRequestHttpJob::AddCookieHeaderAndStart.
+  // Match the logic from URLRequest::SetURLChain.
+  std::vector<GURL> url_chain{request.url};
+  if (request.navigation_redirect_chain.size() >= 2) {
+    // Keep |request.url| as the final entry in the chain.
+    url_chain.insert(url_chain.begin(),
+                     request.navigation_redirect_chain.begin(),
+                     request.navigation_redirect_chain.begin() +
+                         request.navigation_redirect_chain.size() - 1);
+  }
+
   net::CookieOptions options;
   options.set_include_httponly();
-  if (is_save) {
-     options.set_same_site_cookie_context(
-         net::cookie_util::ComputeSameSiteContextForResponse(
-	     {request.url}, request.site_for_cookies, request.request_initiator,
-             is_main_frame_navigation, should_treat_as_first_party));
-  } else {
+  if (for_loading_cookies) {
+    // Match the logic from URLRequestHttpJob::AddCookieHeaderAndStart.
     options.set_same_site_cookie_context(
         net::cookie_util::ComputeSameSiteContextForRequest(
-            request.method, {request.url}, request.site_for_cookies,
+            request.method, url_chain, request.site_for_cookies,
             request.request_initiator, is_main_frame_navigation,
-            should_treat_as_first_party));
+            should_treat_as_first_party,
+            request.destination ==
+                network::mojom::RequestDestination::kWebIdentity));
+  } else {
+    // Match the logic from
+    // URLRequestHttpJob::SaveCookiesAndNotifyHeadersComplete.
+    options.set_same_site_cookie_context(
+        net::cookie_util::ComputeSameSiteContextForResponse(
+            url_chain, request.site_for_cookies, request.request_initiator,
+            is_main_frame_navigation, should_treat_as_first_party));
   }
+
   return options;
 }
 
@@ -81,8 +94,9 @@ void ContinueWithLoadedCookies(const AllowCookieCallback& allow_cookie_callback,
   for (const auto& status : cookies) {
     bool allow = false;
     allow_cookie_callback.Run(status.cookie, &allow);
-    if (allow)
+    if (allow) {
       allowed_cookies.push_back(status.cookie);
+    }
   }
   std::move(done_callback).Run(cookies.size(), std::move(allowed_cookies));
 }
@@ -189,27 +203,30 @@ void SaveCookiesOnUIThread(
                        cookie));
   }
 
-  SetCanonicalCookieCallback(
-      progress, net::CanonicalCookie(),
-      net::CookieAccessResult(net::CookieInclusionStatus(
-          net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
+  net::CookieInclusionStatus status;
+  status.AddExclusionReason(
+      net::CookieInclusionStatus::ExclusionReason::EXCLUDE_UNKNOWN_ERROR);
+  SetCanonicalCookieCallback(progress, net::CanonicalCookie(),
+                             net::CookieAccessResult(std::move(status)));
 }
 
 }  // namespace
 
 bool IsCookieableScheme(
     const GURL& url,
-    const absl::optional<std::vector<std::string>>& cookieable_schemes) {
-  if (!url.has_scheme())
+    const std::optional<std::vector<std::string>>& cookieable_schemes) {
+  if (!url.has_scheme()) {
     return false;
+  }
 
   if (cookieable_schemes) {
     // The client has explicitly registered the full set of schemes that should
     // be supported.
-    const auto url_scheme = url.scheme_piece();
+    const auto url_scheme = url.scheme();
     for (auto scheme : *cookieable_schemes) {
-      if (url_scheme == scheme)
+      if (url_scheme == scheme) {
         return true;
+      }
     }
     return false;
   }
@@ -233,11 +250,23 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
     return;
   }
 
+  net::CookiePartitionKeyCollection partition_key_collection;
+  if (request.trusted_params.has_value() &&
+      !request.trusted_params->isolation_info.IsEmpty()) {
+    const auto& isolation_info = request.trusted_params->isolation_info;
+    partition_key_collection = net::CookiePartitionKeyCollection(
+        net::CookiePartitionKey::FromNetworkIsolationKey(
+            isolation_info.network_isolation_key(), request.site_for_cookies,
+            net::SchemefulSite(request.url),
+            isolation_info.IsMainFrameRequest()));
+  }
+
   CEF_POST_TASK(
-      CEF_UIT, base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
-                              request.url, GetCookieOptions(request, false),
-                              net::CookiePartitionKeyCollection(),
-                              allow_cookie_callback, std::move(done_callback)));
+      CEF_UIT,
+      base::BindOnce(LoadCookiesOnUIThread, browser_context_getter, request.url,
+                     GetCookieOptions(request, /*for_loading_cookies=*/true),
+                     std::move(partition_key_collection), allow_cookie_callback,
+                     std::move(done_callback)));
 }
 
 void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
@@ -257,11 +286,9 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   // Match the logic in
   // URLRequestHttpJob::SaveCookiesAndNotifyHeadersComplete.
-  base::Time response_date;
-  if (!headers->GetDateValue(&response_date))
-    response_date = base::Time();
+  const auto response_date = headers->GetDateValue();
 
-  const base::StringPiece name(net_service::kHTTPSetCookieHeaderName);
+  const std::string_view name(net_service::kHTTPSetCookieHeaderName);
   std::string cookie_string;
   size_t iter = 0;
   net::CookieList allowed_cookies;
@@ -272,8 +299,8 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
 
     net::CookieInclusionStatus returned_status;
     std::unique_ptr<net::CanonicalCookie> cookie = net::CanonicalCookie::Create(
-        request.url, cookie_string, base::Time::Now(),
-        absl::make_optional(response_date), net::CookiePartitionKey::Todo(),
+        request.url, cookie_string, base::Time::Now(), response_date,
+        /*cookie_partition_key=*/std::nullopt, net::CookieSourceType::kHTTP,
         &returned_status);
     if (!returned_status.IsInclude()) {
       continue;
@@ -281,21 +308,22 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
 
     bool allow = false;
     allow_cookie_callback.Run(*cookie, &allow);
-    if (allow)
+    if (allow) {
       allowed_cookies.push_back(*cookie);
+    }
   }
 
   if (!allowed_cookies.empty()) {
     CEF_POST_TASK(
         CEF_UIT,
-        base::BindOnce(SaveCookiesOnUIThread, browser_context_getter,
-                       request.url, GetCookieOptions(request, true), total_count,
-                       std::move(allowed_cookies), std::move(done_callback)));
+        base::BindOnce(
+            SaveCookiesOnUIThread, browser_context_getter, request.url,
+            GetCookieOptions(request, /*for_loading_cookies=*/false),
+            total_count, std::move(allowed_cookies), std::move(done_callback)));
 
   } else {
     std::move(done_callback).Run(total_count, std::move(allowed_cookies));
   }
 }
 
-}  // namespace cookie_helper
-}  // namespace net_service
+}  // namespace net_service::cookie_helper

@@ -99,13 +99,33 @@
 
 - (void)tryToTerminateApplication:(NSApplication*)app {
   SimpleHandler* handler = SimpleHandler::GetInstance();
-  if (handler && !handler->IsClosing())
+  if (handler && !handler->IsClosing()) {
     handler->CloseAllBrowsers(false);
+  }
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:
     (NSApplication*)sender {
   return NSTerminateNow;
+}
+
+// Called when the user clicks the app dock icon while the application is
+// already running.
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)theApplication
+                    hasVisibleWindows:(BOOL)flag {
+  SimpleHandler* handler = SimpleHandler::GetInstance();
+  if (handler && !handler->IsClosing()) {
+    handler->ShowMainWindow();
+  }
+  return NO;
+}
+
+// Requests that any state restoration archive be created with secure encoding
+// (macOS 12+ only). See https://crrev.com/c737387656 for details. This also
+// fixes an issue with macOS default behavior incorrectly restoring windows
+// after hard reset (holding down the power button).
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {
+  return YES;
 }
 @end
 
@@ -114,8 +134,9 @@ int main(int argc, char* argv[]) {
   // Load the CEF framework library at runtime instead of linking directly
   // as required by the macOS sandbox implementation.
   CefScopedLibraryLoader library_loader;
-  if (!library_loader.LoadInMain())
+  if (!library_loader.LoadInMain()) {
     return 1;
+  }
 
   // Provide CEF with command-line arguments.
   CefMainArgs main_args(argc, argv);
@@ -137,14 +158,6 @@ int main(int argc, char* argv[]) {
     // Specify CEF global settings here.
     CefSettings settings;
 
-    const bool with_chrome_runtime =
-        command_line->HasSwitch("enable-chrome-runtime");
-
-    if (with_chrome_runtime) {
-      // Enable experimental Chrome runtime. See issue #2969 for details.
-      settings.chrome_runtime = true;
-    }
-
     // When generating projects with CMake the CEF_USE_SANDBOX value will be
     // defined automatically. Pass -DUSE_SANDBOX=OFF to the CMake command-line
     // to disable use of the sandbox.
@@ -157,11 +170,18 @@ int main(int argc, char* argv[]) {
     // CEF has initialized.
     CefRefPtr<SimpleApp> app(new SimpleApp);
 
-    // Initialize CEF for the browser process.
-    CefInitialize(main_args, settings, app.get(), nullptr);
+    // Initialize the CEF browser process. May return false if initialization
+    // fails or if early exit is desired (for example, due to process singleton
+    // relaunch behavior).
+    if (!CefInitialize(main_args, settings, app.get(), nullptr)) {
+      return CefGetExitCode();
+    }
 
     // Create the application delegate.
-    NSObject* delegate = [[SimpleAppDelegate alloc] init];
+    SimpleAppDelegate* delegate = [[SimpleAppDelegate alloc] init];
+    // Set as the delegate for application events.
+    NSApp.delegate = delegate;
+
     [delegate performSelectorOnMainThread:@selector(createApplication:)
                                withObject:nil
                             waitUntilDone:NO];

@@ -2,11 +2,10 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/x509_certificate_impl.h"
+#include "cef/libcef/browser/x509_certificate_impl.h"
 
-#include "libcef/browser/x509_cert_principal_impl.h"
-#include "libcef/common/time_util.h"
-
+#include "cef/libcef/browser/x509_cert_principal_impl.h"
+#include "cef/libcef/common/time_util.h"
 #include "net/cert/x509_util.h"
 #include "net/ssl/ssl_private_key.h"
 
@@ -21,8 +20,9 @@ CefRefPtr<CefBinaryValue> EncodeCertificate(const CRYPTO_BUFFER* cert_buffer,
   } else if (!net::X509Certificate::GetPEMEncoded(cert_buffer, &encoded)) {
     return nullptr;
   }
-  if (encoded.empty())
+  if (encoded.empty()) {
     return nullptr;
+  }
   return CefBinaryValue::Create(encoded.c_str(), encoded.size());
 }
 
@@ -37,50 +37,47 @@ CefX509CertificateImpl::CefX509CertificateImpl(
     : cert_(cert) {}
 
 CefRefPtr<CefX509CertPrincipal> CefX509CertificateImpl::GetSubject() {
-  if (cert_)
+  if (cert_) {
     return new CefX509CertPrincipalImpl(cert_->subject());
+  }
   return nullptr;
 }
 
 CefRefPtr<CefX509CertPrincipal> CefX509CertificateImpl::GetIssuer() {
-  if (cert_)
+  if (cert_) {
     return new CefX509CertPrincipalImpl(cert_->issuer());
+  }
   return nullptr;
 }
 
 CefRefPtr<CefBinaryValue> CefX509CertificateImpl::GetSerialNumber() {
   if (cert_) {
-    const std::string& serial = cert_->serial_number();
-    return CefBinaryValue::Create(serial.c_str(), serial.size());
+    const auto& serial = cert_->serial_number();
+    return CefBinaryValue::Create(serial.data(), serial.size());
   }
   return nullptr;
 }
 
-CefTime CefX509CertificateImpl::GetValidStart() {
-  CefTime validity;
+CefBaseTime CefX509CertificateImpl::GetValidStart() {
   if (cert_) {
-    const base::Time& valid_time = cert_->valid_start();
-    if (!valid_time.is_null())
-      cef_time_from_basetime(valid_time, validity);
+    return cert_->valid_start();
   }
-  return validity;
+  return CefBaseTime();
 }
 
-CefTime CefX509CertificateImpl::GetValidExpiry() {
-  CefTime validity;
+CefBaseTime CefX509CertificateImpl::GetValidExpiry() {
   if (cert_) {
-    const base::Time& valid_time = cert_->valid_expiry();
-    if (!valid_time.is_null())
-      cef_time_from_basetime(valid_time, validity);
+    return cert_->valid_expiry();
   }
-  return validity;
+  return CefBaseTime();
 }
 
 CefRefPtr<CefBinaryValue> CefX509CertificateImpl::GetDEREncoded() {
   if (cert_) {
     const CRYPTO_BUFFER* cert_buffer = cert_->cert_buffer();
-    if (cert_buffer)
+    if (cert_buffer) {
       return EncodeCertificate(cert_buffer, true);
+    }
   }
   return nullptr;
 }
@@ -88,25 +85,33 @@ CefRefPtr<CefBinaryValue> CefX509CertificateImpl::GetDEREncoded() {
 CefRefPtr<CefBinaryValue> CefX509CertificateImpl::GetPEMEncoded() {
   if (cert_) {
     const CRYPTO_BUFFER* cert_buffer = cert_->cert_buffer();
-    if (cert_buffer)
+    if (cert_buffer) {
       return EncodeCertificate(cert_buffer, false);
+    }
   }
   return nullptr;
 }
 
 size_t CefX509CertificateImpl::GetIssuerChainSize() {
-  if (cert_)
+  if (cert_) {
     return cert_->intermediate_buffers().size();
+  }
   return 0;
 }
 
 void CefX509CertificateImpl::AcquirePrivateKey(
     base::OnceCallback<void(scoped_refptr<net::SSLPrivateKey>)>
         private_key_callback) {
-  if (identity_)
+  if (identity_) {
     identity_->AcquirePrivateKey(std::move(private_key_callback));
-  else
+  } else {
     std::move(private_key_callback).Run(nullptr);
+  }
+}
+
+std::unique_ptr<net::ClientCertIdentity>
+CefX509CertificateImpl::DisconnectIdentity() {
+  return std::move(identity_);
 }
 
 void CefX509CertificateImpl::GetEncodedIssuerChain(
@@ -124,14 +129,16 @@ void CefX509CertificateImpl::GetEncodedIssuerChain(
 
 void CefX509CertificateImpl::GetDEREncodedIssuerChain(
     CefX509Certificate::IssuerChainBinaryList& chain) {
-  if (der_encoded_issuer_chain_.empty())
+  if (der_encoded_issuer_chain_.empty()) {
     GetEncodedIssuerChain(der_encoded_issuer_chain_, true);
+  }
   chain = der_encoded_issuer_chain_;
 }
 
 void CefX509CertificateImpl::GetPEMEncodedIssuerChain(
     CefX509Certificate::IssuerChainBinaryList& chain) {
-  if (pem_encoded_issuer_chain_.empty())
+  if (pem_encoded_issuer_chain_.empty()) {
     GetEncodedIssuerChain(pem_encoded_issuer_chain_, false);
+  }
   chain = pem_encoded_issuer_chain_;
 }

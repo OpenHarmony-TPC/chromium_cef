@@ -6,10 +6,10 @@
 #define CEF_LIBCEF_BROWSER_X509_CERTIFICATE_IMPL_H_
 #pragma once
 
-#include "include/cef_x509_certificate.h"
-
 #include <memory>
 
+#include "cef/include/cef_x509_certificate.h"
+#include "net/cert/x509_certificate.h"
 #include "net/ssl/client_cert_identity.h"
 
 // CefX509Certificate implementation
@@ -20,7 +20,6 @@ class CefX509CertificateImpl : public CefX509Certificate {
   CefX509CertificateImpl(const CefX509CertificateImpl&) = delete;
   CefX509CertificateImpl& operator=(const CefX509CertificateImpl&) = delete;
 
-  // Used with AlloyContentBrowserClient::SelectClientCertificate only.
   explicit CefX509CertificateImpl(
       std::unique_ptr<net::ClientCertIdentity> identity);
 
@@ -28,8 +27,8 @@ class CefX509CertificateImpl : public CefX509Certificate {
   CefRefPtr<CefX509CertPrincipal> GetSubject() override;
   CefRefPtr<CefX509CertPrincipal> GetIssuer() override;
   CefRefPtr<CefBinaryValue> GetSerialNumber() override;
-  CefTime GetValidStart() override;
-  CefTime GetValidExpiry() override;
+  CefBaseTime GetValidStart() override;
+  CefBaseTime GetValidExpiry() override;
   CefRefPtr<CefBinaryValue> GetDEREncoded() override;
   CefRefPtr<CefBinaryValue> GetPEMEncoded() override;
   size_t GetIssuerChainSize() override;
@@ -41,7 +40,7 @@ class CefX509CertificateImpl : public CefX509Certificate {
       base::OnceCallback<void(scoped_refptr<net::SSLPrivateKey>)>
           private_key_callback);
 
-  void setClientCert(scoped_refptr<net::X509Certificate> cert) { cert_ = cert; }
+  [[nodiscard]] std::unique_ptr<net::ClientCertIdentity> DisconnectIdentity();
 
  private:
   void GetEncodedIssuerChain(IssuerChainBinaryList& chain, bool der);

@@ -7,6 +7,7 @@
 #pragma once
 
 #import <Cocoa/Cocoa.h>
+
 #include <string>
 #include <vector>
 
@@ -16,7 +17,7 @@
 // Implementation for the NSTextInputClient protocol used for enabling IME on
 // mac when window rendering is disabled.
 
-@interface CefTextInputClientOSRMac : NSObject<NSTextInputClient> {
+@interface CefTextInputClientOSRMac : NSObject <NSTextInputClient> {
  @private
 
   // The range of current marked text inside the whole content of the DOM node

@@ -8,10 +8,9 @@
 
 #include <memory>
 
-#include "include/views/cef_overlay_controller.h"
-#include "include/views/cef_view.h"
-
-#include "base/compiler_specific.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/include/views/cef_overlay_controller.h"
+#include "cef/include/views/cef_view.h"
 #include "ui/views/view_observer.h"
 #include "ui/views/widget/widget_delegate.h"
 
@@ -30,12 +29,12 @@ class CefOverlayViewHost : public views::WidgetDelegate,
   CefOverlayViewHost& operator=(const CefOverlayViewHost&) = delete;
 
   // Initializes the CefOverlayViewHost. This creates the Widget that |view|
-  // paints into. |host_view| is the view whose position in the |window_view_|
-  // view hierarchy determines the z-order of the widget relative to views with
-  // layers and views with associated NativeViews.
-  void Init(views::View* host_view, CefRefPtr<CefView> view);
+  // paints into. On Aura platforms, |host_view| is the view whose position in
+  // the |window_view_| view hierarchy determines the z-order of the widget
+  // relative to views with layers and views with associated NativeViews.
+  void Init(views::View* host_view, CefRefPtr<CefView> view, bool can_activate);
 
-  void Destroy();
+  void Close();
 
   void MoveIfNecessary();
 
@@ -44,6 +43,7 @@ class CefOverlayViewHost : public views::WidgetDelegate,
 
   // views::ViewObserver methods:
   void OnViewBoundsChanged(views::View* observed_view) override;
+  void OnViewIsDeleting(views::View* observed_view) override;
 
   cef_docking_mode_t docking_mode() const { return docking_mode_; }
   CefRefPtr<CefOverlayController> controller() const { return cef_controller_; }
@@ -56,13 +56,21 @@ class CefOverlayViewHost : public views::WidgetDelegate,
  private:
   gfx::Rect ComputeBounds() const;
 
+  void Cleanup();
+
+  // views::WidgetDelegate methods:
+  void WidgetIsZombie(views::Widget* widget) override;
+
   // The CefWindowView that created us.
-  CefWindowView* const window_view_;
+  raw_ptr<CefWindowView> window_view_;
 
   const cef_docking_mode_t docking_mode_;
 
+  // The host view that the overlay is positioned relative to.
+  raw_ptr<views::View> host_view_ = nullptr;
+
   // Our view, which is responsible for drawing the UI.
-  views::View* view_ = nullptr;
+  raw_ptr<views::View> view_ = nullptr;
 
   // The Widget implementation that is created and maintained by the overlay.
   // It contains |view_|.

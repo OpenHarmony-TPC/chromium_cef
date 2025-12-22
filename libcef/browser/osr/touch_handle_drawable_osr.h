@@ -6,10 +6,9 @@
 #ifndef CEF_LIBCEF_BROWSER_OSR_TOUCH_HANDLE_DRAWABLE_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_TOUCH_HANDLE_DRAWABLE_OSR_H_
 
-#include "include/internal/cef_types_wrappers.h"
-
-// #include "base/memory/raw_ptr.h"
-#include "ui/gfx/native_widget_types.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/include/internal/cef_types_wrappers.h"
+#include "ui/gfx/native_ui_types.h"
 #include "ui/touch_selection/touch_handle.h"
 #include "ui/touch_selection/touch_handle_orientation.h"
 #include "ui/touch_selection/ui_touch_selection_export.h"
@@ -34,14 +33,12 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
   void SetOrigin(const gfx::PointF& position) override;
   void SetAlpha(float alpha) override;
   gfx::RectF GetVisibleBounds() const override;
-  void SetEdge(const gfx::PointF& top, const gfx::PointF& bottom) override;
   float GetDrawableHorizontalPaddingRatio() const override;
 
   // Pass the current touch handle state to the CefRenderHandler.
-  void UpdateVisiableBounds();
   void TouchHandleStateChanged(const CefTouchHandleState& state);
 
-  CefRenderWidgetHostViewOSR* rwhv_;
+  raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
 
   float alpha_ = 0.f;
   static int counter_;
@@ -56,9 +53,6 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
 
   // Handle bounds relative to the focal position.
   gfx::RectF relative_bounds_ = gfx::RectF(0.0F, 0.0F, 24.0F, 24.0F);
-
-  // Handle line height
-  float edge_height_ = 0.f;
 };
 
 #endif

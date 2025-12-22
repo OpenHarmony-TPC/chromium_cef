@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_BROWSER_PRINT_SETTINGS_IMPL_H_
 #pragma once
 
-#include "include/cef_print_settings.h"
-#include "libcef/common/value_base.h"
-
+#include "cef/include/cef_print_settings.h"
+#include "cef/libcef/common/value_base.h"
 #include "printing/print_settings.h"
 
 // CefPrintSettings implementation
@@ -47,7 +46,7 @@ class CefPrintSettingsImpl
   void SetDuplexMode(DuplexMode mode) override;
   DuplexMode GetDuplexMode() override;
 
-  std::unique_ptr<printing::PrintSettings> TakeOwnership() WARN_UNUSED_RESULT;
+  [[nodiscard]] std::unique_ptr<printing::PrintSettings> TakeOwnership();
 };
 
 #endif  // CEF_LIBCEF_BROWSER_PRINT_SETTINGS_IMPL_H_

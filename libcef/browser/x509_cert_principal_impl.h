@@ -6,8 +6,7 @@
 #define CEF_LIBCEF_BROWSER_X509_CERT_PRINCIPAL_IMPL_H_
 #pragma once
 
-#include "include/cef_x509_certificate.h"
-
+#include "cef/include/cef_x509_certificate.h"
 #include "net/cert/x509_cert_types.h"
 
 // CefX509CertPrincipal implementation
@@ -24,10 +23,8 @@ class CefX509CertPrincipalImpl : public CefX509CertPrincipal {
   CefString GetLocalityName() override;
   CefString GetStateOrProvinceName() override;
   CefString GetCountryName() override;
-  void GetStreetAddresses(std::vector<CefString>& addresses) override;
   void GetOrganizationNames(std::vector<CefString>& names) override;
   void GetOrganizationUnitNames(std::vector<CefString>& names) override;
-  void GetDomainComponents(std::vector<CefString>& components) override;
 
  private:
   net::CertPrincipal value_;

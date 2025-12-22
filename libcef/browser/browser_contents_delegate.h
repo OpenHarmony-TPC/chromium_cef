@@ -1,7 +1,6 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
-// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that can
-// be found in the LICENSE file.
+// Copyright 2020 The Chromium Embedded Framework Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_H_
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_H_
@@ -9,13 +8,9 @@
 
 #include <memory>
 
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/icon_helper.h"
-
 #include "base/callback_list.h"
 #include "base/observer_list.h"
-#include "content/public/browser/notification_observer.h"
-#include "content/public/browser/notification_registrar.h"
+#include "cef/libcef/browser/frame_host_impl.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
 
@@ -48,11 +43,10 @@ constexpr inline CefBrowserContentsState operator|(
 }
 
 // Tracks state and executes client callbacks based on WebContents callbacks.
-// Includes functionality that is shared by the alloy and chrome runtimes.
-// Only accessed on the UI thread.
+// Includes functionality that is shared by Alloy and Chrome styles. Only
+// accessed on the UI thread.
 class CefBrowserContentsDelegate : public content::WebContentsDelegate,
-                                   public content::WebContentsObserver,
-                                   public content::NotificationObserver {
+                                   public content::WebContentsObserver {
  public:
   using State = CefBrowserContentsState;
 
@@ -68,7 +62,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
     virtual void OnWebContentsDestroyed(content::WebContents* web_contents) = 0;
 
    protected:
-    ~Observer() override {}
+    ~Observer() override = default;
   };
 
   explicit CefBrowserContentsDelegate(
@@ -85,10 +79,19 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
 
-  // WebContentsDelegate methods:
-  content::WebContents* OpenURLFromTab(
+  // Same as OpenURLFromTab but only taking |navigation_handle_callback|
+  // if the return value is non-nullptr.
+  content::WebContents* OpenURLFromTabEx(
       content::WebContents* source,
-      const content::OpenURLParams& params) override;
+      const content::OpenURLParams& params,
+      base::OnceCallback<void(content::NavigationHandle&)>&
+          navigation_handle_callback);
+
+  // Same as SetContentsBounds but returning false if unhandled.
+  bool SetContentsBoundsEx(content::WebContents* source,
+                           const gfx::Rect& bounds);
+
+  // WebContentsDelegate methods:
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
@@ -97,28 +100,21 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
-  void DidNavigatePrimaryMainFramePostCommit(
-      content::WebContents* web_contents) override;
   void EnterFullscreenModeForTab(
       content::RenderFrameHost* requesting_frame,
       const blink::mojom::FullscreenOptions& options) override;
   void ExitFullscreenModeForTab(content::WebContents* web_contents) override;
+  void CanDownload(const GURL& url,
+                   const std::string& request_method,
+                   base::OnceCallback<void(bool)> callback) override;
   content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
       content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool HandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  void RequestToLockMouse(content::WebContents* web_contents,
-                          bool user_gesture,
-                          bool last_unlocked_by_target) override;
-  void LostMouseLock() override;
-  void UnlockMouse();
-
-#if BUILDFLAG(IS_OHOS)
-  // Shows the repost form confirmation dialog box.
-  void ShowRepostFormWarningDialog(content::WebContents* source) override;
-#endif
+      const input::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(content::WebContents* source,
+                           const input::NativeWebKeyboardEvent& event) override;
+  void DraggableRegionsChanged(
+      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
+      content::WebContents* contents) override;
 
   // WebContentsObserver methods:
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
@@ -129,12 +125,13 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
       content::RenderFrameHost::LifecycleState old_state,
       content::RenderFrameHost::LifecycleState new_state) override;
   void RenderFrameDeleted(content::RenderFrameHost* render_frame_host) override;
+  void RenderWidgetCreated(
+      content::RenderWidgetHost* render_widget_host) override;
   void RenderViewReady() override;
   void PrimaryMainFrameRenderProcessGone(
       base::TerminationStatus status) override;
   void OnFrameFocused(content::RenderFrameHost* render_frame_host) override;
-  void DocumentAvailableInMainFrame(
-      content::RenderFrameHost* render_frame_host) override;
+  void PrimaryMainDocumentElementAvailable() override;
   void LoadProgressChanged(double progress) override;
   void DidStopLoading() override;
   void DidFinishNavigation(
@@ -142,82 +139,65 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void DidFailLoad(content::RenderFrameHost* render_frame_host,
                    const GURL& validated_url,
                    int error_code) override;
+  void DidFinishLoad(content::RenderFrameHost* render_frame_host,
+                     const GURL& validated_url) override;
   void TitleWasSet(content::NavigationEntry* entry) override;
-  void PluginCrashed(const base::FilePath& plugin_path,
-                     base::ProcessId plugin_pid) override;
   void DidUpdateFaviconURL(
       content::RenderFrameHost* render_frame_host,
       const std::vector<blink::mojom::FaviconURLPtr>& candidates) override;
   void OnWebContentsFocused(
       content::RenderWidgetHost* render_widget_host) override;
-  void OnFocusChangedInPage(content::FocusedNodeDetails* details) override;
+  void OnFocusChangedInPage(
+      const content::FocusedNodeDetails& details) override;
+  bool TakeFocus(content::WebContents* source, bool reverse) override;
+  void FindReply(content::WebContents* web_contents,
+                 int request_id,
+                 int number_of_matches,
+                 const gfx::Rect& selection_rect,
+                 int active_match_ordinal,
+                 bool final_update) override;
+  void UpdatePreferredSize(content::WebContents* source,
+                           const gfx::Size& pref_size) override;
+  void ResizeDueToAutoResize(content::WebContents* source,
+                             const gfx::Size& new_size) override;
   void WebContentsDestroyed() override;
-#if BUILDFLAG(IS_OHOS)
-  void DidStartNavigation(content::NavigationHandle* navigation) override;
-  void DocumentOnLoadCompletedInPrimaryMainFrame() override;
-#endif
-
-  // NotificationObserver methods.
-  void Observe(int type,
-               const content::NotificationSource& source,
-               const content::NotificationDetails& details) override;
 
   // Accessors for state information. Changes will be signaled to
   // Observer::OnStateChanged.
   bool is_loading() const { return is_loading_; }
+  bool can_go_back() const { return can_go_back_; }
+  bool can_go_forward() const { return can_go_forward_; }
   bool has_document() const { return has_document_; }
   bool is_fullscreen() const { return is_fullscreen_; }
   CefRefPtr<CefFrameHostImpl> focused_frame() const { return focused_frame_; }
 
   // Helpers for executing client callbacks.
   // TODO(cef): Make this private if/when possible.
-  void OnLoadEnd(CefRefPtr<CefFrame> frame,
-                 const GURL& url,
-                 int http_status_code);
   bool OnSetFocus(cef_focus_source_t source);
-  void InitIconHelper();
 
  private:
   CefRefPtr<CefClient> client() const;
   CefRefPtr<CefBrowser> browser() const;
   CefBrowserPlatformDelegate* platform_delegate() const;
 
-#if BUILDFLAG(IS_OHOS)
-  void OnOldPageNoLongerRendered(const GURL& url, bool success);
-#endif
-
   // Helpers for executing client callbacks.
   void OnAddressChange(const GURL& url);
   void OnLoadStart(CefRefPtr<CefFrame> frame,
                    ui::PageTransition transition_type);
+  void OnLoadEnd(CefRefPtr<CefFrame> frame,
+                 const GURL& url,
+                 int http_status_code);
   void OnLoadError(CefRefPtr<CefFrame> frame, const GURL& url, int error_code);
-  void OnLoadError(CefRefPtr<CefRequest> request,
-                   bool is_in_main_frame,
-                   bool has_user_gesture,
-                   int error_code);
   void OnTitleChange(const std::u16string& title);
   void OnFullscreenModeChange(bool fullscreen);
 
   void OnStateChanged(State state_changed);
 
-  void OnRefreshAccessedHistory(CefRefPtr<CefFrame> frame,
-                                const GURL& url,
-                                bool isReload);
-
-  // Returns true if the mouse is locked.
-  bool IsMouseLocked() const;
-
-  // Returns true if the mouse was locked and no notification should be
-  // displayed to the user.
-  bool IsMouseLockedSilently() const;
-
-  void SetTabWithExclusiveAccess(content::WebContents* tab);
-
-  bool HandleUserKeyEvent(const content::NativeWebKeyboardEvent& event);
-
   scoped_refptr<CefBrowserInfo> browser_info_;
 
   bool is_loading_ = false;
+  bool can_go_back_ = false;
+  bool can_go_forward_ = false;
   bool has_document_ = false;
   bool is_fullscreen_ = false;
 
@@ -230,31 +210,8 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   // Observers that want to be notified of changes to this object.
   base::ObserverList<Observer> observers_;
 
-  // Used for managing notification subscriptions.
-  std::unique_ptr<content::NotificationRegistrar> registrar_;
-
   // True if the focus is currently on an editable field on the page.
   bool focus_on_editable_field_ = false;
-
-  // Store web site icon.
-  CefRefPtr<IconHelper> icon_helper_;
-
-  enum MouseLockState {
-    MOUSELOCK_UNLOCKED,
-    // Mouse has been locked.
-    MOUSELOCK_LOCKED,
-    // Mouse has been locked silently, with no notification to user.
-    MOUSELOCK_LOCKED_SILENTLY
-  };
-
-  MouseLockState mouse_lock_state_;
-
-  // Timestamp when the user last successfully escaped from a lock request.
-  base::TimeTicks last_user_escape_time_;
-
-  content::WebContents* tab_with_exclusive_access_ = nullptr;
-
-  base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_H_

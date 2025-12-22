@@ -1,5 +1,5 @@
 diff --git base/message_loop/message_pump_win.cc base/message_loop/message_pump_win.cc
-index d1140d7945a2d..a3b894aa4f6b0 100644
+index 4e20010e351905ec5c1daa576aecf8d6eeec48ac..588c3dbdcc204f235561290493d6ad0ca64d67cb 100644
 --- base/message_loop/message_pump_win.cc
 +++ base/message_loop/message_pump_win.cc
 @@ -2,6 +2,7 @@
@@ -9,13 +9,13 @@ index d1140d7945a2d..a3b894aa4f6b0 100644
 +#include "base/task/current_thread.h"
  #include "base/message_loop/message_pump_win.h"
  
- #include <algorithm>
-@@ -497,7 +498,17 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
+ #include <windows.h>
+@@ -583,7 +584,17 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
                  ctx.event()->set_chrome_message_pump();
              msg_pump_data->set_sent_messages_in_queue(more_work_is_plausible);
            });
 -      has_msg = ::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) != FALSE;
-+ 
++
 +      // We should not process all window messages if we are in the context of an
 +      // OS modal loop, i.e. in the context of a windows API call like MessageBox.
 +      // This is to ensure that these messages are peeked out by the OS modal loop.
@@ -28,12 +28,12 @@ index d1140d7945a2d..a3b894aa4f6b0 100644
 +      }
      }
    }
-   if (has_msg)
+   if (has_msg) {
 diff --git base/task/current_thread.cc base/task/current_thread.cc
-index b7e9d215c2039..57816ea1c8b81 100644
+index e97435f1705a929ec02848b88b4fe05bdf7399e4..0bacc37506436fab4689a342aedf9dbc776f7b5c 100644
 --- base/task/current_thread.cc
 +++ base/task/current_thread.cc
-@@ -49,6 +49,8 @@ void CurrentThread::AddDestructionObserver(
+@@ -51,6 +51,8 @@ void CurrentThread::AddDestructionObserver(
  
  void CurrentThread::RemoveDestructionObserver(
      DestructionObserver* destruction_observer) {
@@ -43,12 +43,12 @@ index b7e9d215c2039..57816ea1c8b81 100644
    current_->RemoveDestructionObserver(destruction_observer);
  }
 diff --git base/task/current_thread.h base/task/current_thread.h
-index f82025cca1d17..6feb6ac241895 100644
+index d0615fee23ecdddf8e2570d63cbe70b0cf556f1c..311a3da007c36b99cbc00dd6de0e59ec9dea8369 100644
 --- base/task/current_thread.h
 +++ base/task/current_thread.h
-@@ -130,6 +130,12 @@ class BASE_EXPORT CurrentThread {
-   // to run. There can only be one OnNextIdleCallback at a time.
-   void RegisterOnNextIdleCallback(OnceClosure on_next_idle_callback);
+@@ -166,6 +166,12 @@ class BASE_EXPORT CurrentThread {
+       RegisterOnNextIdleCallbackPasskey,
+       OnceClosure on_next_idle_callback);
  
 +#if BUILDFLAG(IS_WIN)
 +  void set_os_modal_loop(bool os_modal_loop) { os_modal_loop_ = os_modal_loop; }
@@ -59,10 +59,10 @@ index f82025cca1d17..6feb6ac241895 100644
    // Enables nested task processing in scope of an upcoming native message loop.
    // Some unwanted message loops may occur when using common controls or printer
    // functions. Hence, nested task processing is disabled by default to avoid
-@@ -195,6 +201,13 @@ class BASE_EXPORT CurrentThread {
+@@ -237,6 +243,13 @@ class BASE_EXPORT CurrentThread {
    friend class web::WebTaskEnvironment;
  
-   sequence_manager::internal::SequenceManagerImpl* current_;
+   raw_ptr<sequence_manager::internal::SequenceManagerImpl> current_;
 +
 +#if BUILDFLAG(IS_WIN)
 + private:
@@ -72,4 +72,4 @@ index f82025cca1d17..6feb6ac241895 100644
 +#endif
  };
  
- #if !BUILDFLAG(IS_NACL)
+ // UI extension of CurrentThread.

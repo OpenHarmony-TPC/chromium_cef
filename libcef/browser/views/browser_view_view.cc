@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/browser_view_view.h"
+#include "cef/libcef/browser/views/browser_view_view.h"
 
-#include "libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+#include "ui/base/metadata/metadata_impl_macros.h"
 
 CefBrowserViewView::CefBrowserViewView(CefBrowserViewDelegate* cef_delegate,
                                        Delegate* browser_view_delegate)
@@ -25,11 +26,10 @@ void CefBrowserViewView::ViewHierarchyChanged(
       // this View to a CefWindow with FillLayout and then calling
       // CefWindow::Show() without first resizing the CefWindow.
       size = details.parent->GetPreferredSize();
-      if (!size.IsEmpty())
+      if (!size.IsEmpty()) {
         SetSize(size);
+      }
     }
-
-    browser_view_delegate_->OnBrowserViewAdded();
   }
 }
 
@@ -37,3 +37,26 @@ void CefBrowserViewView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
   ParentClass::OnBoundsChanged(previous_bounds);
   browser_view_delegate_->OnBoundsChanged();
 }
+
+void CefBrowserViewView::OnGestureEvent(ui::GestureEvent* event) {
+  if (browser_view_delegate_->OnGestureEvent(event)) {
+    return;
+  }
+  ParentClass::OnGestureEvent(event);
+}
+
+void CefBrowserViewView::AddedToWidget() {
+  ParentClass::AddedToWidget();
+  browser_view_delegate_->AddedToWidget();
+}
+
+void CefBrowserViewView::RemovedFromWidget() {
+  ParentClass::RemovedFromWidget();
+  browser_view_delegate_->RemovedFromWidget();
+}
+
+BEGIN_METADATA(WebViewEx)
+END_METADATA
+
+BEGIN_METADATA(CefBrowserViewView)
+END_METADATA

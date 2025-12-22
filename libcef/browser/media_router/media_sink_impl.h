@@ -6,8 +6,7 @@
 #define CEF_LIBCEF_BROWSER_MEDIA_ROUTER_MEDIA_SINK_IMPL_H_
 #pragma once
 
-#include "include/cef_media_router.h"
-
+#include "cef/include/cef_media_router.h"
 #include "components/media_router/common/media_sink.h"
 
 // Implementation of the CefMediaSink interface. May be created on any thread.
@@ -24,7 +23,6 @@ class CefMediaSinkImpl : public CefMediaSink {
   // CefMediaSink methods.
   CefString GetId() override;
   CefString GetName() override;
-  CefString GetDescription() override;
   IconType GetIconType() override;
   void GetDeviceInfo(
       CefRefPtr<CefMediaSinkDeviceInfoCallback> callback) override;

@@ -7,7 +7,6 @@
 #pragma once
 
 #include "include/base/cef_lock.h"
-
 #include "tests/cefclient/browser/browser_window.h"
 #include "tests/cefclient/browser/client_handler_osr.h"
 #include "tests/cefclient/browser/osr_renderer.h"
@@ -25,6 +24,7 @@ class BrowserWindowOsrGtk : public BrowserWindow,
   // Constructor may be called on any thread.
   // |delegate| must outlive this object.
   BrowserWindowOsrGtk(BrowserWindow::Delegate* delegate,
+                      bool with_controls,
                       const std::string& startup_url,
                       const OsrRendererSettings& settings);
 

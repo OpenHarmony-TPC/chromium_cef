@@ -4,16 +4,15 @@
 
 #include <vector>
 
-#include "include/internal/cef_string_list.h"
-
-#include "base/logging.h"
+#include "base/check_op.h"
+#include "cef/include/internal/cef_string_list.h"
 
 namespace {
 using StringList = std::vector<CefString>;
 }  // namespace
 
 CEF_EXPORT cef_string_list_t cef_string_list_alloc() {
-  return new StringList;
+  return reinterpret_cast<cef_string_list_t>(new StringList);
 }
 
 CEF_EXPORT size_t cef_string_list_size(cef_string_list_t list) {
@@ -29,8 +28,9 @@ CEF_EXPORT int cef_string_list_value(cef_string_list_t list,
   DCHECK(value);
   StringList* impl = reinterpret_cast<StringList*>(list);
   DCHECK_LT(index, impl->size());
-  if (index >= impl->size())
+  if (index >= impl->size()) {
     return false;
+  }
   const CefString& str = (*impl)[index];
   return cef_string_copy(str.c_str(), str.length(), value);
 }
@@ -39,7 +39,11 @@ CEF_EXPORT void cef_string_list_append(cef_string_list_t list,
                                        const cef_string_t* value) {
   DCHECK(list);
   StringList* impl = reinterpret_cast<StringList*>(list);
-  impl->push_back(CefString(value));
+  if (value) {
+    impl->emplace_back(value->str, value->length, /*copy=*/true);
+  } else {
+    impl->emplace_back();
+  }
 }
 
 CEF_EXPORT void cef_string_list_clear(cef_string_list_t list) {
@@ -57,5 +61,5 @@ CEF_EXPORT void cef_string_list_free(cef_string_list_t list) {
 CEF_EXPORT cef_string_list_t cef_string_list_copy(cef_string_list_t list) {
   DCHECK(list);
   StringList* impl = reinterpret_cast<StringList*>(list);
-  return new StringList(*impl);
+  return reinterpret_cast<cef_string_list_t>(new StringList(*impl));
 }

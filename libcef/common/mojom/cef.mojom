@@ -10,12 +10,9 @@ import "mojo/public/mojom/base/values.mojom";
 import "services/network/public/mojom/site_for_cookies.mojom";
 import "services/network/public/mojom/url_request.mojom";
 import "third_party/blink/public/mojom/loader/referrer.mojom";
+import "third_party/blink/public/mojom/tokens/tokens.mojom";
 import "ui/gfx/geometry/mojom/geometry.mojom";
 import "url/mojom/url.mojom";
-import "mojo/public/mojom/base/time.mojom";
-
-[EnableIf=is_ohos]
-import "skia/public/mojom/bitmap.mojom";
 
 // Structure passed to UpdateDraggableRegions().
 struct DraggableRegionEntry {
@@ -51,38 +48,17 @@ struct RequestParams {
   network.mojom.URLRequestBody? upload_data;
 };
 
-[EnableIf=is_ohos]
-struct HitEventParams {
-  float x;
-  float y;
-  int32 width;
-  int32 height;
-};
-
-[EnableIf=is_ohos]
-struct GetImageForContextNodeParams {
-  int32 width;
-  int32 height;
-  string image_extension;
-  skia.mojom.BitmapN32 image;
-};
-
-[EnableIf=is_ohos]
-struct HitDataParams {
-  int32 type;
-  string extra_data_for_type;
-  mojo_base.mojom.String16 href;
-  mojo_base.mojom.String16 anchor_text;
-  url.mojom.Url img_src;
-};
-
 // Interface for communicating with a frame in the renderer process.
 interface RenderFrame {
   // Browser process has received the FrameAttached() message.
-  FrameAttachedAck();
+  // |allow| will be false if we don't want to attach the frame.
+  FrameAttachedAck(bool allow);
 
   // Send a message to the render process.
   SendMessage(string name, mojo_base.mojom.ListValue arguments);
+
+  // Send a shared memory region to the render process.
+  SendSharedMemoryRegion(string name, mojo_base.mojom.WritableSharedMemoryRegion region);
 
   // Send a command.
   SendCommand(string command);
@@ -106,52 +82,6 @@ interface RenderFrame {
   // Move or resize of the renderer's containing window has started. Used on
   // Windows and Linux with the Alloy runtime.
   MoveOrResizeStarted();
-
-  [EnableIf=is_ohos]
-  UpdateLocale(string locale);
-
-  [EnableIf=is_ohos]
-  SendHitEvent(HitEventParams params);
-
-  [EnableIf=is_ohos]
-  SetInitialScale(float initialScale);
-
-  // Adjusts the javascript 'online' property value.
-  [EnableIf=is_ohos]
-  SetJsOnlineProperty(bool network_up);
-
-  [EnableIf=is_ohos]
-  PutZoomingForTextFactor(float factor);
-
-  [EnableIf=is_ohos]
-  GetImageForContextNode();
-
-  [EnableIf=is_ohos]
-  GetImagesWithResponse() => (bool response);
-
-  [EnableIf=is_ohos]
-  RemoveCache();
-
-  [EnableIf=is_ohos]
-  ScrollPageUpDown(bool is_up, bool move_half, float view_height);
-
-  [EnableIf=is_ohos]
-  ScrollTo(float x, float y);
-
-  [EnableIf=is_ohos]
-  ScrollBy(float delta_x, float delta_y);
-
-  [EnableIf=is_ohos]
-  SlideScroll(float vx, float vy);
-
-  [EnableIf=is_ohos]
-  ZoomBy(float delta, float width, float height);
-
-  [EnableIf=is_ohos, Sync]
-  GetHitData() => (int32 type, string extra_data);
-
-  [EnableIf=is_ohos]
-  SetOverscrollMode(int32 mode);
 };
 
 // Interface for communicating with a frame in the browser process.
@@ -159,21 +89,15 @@ interface BrowserFrame {
   // Send a message to the browser process.
   SendMessage(string name, mojo_base.mojom.ListValue arguments);
 
+  // Send a shared memory region to the browser process.
+  SendSharedMemoryRegion(string name, mojo_base.mojom.WritableSharedMemoryRegion region);
+
   // The render frame is ready to begin handling actions.
   FrameAttached(pending_remote<RenderFrame> render_frame,
                 bool reattached);
 
-  // The render frame has finished loading.
-  DidFinishFrameLoad(url.mojom.Url validated_url, int32 http_status_code);
-
   // Draggable regions have updated.
   UpdateDraggableRegions(array<DraggableRegionEntry>? regions);
-
-  [EnableIf=is_ohos]
-  OnGetImageForContextNode(GetImageForContextNodeParams params);
-
-  [EnableIf=is_ohos]
-  OnGetImageForContextNodeNull();
 };
 
 struct CrossOriginWhiteListEntry {
@@ -187,11 +111,20 @@ struct NewRenderThreadInfo {
   array<CrossOriginWhiteListEntry>? cross_origin_whitelist_entries;
 };
 
+struct NewBrowserConfig {
+  bool is_popup;
+
+  // Values from cef::BrowserConfig.
+  bool is_windowless;
+  bool print_preview_enabled;
+  bool move_pip_enabled;
+  bool allow_pip_without_user_activation;
+};
+
 struct NewBrowserInfo {
   int32 browser_id;
-  bool is_popup;
-  bool is_windowless;
-  bool is_guest_view;
+  bool is_excluded;
+  NewBrowserConfig? config;
   mojo_base.mojom.DictionaryValue? extra_info;
 };
 
@@ -203,7 +136,8 @@ interface BrowserManager {
 
   // Retrieve info for a new CefBrowser.
   [Sync]
-  GetNewBrowserInfo(int32 render_frame_routing_id) => (NewBrowserInfo info);
+  GetNewBrowserInfo(blink.mojom.LocalFrameToken render_frame_token) =>
+      (NewBrowserInfo info);
 };
 
 // Interface for communicating with browser management to the render process.

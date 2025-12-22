@@ -3,12 +3,11 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/browser/net_service/url_loader_factory_getter.h"
+#include "cef/libcef/browser/net_service/url_loader_factory_getter.h"
 
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/app_manager.h"
-
-#include "base/threading/thread_task_runner_handle.h"
+#include "base/task/single_thread_task_runner.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/app_manager.h"
 #include "content/browser/devtools/devtools_instrumentation.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/browser_context.h"
@@ -19,7 +18,7 @@
 
 namespace net_service {
 
-// Based on CreateDownloadURLLoaderFactoryGetter from
+// Based on CreatePendingSharedURLLoaderFactory from
 // content/browser/download/download_manager_impl.cc.
 // static
 scoped_refptr<URLLoaderFactoryGetter> URLLoaderFactoryGetter::Create(
@@ -35,88 +34,66 @@ scoped_refptr<URLLoaderFactoryGetter> URLLoaderFactoryGetter::Create(
   auto loader_factory = browser_context->GetDefaultStoragePartition()
                             ->GetURLLoaderFactoryForBrowserProcess();
 
-  network::mojom::URLLoaderFactoryPtrInfo proxy_factory_ptr_info;
-  network::mojom::URLLoaderFactoryRequest proxy_factory_request;
+  network::URLLoaderFactoryBuilder factory_builder;
 
-  // Create an intermediate pipe that can be used to proxy the request's
-  // URLLoaderFactory.
-  network::mojom::URLLoaderFactoryPtrInfo maybe_proxy_factory_ptr_info;
-  mojo::PendingReceiver<network::mojom::URLLoaderFactory>
-      maybe_proxy_factory_request = MakeRequest(&maybe_proxy_factory_ptr_info);
-
-  bool should_proxy = false;
+  // TODO: Change to content::ChildProcessId usage once supported by
+  // WillCreateURLLoaderFactory. See https://crbug.com/379869738.
   int render_process_id = -1;
 
   if (render_frame_host) {
-    render_process_id = render_frame_host->GetProcess()->GetID();
+    render_process_id = render_frame_host->GetProcess()->GetDeprecatedID();
 
     // Allow DevTools to potentially inject itself into the proxy pipe.
-    should_proxy =
-        content::devtools_instrumentation::WillCreateURLLoaderFactory(
-            static_cast<content::RenderFrameHostImpl*>(render_frame_host),
-            false /* is_navigation */, false /* is_download */,
-            &maybe_proxy_factory_request, nullptr /* factory_override */);
+    content::devtools_instrumentation::WillCreateURLLoaderFactoryParams::
+        ForFrame(static_cast<content::RenderFrameHostImpl*>(render_frame_host))
+            .Run(/*is_navigation=*/false, /*is_download=*/false,
+                 factory_builder, /*factory_override=*/nullptr);
   }
 
   auto browser_client = CefAppManager::Get()->GetContentClient()->browser();
 
   // Allow the Content embedder to inject itself if it wants to.
-  should_proxy |= browser_client->WillCreateURLLoaderFactory(
+  browser_client->WillCreateURLLoaderFactory(
       browser_context, render_frame_host, render_process_id,
       content::ContentBrowserClient::URLLoaderFactoryType::kDocumentSubResource,
-      url::Origin(), absl::nullopt /* navigation_id */, ukm::SourceIdObj(),
-      &maybe_proxy_factory_request, nullptr /* header_client */,
-      nullptr /* bypass_redirect_checks */, nullptr /* disable_secure_dns */,
-      nullptr /* factory_override */);
-
-  // If anyone above indicated that they care about proxying, pass the
-  // intermediate pipe along to the URLLoaderFactoryGetter.
-  if (should_proxy) {
-    proxy_factory_ptr_info = std::move(maybe_proxy_factory_ptr_info);
-    proxy_factory_request = std::move(maybe_proxy_factory_request);
-  }
+      url::Origin(), net::IsolationInfo(), /*navigation_id=*/std::nullopt,
+      ukm::SourceIdObj(), factory_builder, /*header_client=*/nullptr,
+      /*bypass_redirect_checks=*/nullptr, /*disable_secure_dns=*/nullptr,
+      /*factory_override=*/nullptr,
+      /*navigation_response_task_runner=*/nullptr);
 
   return base::WrapRefCounted(new URLLoaderFactoryGetter(
-      loader_factory->Clone(), std::move(proxy_factory_ptr_info),
-      std::move(proxy_factory_request)));
+      loader_factory->Clone(), std::move(factory_builder)));
 }
 
-// Based on NetworkDownloadURLLoaderFactoryGetter from
-// content/browser/download/network_download_url_loader_factory_getter.cc.
+// Based on CreateFactory from
+// content/browser/download/network_download_pending_url_loader_factory.cc.
 scoped_refptr<network::SharedURLLoaderFactory>
 URLLoaderFactoryGetter::GetURLLoaderFactory() {
   // On first call we associate with the current thread.
   if (!task_runner_) {
-    task_runner_ = base::ThreadTaskRunnerHandle::Get();
+    task_runner_ = base::SingleThreadTaskRunner::GetCurrentDefault();
   } else {
     DCHECK(task_runner_->RunsTasksInCurrentSequence());
   }
 
-  if (lazy_factory_)
+  if (lazy_factory_) {
     return lazy_factory_;
+  }
 
   // Bind on the current thread.
   auto loader_factory =
       network::SharedURLLoaderFactory::Create(std::move(loader_factory_info_));
 
-  if (proxy_factory_request_.is_pending()) {
-    loader_factory->Clone(std::move(proxy_factory_request_));
-    lazy_factory_ =
-        base::MakeRefCounted<network::WrapperSharedURLLoaderFactory>(
-            std::move(proxy_factory_ptr_info_));
-  } else {
-    lazy_factory_ = loader_factory;
-  }
+  lazy_factory_ = std::move(factory_builder_).Finish(loader_factory);
   return lazy_factory_;
 }
 
 URLLoaderFactoryGetter::URLLoaderFactoryGetter(
     std::unique_ptr<network::PendingSharedURLLoaderFactory> loader_factory_info,
-    network::mojom::URLLoaderFactoryPtrInfo proxy_factory_ptr_info,
-    network::mojom::URLLoaderFactoryRequest proxy_factory_request)
+    network::URLLoaderFactoryBuilder factory_builder)
     : loader_factory_info_(std::move(loader_factory_info)),
-      proxy_factory_ptr_info_(std::move(proxy_factory_ptr_info)),
-      proxy_factory_request_(std::move(proxy_factory_request)) {}
+      factory_builder_(std::move(factory_builder)) {}
 
 URLLoaderFactoryGetter::~URLLoaderFactoryGetter() = default;
 

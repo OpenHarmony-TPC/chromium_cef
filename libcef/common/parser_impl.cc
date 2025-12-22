@@ -4,19 +4,36 @@
 
 #include <sstream>
 
-#include "include/cef_parser.h"
-
 #include "base/base64.h"
+#include "base/strings/escape.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/include/cef_parser.h"
 #include "components/url_formatter/elide_url.h"
-#include "net/base/escape.h"
 #include "net/base/mime_util.h"
 #include "url/gurl.h"
 
+bool CefResolveURL(const CefString& base_url,
+                   const CefString& relative_url,
+                   CefString& resolved_url) {
+  GURL base_gurl(base_url.ToString());
+  if (!base_gurl.is_valid()) {
+    return false;
+  }
+
+  GURL combined_gurl = base_gurl.Resolve(relative_url.ToString());
+  if (!combined_gurl.is_valid()) {
+    return false;
+  }
+
+  resolved_url = combined_gurl.spec();
+  return true;
+}
+
 bool CefParseURL(const CefString& url, CefURLParts& parts) {
   GURL gurl(url.ToString());
-  if (!gurl.is_valid())
+  if (!gurl.is_valid()) {
     return false;
+  }
 
   CefString(&parts.spec).FromString(gurl.spec());
   CefString(&parts.scheme).FromString(gurl.scheme());
@@ -54,19 +71,24 @@ bool CefCreateURL(const CefURLParts& parts, CefString& url) {
     ss << scheme << "://";
     if (!username.empty()) {
       ss << username;
-      if (!password.empty())
+      if (!password.empty()) {
         ss << ":" << password;
+      }
       ss << "@";
     }
     ss << host;
-    if (!port.empty())
+    if (!port.empty()) {
       ss << ":" << port;
-    if (!path.empty())
+    }
+    if (!path.empty()) {
       ss << path;
-    if (!query.empty())
+    }
+    if (!query.empty()) {
       ss << "?" << query;
-    if (!fragment.empty())
+    }
+    if (!fragment.empty()) {
       ss << "#" << fragment;
+    }
     gurl = GURL(ss.str());
   }
 
@@ -86,7 +108,7 @@ CefString CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
 CefString CefGetMimeType(const CefString& extension) {
   // Requests should not block on the disk!  On POSIX this goes to disk.
   // http://code.google.com/p/chromium/issues/detail?id=59849
-  base::ThreadRestrictions::ScopedAllowIO allow_io;
+  base::ScopedAllowBlockingForTesting allow_blocking;
 
   std::string mime_type;
   net::GetMimeTypeFromExtension(extension, &mime_type);
@@ -95,47 +117,48 @@ CefString CefGetMimeType(const CefString& extension) {
 
 void CefGetExtensionsForMimeType(const CefString& mime_type,
                                  std::vector<CefString>& extensions) {
-  using VectorType = std::vector<base::FilePath::StringType>;
-  VectorType ext;
-  net::GetExtensionsForMimeType(mime_type, &ext);
-  VectorType::const_iterator it = ext.begin();
-  for (; it != ext.end(); ++it)
-    extensions.push_back(*it);
+  std::vector<base::FilePath::StringType> buffer;
+  net::GetExtensionsForMimeType(mime_type.ToString(), &buffer);
+  for (const auto& extension : buffer) {
+    extensions.push_back(extension);
+  }
 }
 
 CefString CefBase64Encode(const void* data, size_t data_size) {
-  if (data_size == 0)
+  if (data_size == 0) {
     return CefString();
+  }
 
-  base::StringPiece input(static_cast<const char*>(data), data_size);
-  std::string output;
-  base::Base64Encode(input, &output);
-  return output;
+  std::string_view input(static_cast<const char*>(data), data_size);
+  return base::Base64Encode(input);
 }
 
 CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data) {
-  if (data.size() == 0)
+  if (data.size() == 0) {
     return nullptr;
+  }
 
   const std::string& input = data;
   std::string output;
-  if (base::Base64Decode(input, &output))
+  if (base::Base64Decode(input, &output)) {
     return CefBinaryValue::Create(output.data(), output.size());
+  }
   return nullptr;
 }
 
 CefString CefURIEncode(const CefString& text, bool use_plus) {
-  return net::EscapeQueryParamValue(text.ToString(), use_plus);
+  return base::EscapeQueryParamValue(text.ToString(), use_plus);
 }
 
 CefString CefURIDecode(const CefString& text,
                        bool convert_to_utf8,
                        cef_uri_unescape_rule_t unescape_rule) {
-  const net::UnescapeRule::Type type =
-      static_cast<net::UnescapeRule::Type>(unescape_rule);
-  if (convert_to_utf8)
-    return net::UnescapeAndDecodeUTF8URLComponentWithAdjustments(
+  const base::UnescapeRule::Type type =
+      static_cast<base::UnescapeRule::Type>(unescape_rule);
+  if (convert_to_utf8) {
+    return base::UnescapeAndDecodeUTF8URLComponentWithAdjustments(
         text.ToString(), type, nullptr);
-  else
-    return net::UnescapeURLComponent(text.ToString(), type);
+  } else {
+    return base::UnescapeURLComponent(text.ToString(), type);
+  }
 }

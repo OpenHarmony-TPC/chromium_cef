@@ -7,10 +7,9 @@
 #define CEF_LIBCEF_BROWSER_OSR_MOTION_EVENT_OSR_H_
 #pragma once
 
-#include "include/cef_base.h"
-
+#include "cef/include/cef_base.h"
 #include "third_party/blink/public/common/input/web_touch_event.h"
-#include "ui/events/gesture_detection/motion_event_generic.h"
+#include "ui/events/velocity_tracker/motion_event_generic.h"
 
 // Implementation of MotionEvent which takes a stream of CefTouchEvents.
 // This class is based on ui::MotionEventAura.
@@ -39,18 +38,11 @@ class CefMotionEventOSR : public ui::MotionEventGeneric {
   // touchcancel to make sure only send one ack per WebTouchEvent.
   void MarkUnchangedTouchPointsAsStationary(blink::WebTouchEvent* event,
                                             const CefTouchEvent& cef_event);
-#if BUILDFLAG(IS_OHOS)
-  bool FromOverlay() const override { return from_overlay_; };
-  void SetFromOverlay(bool from_overlay) override { from_overlay_ = from_overlay; };
-#endif
-  
+
  private:
   // Chromium can't cope with touch ids >31, so let's map the incoming
   // ids to a safe range.
   int id_map_[blink::WebTouchEvent::kTouchesLengthCap];
-#if BUILDFLAG(IS_OHOS)
-  bool from_overlay_ = false;
-#endif
 
   int LookupId(int id);
   int AddId(int id);

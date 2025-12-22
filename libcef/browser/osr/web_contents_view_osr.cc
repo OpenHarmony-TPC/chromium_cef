@@ -3,65 +3,54 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/web_contents_view_osr.h"
+#include "cef/libcef/browser/osr/web_contents_view_osr.h"
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/osr/render_widget_host_view_osr.h"
-#include "libcef/common/drag_data_impl.h"
-
-#include "content/browser/browser_plugin/browser_plugin_embedder.h"
-#include "content/browser/browser_plugin/browser_plugin_guest.h"
+#include "base/notimplemented.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
+#include "cef/libcef/browser/osr/touch_selection_controller_client_osr.h"
+#include "cef/libcef/common/drag_data_impl.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/render_widget_host.h"
-#include "components/performance_manager/embedder/performance_manager_registry.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
-#endif
 
 CefWebContentsViewOSR::CefWebContentsViewOSR(SkColor background_color,
                                              bool use_shared_texture,
                                              bool use_external_begin_frame)
     : background_color_(background_color),
       use_shared_texture_(use_shared_texture),
-      use_external_begin_frame_(use_external_begin_frame),
-      web_contents_(nullptr) {}
+      use_external_begin_frame_(use_external_begin_frame) {}
 
-CefWebContentsViewOSR::~CefWebContentsViewOSR() {}
+CefWebContentsViewOSR::~CefWebContentsViewOSR() = default;
 
 void CefWebContentsViewOSR::WebContentsCreated(
     content::WebContents* web_contents) {
   DCHECK(!web_contents_);
   web_contents_ = web_contents;
-  LOG(INFO) << "CefWebContentsViewOSR::WebContentsCreated";
-  if (auto* registry =
-          performance_manager::PerformanceManagerRegistry::GetInstance()) {
-    registry->MaybeCreatePageNodeForWebContents(web_contents_);
-  }
 
   RenderViewCreated();
 }
 
 void CefWebContentsViewOSR::RenderViewCreated() {
-  if (web_contents_) {
-    auto host = web_contents_->GetRenderViewHost();
-    CefRenderWidgetHostViewOSR* view =
-        static_cast<CefRenderWidgetHostViewOSR*>(host->GetWidget()->GetView());
-    if (view)
-      view->InstallTransparency();
+  if (auto* view = GetView()) {
+    view->InstallTransparency();
   }
 }
 
 gfx::NativeView CefWebContentsViewOSR::GetNativeView() const {
+  // TODO(osr): Fix all calling code paths and convert to DCHECK.
+  NOTIMPLEMENTED();
   return gfx::NativeView();
 }
 
 gfx::NativeView CefWebContentsViewOSR::GetContentNativeView() const {
+  // TODO(osr): Fix all calling code paths and convert to DCHECK.
+  NOTIMPLEMENTED();
   return gfx::NativeView();
 }
 
 gfx::NativeWindow CefWebContentsViewOSR::GetTopLevelNativeWindow() const {
+  // TODO(osr): Fix all calling code paths and convert to DCHECK.
+  NOTIMPLEMENTED();
   return gfx::NativeWindow();
 }
 
@@ -69,23 +58,14 @@ gfx::Rect CefWebContentsViewOSR::GetContainerBounds() const {
   return GetViewBounds();
 }
 
-void CefWebContentsViewOSR::Focus() {}
-
-void CefWebContentsViewOSR::SetInitialFocus() {}
-
-void CefWebContentsViewOSR::StoreFocus() {}
-
-void CefWebContentsViewOSR::RestoreFocus() {}
-
-void CefWebContentsViewOSR::FocusThroughTabTraversal(bool reverse) {}
-
 void CefWebContentsViewOSR::GotFocus(
     content::RenderWidgetHostImpl* render_widget_host) {
   if (web_contents_) {
     content::WebContentsImpl* web_contents_impl =
         static_cast<content::WebContentsImpl*>(web_contents_);
-    if (web_contents_impl)
+    if (web_contents_impl) {
       web_contents_impl->NotifyWebContentsFocused(render_widget_host);
+    }
   }
 }
 
@@ -94,18 +74,16 @@ void CefWebContentsViewOSR::LostFocus(
   if (web_contents_) {
     content::WebContentsImpl* web_contents_impl =
         static_cast<content::WebContentsImpl*>(web_contents_);
-    if (web_contents_impl)
+    if (web_contents_impl) {
       web_contents_impl->NotifyWebContentsLostFocus(render_widget_host);
+    }
   }
 }
 
 void CefWebContentsViewOSR::TakeFocus(bool reverse) {
-  if (web_contents_->GetDelegate())
+  if (web_contents_->GetDelegate()) {
     web_contents_->GetDelegate()->TakeFocus(web_contents_, reverse);
-}
-
-content::DropData* CefWebContentsViewOSR::GetDropData() const {
-  return nullptr;
+  }
 }
 
 gfx::Rect CefWebContentsViewOSR::GetViewBounds() const {
@@ -113,7 +91,14 @@ gfx::Rect CefWebContentsViewOSR::GetViewBounds() const {
   return view ? view->GetViewBounds() : gfx::Rect();
 }
 
-void CefWebContentsViewOSR::CreateView(gfx::NativeView context) {}
+void CefWebContentsViewOSR::Resize(const gfx::Rect& new_bounds) {
+  // For OSR, resizing is handled via the RenderWidgetHostView.
+  // The bounds are managed externally by the embedder.
+}
+
+gfx::Size CefWebContentsViewOSR::GetSize() const {
+  return GetViewBounds().size();
+}
 
 content::RenderWidgetHostViewBase* CefWebContentsViewOSR::CreateViewForWidget(
     content::RenderWidgetHost* render_widget_host) {
@@ -139,38 +124,34 @@ CefWebContentsViewOSR::CreateViewForChildWidget(
                                         render_widget_host, view);
 }
 
-void CefWebContentsViewOSR::SetPageTitle(const std::u16string& title) {}
+void CefWebContentsViewOSR::ShowContextMenu(
+    content::RenderFrameHost& render_frame_host,
+    const content::ContextMenuParams& params) {
+  auto selection_controller_client = GetSelectionControllerClient();
+  if (selection_controller_client &&
+      selection_controller_client->HandleContextMenu(params)) {
+    // Context menu display, if any, will be handled via
+    // AlloyWebContentsViewDelegate::ShowContextMenu.
+    return;
+  }
 
-void CefWebContentsViewOSR::RenderViewReady() {
-  RenderViewCreated();
+  if (auto browser = GetBrowser()) {
+    browser->ShowContextMenu(params);
+  }
 }
-
-void CefWebContentsViewOSR::RenderViewHostChanged(
-    content::RenderViewHost* old_host,
-    content::RenderViewHost* new_host) {}
-
-void CefWebContentsViewOSR::SetOverscrollControllerEnabled(bool enabled) {}
-
-void CefWebContentsViewOSR::OnCapturerCountChanged() {}
-
-#if BUILDFLAG(IS_MAC)
-bool CefWebContentsViewOSR::CloseTabAfterEventTrackingIfNeeded() {
-  return false;
-}
-#endif  // BUILDFLAG(IS_MAC)
-
-void CefWebContentsViewOSR::FullscreenStateChanged(bool is_fullscreen) {}
 
 void CefWebContentsViewOSR::StartDragging(
     const content::DropData& drop_data,
+    const url::Origin& source_origin,
     blink::DragOperationsMask allowed_ops,
     const gfx::ImageSkia& image,
-    const gfx::Vector2d& image_offset,
+    const gfx::Vector2d& cursor_offset,
+    const gfx::Rect& drag_obj_rect,
     const blink::mojom::DragEventSourceInfo& event_info,
     content::RenderWidgetHostImpl* source_rwh) {
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
   if (browser.get()) {
-    browser->StartDragging(drop_data, allowed_ops, image, image_offset,
+    browser->StartDragging(drop_data, allowed_ops, image, cursor_offset,
                            event_info, source_rwh);
   } else if (web_contents_) {
     static_cast<content::WebContentsImpl*>(web_contents_)
@@ -178,33 +159,14 @@ void CefWebContentsViewOSR::StartDragging(
   }
 }
 
-void CefWebContentsViewOSR::UpdateDragCursor(
-    ui::mojom::DragOperation operation) {
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get())
-    browser->UpdateDragCursor(operation);
-}
-
-#if BUILDFLAG(USE_EXTERNAL_POPUP_MENU)
-void CefWebContentsViewOSR::ShowPopupMenu(
-    content::RenderFrameHost* render_frame_host,
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection) {
+void CefWebContentsViewOSR::UpdateDragOperation(
+    ui::mojom::DragOperation operation,
+    bool document_is_handling_drag) {
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
   if (browser.get()) {
-    browser->ShowPopupMenu(std::move(popup_client), bounds,
-                           item_height, item_font_size, selected_item,
-                           std::move(menu_items), right_aligned,
-                           allow_multiple_selection);
+    browser->UpdateDragOperation(operation, document_is_handling_drag);
   }
 }
-#endif
 
 CefRenderWidgetHostViewOSR* CefWebContentsViewOSR::GetView() const {
   if (web_contents_) {
@@ -216,53 +178,14 @@ CefRenderWidgetHostViewOSR* CefWebContentsViewOSR::GetView() const {
 
 AlloyBrowserHostImpl* CefWebContentsViewOSR::GetBrowser() const {
   CefRenderWidgetHostViewOSR* view = GetView();
-  if (view)
+  if (view) {
     return view->browser_impl().get();
+  }
   return nullptr;
 }
 
-#if BUILDFLAG(IS_OHOS)
-int CefWebContentsViewOSR::GetTopControlsHeight() {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    return 0;
-  }
-
-  int top_controls_height = top_controls_height_;
-
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get() && browser->GetClient().get()) {
-    top_controls_height = browser->GetClient()->OnGetTopControlsHeight();
-  }
-  if (top_controls_height != top_controls_height_) {
-    top_controls_height_ = top_controls_height;
-  }
-
-  return top_controls_height_;
+CefTouchSelectionControllerClientOSR*
+CefWebContentsViewOSR::GetSelectionControllerClient() const {
+  CefRenderWidgetHostViewOSR* view = GetView();
+  return view ? view->selection_controller_client() : nullptr;
 }
-
-bool CefWebContentsViewOSR::DoBrowserControlsShrinkRendererSize() const {
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get() && browser->GetClient().get()) {
-    return browser->GetClient()->DoBrowserControlsShrinkRendererSize();
-  }
-  return false;
-}
-#endif
-
-#if defined(OHOS_NWEB_EX)
-void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
-                                                        bool animate) {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser) ||
-      height == top_controls_height_)
-    return;
-
-  top_controls_height_ = height;
-
-  if (CefRenderWidgetHostViewOSR* view = GetView()) {
-    view->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
-                                      absl::nullopt);
-  }
-}
-#endif

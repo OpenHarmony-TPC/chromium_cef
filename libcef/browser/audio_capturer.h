@@ -7,10 +7,11 @@
 #define CEF_LIBCEF_BROWSER_AUDIO_CAPTURER_H_
 #pragma once
 
-#include "include/internal/cef_ptr.h"
-#include "include/internal/cef_types_wrappers.h"
-
+#include "cef/include/internal/cef_ptr.h"
+#include "cef/include/internal/cef_types_wrappers.h"
+#include "components/mirroring/mojom/session_observer.mojom.h"
 #include "media/base/audio_capturer_source.h"
+#include "mojo/public/cpp/bindings/remote.h"
 
 namespace media {
 class AudioInputDevice;
@@ -31,8 +32,8 @@ class CefAudioCapturer : public media::AudioCapturerSource::CaptureCallback {
   void OnCaptureStarted() override;
   void Capture(const media::AudioBus* audio_source,
                base::TimeTicks audio_capture_time,
-               double volume,
-               bool key_pressed) override;
+               const media::AudioGlitchInfo& glitch_info,
+               double volume) override;
   void OnCaptureError(media::AudioCapturerSource::ErrorCode code,
                       const std::string& message) override;
   void OnCaptureMuted(bool is_muted) override {}
@@ -44,6 +45,7 @@ class CefAudioCapturer : public media::AudioCapturerSource::CaptureCallback {
   CefRefPtr<CefAudioHandler> audio_handler_;
   std::unique_ptr<CefAudioLoopbackStreamCreator> audio_stream_creator_;
   scoped_refptr<media::AudioInputDevice> audio_input_device_;
+  mojo::Remote<mirroring::mojom::SessionObserver> observer_;
   bool capturing_ = false;
   int channels_ = 0;
 };

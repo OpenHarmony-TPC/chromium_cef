@@ -3,7 +3,6 @@
 // can be found in the LICENSE file.
 
 #include "include/base/cef_callback.h"
-#include "include/cef_pack_strings.h"
 #include "include/views/cef_panel.h"
 #include "include/views/cef_panel_delegate.h"
 #include "include/views/cef_scroll_view.h"
@@ -25,7 +24,7 @@ const int kContentPanelSize = TestWindowDelegate::kWSize + 200;
 
 class TestScrollViewDelegate : public CefViewDelegate {
  public:
-  TestScrollViewDelegate() {}
+  TestScrollViewDelegate() = default;
 
   CefSize GetPreferredSize(CefRefPtr<CefView> view) override {
     EXPECT_EQ(kScrollViewID, view->GetID());
@@ -42,7 +41,7 @@ class TestScrollViewDelegate : public CefViewDelegate {
 
 class TestPanelDelegate : public CefPanelDelegate {
  public:
-  TestPanelDelegate() {}
+  TestPanelDelegate() = default;
 
   CefSize GetPreferredSize(CefRefPtr<CefView> view) override {
     EXPECT_EQ(kContentPanelID, view->GetID());
@@ -119,10 +118,10 @@ void RunScrollViewLayout(bool with_delegate, CefRefPtr<CefWindow> window) {
   const CefSize& content_panel_size = content_panel->GetSize();
   EXPECT_EQ(CefSize(kContentPanelSize, kContentPanelSize), content_panel_size);
 
+  // Platforms that support overlay scrollbars may report 0 width/height when
+  // enabled. We therefore don't verify the returned values directly.
   const int sb_height = scroll_view->GetHorizontalScrollbarHeight();
-  EXPECT_GT(sb_height, 0);
   const int sb_width = scroll_view->GetVerticalScrollbarWidth();
-  EXPECT_GT(sb_width, 0);
 
   // Verify visible content panel region.
   const CefRect& visible_rect = scroll_view->GetVisibleContentRect();

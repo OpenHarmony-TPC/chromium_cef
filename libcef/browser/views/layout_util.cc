@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/layout_util.h"
+#include "cef/libcef/browser/views/layout_util.h"
 
 #include <utility>
 
-#include "libcef/browser/views/layout_adapter.h"
-
+#include "cef/libcef/browser/views/layout_adapter.h"
 #include "ui/views/view.h"
 
 namespace layout_util {
@@ -19,8 +18,9 @@ class UserData : public base::SupportsUserData::Data {
  public:
   static CefRefPtr<CefLayout> GetFor(const views::View* view) {
     UserData* data = static_cast<UserData*>(view->GetUserData(UserDataKey()));
-    if (data)
+    if (data) {
       return data->layout_;
+    }
     return nullptr;
   }
 

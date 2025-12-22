@@ -6,14 +6,12 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_LABEL_BUTTON_IMPL_H_
 #pragma once
 
-#include "include/views/cef_button.h"
-#include "include/views/cef_label_button.h"
-#include "include/views/cef_menu_button.h"
-
-#include "libcef/browser/image_impl.h"
-#include "libcef/browser/views/button_impl.h"
-
 #include "base/logging.h"
+#include "cef/include/views/cef_button.h"
+#include "cef/include/views/cef_label_button.h"
+#include "cef/include/views/cef_menu_button.h"
+#include "cef/libcef/browser/image_impl.h"
+#include "cef/libcef/browser/views/button_impl.h"
 #include "ui/views/controls/button/label_button.h"
 
 // Helpers for template boiler-plate.
@@ -48,10 +46,9 @@ CEF_LABEL_BUTTON_IMPL_T class CefLabelButtonImpl : public CEF_BUTTON_IMPL_D {
   CefRefPtr<CefLabelButton> AsLabelButton() override { return this; }
 
   // CefViewAdapter methods:
-  void GetDebugInfo(base::DictionaryValue* info,
-                    bool include_children) override {
+  void GetDebugInfo(base::Value::Dict* info, bool include_children) override {
     ParentClass::GetDebugInfo(info, include_children);
-    info->SetString("text", ParentClass::root_view()->GetText());
+    info->Set("text", ParentClass::root_view()->GetText());
   }
 
  protected:
@@ -65,12 +62,12 @@ CEF_LABEL_BUTTON_IMPL_T class CefLabelButtonImpl : public CEF_BUTTON_IMPL_D {
 CEF_LABEL_BUTTON_IMPL_T void CEF_LABEL_BUTTON_IMPL_D::SetText(
     const CefString& text) {
   CEF_REQUIRE_VALID_RETURN_VOID();
-  ParentClass::root_view()->SetText(text);
+  ParentClass::root_view()->SetText(text.ToString16());
 }
 
 CEF_LABEL_BUTTON_IMPL_T CefString CEF_LABEL_BUTTON_IMPL_D::GetText() {
   CEF_REQUIRE_VALID_RETURN(CefString());
-  return ParentClass::root_view()->GetText();
+  return std::u16string(ParentClass::root_view()->GetText());
 }
 
 CEF_LABEL_BUTTON_IMPL_T void CEF_LABEL_BUTTON_IMPL_D::SetImage(
@@ -78,10 +75,12 @@ CEF_LABEL_BUTTON_IMPL_T void CEF_LABEL_BUTTON_IMPL_D::SetImage(
     CefRefPtr<CefImage> image) {
   CEF_REQUIRE_VALID_RETURN_VOID();
   gfx::ImageSkia image_skia;
-  if (image)
+  if (image) {
     image_skia = static_cast<CefImageImpl*>(image.get())->AsImageSkia();
-  ParentClass::root_view()->SetImage(
-      static_cast<views::Button::ButtonState>(button_state), image_skia);
+  }
+  ParentClass::root_view()->SetImageModel(
+      static_cast<views::Button::ButtonState>(button_state),
+      ui::ImageModel::FromImageSkia(image_skia));
 }
 
 CEF_LABEL_BUTTON_IMPL_T CefRefPtr<CefImage> CEF_LABEL_BUTTON_IMPL_D::GetImage(
@@ -89,8 +88,9 @@ CEF_LABEL_BUTTON_IMPL_T CefRefPtr<CefImage> CEF_LABEL_BUTTON_IMPL_D::GetImage(
   CEF_REQUIRE_VALID_RETURN(nullptr);
   const gfx::ImageSkia& image_skia = ParentClass::root_view()->GetImage(
       static_cast<views::Button::ButtonState>(button_state));
-  if (image_skia.isNull())
+  if (image_skia.isNull()) {
     return nullptr;
+  }
   return new CefImageImpl(image_skia);
 }
 

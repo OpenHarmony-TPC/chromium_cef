@@ -6,25 +6,21 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTEXT_IMPL_H_
 #pragma once
 
+#include <optional>
 #include <set>
 #include <vector>
 
-#include "include/cef_request_context_handler.h"
-#include "libcef/browser/iothread_state.h"
-#include "libcef/browser/request_context_handler_map.h"
-
-#include "base/callback.h"
 #include "base/files/file_path.h"
+#include "base/functional/callback.h"
 #include "base/memory/weak_ptr.h"
 #include "base/task/sequenced_task_runner_helpers.h"
+#include "cef/include/cef_request_context_handler.h"
+#include "cef/libcef/browser/iothread_state.h"
+#include "cef/libcef/browser/request_context_handler_map.h"
 #include "chrome/common/plugin.mojom.h"
 #include "services/network/public/mojom/network_context.mojom.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
+#include "ui/base/page_transition_types.h"
 #include "url/origin.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "media/media_buildflags.h"
-#endif
 
 /*
 // Classes used in request processing (network, storage, service, etc.):
@@ -108,7 +104,7 @@ class CefBrowserContext {
       const content::GlobalRenderFrameHostId& global_id,
       bool require_frame_match);
 
-  // Returns the underlying CefBrowserContext if any.
+  // Returns the underlying CefBrowserContext, if any.
   static CefBrowserContext* FromBrowserContext(
       const content::BrowserContext* context);
   static CefBrowserContext* FromProfile(const Profile* profile);
@@ -135,14 +131,12 @@ class CefBrowserContext {
   // Called from CefRequestContextImpl::OnRenderFrameCreated.
   void OnRenderFrameCreated(CefRequestContextImpl* request_context,
                             const content::GlobalRenderFrameHostId& global_id,
-                            bool is_main_frame,
-                            bool is_guest_view);
+                            bool is_main_frame);
 
   // Called from CefRequestContextImpl::OnRenderFrameDeleted.
   void OnRenderFrameDeleted(CefRequestContextImpl* request_context,
                             const content::GlobalRenderFrameHostId& global_id,
-                            bool is_main_frame,
-                            bool is_guest_view);
+                            bool is_main_frame);
 
   // Returns the handler that matches the specified IDs. Pass -1 for unknown
   // values. If |require_frame_match| is true only exact matches will be
@@ -165,25 +159,20 @@ class CefBrowserContext {
                                     const CefString& domain_name,
                                     CefRefPtr<CefSchemeHandlerFactory> factory);
   void ClearSchemeHandlerFactories();
-  // TODO(chrome-runtime): Make these extension methods pure virtual.
-  virtual void LoadExtension(const CefString& root_directory,
-                             CefRefPtr<CefDictionaryValue> manifest,
-                             CefRefPtr<CefExtensionHandler> handler,
-                             CefRefPtr<CefRequestContext> loader_context);
-  virtual bool GetExtensions(std::vector<CefString>& extension_ids);
-  virtual CefRefPtr<CefExtension> GetExtension(const CefString& extension_id);
-
-  // Called from CefExtensionImpl::Unload().
-  virtual bool UnloadExtension(const CefString& extension_id);
-
-  // Returns true if this context supports print preview.
-  virtual bool IsPrintPreviewSupported() const;
 
   network::mojom::NetworkContext* GetNetworkContext();
 
   CefMediaRouterManager* GetMediaRouterManager();
 
-  using CookieableSchemes = absl::optional<std::vector<std::string>>;
+  // Returns any CefRequestContext associated with this object, or nullptr if
+  // none exist. If |prefer_no_handler| is true this method will try to return a
+  // context without an associated CefRequestContextHandler. Use
+  // CefRequestContextImpl::GetOrCreateForBrowserContext() instead of calling
+  // this method directly.
+  CefRefPtr<CefRequestContextImpl> GetAnyRequestContext(
+      bool prefer_no_handler) const;
+
+  using CookieableSchemes = std::optional<std::vector<std::string>>;
 
   // Returns the schemes associated with this context specifically, or the
   // global configuration if unset.
@@ -224,12 +213,10 @@ class CefBrowserContext {
 
   scoped_refptr<CefIOThreadState> iothread_state_;
   CookieableSchemes cookieable_schemes_;
-#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   std::unique_ptr<CefMediaRouterManager> media_router_manager_;
-#endif
 
   // CefRequestContextImpl objects referencing this object.
-  std::set<CefRequestContextImpl*> request_context_set_;
+  std::set<raw_ptr<CefRequestContextImpl>> request_context_set_;
 
   // Map IDs to CefRequestContextHandler objects.
   CefRequestContextHandlerMap handler_map_;

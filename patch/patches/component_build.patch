@@ -1,49 +1,40 @@
 diff --git content/browser/devtools/devtools_instrumentation.h content/browser/devtools/devtools_instrumentation.h
-index 29416cec2eb48..ff152e4b04a0a 100644
+index 313dd723e360c80bd837107afb4051542b6ab73d..15f025e8153cf246605bd0aeb9f7083326a0890d 100644
 --- content/browser/devtools/devtools_instrumentation.h
 +++ content/browser/devtools/devtools_instrumentation.h
-@@ -97,7 +97,7 @@ bool ApplyUserAgentMetadataOverrides(
+@@ -150,7 +150,7 @@ bool ApplyUserAgentMetadataOverrides(
      FrameTreeNode* frame_tree_node,
-     absl::optional<blink::UserAgentMetadata>* override_out);
+     std::optional<blink::UserAgentMetadata>* override_out);
  
--bool WillCreateURLLoaderFactory(
-+CONTENT_EXPORT bool WillCreateURLLoaderFactory(
-     RenderFrameHostImpl* rfh,
-     bool is_navigation,
-     bool is_download,
+-class WillCreateURLLoaderFactoryParams final {
++class CONTENT_EXPORT WillCreateURLLoaderFactoryParams final {
+   STACK_ALLOCATED();
+ 
+  public:
 diff --git content/browser/renderer_host/input/mouse_wheel_phase_handler.h content/browser/renderer_host/input/mouse_wheel_phase_handler.h
-index 5206955ca2609..3ae147e0edf58 100644
+index 9c6e2f83d387c32c73b2c0850151fcd9747b83fc..cb7e04e798a09c525326994365409ebacca88339 100644
 --- content/browser/renderer_host/input/mouse_wheel_phase_handler.h
 +++ content/browser/renderer_host/input/mouse_wheel_phase_handler.h
-@@ -8,6 +8,7 @@
- #include "base/memory/raw_ptr.h"
+@@ -9,6 +9,7 @@
+ #include "base/time/time.h"
  #include "base/timer/timer.h"
  #include "content/browser/renderer_host/render_widget_host_delegate.h"
 +#include "content/common/content_export.h"
  #include "third_party/blink/public/common/input/web_mouse_wheel_event.h"
  #include "third_party/blink/public/mojom/input/input_event_result.mojom-shared.h"
  
-@@ -50,7 +51,7 @@ enum class FirstScrollUpdateAckState {
- // The MouseWheelPhaseHandler is responsible for adding the proper phase to
- // wheel events. Phase information is necessary for wheel scrolling since it
- // shows the start and end of a scrolling sequence.
--class MouseWheelPhaseHandler {
-+class CONTENT_EXPORT MouseWheelPhaseHandler {
-  public:
-   MouseWheelPhaseHandler(RenderWidgetHostViewBase* const host_view);
- 
 diff --git content/browser/renderer_host/input/synthetic_gesture_target_base.h content/browser/renderer_host/input/synthetic_gesture_target_base.h
-index 3f0f719a192db..5fb3754cced7e 100644
+index 09d80f2ba678df9ab1b9b2b74ad66d4546036fb2..5dbff44c280a145c65146279a971620fc18db54c 100644
 --- content/browser/renderer_host/input/synthetic_gesture_target_base.h
 +++ content/browser/renderer_host/input/synthetic_gesture_target_base.h
-@@ -9,6 +9,7 @@
+@@ -8,6 +8,7 @@
+ #include "base/functional/callback_forward.h"
  #include "base/memory/raw_ptr.h"
  #include "base/time/time.h"
- #include "content/browser/renderer_host/input/synthetic_gesture_target.h"
 +#include "content/common/content_export.h"
+ #include "content/common/input/synthetic_gesture_target.h"
  #include "ui/gfx/geometry/point_f.h"
  
- namespace ui {
 @@ -26,7 +27,8 @@ namespace content {
  
  class RenderWidgetHostImpl;
@@ -54,42 +45,36 @@ index 3f0f719a192db..5fb3754cced7e 100644
   public:
    explicit SyntheticGestureTargetBase(RenderWidgetHostImpl* host);
  
-diff --git content/common/content_switches_internal.h content/common/content_switches_internal.h
-index 57072bf1263ae..0a93446e4d21c 100644
---- content/common/content_switches_internal.h
-+++ content/common/content_switches_internal.h
-@@ -15,7 +15,7 @@ class CommandLine;
- 
- namespace content {
- 
--bool IsPinchToZoomEnabled();
-+CONTENT_EXPORT bool IsPinchToZoomEnabled();
- 
- blink::mojom::V8CacheOptions GetV8CacheOptions();
- 
 diff --git third_party/blink/renderer/controller/BUILD.gn third_party/blink/renderer/controller/BUILD.gn
-index b54d43016f306..b26a292893de8 100644
+index b229de2731dc6a86b9909322c0d0e94e8f2e7eb7..1d55f8ee98f93d77252badbb9fc8f67078c0907f 100644
 --- third_party/blink/renderer/controller/BUILD.gn
 +++ third_party/blink/renderer/controller/BUILD.gn
-@@ -32,6 +32,7 @@ component("controller") {
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
  
-   configs += [
-     "//build/config/compiler:wexit_time_destructors",
-+    "//cef/libcef/features:config",
-     "//third_party/blink/renderer:config",
-     "//third_party/blink/renderer:inside_blink",
-     "//third_party/blink/renderer:non_test_config",
-@@ -57,6 +58,8 @@ component("controller") {
-     "performance_manager/v8_detailed_memory_reporter_impl.h",
-     "performance_manager/v8_worker_memory_reporter.cc",
+ import("//build/config/ui.gni")
++import("//cef/libcef/features/features.gni")
+ import("//testing/test.gni")
+ import("//third_party/blink/renderer/bindings/bindings.gni")
+ import("//third_party/blink/renderer/config.gni")
+@@ -73,6 +74,15 @@ component("controller") {
      "performance_manager/v8_worker_memory_reporter.h",
-+    "//cef/libcef/renderer/blink_glue.cc",
-+    "//cef/libcef/renderer/blink_glue.h",
    ]
  
++  if (enable_cef) {
++    sources += [
++      "//cef/libcef/renderer/blink_glue.cc",
++      "//cef/libcef/renderer/blink_glue.h",
++    ]
++    configs += [ "//cef/libcef/features:config" ]
++    deps += [ "//cef/libcef/features:deps" ]
++  }
++
    if (is_linux || is_chromeos) {
+     sources += [
+       "memory_usage_monitor_posix.cc",
 diff --git ui/events/keycodes/BUILD.gn ui/events/keycodes/BUILD.gn
-index c7fe1117512e5..44af6b52db4b4 100644
+index 4f4fbfb769cf8d7a8a10c6772f39b2eef8362b53..a794da2d8343bb8aafe59dd8e60d2c3d2dfd62e3 100644
 --- ui/events/keycodes/BUILD.gn
 +++ ui/events/keycodes/BUILD.gn
 @@ -19,6 +19,8 @@ source_set("xkb") {
@@ -100,9 +85,9 @@ index c7fe1117512e5..44af6b52db4b4 100644
 +
    deps = [
      "//base",
-     "//build:chromeos_buildflags",
+     "//ui/events:dom_keycode_converter",
 diff --git ui/events/keycodes/keyboard_code_conversion_xkb.h ui/events/keycodes/keyboard_code_conversion_xkb.h
-index e1fefa4cead9e..8213402ff263d 100644
+index 5693e3a1c4bc4c5b4277fd20f6aaf1290f5efe35..88c0cc6d590987f7834c53b6069ac9576a1eeb2f 100644
 --- ui/events/keycodes/keyboard_code_conversion_xkb.h
 +++ ui/events/keycodes/keyboard_code_conversion_xkb.h
 @@ -9,6 +9,7 @@

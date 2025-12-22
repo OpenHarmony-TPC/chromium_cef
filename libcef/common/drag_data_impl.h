@@ -6,12 +6,11 @@
 #define CEF_LIBCEF_COMMON_DRAG_DATA_IMPL_H_
 #pragma once
 
-#include "include/cef_drag_data.h"
-#include "include/cef_image.h"
-
 #include <vector>
 
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_drag_data.h"
+#include "cef/include/cef_image.h"
 #include "content/public/common/drop_data.h"
 
 // Implementation of CefDragData.
@@ -37,6 +36,7 @@ class CefDragDataImpl : public CefDragData {
   CefString GetFileName() override;
   size_t GetFileContents(CefRefPtr<CefStreamWriter> writer) override;
   bool GetFileNames(std::vector<CefString>& names) override;
+  bool GetFilePaths(std::vector<CefString>& paths) override;
   void SetLinkURL(const CefString& url) override;
   void SetLinkTitle(const CefString& title) override;
   void SetLinkMetadata(const CefString& data) override;
@@ -45,6 +45,7 @@ class CefDragDataImpl : public CefDragData {
   void SetFragmentBaseURL(const CefString& fragment) override;
   void ResetFileContents() override;
   void AddFile(const CefString& path, const CefString& display_name) override;
+  void ClearFilenames() override;
   CefRefPtr<CefImage> GetImage() override;
   CefPoint GetImageHotspot() override;
   bool HasImage() override;
@@ -52,13 +53,7 @@ class CefDragDataImpl : public CefDragData {
   // This method is not safe. Use Lock/Unlock to get mutually exclusive access.
   content::DropData* drop_data() { return &data_; }
 
-  void SetReadOnly(bool read_only) override;
-
-#if BUILDFLAG(IS_OHOS)
-  bool IsImageFileContents() override;
-  void ClearFileNames() override;
-  size_t GetImageFileSize() override;
-#endif
+  void SetReadOnly(bool read_only);
 
   base::Lock& lock() { return lock_; }
 

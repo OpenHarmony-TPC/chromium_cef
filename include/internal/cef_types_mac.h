@@ -31,19 +31,16 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_MAC_H_
 #pragma once
 
+#if !defined(GENERATING_CEF_API_HASH)
 #include "include/base/cef_build.h"
+#endif
 
 #if defined(OS_MAC)
 #include "include/internal/cef_string.h"
+#include "include/internal/cef_types_color.h"
 #include "include/internal/cef_types_geometry.h"
-
-// Handle types.
-// Actually NSCursor*
-#define cef_cursor_handle_t void*
-// Acutally NSEvent*
-#define cef_event_handle_t void*
-// Actually NSView*
-#define cef_window_handle_t void*
+#include "include/internal/cef_types_osr.h"
+#include "include/internal/cef_types_runtime.h"
 
 #define kNullCursorHandle NULL
 #define kNullEventHandle NULL
@@ -73,8 +70,18 @@
 extern "C" {
 #endif
 
+// Handle types.
+// Actually NSCursor*
+typedef void* cef_cursor_handle_t;
+// Actually NSEvent*
+typedef void* cef_event_handle_t;
+// Actually NSView*
+typedef void* cef_window_handle_t;
+// Actually IOSurface*
+typedef void* cef_shared_texture_handle_t;
+
 ///
-// Structure representing CefExecuteProcess arguments.
+/// Structure representing CefExecuteProcess arguments.
 ///
 typedef struct _cef_main_args_t {
   int argc;
@@ -82,58 +89,98 @@ typedef struct _cef_main_args_t {
 } cef_main_args_t;
 
 ///
-// Class representing window information.
+/// Class representing window information.
 ///
 typedef struct _cef_window_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
   cef_string_t window_name;
 
   ///
-  // Initial window bounds.
+  /// Initial window bounds.
   ///
   cef_rect_t bounds;
 
   ///
-  // Set to true (1) to create the view initially hidden.
+  /// Set to true (1) to create the view initially hidden.
   ///
   int hidden;
 
   ///
-  // NSView pointer for the parent view.
+  /// NSView pointer for the parent view.
   ///
   cef_window_handle_t parent_view;
 
   ///
-  // Set to true (1) to create the browser using windowless (off-screen)
-  // rendering. No view will be created for the browser and all rendering will
-  // occur via the CefRenderHandler interface. The |parent_view| value will be
-  // used to identify monitor info and to act as the parent view for dialogs,
-  // context menus, etc. If |parent_view| is not provided then the main screen
-  // monitor will be used and some functionality that requires a parent view
-  // may not function correctly. In order to create windowless browsers the
-  // CefSettings.windowless_rendering_enabled value must be set to true.
-  // Transparent painting is enabled by default but can be disabled by setting
-  // CefBrowserSettings.background_color to an opaque value.
+  /// Set to true (1) to create the browser using windowless (off-screen)
+  /// rendering. No view will be created for the browser and all rendering will
+  /// occur via the CefRenderHandler interface. The |parent_view| value will be
+  /// used to identify monitor info and to act as the parent view for dialogs,
+  /// context menus, etc. If |parent_view| is not provided then the main screen
+  /// monitor will be used and some functionality that requires a parent view
+  /// may not function correctly. In order to create windowless browsers the
+  /// CefSettings.windowless_rendering_enabled value must be set to true.
+  /// Transparent painting is enabled by default but can be disabled by setting
+  /// CefBrowserSettings.background_color to an opaque value.
   ///
   int windowless_rendering_enabled;
 
   ///
-  // Set to true (1) to enable shared textures for windowless rendering. Only
-  // valid if windowless_rendering_enabled above is also set to true. Currently
-  // only supported on Windows (D3D11).
+  /// Set to true (1) to enable shared textures for windowless rendering. Only
+  /// valid if windowless_rendering_enabled above is also set to true. Currently
+  /// only supported on Windows (D3D11).
   ///
   int shared_texture_enabled;
 
   ///
-  // Set to true (1) to enable the ability to issue BeginFrame from the client
-  // application.
+  /// Set to true (1) to enable the ability to issue BeginFrame from the client
+  /// application.
   ///
   int external_begin_frame_enabled;
 
   ///
-  // NSView pointer for the new browser view. Only used with windowed rendering.
+  /// NSView pointer for the new browser view. Only used with windowed
+  /// rendering.
   ///
   cef_window_handle_t view;
+
+  ///
+  /// Optionally change the runtime style. Alloy style will always be used if
+  /// |windowless_rendering_enabled| is true or if |parent_view| is provided.
+  /// See cef_runtime_style_t documentation for details.
+  ///
+  cef_runtime_style_t runtime_style;
 } cef_window_info_t;
+
+///
+/// Structure containing shared texture information for the OnAcceleratedPaint
+/// callback. Resources will be released to the underlying pool for reuse when
+/// the callback returns from client code.
+///
+typedef struct _cef_accelerated_paint_info_t {
+  ///
+  /// Size of this structure.
+  ///
+  size_t size;
+
+  ///
+  /// Handle for the shared texture IOSurface.
+  ///
+  cef_shared_texture_handle_t shared_texture_io_surface;
+
+  ///
+  /// The pixel format of the texture.
+  ///
+  cef_color_type_t format;
+
+  ///
+  /// The extra common info.
+  ///
+  cef_accelerated_paint_info_common_t extra;
+} cef_accelerated_paint_info_t;
 
 #ifdef __cplusplus
 }
