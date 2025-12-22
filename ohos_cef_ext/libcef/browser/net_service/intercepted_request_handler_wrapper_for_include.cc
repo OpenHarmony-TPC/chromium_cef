@@ -297,20 +297,19 @@ void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RedirectSavedCookieDone(int32_t request_id,
-                               network::ResourceRequest* request,
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
     auto exec_callback = base::BindOnce(
         std::move(callback), ResponseMode::CONTINUE, nullptr, new_url);
     RequestState* state = GetState(request_id);
-    if (!state) {
+    if (!state || !state->request_) {
       // The request may have been canceled while the async callback was
       // pending.
       std::move(exec_callback).Run();
       return;
     }
     // Clear the cookie  first. we will get cookie for this redirect.
-    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
+    state->request_->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
 
     MaybeLoadCookies(request_id, state, new_url, std::move(exec_callback));
   }
