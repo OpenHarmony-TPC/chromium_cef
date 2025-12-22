@@ -385,6 +385,18 @@ void CefBrowserHostBase::AbortAskVideoCapturePermission(
 }
 #endif  // BUILDFLAG(ARKWEB_PERMISSION)
 
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+void CefBrowserHostBase::GetOverScrollOffsetValue(float* offset_x,
+                                                  float* offset_y) {
+  if (GetWebContents()) {
+    GetWebContents()->GetOverScrollOffset(offset_x, offset_y);
+  } else if (offset_x && offset_y) {
+    *offset_x = 0.0f;
+    *offset_y = 0.0f;
+  }
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
 bool CefBrowserHostBase::NeedToFireBeforeUnloadOrUnloadEvents() {
   if (!GetWebContents()) {
