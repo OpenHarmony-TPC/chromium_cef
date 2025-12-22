@@ -200,7 +200,8 @@ void ArkwebFrameExtImpl::SetJsOnlineProperty(bool network_up) {
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
 // 2GB
 const int kNeedImageDownScaleSysMemKB = 2097152;
 
@@ -223,15 +224,11 @@ bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem, int32_t
     return false;
   }
 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
   return true;
 }
 
 SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
 
@@ -240,16 +237,16 @@ SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
     return image;
   }
 
-  gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
   }
 
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
 
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,

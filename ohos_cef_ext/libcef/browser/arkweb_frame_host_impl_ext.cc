@@ -32,6 +32,7 @@
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
+#include "skia/ext/image_operations.h"
 #include "services/service_manager/public/cpp/interface_provider.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -52,26 +53,23 @@
 
 namespace {
 
-#ifdef OHOS_CLIPBOARD
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
  
 bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
   // only image copy need down scale
   if (command_id != MENU_ID_IMAGE_COPY) {
     return false;
   }
- 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
+
   LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
              << ", height: " << original_image_size.height();
   return true;
 }
  
 SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
  
@@ -80,16 +78,16 @@ SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
     return image;
   }
  
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
+  }
+
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
-  }
- 
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
  
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,
@@ -328,7 +326,7 @@ void ArkwebFrameHostExtImpl::OnGetImageFromCache(
     if (sk_image) {
       SkBitmap bitmap;
       if (sk_image->asLegacyBitmap(&bitmap)) {
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
         SkBitmap resize_image = DownScale(bitmap, command_id);
         if (resize_image.colorType() == kBGRA_8888_SkColorType ||
             resize_image.colorType() == kRGBA_8888_SkColorType) {
