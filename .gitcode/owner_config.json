@@ -1,23 +1,30 @@
 {
     "groups": {
-        "ringking0": [
+        "ArkWeb_Build": [
             "ringking0"
         ],
-        "d0ub1eh": [
+        "arkweb-multimedia": [
             "d0ub1eh",
             "whuqincheng"
         ],
-        "LXinJie1": [
+        "arkweb-compositor": [
             "LXinJie1"
         ],
-        "yuzhouhang1": [
+        "arkweb-storage": [
             "yuzhouhang1"
         ],
-        "StringChen": [
+        "arkweb-DFX": [
             "StringChen"
         ],
-        "zhang-yinglie": [
+        "arkweb-peripherals": [
             "zhang-yinglie"
+        ],
+        "arkweb-CCS": [
+            "fredranking",
+            "aohui",
+            "shawshank",
+            "chenjiadong",
+            "zhangyanchuan"
         ]
     },
     "userInfos": {
@@ -34,13 +41,28 @@
             "info": "[渲染合成]"
         },
         "yuzhouhang1": {
-            "info": "[JavaScript引擎]"
+            "info": "[存储]"
         },
         "StringChen": {
             "info": "[DFX]"
         },
         "zhang-yinglie": {
             "info": "[外设服务]"
+        },
+        "fredranking": {
+            "info": "[云服务]"
+        },
+        "aohui": {
+            "info": "[云服务]"
+        },
+        "shawshank": {
+            "info": "[云服务]"
+        },
+        "chenjiadong": {
+            "info": "[云服务]"
+        },
+        "zhangyanchuan": {
+            "info": "[云服务]"
         }
     }
 }
