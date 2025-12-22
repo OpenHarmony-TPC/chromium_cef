@@ -1,54 +1,98 @@
 diff --git content/browser/child_process_security_policy_impl.cc content/browser/child_process_security_policy_impl.cc
-index 620b3fdc4403a..f20399d453680 100644
+index c5a1a6230507531afc14181f3a717e90048890a7..3a5685b8adf4e14b306b3a73fd3688ea0a8aa724 100644
 --- content/browser/child_process_security_policy_impl.cc
 +++ content/browser/child_process_security_policy_impl.cc
-@@ -1724,6 +1724,16 @@ bool ChildProcessSecurityPolicyImpl::CanAccessDataForMaybeOpaqueOrigin(
-             // DeclarativeApiTest.PersistRules.
-             if (actual_process_lock.matches_scheme(url::kDataScheme))
-               return true;
+@@ -2192,6 +2192,16 @@ bool ChildProcessSecurityPolicyImpl::PerformJailAndCitadelChecks(
+         if (actual_process_lock.MatchesScheme(url::kDataScheme)) {
+           return true;
+         }
 +
-+            // Allow other schemes that are non-standard, non-local and WebSafe.
-+            if (lock_url.is_valid() &&
-+                !lock_url.IsStandard() &&
-+                !base::Contains(url::GetLocalSchemes(),
-+                                lock_url.scheme_piece()) &&
-+                base::Contains(schemes_okay_to_request_in_any_process_,
-+                               lock_url.scheme())) {
-+              return true;
-+            }
-           }
++        // Allow other schemes that are non-standard, non-local and WebSafe.
++        if (lock_url.is_valid() && !lock_url.IsStandard() &&
++            !base::Contains(url::GetLocalSchemes(), lock_url.scheme())) {
++          base::AutoLock schemes_lock(schemes_lock_);
++          if (base::Contains(schemes_okay_to_request_in_any_process_,
++                             std::string(lock_url.scheme()))) {
++            return true;
++          }
++        }
+       }
  
-           // TODO(wjmaclean): We should update the ProcessLock comparison API
+       // Make an exception to allow most visited tiles to commit in third-party
 diff --git content/browser/renderer_host/navigation_request.cc content/browser/renderer_host/navigation_request.cc
-index 2f17127dc4ba6..32c7890a69379 100644
+index 83c47152aae8652f7ffdb2fe9e79a737056854e5..b00c1951cdc39b6d8d2c03d7acc9db893b901e2c 100644
 --- content/browser/renderer_host/navigation_request.cc
 +++ content/browser/renderer_host/navigation_request.cc
-@@ -5896,6 +5896,12 @@ NavigationRequest::GetOriginForURLLoaderFactoryWithoutFinalFrameHost(
-     network::mojom::WebSandboxFlags sandbox_flags) {
+@@ -8799,7 +8799,8 @@ std::optional<url::Origin> NavigationRequest::GetOriginToCommit() {
+ }
+ 
+ url::Origin NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponse(
+-    network::mojom::WebSandboxFlags sandbox_flags) {
++    network::mojom::WebSandboxFlags sandbox_flags,
++    bool* cef_nonstandard) {
    // Calculate an approximation of the origin. The sandbox/csp are ignored.
-   url::Origin origin = GetOriginForURLLoaderFactoryUnchecked(this);
+   url::Origin origin = GetOriginForURLLoaderFactoryUnchecked();
+ 
+@@ -8816,6 +8817,17 @@ url::Origin NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponse(
+   bool use_opaque_origin =
+       (sandbox_flags & network::mojom::WebSandboxFlags::kOrigin) ==
+       network::mojom::WebSandboxFlags::kOrigin;
++
 +  if (!origin.GetURL().IsStandard()) {
 +    // Always return an opaque origin for non-standard URLs. Otherwise, the
-+    // below CanAccessDataForOrigin() check may fail for unregistered custom
++    // CanAccessDataForOrigin() check may fail for unregistered custom
 +    // scheme requests in CEF.
-+    return origin.DeriveNewOpaqueOrigin();
-+  }
- 
-   // Apply sandbox flags.
-   // See https://html.spec.whatwg.org/#sandboxed-origin-browsing-context-flag
-@@ -5929,6 +5935,15 @@ NavigationRequest::GetOriginForURLLoaderFactoryWithFinalFrameHost() {
-   if (IsSameDocument() || IsPageActivation())
-     return GetRenderFrameHost()->GetLastCommittedOrigin();
- 
-+  // Calculate an approximation of the origin. The sandbox/csp are ignored.
-+  url::Origin unchecked_origin = GetOriginForURLLoaderFactoryUnchecked(this);
-+  if (!unchecked_origin.GetURL().IsStandard()) {
-+    // Always return an opaque origin for non-standard URLs. Otherwise, the
-+    // below CanAccessDataForOrigin() check may fail for unregistered custom
-+    // scheme requests in CEF.
-+    return unchecked_origin.DeriveNewOpaqueOrigin();
++    use_opaque_origin = true;
++    if (cef_nonstandard) {
++      *cef_nonstandard = true;
++    }
 +  }
 +
-   url::Origin origin = GetOriginForURLLoaderFactoryWithoutFinalFrameHost(
-       sandbox_flags_to_commit_.value());
+   if (use_opaque_origin) {
+     origin = origin.DeriveNewOpaqueOrigin();
+   }
+@@ -8875,8 +8887,9 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponse() {
+     return GetRenderFrameHost()->GetLastCommittedOrigin();
+   }
  
+-  url::Origin origin =
+-      GetOriginForURLLoaderFactoryBeforeResponse(SandboxFlagsToCommit());
++  bool cef_nonstandard = false;
++  url::Origin origin = GetOriginForURLLoaderFactoryBeforeResponse(
++      SandboxFlagsToCommit(), &cef_nonstandard);
+ 
+   SCOPED_CRASH_KEY_BOOL("Bug1454273", "is_in_main_frame", IsInMainFrame());
+   SCOPED_CRASH_KEY_STRING256(
+@@ -8911,10 +8924,17 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponse() {
+       DetermineInitiatorRelationship(initiator_rfh,
+                                      frame_tree_node_->current_frame_host()));
+ 
++  if (origin.opaque() && cef_nonstandard) {
++    // Always return an opaque origin for non-standard URLs. Otherwise, the
++    // below CanAccessOrigin() check may fail for unregistered custom scheme
++    // requests in CEF.
++    return origin;
++  }
++
+   // MHTML documents should commit as an opaque origin. They should not be able
+   // to make network request on behalf of the real origin.
+   // TODO(crbug.com/370979008): Migrate to CHECK.
+-  DUMP_WILL_BE_CHECK(!IsMhtmlOrSubframe() || origin.opaque());
++  // DUMP_WILL_BE_CHECK(!IsMhtmlOrSubframe() || origin.opaque());
+ 
+   // If the target of this navigation will be rendered in a RenderFrameHost,
+   // then verify that the chosen origin is allowed to be accessed from that
+diff --git content/browser/renderer_host/navigation_request.h content/browser/renderer_host/navigation_request.h
+index 8a35ee5747f538f20df60ecbb9860f67a606c41e..88b06ecde77fad3ba7a2b741a3d0c36a8687c7eb 100644
+--- content/browser/renderer_host/navigation_request.h
++++ content/browser/renderer_host/navigation_request.h
+@@ -2335,7 +2335,8 @@ class CONTENT_EXPORT NavigationRequest
+   // situations where the final frame host hasn't been determined but the origin
+   // is needed to create URLLoaderFactory.
+   url::Origin GetOriginForURLLoaderFactoryBeforeResponse(
+-      network::mojom::WebSandboxFlags sandbox_flags);
++      network::mojom::WebSandboxFlags sandbox_flags,
++      bool* cef_nonstandard = nullptr);
+ 
+   // Superset of GetOriginForURLLoaderFactoryBeforeResponse(). Calculates
+   // the origin with information from the final frame host. Can be called only

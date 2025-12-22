@@ -2,22 +2,20 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_file_util.h"
-
-#include "libcef/browser/context.h"
-#include "libcef/browser/thread_util.h"
-
 #include "base/files/file_util.h"
 #include "base/logging.h"
+#include "cef/include/cef_file_util.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "content/public/browser/network_service_instance.h"
-#include "services/network/network_service.h"
+#include "services/cert_verifier/public/mojom/cert_verifier_service_factory.mojom.h"
 
 namespace {
 
 void UpdateCRLSet(const std::string& crl_set_bytes) {
   CEF_REQUIRE_UIT();
-  content::GetNetworkService()->UpdateCRLSet(
-      base::as_bytes(base::make_span(crl_set_bytes)), base::DoNothing());
+  content::GetCertVerifierServiceFactory()->UpdateCRLSet(
+      base::as_bytes(base::span(crl_set_bytes)), base::DoNothing());
 }
 
 void LoadFromDisk(const base::FilePath& path) {
@@ -38,7 +36,7 @@ void LoadFromDisk(const base::FilePath& path) {
 
 void CefLoadCRLSetsFile(const CefString& path) {
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 

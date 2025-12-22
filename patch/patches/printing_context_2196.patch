@@ -1,22 +1,22 @@
-diff --git chrome/browser/printing/print_job_worker.cc chrome/browser/printing/print_job_worker.cc
-index c7a7f857a28d0..9479a7874ea3b 100644
---- chrome/browser/printing/print_job_worker.cc
-+++ chrome/browser/printing/print_job_worker.cc
-@@ -136,6 +136,7 @@ PrintJobWorker::PrintJobWorker(int render_process_id, int render_frame_id)
-                                   ShouldPrintingContextSkipSystemCalls())),
-       thread_("Printing_Worker") {
-   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-+  printing_context_->set_render_ids(render_process_id, render_frame_id);
+diff --git chrome/browser/printing/printer_query.cc chrome/browser/printing/printer_query.cc
+index 20bbbeddd18ef26b68defcdbd4a7c62706c43d0b..de91dc4c66fe67fe9e9e9dbe1e8d9875934f1e8a 100644
+--- chrome/browser/printing/printer_query.cc
++++ chrome/browser/printing/printer_query.cc
+@@ -125,6 +125,7 @@ PrinterQuery::PrinterQuery(content::GlobalRenderFrameHostId rfh_id)
+       rfh_id_(rfh_id),
+       cookie_(PrintSettings::NewCookie()) {
+   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
++  printing_context_->set_render_ids(rfh_id.child_id, rfh_id.frame_routing_id);
  }
  
- PrintJobWorker::~PrintJobWorker() {
+ PrinterQuery::~PrinterQuery() {
 diff --git printing/printing_context.h printing/printing_context.h
-index 3f36303105b79..aea7f788504d6 100644
+index 2f34f45aaf89e6f4600be1d2b8444c636b0cc83f..6443da7efb92ffb745fadd2645a78f424db5150d 100644
 --- printing/printing_context.h
 +++ printing/printing_context.h
-@@ -172,6 +172,13 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
- 
-   int job_id() const { return job_id_; }
+@@ -217,6 +217,13 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
+   void SetJobId(int job_id);
+ #endif
  
 +  void set_render_ids(int render_process_id, int render_frame_id) {
 +    render_process_id_ = render_process_id;
@@ -26,16 +26,16 @@ index 3f36303105b79..aea7f788504d6 100644
 +  int render_frame_id() const { return render_frame_id_; }
 +
   protected:
-   explicit PrintingContext(Delegate* delegate);
- 
-@@ -216,6 +223,10 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
-   // The job id for the current job. The value is 0 if no jobs are active.
-   int job_id_;
+   PrintingContext(Delegate* delegate,
+                   OutOfProcessBehavior out_of_process_behavior);
+@@ -251,6 +258,10 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
+   // management.
+   int job_id_ = kNoPrintJobId;
  
 +  // Routing IDs for the frame that owns this object.
 +  int render_process_id_ = 0;
 +  int render_frame_id_ = 0;
 +
   private:
- #if BUILDFLAG(ENABLE_OOP_PRINTING)
-   // If this instance of PrintingContext should skip making any system calls
+   const OutOfProcessBehavior out_of_process_behavior_;
+ };

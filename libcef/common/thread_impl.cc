@@ -2,12 +2,13 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/common/thread_impl.h"
+#include "cef/libcef/common/thread_impl.h"
 
-#include "libcef/common/task_runner_impl.h"
+#include <memory>
 
-#include "base/bind.h"
+#include "base/functional/bind.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/libcef/common/task_runner_impl.h"
 
 namespace {
 
@@ -29,7 +30,7 @@ CefRefPtr<CefThread> CefThread::CreateThread(
     bool stoppable,
     cef_com_init_mode_t com_init_mode) {
   if (!CefTaskRunnerImpl::GetCurrentTaskRunner()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return nullptr;
   }
 
@@ -41,7 +42,7 @@ CefRefPtr<CefThread> CefThread::CreateThread(
   return thread_impl;
 }
 
-CefThreadImpl::CefThreadImpl() : thread_id_(kInvalidPlatformThreadId) {}
+CefThreadImpl::CefThreadImpl() = default;
 
 CefThreadImpl::~CefThreadImpl() {
   if (thread_.get()) {
@@ -63,22 +64,23 @@ bool CefThreadImpl::Create(const CefString& display_name,
                            cef_com_init_mode_t com_init_mode) {
   owner_task_runner_ = CefTaskRunnerImpl::GetCurrentTaskRunner();
   DCHECK(owner_task_runner_);
-  if (!owner_task_runner_)
+  if (!owner_task_runner_) {
     return false;
+  }
 
-  thread_.reset(new base::Thread(display_name));
+  thread_ = std::make_unique<base::Thread>(display_name);
 
   base::Thread::Options options;
 
   switch (priority) {
     case TP_BACKGROUND:
-      options.priority = base::ThreadPriority::BACKGROUND;
+      options.thread_type = base::ThreadType::kBackground;
       break;
     case TP_DISPLAY:
-      options.priority = base::ThreadPriority::DISPLAY;
+      options.thread_type = base::ThreadType::kDisplayCritical;
       break;
     case TP_REALTIME_AUDIO:
-      options.priority = base::ThreadPriority::REALTIME_AUDIO;
+      options.thread_type = base::ThreadType::kRealtimeAudio;
       break;
     default:
       break;
@@ -99,8 +101,9 @@ bool CefThreadImpl::Create(const CefString& display_name,
 
 #if BUILDFLAG(IS_WIN)
   if (com_init_mode != COM_INIT_MODE_NONE) {
-    if (com_init_mode == COM_INIT_MODE_STA)
+    if (com_init_mode == COM_INIT_MODE_STA) {
       options.message_pump_type = base::MessagePumpType::UI;
+    }
     thread_->init_com_with_mta(com_init_mode == COM_INIT_MODE_MTA);
   }
 #endif
@@ -111,7 +114,7 @@ bool CefThreadImpl::Create(const CefString& display_name,
   }
 
   thread_task_runner_ = new CefTaskRunnerImpl(thread_->task_runner());
-  thread_id_ = thread_->GetThreadId();
+  thread_id_ = thread_->GetThreadId().raw();
   return true;
 }
 
@@ -124,22 +127,25 @@ cef_platform_thread_id_t CefThreadImpl::GetPlatformThreadId() {
 }
 
 void CefThreadImpl::Stop() {
-  if (!owner_task_runner_)
+  if (!owner_task_runner_) {
     return;
+  }
   if (!owner_task_runner_->RunsTasksInCurrentSequence()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return;
   }
 
-  if (thread_)
+  if (thread_) {
     StopAndDestroy(thread_.release());
+  }
 }
 
 bool CefThreadImpl::IsRunning() {
-  if (!owner_task_runner_)
+  if (!owner_task_runner_) {
     return false;
+  }
   if (!owner_task_runner_->RunsTasksInCurrentSequence()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return false;
   }
 

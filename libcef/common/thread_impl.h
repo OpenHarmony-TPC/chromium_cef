@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_COMMON_THREAD_IMPL_H_
 #pragma once
 
-#include "include/cef_thread.h"
-
 #include "base/threading/thread.h"
+#include "cef/include/cef_thread.h"
 
 class CefThreadImpl : public CefThread {
  public:
@@ -17,7 +16,7 @@ class CefThreadImpl : public CefThread {
   CefThreadImpl(const CefThreadImpl&) = delete;
   CefThreadImpl& operator=(const CefThreadImpl&) = delete;
 
-  ~CefThreadImpl();
+  ~CefThreadImpl() override;
 
   bool Create(const CefString& display_name,
               cef_thread_priority_t priority,
@@ -33,7 +32,7 @@ class CefThreadImpl : public CefThread {
 
  private:
   std::unique_ptr<base::Thread> thread_;
-  cef_platform_thread_id_t thread_id_;
+  cef_platform_thread_id_t thread_id_ = kInvalidPlatformThreadId;
   CefRefPtr<CefTaskRunner> thread_task_runner_;
 
   // TaskRunner for the owner thread.

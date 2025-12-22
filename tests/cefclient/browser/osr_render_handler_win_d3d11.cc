@@ -12,7 +12,7 @@
 namespace client {
 
 BrowserLayer::BrowserLayer(const std::shared_ptr<d3d11::Device>& device)
-    : d3d11::Layer(device, true /* flip */) {
+    : d3d11::Layer(device, false /* flip */) {
   frame_buffer_ = std::make_shared<d3d11::FrameBuffer>(device_);
 }
 
@@ -35,32 +35,40 @@ PopupLayer::PopupLayer(const std::shared_ptr<d3d11::Device>& device)
 
 void PopupLayer::set_bounds(const CefRect& bounds) {
   const auto comp = composition();
-  if (!comp)
+  if (!comp) {
     return;
+  }
 
   const auto outer_width = comp->width();
   const auto outer_height = comp->height();
-  if (outer_width == 0 || outer_height == 0)
+  if (outer_width == 0 || outer_height == 0) {
     return;
+  }
 
   original_bounds_ = bounds;
   bounds_ = bounds;
 
   // If x or y are negative, move them to 0.
-  if (bounds_.x < 0)
+  if (bounds_.x < 0) {
     bounds_.x = 0;
-  if (bounds_.y < 0)
+  }
+  if (bounds_.y < 0) {
     bounds_.y = 0;
+  }
   // If popup goes outside the view, try to reposition origin
-  if (bounds_.x + bounds_.width > outer_width)
+  if (bounds_.x + bounds_.width > outer_width) {
     bounds_.x = outer_width - bounds_.width;
-  if (bounds_.y + bounds_.height > outer_height)
+  }
+  if (bounds_.y + bounds_.height > outer_height) {
     bounds_.y = outer_height - bounds_.height;
+  }
   // If x or y became negative, move them to 0 again.
-  if (bounds_.x < 0)
+  if (bounds_.x < 0) {
     bounds_.x = 0;
-  if (bounds_.y < 0)
+  }
+  if (bounds_.y < 0) {
     bounds_.y = 0;
+  }
 
   const auto x = bounds_.x / float(outer_width);
   const auto y = bounds_.y / float(outer_height);
@@ -72,7 +80,7 @@ void PopupLayer::set_bounds(const CefRect& bounds) {
 OsrRenderHandlerWinD3D11::OsrRenderHandlerWinD3D11(
     const OsrRendererSettings& settings,
     HWND hwnd)
-    : OsrRenderHandlerWin(settings, hwnd), start_time_(0) {}
+    : OsrRenderHandlerWin(settings, hwnd) {}
 
 bool OsrRenderHandlerWinD3D11::Initialize(CefRefPtr<CefBrowser> browser,
                                           int width,
@@ -82,14 +90,16 @@ bool OsrRenderHandlerWinD3D11::Initialize(CefRefPtr<CefBrowser> browser,
   // Create a D3D11 device instance.
   device_ = d3d11::Device::create();
   DCHECK(device_);
-  if (!device_)
+  if (!device_) {
     return false;
+  }
 
   // Create a D3D11 swapchain for the window.
   swap_chain_ = device_->create_swapchain(hwnd());
   DCHECK(swap_chain_);
-  if (!swap_chain_)
+  if (!swap_chain_) {
     return false;
+  }
 
   // Create the browser layer.
   browser_layer_ = std::make_shared<BrowserLayer>(device_);
@@ -124,15 +134,17 @@ bool OsrRenderHandlerWinD3D11::IsOverPopupWidget(int x, int y) const {
 
 int OsrRenderHandlerWinD3D11::GetPopupXOffset() const {
   CEF_REQUIRE_UI_THREAD();
-  if (popup_layer_)
+  if (popup_layer_) {
     return popup_layer_->xoffset();
+  }
   return 0;
 }
 
 int OsrRenderHandlerWinD3D11::GetPopupYOffset() const {
   CEF_REQUIRE_UI_THREAD();
-  if (popup_layer_)
+  if (popup_layer_) {
     return popup_layer_->yoffset();
+  }
   return 0;
 }
 
@@ -177,13 +189,13 @@ void OsrRenderHandlerWinD3D11::OnAcceleratedPaint(
     CefRefPtr<CefBrowser> browser,
     CefRenderHandler::PaintElementType type,
     const CefRenderHandler::RectList& dirtyRects,
-    void* share_handle) {
+    const CefAcceleratedPaintInfo& info) {
   CEF_REQUIRE_UI_THREAD();
 
   if (type == PET_POPUP) {
-    popup_layer_->on_paint(share_handle);
+    popup_layer_->on_paint(info.shared_texture_handle);
   } else {
-    browser_layer_->on_paint(share_handle);
+    browser_layer_->on_paint(info.shared_texture_handle);
   }
 
   Render();

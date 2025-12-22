@@ -36,11 +36,7 @@ macro(PRINT_CEF_CONFIG)
 
   message(STATUS "CEF sandbox:                  ${USE_SANDBOX}")
 
-  set(_libraries ${CEF_STANDARD_LIBS})
-  if(OS_WINDOWS AND USE_SANDBOX)
-    list(APPEND _libraries ${CEF_SANDBOX_STANDARD_LIBS})
-  endif()
-  message(STATUS "Standard libraries:           ${_libraries}")
+  message(STATUS "Standard libraries:           ${CEF_STANDARD_LIBS}")
 
   message(STATUS "Compile defines:              ${CEF_COMPILER_DEFINES}")
   message(STATUS "Compile defines (Debug):      ${CEF_COMPILER_DEFINES_DEBUG}")
@@ -95,41 +91,62 @@ macro(SET_CEF_TARGET_OUT_DIR)
   endif()
 endmacro()
 
-# Copy a list of files from one directory to another. Relative files paths are maintained.
-# The path component of the source |file_list| will be removed.
+# Copy a list of files from one directory to another. Relative file paths are maintained.
 macro(COPY_FILES target file_list source_dir target_dir)
   foreach(FILENAME ${file_list})
     set(source_file ${source_dir}/${FILENAME})
+
+    # Remove the target file path component.
     get_filename_component(target_name ${FILENAME} NAME)
     set(target_file ${target_dir}/${target_name})
 
-    string(FIND ${source_file} "$<CONFIGURATION>" _pos)
-    if(NOT ${_pos} EQUAL -1)
-      # Must test with an actual configuration directory.
-      string(REPLACE "$<CONFIGURATION>" "Release" existing_source_file ${source_file})
-      if(NOT EXISTS ${existing_source_file})
-        string(REPLACE "$<CONFIGURATION>" "Debug" existing_source_file ${source_file})
-      endif()
-    else()
-      set(existing_source_file ${source_file})
-    endif()
-
-    if(IS_DIRECTORY ${existing_source_file})
-      add_custom_command(
-        TARGET ${target}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${source_file}" "${target_file}"
-        VERBATIM
-        )
-    else()
-      add_custom_command(
-        TARGET ${target}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${source_file}" "${target_file}"
-        VERBATIM
-        )
-    endif()
+    COPY_SINGLE_FILE(${target} ${source_file} ${target_file})
   endforeach()
+endmacro()
+
+# Copy a list of files from one directory to another. Relative file paths are maintained.
+macro(COPY_RESOURCES target file_list prefix_list source_dir target_dir)
+  foreach(FILENAME ${file_list})
+    set(source_file ${source_dir}/${FILENAME})
+
+    # Remove one or more prefixes from the source paths.
+    set(TARGET_FILENAME "${FILENAME}")
+    foreach(PREFIX ${prefix_list})
+      string(REGEX REPLACE "^.*${PREFIX}" "" TARGET_FILENAME ${TARGET_FILENAME})
+    endforeach()
+    set(target_file ${target_dir}/${TARGET_FILENAME})
+
+    COPY_SINGLE_FILE(${target} ${source_file} ${target_file})
+  endforeach()
+endmacro()
+
+macro(COPY_SINGLE_FILE target source_file target_file)
+  string(FIND ${source_file} "$<CONFIGURATION>" _pos)
+  if(NOT ${_pos} EQUAL -1)
+    # Must test with an actual configuration directory.
+    string(REPLACE "$<CONFIGURATION>" "Release" existing_source_file ${source_file})
+    if(NOT EXISTS ${existing_source_file})
+      string(REPLACE "$<CONFIGURATION>" "Debug" existing_source_file ${source_file})
+    endif()
+  else()
+    set(existing_source_file ${source_file})
+  endif()
+
+  if(IS_DIRECTORY ${existing_source_file})
+    add_custom_command(
+      TARGET ${target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory "${source_file}" "${target_file}"
+      VERBATIM
+      )
+  else()
+    add_custom_command(
+      TARGET ${target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${source_file}" "${target_file}"
+      VERBATIM
+      )
+  endif()
 endmacro()
 
 
@@ -185,6 +202,42 @@ endif(OS_LINUX)
 #
 
 if(OS_MAC)
+
+# Copy the CEF framework into the Frameworks directory and create the necessary symlinks.
+# Resulting directory structure is:
+#   Chromium Embedded Framework.framework
+#   ├── Chromium Embedded Framework -> Versions/A/Chromium Embedded Framework
+#   ├── Libraries -> Versions/A/Libraries
+#   ├── Resources -> Versions/A/Resources
+#   └── Versions
+#       ├── A
+#       │   ├── Chromium Embedded Framework
+#       │   ├── Libraries
+#       │   └── Resources
+#       └── Current -> A
+macro(COPY_MAC_FRAMEWORK target binary_path app_path)
+  set(FRAMEWORK_DIR "${app_path}/Contents/Frameworks/Chromium Embedded Framework.framework")
+  add_custom_command(
+    TARGET ${target}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${binary_path}/Chromium Embedded Framework.framework"
+            "${FRAMEWORK_DIR}/Versions/A"
+    COMMAND cd "${FRAMEWORK_DIR}" && ln -sf
+            "Versions/A/Chromium Embedded Framework"
+            "Chromium Embedded Framework"
+    COMMAND cd "${FRAMEWORK_DIR}" && ln -sf
+            "Versions/A/Libraries"
+            "Libraries"
+    COMMAND cd "${FRAMEWORK_DIR}" && ln -sf
+            "Versions/A/Resources"
+            "Resources"
+    COMMAND cd "${FRAMEWORK_DIR}/Versions" && ln -sf
+            "A"
+            "Current"
+    VERBATIM
+    )
+endmacro()
 
 # Manually process and copy over resource files.
 macro(COPY_MAC_RESOURCES resource_list prefix_list target source_dir app_path)
@@ -250,6 +303,17 @@ macro(ADD_WINDOWS_MANIFEST manifest_path target extension)
     )
 endmacro()
 
+# Set LPAC ACLs required for Windows sandbox support.
+# See https://github.com/chromiumembedded/cef/issues/3791#issuecomment-2664128961
+macro(SET_LPAC_ACLS target)
+  add_custom_command(
+    TARGET ${target}
+    POST_BUILD
+    COMMAND "icacls" "${CEF_TARGET_OUT_DIR}" "/grant" "*S-1-15-2-2:(OI)(CI)(RX)"
+    COMMENT "Setting LPAC ACLs..."
+    )
+endmacro()
+
 endif(OS_WINDOWS)
 
 
@@ -272,9 +336,12 @@ endmacro()
 # SET_EXECUTABLE_TARGET_PROPERTIES() instead of calling this macro directly.
 macro(SET_COMMON_TARGET_PROPERTIES target)
   # Compile flags.
-  target_compile_options(${target} PRIVATE ${CEF_COMPILER_FLAGS} ${CEF_CXX_COMPILER_FLAGS})
-  target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_CXX_COMPILER_FLAGS_DEBUG}>)
-  target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_CXX_COMPILER_FLAGS_RELEASE}>)
+  target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:C>:${CEF_COMPILER_FLAGS} ${CEF_C_COMPILER_FLAGS}>)
+  target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CEF_COMPILER_FLAGS} ${CEF_CXX_COMPILER_FLAGS}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_C_COMPILER_FLAGS_DEBUG}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:${CEF_COMPILER_FLAGS_DEBUG} ${CEF_CXX_COMPILER_FLAGS_DEBUG}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_C_COMPILER_FLAGS_RELEASE}>)
+  target_compile_options(${target} PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:${CEF_COMPILER_FLAGS_RELEASE} ${CEF_CXX_COMPILER_FLAGS_RELEASE}>)
 
   # Compile definitions.
   target_compile_definitions(${target} PRIVATE ${CEF_COMPILER_DEFINES})

@@ -6,8 +6,7 @@
 #define CEF_LIBCEF_BROWSER_SSL_INFO_IMPL_H_
 #pragma once
 
-#include "include/cef_ssl_info.h"
-
+#include "cef/include/cef_ssl_info.h"
 #include "net/ssl/ssl_info.h"
 
 // CefSSLInfo implementation
@@ -23,7 +22,7 @@ class CefSSLInfoImpl : public CefSSLInfo {
   CefRefPtr<CefX509Certificate> GetX509Certificate() override;
 
  private:
-  cef_cert_status_t cert_status_;
+  cef_cert_status_t cert_status_ = CERT_STATUS_NONE;
   CefRefPtr<CefX509Certificate> cert_;
 
   IMPLEMENT_REFCOUNTING(CefSSLInfoImpl);

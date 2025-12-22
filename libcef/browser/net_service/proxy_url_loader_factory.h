@@ -1,38 +1,36 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
-// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that can
-// be found in the LICENSE file.
+// Copyright (c) 2019 The Chromium Embedded Framework Authors. Portions
+// Copyright (c) 2018 The Chromium Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_PROXY_URL_LOADER_FACTORY_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_PROXY_URL_LOADER_FACTORY_H_
 
-#include "include/internal/cef_ptr.h"
-#include "libcef/browser/net_service/net_helpers.h"
-#include "libcef/browser/net_service/stream_reader_url_loader.h"
+#include <optional>
+#include <string_view>
 
-#include "base/callback.h"
 #include "base/containers/unique_ptr_adapters.h"
+#include "base/functional/callback.h"
 #include "base/hash/hash.h"
-#include "base/strings/string_piece.h"
+#include "cef/libcef/browser/net_service/stream_reader_url_loader.h"
 #include "content/public/browser/content_browser_client.h"
 #include "content/public/browser/web_contents.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/receiver_set.h"
+#include "services/network/public/cpp/url_loader_factory_builder.h"
 #include "services/network/public/mojom/network_context.mojom.h"
 #include "services/network/public/mojom/url_loader_factory.mojom.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
-
-class CefRequest;
-class CefResponse;
-
-namespace content {
-class ResourceContext;
-}
 
 namespace net_service {
 
 class InterceptedRequest;
-class ResourceContextData;
+class ProxyURLLoaderFactory;
+
+// Unique identifier for a BrowserContext, used to safely track proxies across
+// threads without risk of pointer reuse (ABA problem). IDs are generated on
+// the UI thread and are never reused.
+using ContextId = uint64_t;
+constexpr ContextId kInvalidContextId = 0;
 
 // Implement this interface to to evaluate requests. All methods are called on
 // the IO thread, and all callbacks must be executed on the IO thread.
@@ -109,12 +107,11 @@ class InterceptedRequestHandler {
       ResponseMode /* response_mode */,
       scoped_refptr<net::HttpResponseHeaders> /* override_headers */,
       const GURL& /* redirect_url */)>;
-  virtual void OnRequestResponse(
-      int32_t request_id,
-      network::ResourceRequest* request,
-      net::HttpResponseHeaders* headers,
-      absl::optional<net::RedirectInfo> redirect_info,
-      OnRequestResponseResultCallback callback);
+  virtual void OnRequestResponse(int32_t request_id,
+                                 network::ResourceRequest* request,
+                                 net::HttpResponseHeaders* headers,
+                                 std::optional<net::RedirectInfo> redirect_info,
+                                 OnRequestResponseResultCallback callback);
 
   // Called to optionally filter the response body.
   virtual mojo::ScopedDataPipeConsumerHandle OnFilterResponseBody(
@@ -126,23 +123,14 @@ class InterceptedRequestHandler {
   virtual void OnRequestComplete(
       int32_t request_id,
       const network::ResourceRequest& request,
-      const network::URLLoaderCompletionStatus& status) {}
+      const network::URLLoaderCompletionStatus& status,
+      bool& handled_externally) {}
 
   // Called on error.
   virtual void OnRequestError(int32_t request_id,
                               const network::ResourceRequest& request,
                               int error_code,
                               bool safebrowsing_hit) {}
-
-  // Called on received http request error.
-  virtual void OnHttpError(int32_t request_id,
-                           CefRefPtr<CefRequest> request,
-                           bool is_main_frame,
-                           bool has_user_gesture,
-                           CefRefPtr<CefResponse> error_response) {}
-
-  // To get setting of net helper.
-  virtual void GetSettingOfNetHelper(struct NetHelperSetting& setting) {}
 };
 
 // URL Loader Factory that supports request/response interception, processing
@@ -161,16 +149,29 @@ class ProxyURLLoaderFactory
   // Create a proxy object on the UI thread.
   static void CreateProxy(
       content::BrowserContext* browser_context,
-      mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+      network::URLLoaderFactoryBuilder& factory_builder,
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
 
-  // Create a proxy object on the IO thread.
-  static void CreateProxy(
+  // Create a proxy object on the IO thread for a WebContents.
+  static void CreateProxyForWebContents(
       content::WebContents::Getter web_contents_getter,
       mojo::PendingReceiver<network::mojom::URLLoaderFactory> loader_request,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
+
+  // Called from CefBrowserContext::Shutdown to clear all proxies associated
+  // with a BrowserContext before it is destroyed. Must be called on the UI
+  // thread, will post to IO thread to do the actual cleanup.
+  static void ClearProxiesForBrowserContextAsync(
+      content::BrowserContext* browser_context);
+
+  using DisconnectCallback = base::OnceCallback<void(ProxyURLLoaderFactory*)>;
+
+  // Set a callback to be invoked when this factory is disconnected. The
+  // callback will be invoked with |this| as the argument, and is responsible
+  // for deleting |this|.
+  void SetDisconnectCallback(DisconnectCallback on_disconnect);
 
   // mojom::URLLoaderFactory methods:
   void CreateLoaderAndStart(
@@ -196,25 +197,23 @@ class ProxyURLLoaderFactory
 
  private:
   friend class InterceptedRequest;
-  friend class ResourceContextData;
 
   ProxyURLLoaderFactory(
       mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,
-      network::mojom::URLLoaderFactoryPtrInfo target_factory_info,
+      mojo::PendingRemote<network::mojom::URLLoaderFactory>
+          target_factory_remote,
       mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
           header_client_receiver,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
 
   static void CreateOnIOThread(
       mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,
-      network::mojom::URLLoaderFactoryPtrInfo target_factory_info,
+      mojo::PendingRemote<network::mojom::URLLoaderFactory>
+          target_factory_remote,
       mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
           header_client_receiver,
-      content::ResourceContext* resource_context,
+      ContextId context_id,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
-
-  using DisconnectCallback = base::OnceCallback<void(ProxyURLLoaderFactory*)>;
-  void SetDisconnectCallback(DisconnectCallback on_disconnect);
 
   void OnTargetFactoryError();
   void OnProxyBindingError();

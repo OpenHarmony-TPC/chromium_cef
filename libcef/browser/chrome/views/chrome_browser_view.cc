@@ -2,32 +2,32 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/chrome/views/chrome_browser_view.h"
+#include "cef/libcef/browser/chrome/views/chrome_browser_view.h"
 
-#include "libcef/browser/chrome/views/chrome_browser_frame.h"
-#include "libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/browser/chrome/views/chrome_browser_widget.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+#include "ui/base/metadata/metadata_impl_macros.h"
 
-ChromeBrowserView::ChromeBrowserView(CefBrowserViewDelegate* cef_delegate,
-                                     Delegate* browser_view_delegate)
-    : ParentClass(cef_delegate), browser_view_delegate_(browser_view_delegate) {
-  DCHECK(browser_view_delegate_);
+ChromeBrowserView::ChromeBrowserView(CefBrowserViewImpl* cef_browser_view)
+    : ParentClass(cef_browser_view->delegate()),
+      cef_browser_view_(cef_browser_view) {}
+
+ChromeBrowserView::~ChromeBrowserView() {
+  if (cef_toolbar_) {
+    WillDestroyToolbar();
+    cef_toolbar_ = nullptr;
+  }
 }
 
-void ChromeBrowserView::InitBrowser(std::unique_ptr<Browser> browser,
-                                    CefRefPtr<CefBrowserView> browser_view) {
-  DCHECK(!browser_);
+void ChromeBrowserView::InitBrowser(Browser* browser) {
   DCHECK(!web_view_);
 
-  browser_ = browser.get();
-  DCHECK(browser_);
-
-  // Initialize the BrowserFrame and BrowserView.
-  auto chrome_widget = static_cast<ChromeBrowserFrame*>(GetWidget());
-  chrome_widget->Init(this, std::move(browser));
+  // Initialize the BrowserWidget and BrowserView.
+  auto chrome_widget = static_cast<ChromeBrowserWidget*>(GetWidget());
+  chrome_widget->Init(this, browser);
 
   // Retrieve the views::WebView that was created by the above initializations.
-  auto view_impl = static_cast<CefBrowserViewImpl*>(browser_view.get());
-  web_view_ = view_impl->web_view();
+  web_view_ = cef_browser_view_->web_view();
   DCHECK(web_view_);
 
   ParentClass::AddedToWidget();
@@ -36,7 +36,6 @@ void ChromeBrowserView::InitBrowser(std::unique_ptr<Browser> browser,
 void ChromeBrowserView::Destroyed() {
   DCHECK(!destroyed_);
   destroyed_ = true;
-  browser_ = nullptr;
   web_view_ = nullptr;
 }
 
@@ -53,41 +52,54 @@ void ChromeBrowserView::ViewHierarchyChanged(
       // this View to a CefWindow with FillLayout and then calling
       // CefWindow::Show() without first resizing the CefWindow.
       size = details.parent->GetPreferredSize();
-      if (!size.IsEmpty())
+      if (!size.IsEmpty()) {
         SetSize(size);
+      }
     }
   }
 }
 
 void ChromeBrowserView::AddedToWidget() {
+  // Create the Browser and ChromeBrowserHostImpl.
   // Results in a call to InitBrowser which calls ParentClass::AddedToWidget.
-  browser_view_delegate_->OnBrowserViewAdded();
+  cef_browser_view_->AddedToWidget();
+}
+
+void ChromeBrowserView::RemovedFromWidget() {
+  ParentClass::RemovedFromWidget();
+  cef_browser_view_->RemovedFromWidget();
 }
 
 void ChromeBrowserView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
   ParentClass::OnBoundsChanged(previous_bounds);
-  browser_view_delegate_->OnBoundsChanged();
+  cef_browser_view_->OnBoundsChanged();
 }
 
-ToolbarView* ChromeBrowserView::OverrideCreateToolbar(
-    Browser* browser,
-    BrowserView* browser_view) {
+void ChromeBrowserView::OnGestureEvent(ui::GestureEvent* event) {
+  if (cef_browser_view_->OnGestureEvent(event)) {
+    return;
+  }
+  ParentClass::OnGestureEvent(event);
+}
+
+ToolbarView* ChromeBrowserView::OverrideCreateToolbar() {
   if (cef_delegate()) {
-    auto toolbar_type = cef_delegate()->GetChromeToolbarType();
-    absl::optional<ToolbarView::DisplayMode> display_mode;
+    auto toolbar_type =
+        cef_delegate()->GetChromeToolbarType(cef_browser_view_.get());
+    std::optional<ToolbarView::DisplayMode> display_mode;
     switch (toolbar_type) {
       case CEF_CTT_NORMAL:
-        display_mode = ToolbarView::DisplayMode::NORMAL;
+        display_mode = ToolbarView::DisplayMode::kNormal;
         break;
       case CEF_CTT_LOCATION:
-        display_mode = ToolbarView::DisplayMode::LOCATION;
+        display_mode = ToolbarView::DisplayMode::kLocation;
         break;
       default:
         break;
     }
     if (display_mode) {
-      cef_toolbar_ = CefToolbarViewImpl::Create(nullptr, browser, browser_view,
-                                                display_mode);
+      cef_toolbar_ =
+          CefToolbarViewImpl::Create(nullptr, browser(), this, display_mode);
       // Ownership will be taken by BrowserView.
       view_util::PassOwnership(cef_toolbar_).release();
       return cef_toolbar_->root_view();
@@ -96,3 +108,14 @@ ToolbarView* ChromeBrowserView::OverrideCreateToolbar(
 
   return nullptr;
 }
+
+void ChromeBrowserView::WillDestroyToolbar() {
+  BrowserView::WillDestroyToolbar();
+  if (cef_toolbar_) {
+    cef_toolbar_->Destroyed();
+    cef_toolbar_ = nullptr;
+  }
+}
+
+BEGIN_METADATA(ChromeBrowserView)
+END_METADATA

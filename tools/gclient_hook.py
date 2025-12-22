@@ -5,11 +5,12 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from file_util import make_dir, write_file
+from file_util import make_dir, write_file_if_changed
 from gclient_util import *
 from gn_args import GetAllPlatformConfigs, GetConfigFileContents
 import issue_1999
 import os
+from setup_vscode import GetPreferredOutputDirectory, UpdateCompileCommandsJSON
 import sys
 
 # The CEF directory is the parent directory of _this_ script.
@@ -26,10 +27,10 @@ elif sys.platform.startswith('linux'):
   platform = 'linux'
 else:
   print('Unknown operating system platform')
-  sys.exit()
+  sys.exit(1)
 
-print("\nGenerating CEF version header file...")
-cmd = [sys.executable, 'tools/make_version_header.py', 'include/cef_version.h']
+print("\nGenerating CEF translated files...")
+cmd = [sys.executable, 'tools/version_manager.py', '-u', '--fast-check']
 RunAction(cef_dir, cmd)
 
 print("\nPatching build configuration and source files for CEF...")
@@ -65,12 +66,6 @@ if platform == 'windows':
   #
   #   set WIN_CUSTOM_TOOLCHAIN=1
   #
-  # o Used by tools/msvs_env.bat to configure the MSVS tools environment.
-  #   Should be set to "none" because VC variables for CEF will be set via
-  #   INCLUDE/LIB/PATH.
-  #
-  #   set CEF_VCVARS=none
-  #
   # o Used by the following scripts:
   #   (a) build/vs_toolchain.py SetEnvironmentAndGetRuntimeDllDirs when
   #   determining whether to copy VS runtime binaries to the output directory.
@@ -93,6 +88,7 @@ if platform == 'windows':
   #
   #   set VS_CRT_ROOT=<VS CRT root directory>
   #   set SDK_ROOT=<Platform SDK root directory>
+  #   set SDK_VERSION=<Platform SDK version>
   #
   # o Used by various scripts as described above. These values are optional when
   #   vcvarsall.bat [1] exists.
@@ -110,7 +106,7 @@ if platform == 'windows':
   #     installed (e.g. not discoverable via the Windows registry) then
   #     "%GYP_MSVS_OVERRIDE_PATH%\Common7\Tools\vsdevcmd\core\winsdk.bat" must be
   #     patched to support discovery via SDK_ROOT as described in
-  #     https://bitbucket.org/chromiumembedded/cef/issues/2773#comment-59687474.
+  #     https://github.com/chromiumembedded/cef/issues/2773#issuecomment-1465019898.
   #
   if bool(int(os.environ.get('WIN_CUSTOM_TOOLCHAIN', '0'))):
     required_vars = [
@@ -119,6 +115,7 @@ if platform == 'windows':
         'GYP_MSVS_VERSION',
         'VS_CRT_ROOT',
         'SDK_ROOT',
+        'SDK_VERSION',
     ]
     for var in required_vars:
       if not var in os.environ.keys():
@@ -129,15 +126,20 @@ if platform == 'windows':
     gn_args['visual_studio_version'] = os.environ['GYP_MSVS_VERSION']
     gn_args['visual_studio_runtime_dirs'] = os.environ['VS_CRT_ROOT']
     gn_args['windows_sdk_path'] = os.environ['SDK_ROOT']
+    gn_args['windows_sdk_version'] = os.environ['SDK_VERSION']
 
 configs = GetAllPlatformConfigs(gn_args)
+
+# Returns the preferred output directory for VSCode, or None.
+preferred_dir = GetPreferredOutputDirectory(configs.keys())
+
 for dir, config in configs.items():
   # Create out directories and write the args.gn file.
   out_path = os.path.join(src_dir, 'out', dir)
   make_dir(out_path, False)
   args_gn_path = os.path.join(out_path, 'args.gn')
   args_gn_contents = GetConfigFileContents(config)
-  write_file(args_gn_path, args_gn_contents)
+  write_file_if_changed(args_gn_path, args_gn_contents)
 
   # Generate the Ninja config.
   cmd = ['gn', 'gen', os.path.join('out', dir)]
@@ -146,3 +148,7 @@ for dir, config in configs.items():
   RunAction(src_dir, cmd)
   if platform == 'windows':
     issue_1999.apply(out_path)
+
+  if dir == preferred_dir and not UpdateCompileCommandsJSON(
+      src_dir, out_path, create=False):
+    sys.exit(1)

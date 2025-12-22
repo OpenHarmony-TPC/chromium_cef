@@ -2,33 +2,32 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/menu_manager.h"
+#include "cef/libcef/browser/menu_manager.h"
 
 #include <tuple>
 #include <utility>
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/context_menu_params_impl.h"
-#include "libcef/browser/menu_runner.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/app_manager.h"
-
-#include "base/compiler_specific.h"
 #include "base/logging.h"
+#include "base/notimplemented.h"
 #include "cef/grit/cef_strings.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/context_menu_params_impl.h"
+#include "cef/libcef/browser/menu_runner.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/app_manager.h"
 #include "chrome/grit/generated_resources.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
-#include "ui/base/clipboard/clipboard.h"
-#include "ui/base/data_transfer_policy/data_transfer_endpoint.h"
+
+#if BUILDFLAG(IS_WIN)
+#include "chrome/browser/spellchecker/spellcheck_factory.h"
+#include "chrome/browser/spellchecker/spellcheck_service.h"
+#include "components/spellcheck/browser/spellcheck_platform.h"
+#endif
 
 namespace {
-
-constexpr cef_context_menu_edit_state_flags_t kMenuCommands[] = {
-    CM_EDITFLAG_CAN_CUT, CM_EDITFLAG_CAN_COPY, CM_EDITFLAG_CAN_PASTE,
-    CM_EDITFLAG_CAN_DELETE, CM_EDITFLAG_CAN_SELECT_ALL};
 
 CefString GetLabel(int message_id) {
   std::u16string label =
@@ -51,7 +50,7 @@ class CefRunContextMenuCallbackImpl : public CefRunContextMenuCallback {
   CefRunContextMenuCallbackImpl& operator=(
       const CefRunContextMenuCallbackImpl&) = delete;
 
-  ~CefRunContextMenuCallbackImpl() {
+  ~CefRunContextMenuCallbackImpl() override {
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
@@ -102,7 +101,7 @@ CefMenuManager::CefMenuManager(AlloyBrowserHostImpl* browser,
     : content::WebContentsObserver(browser->web_contents()),
       browser_(browser),
       runner_(std::move(runner)),
-      custom_menu_callback_(nullptr),
+
       weak_ptr_factory_(this) {
   DCHECK(web_contents());
   model_ = new CefMenuModelImpl(this, nullptr, false);
@@ -116,62 +115,20 @@ CefMenuManager::~CefMenuManager() {
 
 void CefMenuManager::Destroy() {
   CancelContextMenu();
-  if (runner_)
+  if (runner_) {
     runner_.reset(nullptr);
+  }
 }
 
 bool CefMenuManager::IsShowingContextMenu() {
-  if (!web_contents())
+  if (!web_contents()) {
     return false;
+  }
   return web_contents()->IsShowingContextMenu();
 }
 
-bool CefMenuManager::IsCommandIdEnabled(int command_id,
-    content::ContextMenuParams& params) const {
-  bool editable = params.is_editable;
-  switch (command_id) {
-    case CM_EDITFLAG_CAN_CUT:
-      return !!(params.edit_flags & CM_EDITFLAG_CAN_CUT);
-    case CM_EDITFLAG_CAN_DELETE:
-      return !!(params.edit_flags & CM_EDITFLAG_CAN_DELETE);
-    case CM_EDITFLAG_CAN_COPY:
-      return !!(params.edit_flags & CM_EDITFLAG_CAN_COPY);
-    case CM_EDITFLAG_CAN_PASTE: {
-      std::u16string result;
-      bool can_paste = false;
-      ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
-          ui::EndpointType::kDefault, false);
-      ui::Clipboard::GetForCurrentThread()->ReadText(
-          ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
-
-      if (result.empty()) {
-        can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::BitmapType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
-      }
-      can_paste = can_paste ? can_paste : !result.empty();
-      return editable && can_paste;
-    }
-    case CM_EDITFLAG_CAN_SELECT_ALL:
-      return !!(params.edit_flags & CM_EDITFLAG_CAN_SELECT_ALL);
-    default:
-      return false;
-  }
-}
-
-void CefMenuManager::UpdateMenuEditStateFlags(content::ContextMenuParams& params) {
-  int menu_flags = 0;
-  for (const auto& command : kMenuCommands) {
-    if (IsCommandIdEnabled(command, params)) {
-      menu_flags |= command;
-    }
-  }
-
-  params.edit_flags = menu_flags;
-}
-
-bool CefMenuManager::CreateContextMenu(
-    const content::ContextMenuParams& params) {
+bool CefMenuManager::CreateContextMenu(const content::ContextMenuParams& params,
+                                       bool query_spellcheck) {
   // The renderer may send the "show context menu" message multiple times, one
   // for each right click mouse event it receives. Normally, this doesn't happen
   // because mouse events are not forwarded once the context menu is showing.
@@ -179,12 +136,30 @@ bool CefMenuManager::CreateContextMenu(
   // the second mouse event arrives. In this case, |HandleContextMenu()| will
   // get called multiple times - if so, don't create another context menu.
   // TODO(asvitkine): Fix the renderer so that it doesn't do this.
-  if (IsShowingContextMenu())
+  if (IsShowingContextMenu()) {
     return true;
+  }
 
   params_ = params;
+
+#if BUILDFLAG(IS_WIN)
+  // System spellcheck suggestions need to be queried asynchronously.
+  if (query_spellcheck && !params_.misspelled_word.empty() &&
+      params_.dictionary_suggestions.empty()) {
+    SpellcheckService* spellcheck_service =
+        SpellcheckServiceFactory::GetForContext(
+            browser_->web_contents()->GetBrowserContext());
+    if (spellcheck_service) {
+      spellcheck_platform::GetPerLanguageSuggestions(
+          spellcheck_service->platform_spell_checker(), params_.misspelled_word,
+          base::BindOnce(&CefMenuManager::OnGetPlatformSuggestionsComplete,
+                         weak_ptr_factory_.GetWeakPtr()));
+    }
+    return true;
+  }
+#endif
+
   model_->Clear();
-  UpdateMenuEditStateFlags(params_);
 
   // Create the default menu model.
   CreateDefaultModel();
@@ -201,7 +176,7 @@ bool CefMenuManager::CreateContextMenu(
           new CefContextMenuParamsImpl(&params_));
       CefRefPtr<CefFrame> frame = browser_->GetFocusedFrame();
 
-      handler->OnBeforeContextMenu(browser_, frame, paramsPtr.get(),
+      handler->OnBeforeContextMenu(browser_.get(), frame, paramsPtr.get(),
                                    model_.get());
 
       MenuWillShow(model_);
@@ -216,7 +191,7 @@ bool CefMenuManager::CreateContextMenu(
         // the callback object is deleted.
         custom_menu_callback_ = callbackImpl.get();
 
-        if (handler->RunContextMenu(browser_, frame, paramsPtr.get(),
+        if (handler->RunContextMenu(browser_.get(), frame, paramsPtr.get(),
                                     model_.get(), callbackImpl.get())) {
           custom_menu = true;
         } else {
@@ -240,17 +215,25 @@ bool CefMenuManager::CreateContextMenu(
     }
   }
 
-  if (custom_menu || !runner_)
+  if (custom_menu) {
     return true;
-  return runner_->RunContextMenu(browser_, model_.get(), params_);
+  }
+
+  if (!runner_ || !runner_->RunContextMenu(browser_, model_.get(), params_)) {
+    LOG(ERROR) << "Default context menu implementation is not available; "
+                  "canceling the menu";
+    return false;
+  }
+  return true;
 }
 
 void CefMenuManager::CancelContextMenu() {
   if (IsShowingContextMenu()) {
-    if (custom_menu_callback_)
+    if (custom_menu_callback_) {
       custom_menu_callback_->Cancel();
-    else if (runner_)
+    } else if (runner_) {
       runner_->CancelContextMenu();
+    }
   }
 }
 
@@ -266,15 +249,16 @@ void CefMenuManager::ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
           new CefContextMenuParamsImpl(&params_));
 
       bool handled = handler->OnContextMenuCommand(
-          browser_, browser_->GetFocusedFrame(), paramsPtr.get(), command_id,
-          event_flags);
+          browser_.get(), browser_->GetFocusedFrame(), paramsPtr.get(),
+          command_id, event_flags);
 
       // Do not keep references to the parameters in the callback.
       std::ignore = paramsPtr->Detach(nullptr);
       DCHECK(paramsPtr->HasOneRef());
 
-      if (handled)
+      if (handled) {
         return;
+      }
     }
   }
 
@@ -284,15 +268,18 @@ void CefMenuManager::ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
 
 void CefMenuManager::MenuWillShow(CefRefPtr<CefMenuModelImpl> source) {
   // May be called for sub-menus as well.
-  if (source.get() != model_.get())
+  if (source.get() != model_.get()) {
     return;
+  }
 
-  if (!web_contents())
+  if (!web_contents()) {
     return;
+  }
 
   // May be called multiple times.
-  if (IsShowingContextMenu())
+  if (IsShowingContextMenu()) {
     return;
+  }
 
   // Notify the host before showing the context menu.
   web_contents()->SetShowingContextMenu(true);
@@ -300,11 +287,13 @@ void CefMenuManager::MenuWillShow(CefRefPtr<CefMenuModelImpl> source) {
 
 void CefMenuManager::MenuClosed(CefRefPtr<CefMenuModelImpl> source) {
   // May be called for sub-menus as well.
-  if (source.get() != model_.get())
+  if (source.get() != model_.get()) {
     return;
+  }
 
-  if (!web_contents())
+  if (!web_contents()) {
     return;
+  }
 
   DCHECK(IsShowingContextMenu());
 
@@ -313,19 +302,21 @@ void CefMenuManager::MenuClosed(CefRefPtr<CefMenuModelImpl> source) {
   if (client.get()) {
     CefRefPtr<CefContextMenuHandler> handler = client->GetContextMenuHandler();
     if (handler.get()) {
-      handler->OnContextMenuDismissed(browser_, browser_->GetFocusedFrame());
+      handler->OnContextMenuDismissed(browser_.get(),
+                                      browser_->GetFocusedFrame());
     }
   }
 
   // Notify the host after closing the context menu.
   web_contents()->SetShowingContextMenu(false);
-  web_contents()->NotifyContextMenuClosed(params_.link_followed);
+  web_contents()->NotifyContextMenuClosed(params_.link_followed, std::nullopt);
 }
 
 bool CefMenuManager::FormatLabel(CefRefPtr<CefMenuModelImpl> source,
                                  std::u16string& label) {
-  if (!runner_)
+  if (!runner_) {
     return false;
+  }
   return runner_->FormatLabel(label);
 }
 
@@ -333,8 +324,9 @@ void CefMenuManager::ExecuteCommandCallback(int command_id,
                                             cef_event_flags_t event_flags) {
   DCHECK(IsShowingContextMenu());
   DCHECK(custom_menu_callback_);
-  if (command_id != kInvalidCommandId)
+  if (command_id != kInvalidCommandId) {
     ExecuteCommand(model_, command_id, event_flags);
+  }
   MenuClosed(model_);
   custom_menu_callback_ = nullptr;
 }
@@ -361,25 +353,35 @@ void CefMenuManager::CreateDefaultModel() {
     model_->AddItem(MENU_ID_CUT, GetLabel(IDS_CONTENT_CONTEXT_CUT));
     model_->AddItem(MENU_ID_COPY, GetLabel(IDS_CONTENT_CONTEXT_COPY));
     model_->AddItem(MENU_ID_PASTE, GetLabel(IDS_CONTENT_CONTEXT_PASTE));
+    model_->AddItem(MENU_ID_PASTE_MATCH_STYLE,
+                    GetLabel(IDS_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE));
 
     model_->AddSeparator();
     model_->AddItem(MENU_ID_SELECT_ALL,
                     GetLabel(IDS_CONTENT_CONTEXT_SELECTALL));
 
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_UNDO))
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_UNDO)) {
       model_->SetEnabled(MENU_ID_UNDO, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_REDO))
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_REDO)) {
       model_->SetEnabled(MENU_ID_REDO, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_CUT))
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_CUT)) {
       model_->SetEnabled(MENU_ID_CUT, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_COPY))
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_COPY)) {
       model_->SetEnabled(MENU_ID_COPY, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_PASTE))
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_PASTE)) {
       model_->SetEnabled(MENU_ID_PASTE, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_DELETE))
+      model_->SetEnabled(MENU_ID_PASTE_MATCH_STYLE, false);
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_DELETE)) {
       model_->SetEnabled(MENU_ID_DELETE, false);
-    if (!(params_.edit_flags & CM_EDITFLAG_CAN_SELECT_ALL))
+    }
+    if (!(params_.edit_flags & CM_EDITFLAG_CAN_SELECT_ALL)) {
       model_->SetEnabled(MENU_ID_SELECT_ALL, false);
+    }
 
     if (!params_.misspelled_word.empty()) {
       // Always add a separator before the list of dictionary suggestions or
@@ -420,10 +422,12 @@ void CefMenuManager::CreateDefaultModel() {
     model_->AddItem(MENU_ID_VIEW_SOURCE,
                     GetLabel(IDS_CONTENT_CONTEXT_VIEWPAGESOURCE));
 
-    if (!browser_->CanGoBack())
+    if (!browser_->CanGoBack()) {
       model_->SetEnabled(MENU_ID_BACK, false);
-    if (!browser_->CanGoForward())
+    }
+    if (!browser_->CanGoForward()) {
       model_->SetEnabled(MENU_ID_FORWARD, false);
+    }
   }
 }
 
@@ -482,6 +486,9 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
     case MENU_ID_PASTE:
       browser_->GetFocusedFrame()->Paste();
       break;
+    case MENU_ID_PASTE_MATCH_STYLE:
+      browser_->GetFocusedFrame()->PasteAndMatchStyle();
+      break;
     case MENU_ID_DELETE:
       browser_->GetFocusedFrame()->Delete();
       break;
@@ -513,17 +520,34 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
 
 bool CefMenuManager::IsCustomContextMenuCommand(int command_id) {
   // Verify that the command ID is in the correct range.
-  if (command_id < MENU_ID_CUSTOM_FIRST || command_id > MENU_ID_CUSTOM_LAST)
+  if (command_id < MENU_ID_CUSTOM_FIRST || command_id > MENU_ID_CUSTOM_LAST) {
     return false;
+  }
 
   command_id -= MENU_ID_CUSTOM_FIRST;
 
   // Verify that the specific command ID was passed from the renderer process.
   if (!params_.custom_items.empty()) {
-    for (size_t i = 0; i < params_.custom_items.size(); ++i) {
-      if (static_cast<int>(params_.custom_items[i]->action) == command_id)
+    for (const auto& custom_item : params_.custom_items) {
+      if (static_cast<int>(custom_item->action) == command_id) {
         return true;
+      }
     }
   }
   return false;
 }
+
+#if BUILDFLAG(IS_WIN)
+void CefMenuManager::OnGetPlatformSuggestionsComplete(
+    const spellcheck::PerLanguageSuggestions&
+        platform_per_language_suggestions) {
+  std::vector<std::u16string> combined_suggestions;
+  spellcheck::FillSuggestions(platform_per_language_suggestions,
+                              &combined_suggestions);
+
+  params_.dictionary_suggestions = combined_suggestions;
+
+  // Now that we have spelling suggestions, call CreateContextMenu again.
+  CreateContextMenu(params_, /*query_spellcheck=*/false);
+}
+#endif

@@ -96,22 +96,22 @@
 import("//base/allocator/allocator.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
-import("//build/config/ohos/config.gni")
 import("//build/config/ozone.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
+import("//cef/libcef/features/features.gni")
 import("//chrome/common/features.gni")
 import("//content/public/app/mac_helpers.gni")
 import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
 import("//mojo/public/tools/bindings/mojom.gni")
-import("//ppapi/buildflags/buildflags.gni")
 import("//printing/buildflags/buildflags.gni")
+import("//rlz/buildflags/buildflags.gni")
 import("//testing/test.gni")
 import("//third_party/icu/config.gni")
 import("//third_party/widevine/cdm/widevine.gni")
-import("//tools/grit/grit_rule.gni")
 import("//tools/grit/repack.gni")
+import("//tools/grit/grit_rule.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//ui/gl/features.gni")
 import("//v8/gni/v8.gni")
@@ -125,7 +125,7 @@ if (is_linux) {
 if (is_mac) {
   import("//build/apple/tweak_info_plist.gni")
   import("//build/config/mac/rules.gni")
-  import("//build/util/version.gni")
+  import("//chrome/version.gni")
   import("//media/cdm/library_cdm/cdm_paths.gni")
 
   # Template to compile .xib and .storyboard files.
@@ -140,14 +140,14 @@ if (is_mac) {
   template("compile_ib_files") {
     action_foreach(target_name) {
       forward_variables_from(invoker,
-                             [
-                               "testonly",
-                               "visibility",
-                             ])
+                            [
+                              "testonly",
+                              "visibility",
+                            ])
       assert(defined(invoker.sources),
-             "sources must be specified for $target_name")
+            "sources must be specified for $target_name")
       assert(defined(invoker.output_extension),
-             "output_extension must be specified for $target_name")
+            "output_extension must be specified for $target_name")
 
       ibtool_flags = []
       if (defined(invoker.ibtool_flags)) {
@@ -210,12 +210,14 @@ if (is_mac) {
 
     bundle_data(_target_name) {
       forward_variables_from(invoker,
-                             [
-                               "testonly",
-                               "visibility",
-                             ])
+                            [
+                              "testonly",
+                              "visibility",
+                            ])
 
-      public_deps = [ ":$_compile_target_name" ]
+      public_deps = [
+        ":$_compile_target_name",
+      ]
       sources = get_target_outputs(":$_compile_target_name")
 
       _output_path = "{{bundle_resources_dir}}"
@@ -223,7 +225,9 @@ if (is_mac) {
         _output_path = invoker.output_path
       }
 
-      outputs = [ "$_output_path/{{source_file_part}}" ]
+      outputs = [
+        "$_output_path/{{source_file_part}}",
+      ]
     }
   }
 }
@@ -247,24 +251,28 @@ if (is_linux) {
 # Set by GetRequiredArgs() in //cef/tools/gn_args.py.
 #
 
-# Set ENABLE_PRINTING=1 ENABLE_BASIC_PRINTING=1.
-assert(enable_basic_printing)
-assert(enable_print_preview || is_ohos)
+# Enable support for Print Preview.
+assert(enable_print_preview)
 
 # Enable support for Widevine CDM.
-assert(enable_widevine || is_ohos)
+assert(enable_widevine)
+
+if (is_mac || is_win) {
+  # Enable Widevine CDM host verification and storage ID.
+  assert(enable_cdm_host_verification)
+  assert(enable_cdm_storage_id)
+  assert(alternate_cdm_storage_id_key != "")
+  assert(enable_rlz)
+}
+
+# Enable Views UI framework.
+assert(toolkit_views)
 
 if (is_clang) {
   # Don't use the chrome style plugin.
   assert(!clang_use_chrome_plugins)
 }
 
-if (is_ohos) {
-  import("//pdf/features.gni")
-  declare_args() {
-    ohos_enable_cef_chrome_runtime = false
-  }
-}
 
 #
 # Local variables.
@@ -273,12 +281,12 @@ if (is_ohos) {
 if (is_mac) {
   # The tweak_info_plist.py script requires a version number with 4 parts. CEF
   # uses a version number with 3 parts so just set the last part to 0.
-  cef_plist_version =
-      exec_script("//cef/tools/cef_version.py", [ "plist" ], "trim string", [])
+  cef_plist_version = exec_script(
+    "//cef/tools/cef_version.py", [ "plist" ], "trim string", [])
 
   # Need to be creative to match dylib version formatting requirements.
-  cef_dylib_version =
-      exec_script("//cef/tools/cef_version.py", [ "dylib" ], "trim string", [])
+  cef_dylib_version = exec_script(
+    "//cef/tools/cef_version.py", [ "dylib" ], "trim string", [])
 }
 
 # Read file lists from gypi files. The gypi_to_gn.py script does not support
@@ -298,6 +306,12 @@ includes_mac = gypi_paths2.includes_mac + gypi_paths2.includes_mac_capi
 includes_linux = gypi_paths2.includes_linux + gypi_paths2.includes_linux_capi
 includes_win = gypi_paths2.includes_win + gypi_paths2.includes_win_capi
 
+# CAPI-only includes for pure C implementations.
+includes_common_capi = gypi_paths2.includes_common_capi + gypi_paths2.includes_capi
+includes_mac_capi = gypi_paths2.includes_mac_capi
+includes_linux_capi = gypi_paths2.includes_linux_capi
+includes_win_capi = gypi_paths2.includes_win_capi
+
 #
 # Targets that will be built when depending on "//cef".
 #
@@ -306,18 +320,27 @@ group("cef") {
   testonly = true
   deps = [
     ":cefsimple",
+    ":cefsimple_capi",
     ":ceftests",
     ":libcef_static_unittests",
   ]
+
+  if (is_win) {
+    deps += [
+      ":bootstrap",
+      ":bootstrapc",
+      ":cefclient_dll",
+      ":cefsimple_dll",
+      ":cefsimple_capi_dll",
+      ":ceftests_dll",
+    ]
+  }
 
   if (!is_linux || ozone_platform_x11) {
     deps += [ ":cefclient" ]
   }
 }
 
-#
-# libcef static target.
-#
 
 if (is_win) {
   # Target for building code that accesses chrome_elf internals. Included from
@@ -332,9 +355,9 @@ if (is_win) {
       # Required for crash_keys::GetChromeCrashKeys.
       # Otherwise we need to copy this array into CEF, which would be difficult
       # to maintain.
-      "//chrome/common/chrome_switches.cc",
       "//chrome/common/crash_keys.cc",
-      "//components/flags_ui/flags_ui_switches.cc",
+      "//chrome/common/chrome_switches.cc",
+      "//components/webui/flags/flags_ui_switches.cc",
       "//content/public/common/content_switches.cc",
     ]
 
@@ -343,23 +366,32 @@ if (is_win) {
       "//build/config:precompiled_headers",
     ]
 
+    public_configs = [
+      "libcef/features:config",
+    ]
+
     if (is_component_build) {
       # Avoid linker errors with content_switches.cc in component build by not
       # defining CONTENT_EXPORT.
-      defines = [ "COMPILE_CONTENT_STATICALLY" ]
+      defines = ["COMPILE_CONTENT_STATICALLY"]
     }
 
     deps = [
+      ":make_version_header",
+
       "//components/crash/core/common",  # crash_keys
 
       # Required by chrome_switches.cc
       "//chrome/common:buildflags",
-      "//ppapi/buildflags:buildflags",
       "//printing/buildflags:buildflags",
       "//ui/base:buildflags",
 
       # Required by content_switches.cc
       "//media:media_buildflags",
+
+      # Required by crash_keys.cc
+      "//content/public/common:buildflags",
+      "//tools/v8_context_snapshot:buildflags",
 
       # Required by crash_keys.cc (from base/stl_util.h)
       "//third_party/abseil-cpp:absl",
@@ -367,14 +399,30 @@ if (is_win) {
   }
 }
 
-# libcef_static source files that have unit tests.
+
+#
+# Test support targets.
+#
+
+# Source files that are linked into libcef and cef_framework and tested by
+# libcef_static_unittests. These sources provide libcef-internal functionality
+# that is limited in scope (e.g. utility classes/methods).
 source_set("libcef_static_unittested") {
   sources = [
     "libcef/browser/devtools/devtools_util.cc",
     "libcef/browser/devtools/devtools_util.h",
+    "libcef/browser/geometry_util.h",
+    "libcef/browser/geometry_util.cc",
   ]
 
-  deps = [ "//base" ]
+  deps = [
+    "//ui/gfx/geometry",
+  ]
+
+  public_deps = [
+    # Support relative include paths.
+    "//base",
+  ]
 
   configs += [
     "libcef/features:config",
@@ -382,9 +430,15 @@ source_set("libcef_static_unittested") {
   ]
 }
 
-# Executable target for libcef_static unit tests.
+# Executable target that provides test coverage for libcef_static_unittested
+# source files.
 test("libcef_static_unittests") {
-  sources = [ "libcef/browser/devtools/devtools_util_unittest.cc" ]
+  testonly = true
+
+  sources = [
+    "libcef/browser/devtools/devtools_util_unittest.cc",
+    "libcef/browser/geometry_util_unittest.cc",
+  ]
 
   deps = [
     ":libcef_static_unittested",
@@ -398,639 +452,487 @@ test("libcef_static_unittests") {
   ]
 }
 
-static_library("libcef_static") {
-  if (gpu_switch == "off") {
-    defines = [ "DISABLE_GPU" ]
-  }
+# Source files that are linked into libcef and cef_framework and implement
+# interfaces exposed to ceftests via the include/test directory. These sources
+# may access Chromium/CEF internals. This is defined as a separate target from
+# libcef_static to avoid introducing testonly dependencies there.
+source_set("libcef_test_support") {
+  testonly = true
 
-  sources = includes_common + gypi_paths.autogen_cpp_includes + [
-              "libcef/browser/alloy/alloy_browser_context.cc",
-              "libcef/browser/alloy/alloy_browser_context.h",
-              "libcef/browser/alloy/alloy_browser_host_impl.cc",
-              "libcef/browser/alloy/alloy_browser_host_impl.h",
-              "libcef/browser/alloy/alloy_browser_main.cc",
-              "libcef/browser/alloy/alloy_browser_main.h",
-              "libcef/browser/alloy/alloy_client_cert_lookup_table.cc",
-              "libcef/browser/alloy/alloy_client_cert_lookup_table.h",
-              "libcef/browser/alloy/alloy_content_browser_client.cc",
-              "libcef/browser/alloy/alloy_content_browser_client.h",
-              "libcef/browser/alloy/alloy_web_contents_view_delegate.cc",
-              "libcef/browser/alloy/alloy_web_contents_view_delegate.h",
-              "libcef/browser/alloy/alloy_dialog_util.cc",
-              "libcef/browser/alloy/alloy_dialog_util.h",
-              "libcef/browser/alloy/alloy_download_util.cc",
-              "libcef/browser/alloy/alloy_download_util.h",
-              "libcef/browser/alloy/browser_platform_delegate_alloy.cc",
-              "libcef/browser/alloy/browser_platform_delegate_alloy.h",
-              "libcef/browser/alloy/chrome_browser_process_alloy.cc",
-              "libcef/browser/alloy/chrome_browser_process_alloy.h",
-              "libcef/browser/alloy/chrome_profile_manager_alloy.cc",
-              "libcef/browser/alloy/chrome_profile_manager_alloy.h",
-              "libcef/browser/alloy/chrome_profile_alloy.cc",
-              "libcef/browser/alloy/chrome_profile_alloy.h",
-              "libcef/browser/audio_capturer.cc",
-              "libcef/browser/audio_capturer.h",
-              "libcef/browser/audio_loopback_stream_creator.cc",
-              "libcef/browser/audio_loopback_stream_creator.h",
-              "libcef/browser/browser_contents_delegate.cc",
-              "libcef/browser/browser_contents_delegate.h",
-              "libcef/browser/browser_context.cc",
-              "libcef/browser/browser_context.h",
-              "libcef/browser/browser_context_keyed_service_factories.cc",
-              "libcef/browser/browser_context_keyed_service_factories.h",
-              "libcef/browser/browser_frame.cc",
-              "libcef/browser/browser_frame.h",
-              "libcef/browser/browser_host_base.cc",
-              "libcef/browser/browser_host_base.h",
-              "libcef/browser/browser_host_create.cc",
-              "libcef/browser/browser_info.cc",
-              "libcef/browser/browser_info.h",
-              "libcef/browser/browser_info_manager.cc",
-              "libcef/browser/browser_info_manager.h",
-              "libcef/browser/browser_manager.cc",
-              "libcef/browser/browser_manager.h",
-              "libcef/browser/browser_message_loop.cc",
-              "libcef/browser/browser_message_loop.h",
-              "libcef/browser/browser_platform_delegate.cc",
-              "libcef/browser/browser_platform_delegate.h",
-              "libcef/browser/browser_platform_delegate_create.cc",
-              "libcef/browser/browser_util.cc",
-              "libcef/browser/browser_util.h",
-              "libcef/browser/received_slice_helper.h",
-              "libcef/browser/received_slice_helper.cc",
-              "libcef/browser/navigation_state_serializer.cc",
-              "libcef/browser/navigation_state_serializer.h",
-              "libcef/browser/chrome/browser_delegate.h",
-              "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
-              "libcef/browser/chrome/browser_platform_delegate_chrome.h",
-              "libcef/browser/chrome/chrome_browser_context.cc",
-              "libcef/browser/chrome/chrome_browser_context.h",
-              "libcef/browser/chrome/chrome_browser_delegate.cc",
-              "libcef/browser/chrome/chrome_browser_delegate.h",
-              "libcef/browser/chrome/chrome_browser_host_impl.cc",
-              "libcef/browser/chrome/chrome_browser_host_impl.h",
-              "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.cc",
-              "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.h",
-              "libcef/browser/chrome/chrome_content_browser_client_cef.cc",
-              "libcef/browser/chrome/chrome_content_browser_client_cef.h",
-              "libcef/browser/chrome/chrome_context_menu_handler.cc",
-              "libcef/browser/chrome/chrome_context_menu_handler.h",
-              "libcef/browser/chrome_crash_reporter_client_stub.cc",
-              "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.cc",
-              "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.h",
-              "libcef/browser/context.cc",
-              "libcef/browser/context.h",
-              "libcef/browser/context_menu_params_impl.cc",
-              "libcef/browser/context_menu_params_impl.h",
-              "libcef/browser/devtools/devtools_controller.cc",
-              "libcef/browser/devtools/devtools_controller.h",
-              "libcef/browser/devtools/devtools_file_manager.cc",
-              "libcef/browser/devtools/devtools_file_manager.h",
-              "libcef/browser/devtools/devtools_frontend.cc",
-              "libcef/browser/devtools/devtools_frontend.h",
-              "libcef/browser/devtools/devtools_manager.cc",
-              "libcef/browser/devtools/devtools_manager.h",
-              "libcef/browser/devtools/devtools_manager_delegate.cc",
-              "libcef/browser/devtools/devtools_manager_delegate.h",
-              "libcef/browser/download_item_impl.cc",
-              "libcef/browser/download_item_impl.h",
-              "libcef/browser/download_manager_delegate.cc",
-              "libcef/browser/download_manager_delegate.h",
-              "libcef/browser/download_resume_util.cc",
-              "libcef/browser/download_resume_util.h",
-              "libcef/browser/extension_impl.cc",
-              "libcef/browser/extension_impl.h",
-              "libcef/browser/extensions/api/file_system/cef_file_system_delegate.cc",
-              "libcef/browser/extensions/api/file_system/cef_file_system_delegate.h",
-              "libcef/browser/extensions/api/storage/sync_value_store_cache.cc",
-              "libcef/browser/extensions/api/storage/sync_value_store_cache.h",
-              "libcef/browser/extensions/api/tabs/tabs_api.cc",
-              "libcef/browser/extensions/api/tabs/tabs_api.h",
-              "libcef/browser/extensions/alloy_extensions_util.cc",
-              "libcef/browser/extensions/alloy_extensions_util.h",
-              "libcef/browser/extensions/browser_extensions_util.cc",
-              "libcef/browser/extensions/browser_extensions_util.h",
-              "libcef/browser/extensions/browser_platform_delegate_background.cc",
-              "libcef/browser/extensions/browser_platform_delegate_background.h",
-              "libcef/browser/extensions/chrome_api_registration.cc",
-              "libcef/browser/extensions/chrome_api_registration.h",
-              "libcef/browser/extensions/component_extension_resource_manager.cc",
-              "libcef/browser/extensions/component_extension_resource_manager.h",
-              "libcef/browser/extensions/extensions_api_client.cc",
-              "libcef/browser/extensions/extensions_api_client.h",
-              "libcef/browser/extensions/extensions_browser_api_provider.cc",
-              "libcef/browser/extensions/extensions_browser_api_provider.h",
-              "libcef/browser/extensions/extensions_browser_client.cc",
-              "libcef/browser/extensions/extensions_browser_client.h",
-              "libcef/browser/extensions/extension_background_host.cc",
-              "libcef/browser/extensions/extension_background_host.h",
-              "libcef/browser/extensions/extension_function_details.cc",
-              "libcef/browser/extensions/extension_function_details.h",
-              "libcef/browser/extensions/extension_host_delegate.cc",
-              "libcef/browser/extensions/extension_host_delegate.h",
-              "libcef/browser/extensions/extension_system.cc",
-              "libcef/browser/extensions/extension_system.h",
-              "libcef/browser/extensions/extension_system_factory.cc",
-              "libcef/browser/extensions/extension_system_factory.h",
-              "libcef/browser/extensions/extension_view_host.cc",
-              "libcef/browser/extensions/extension_view_host.h",
-              "libcef/browser/extensions/extension_web_contents_observer.cc",
-              "libcef/browser/extensions/extension_web_contents_observer.h",
-              "libcef/browser/extensions/mime_handler_view_guest_delegate.cc",
-              "libcef/browser/extensions/mime_handler_view_guest_delegate.h",
-              "libcef/browser/extensions/value_store/cef_value_store.cc",
-              "libcef/browser/extensions/value_store/cef_value_store.h",
-              "libcef/browser/extensions/value_store/cef_value_store_factory.cc",
-              "libcef/browser/extensions/value_store/cef_value_store_factory.h",
-              "libcef/browser/file_dialog_runner.h",
-              "libcef/browser/file_dialog_manager.cc",
-              "libcef/browser/file_dialog_manager.h",
-              "libcef/browser/frame_host_impl.cc",
-              "libcef/browser/frame_host_impl.h",
-              "libcef/browser/icon_helper.cc",
-              "libcef/browser/icon_helper.h",
-              "libcef/browser/frame_service_base.h",
-              "libcef/browser/image_impl.cc",
-              "libcef/browser/image_impl.h",
-              "libcef/browser/iothread_state.cc",
-              "libcef/browser/iothread_state.h",
-              "libcef/browser/javascript_dialog_runner.h",
-              "libcef/browser/javascript_dialog_manager.cc",
-              "libcef/browser/javascript_dialog_manager.h",
-              "libcef/browser/main_runner.cc",
-              "libcef/browser/main_runner.h",
-              "libcef/browser/media_capture_devices_dispatcher.cc",
-              "libcef/browser/media_capture_devices_dispatcher.h",
-              "libcef/browser/media_router/media_route_impl.cc",
-              "libcef/browser/media_router/media_route_impl.h",
-              "libcef/browser/media_router/media_router_impl.cc",
-              "libcef/browser/media_router/media_router_impl.h",
-              "libcef/browser/media_router/media_router_manager.cc",
-              "libcef/browser/media_router/media_router_manager.h",
-              "libcef/browser/media_router/media_sink_impl.cc",
-              "libcef/browser/media_router/media_sink_impl.h",
-              "libcef/browser/media_router/media_source_impl.cc",
-              "libcef/browser/media_router/media_source_impl.h",
-              "libcef/browser/menu_manager.cc",
-              "libcef/browser/menu_manager.h",
-              "libcef/browser/menu_model_impl.cc",
-              "libcef/browser/menu_model_impl.h",
-              "libcef/browser/menu_runner.h",
-              "libcef/browser/native/browser_platform_delegate_native.cc",
-              "libcef/browser/native/browser_platform_delegate_native.h",
-              "libcef/browser/native/cursor_util.h",
-              "libcef/browser/native/cursor_util.cc",
-              "libcef/browser/navigation_entry_impl.cc",
-              "libcef/browser/navigation_entry_impl.h",
-              "libcef/browser/net/chrome_scheme_handler.cc",
-              "libcef/browser/net/chrome_scheme_handler.h",
-              "libcef/browser/net/crlset_file_util_impl.cc",
-              "libcef/browser/net/devtools_scheme_handler.cc",
-              "libcef/browser/net/devtools_scheme_handler.h",
-              "libcef/browser/net/internal_scheme_handler.cc",
-              "libcef/browser/net/internal_scheme_handler.h",
-              "libcef/browser/net/scheme_handler.cc",
-              "libcef/browser/net/scheme_handler.h",
-              "libcef/browser/net/throttle_handler.cc",
-              "libcef/browser/net/throttle_handler.h",
-              "libcef/browser/net_database/cef_data_base_impl.cc",
-              "libcef/browser/net_database/cef_data_base_impl.h",
-              "libcef/browser/net_service/browser_urlrequest_impl.cc",
-              "libcef/browser/net_service/browser_urlrequest_impl.h",
-              "libcef/browser/net_service/cookie_helper.cc",
-              "libcef/browser/net_service/cookie_helper.h",
-              "libcef/browser/net_service/cookie_manager_impl.cc",
-              "libcef/browser/net_service/cookie_manager_impl.h",
-              "libcef/browser/net_service/login_delegate.cc",
-              "libcef/browser/net_service/login_delegate.h",
-              "libcef/browser/net_service/proxy_config_monitor.cc",
-              "libcef/browser/net_service/proxy_config_monitor.h",
-              "libcef/browser/net_service/proxy_url_loader_factory.cc",
-              "libcef/browser/net_service/proxy_url_loader_factory.h",
-              "libcef/browser/net_service/resource_handler_wrapper.cc",
-              "libcef/browser/net_service/resource_handler_wrapper.h",
-              "libcef/browser/net_service/resource_request_handler_wrapper.cc",
-              "libcef/browser/net_service/resource_request_handler_wrapper.h",
-              "libcef/browser/net_service/response_filter_wrapper.cc",
-              "libcef/browser/net_service/response_filter_wrapper.h",
-              "libcef/browser/net_service/restrict_cookie_manager.cc",
-              "libcef/browser/net_service/restrict_cookie_manager.h",
-              "libcef/browser/net_service/stream_reader_url_loader.cc",
-              "libcef/browser/net_service/stream_reader_url_loader.h",
-              "libcef/browser/net_service/url_loader_factory_getter.cc",
-              "libcef/browser/net_service/url_loader_factory_getter.h",
-              "libcef/browser/net_service/net_helpers.cc",
-              "libcef/browser/net_service/net_helpers.h",
-              "libcef/browser/origin_whitelist_impl.cc",
-              "libcef/browser/origin_whitelist_impl.h",
-              "libcef/browser/osr/browser_platform_delegate_osr.cc",
-              "libcef/browser/osr/browser_platform_delegate_osr.h",
-              "libcef/browser/osr/host_display_client_osr.cc",
-              "libcef/browser/osr/host_display_client_osr.h",
-              "libcef/browser/osr/motion_event_osr.cc",
-              "libcef/browser/osr/motion_event_osr.h",
-              "libcef/browser/osr/osr_accessibility_util.cc",
-              "libcef/browser/osr/osr_accessibility_util.h",
-              "libcef/browser/osr/osr_util.cc",
-              "libcef/browser/osr/osr_util.h",
-              "libcef/browser/osr/render_widget_host_view_osr.cc",
-              "libcef/browser/osr/render_widget_host_view_osr.h",
-              "libcef/browser/osr/synthetic_gesture_target_osr.cc",
-              "libcef/browser/osr/synthetic_gesture_target_osr.h",
-              "libcef/browser/osr/video_consumer_osr.cc",
-              "libcef/browser/osr/video_consumer_osr.h",
-              "libcef/browser/osr/web_contents_view_osr.cc",
-              "libcef/browser/osr/web_contents_view_osr.h",
-              "libcef/browser/osr/touch_handle_drawable_osr.cc",
-              "libcef/browser/osr/touch_handle_drawable_osr.h",
-              "libcef/browser/osr/touch_selection_controller_client_osr.cc",
-              "libcef/browser/osr/touch_selection_controller_client_osr.h",
-              "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.cc",
-              "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.h",
-              "libcef/browser/page_load_metrics/page_load_metrics_initialize.cc",
-              "libcef/browser/page_load_metrics/page_load_metrics_initialize.h",
-              "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.h",
-              "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.cc",
-              "libcef/browser/path_util_impl.cc",
-              "libcef/browser/permission/alloy_access_request.cc",
-              "libcef/browser/permission/alloy_access_request.h",
-              "libcef/browser/permission/alloy_geolocation_access.cc",
-              "libcef/browser/permission/alloy_geolocation_access.h",
-              "libcef/browser/permission/alloy_permission_manager.cc",
-              "libcef/browser/permission/alloy_permission_manager.h",
-              "libcef/browser/permission/alloy_permission_request_handler.cc",
-              "libcef/browser/permission/alloy_permission_request_handler.h",
-              "libcef/browser/predictors/loading_predictor.cc",
-              "libcef/browser/predictors/loading_predictor.h",
-              "libcef/browser/predictors/loading_predictor_config.cc",
-              "libcef/browser/predictors/loading_predictor_config.h",
-              "libcef/browser/predictors/loading_predictor_factory.cc",
-              "libcef/browser/predictors/loading_predictor_factory.h",
-              "libcef/browser/predictors/loading_predictor_tab_helper.cc",
-              "libcef/browser/predictors/loading_predictor_tab_helper.h",
-              "libcef/browser/predictors/navigation_id.cc",
-              "libcef/browser/predictors/navigation_id.h",
-              "libcef/browser/predictors/preconnect_manager.cc",
-              "libcef/browser/predictors/preconnect_manager.h",
-              "libcef/browser/predictors/proxy_lookup_client_impl.cc",
-              "libcef/browser/predictors/proxy_lookup_client_impl.h",
-              "libcef/browser/predictors/resolve_host_client_impl.cc",
-              "libcef/browser/predictors/resolve_host_client_impl.h",
-              "libcef/browser/predictors/resource_prefetch_predictor.cc",
-              "libcef/browser/predictors/resource_prefetch_predictor.h",
-              "libcef/browser/prefs/browser_prefs.cc",
-              "libcef/browser/prefs/browser_prefs.h",
-              "libcef/browser/prefs/pref_store.cc",
-              "libcef/browser/prefs/pref_store.h",
-              "libcef/browser/prefs/renderer_prefs.cc",
-              "libcef/browser/prefs/renderer_prefs.h",
-              "libcef/browser/print_settings_impl.cc",
-              "libcef/browser/print_settings_impl.h",
-              "libcef/browser/printing/constrained_window_views_client.cc",
-              "libcef/browser/printing/constrained_window_views_client.h",
-              "libcef/browser/printing/ohos_print_manager.cc",
-              "libcef/browser/printing/ohos_print_manager.h",
-              "libcef/browser/printing/print_view_manager.cc",
-              "libcef/browser/printing/print_view_manager.h",
-              "libcef/browser/process_util_impl.cc",
-              "libcef/browser/request_context_handler_map.cc",
-              "libcef/browser/request_context_handler_map.h",
-              "libcef/browser/request_context_impl.cc",
-              "libcef/browser/request_context_impl.h",
-              "libcef/browser/scheme_impl.cc",
-              "libcef/browser/server_impl.cc",
-              "libcef/browser/server_impl.h",
-              "libcef/browser/simple_menu_model_impl.cc",
-              "libcef/browser/simple_menu_model_impl.h",
-              "libcef/browser/speech_recognition_manager_delegate.cc",
-              "libcef/browser/speech_recognition_manager_delegate.h",
-              "libcef/browser/ssl_host_state_delegate.cc",
-              "libcef/browser/ssl_host_state_delegate.h",
-              "libcef/browser/ssl_info_impl.cc",
-              "libcef/browser/ssl_info_impl.h",
-              "libcef/browser/ssl_status_impl.cc",
-              "libcef/browser/ssl_status_impl.h",
-              "libcef/browser/storage/web_storage_impl.cc",
-              "libcef/browser/storage/web_storage_impl.h",
-              "libcef/browser/stream_impl.cc",
-              "libcef/browser/stream_impl.h",
-              "libcef/browser/trace_impl.cc",
-              "libcef/browser/trace_subscriber.cc",
-              "libcef/browser/trace_subscriber.h",
-              "libcef/browser/thread_util.h",
-              "libcef/browser/web_contents_dialog_helper.cc",
-              "libcef/browser/web_contents_dialog_helper.h",
-              "libcef/browser/web_plugin_impl.cc",
-              "libcef/browser/web_plugin_impl.h",
-              "libcef/browser/x509_certificate_impl.cc",
-              "libcef/browser/x509_certificate_impl.h",
-              "libcef/browser/x509_cert_principal_impl.cc",
-              "libcef/browser/x509_cert_principal_impl.h",
-              "libcef/browser/xml_reader_impl.cc",
-              "libcef/browser/xml_reader_impl.h",
-              "libcef/browser/zip_reader_impl.cc",
-              "libcef/browser/zip_reader_impl.h",
-              "libcef/common/alloy/alloy_content_client.cc",
-              "libcef/common/alloy/alloy_content_client.h",
-              "libcef/common/alloy/alloy_main_delegate.cc",
-              "libcef/common/alloy/alloy_main_delegate.h",
-              "libcef/common/alloy/alloy_main_runner_delegate.cc",
-              "libcef/common/alloy/alloy_main_runner_delegate.h",
-              "libcef/common/app_manager.cc",
-              "libcef/common/app_manager.h",
-              "libcef/common/base_impl.cc",
-              "libcef/common/cef_switches.cc",
-              "libcef/common/cef_switches.h",
-              "libcef/common/chrome/chrome_content_client_cef.cc",
-              "libcef/common/chrome/chrome_content_client_cef.h",
-              "libcef/common/chrome/chrome_main_delegate_cef.cc",
-              "libcef/common/chrome/chrome_main_delegate_cef.h",
-              "libcef/common/chrome/chrome_main_runner_delegate.cc",
-              "libcef/common/chrome/chrome_main_runner_delegate.h",
-              "libcef/common/command_line_impl.cc",
-              "libcef/common/command_line_impl.h",
-              "libcef/common/crash_reporter_client.cc",
-              "libcef/common/crash_reporter_client.h",
-              "libcef/common/crash_reporting.cc",
-              "libcef/common/crash_reporting.h",
-              "libcef/common/drag_data_impl.cc",
-              "libcef/common/drag_data_impl.h",
-              "libcef/common/extensions/chrome_generated_schemas.cc",
-              "libcef/common/extensions/chrome_generated_schemas.h",
-              "libcef/common/extensions/extensions_api_provider.cc",
-              "libcef/common/extensions/extensions_api_provider.h",
-              "libcef/common/extensions/extensions_client.cc",
-              "libcef/common/extensions/extensions_client.h",
-              "libcef/common/extensions/extensions_util.cc",
-              "libcef/common/extensions/extensions_util.h",
-              "libcef/common/file_util_impl.cc",
-              "libcef/common/frame_util.cc",
-              "libcef/common/frame_util.h",
-              "libcef/common/i18n_util_impl.cc",
-              "libcef/common/json_impl.cc",
-              "libcef/common/main_runner_delegate.h",
-              "libcef/common/main_runner_handler.h",
-              "libcef/common/net/http_header_utils.cc",
-              "libcef/common/net/http_header_utils.h",
-              "libcef/common/net/net_resource_provider.cc",
-              "libcef/common/net/net_resource_provider.h",
-              "libcef/common/net/scheme_registration.cc",
-              "libcef/common/net/scheme_registration.h",
-              "libcef/common/net/url_util.cc",
-              "libcef/common/net/url_util.h",
-              "libcef/common/net_service/net_service_util.cc",
-              "libcef/common/net_service/net_service_util.h",
-              "libcef/common/parser_impl.cc",
-              "libcef/common/process_message_impl.cc",
-              "libcef/common/process_message_impl.h",
-              "libcef/common/request_impl.cc",
-              "libcef/common/request_impl.h",
-              "libcef/common/resource_bundle_delegate.cc",
-              "libcef/common/resource_bundle_delegate.h",
-              "libcef/common/resource_bundle_impl.cc",
-              "libcef/common/resource_bundle_impl.h",
-              "libcef/common/resource_util.cc",
-              "libcef/common/resource_util.h",
-              "libcef/common/response_impl.cc",
-              "libcef/common/response_impl.h",
-              "libcef/common/scheme_registrar_impl.cc",
-              "libcef/common/scheme_registrar_impl.h",
-              "libcef/common/string_list_impl.cc",
-              "libcef/common/string_map_impl.cc",
-              "libcef/common/string_multimap_impl.cc",
-              "libcef/common/string_types_impl.cc",
-              "libcef/common/string_util.cc",
-              "libcef/common/string_util.h",
-              "libcef/common/task_impl.cc",
-              "libcef/common/task_runner_impl.cc",
-              "libcef/common/task_runner_impl.h",
-              "libcef/common/task_runner_manager.cc",
-              "libcef/common/task_runner_manager.h",
-              "libcef/common/test/translator_test_impl.cc",
-              "libcef/common/thread_impl.cc",
-              "libcef/common/thread_impl.h",
-              "libcef/common/time_impl.cc",
-              "libcef/common/time_util.h",
-              "libcef/common/tracker.cc",
-              "libcef/common/tracker.h",
-              "libcef/common/urlrequest_impl.cc",
-              "libcef/common/value_base.cc",
-              "libcef/common/value_base.h",
-              "libcef/common/values_impl.cc",
-              "libcef/common/values_impl.h",
-              "libcef/common/waitable_event_impl.cc",
-              "libcef/common/waitable_event_impl.h",
-              "libcef/features/runtime.h",
-              "libcef/features/runtime_checks.h",
-              "libcef/renderer/alloy/alloy_content_renderer_client.cc",
-              "libcef/renderer/alloy/alloy_content_renderer_client.h",
-              "libcef/renderer/alloy/alloy_content_settings_client.cc",
-              "libcef/renderer/alloy/alloy_content_settings_client.h",
-              "libcef/renderer/alloy/alloy_render_thread_observer.cc",
-              "libcef/renderer/alloy/alloy_render_thread_observer.h",
-              "libcef/renderer/alloy/url_loader_throttle_provider_impl.cc",
-              "libcef/renderer/alloy/url_loader_throttle_provider_impl.h",
-              "libcef/renderer/browser_impl.cc",
-              "libcef/renderer/browser_impl.h",
-              "libcef/renderer/chrome/chrome_content_renderer_client_cef.cc",
-              "libcef/renderer/chrome/chrome_content_renderer_client_cef.h",
-              "libcef/renderer/dom_document_impl.cc",
-              "libcef/renderer/dom_document_impl.h",
-              "libcef/renderer/dom_node_impl.cc",
-              "libcef/renderer/dom_node_impl.h",
-              "libcef/renderer/extensions/extensions_dispatcher_delegate.cc",
-              "libcef/renderer/extensions/extensions_dispatcher_delegate.h",
-              "libcef/renderer/extensions/extensions_renderer_client.cc",
-              "libcef/renderer/extensions/extensions_renderer_client.h",
-              "libcef/renderer/extensions/ohos_print_render_frame_helper_delegate.cc",
-              "libcef/renderer/extensions/ohos_print_render_frame_helper_delegate.h",
-              "libcef/renderer/extensions/print_render_frame_helper_delegate.cc",
-              "libcef/renderer/extensions/print_render_frame_helper_delegate.h",
-              "libcef/renderer/frame_impl.cc",
-              "libcef/renderer/frame_impl.h",
-              "libcef/renderer/render_frame_observer.cc",
-              "libcef/renderer/render_frame_observer.h",
-              "libcef/renderer/render_frame_util.cc",
-              "libcef/renderer/render_frame_util.h",
-              "libcef/renderer/render_manager.cc",
-              "libcef/renderer/render_manager.h",
-              "libcef/renderer/render_urlrequest_impl.cc",
-              "libcef/renderer/render_urlrequest_impl.h",
-              "libcef/renderer/thread_util.h",
-              "libcef/renderer/v8_impl.cc",
-              "libcef/renderer/v8_impl.h",
+  sources = [
+    "libcef/browser/test/test_helpers_impl.cc",
+    "libcef/browser/test/test_server_impl.cc",
+    "libcef/browser/test/test_server_impl.h",
+    "libcef/common/test/api_version_test_impl.cc",
+    "libcef/common/test/translator_test_impl.cc",
+  ]
 
-              # For Chrome runtime support.
-              "//chrome/app/chrome_main_delegate.cc",
-              "//chrome/app/chrome_main_delegate.h",
+  deps = [
+    ":libcef_static",
+    "//net:test_support",
 
-              # For Javascript
-              "libcef/browser/javascript/oh_javascript_injector.h",
-              "libcef/browser/javascript/oh_javascript_injector.cc",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.h",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.cc",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.h",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.cc",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_object_deletion_message_filter.h",
-              "libcef/browser/javascript/oh_gin_javascript_bridge_object_deletion_message_filter.cc",
-              "libcef/common/javascript/oh_gin_javascript_bridge_messages.h",
-              "libcef/common/javascript/oh_gin_javascript_bridge_message_generator.h",
-              "libcef/common/javascript/oh_gin_javascript_bridge_message_generator.cc",
-              "libcef/common/javascript/oh_gin_javascript_bridge_errors.h",
-              "libcef/common/javascript/oh_gin_javascript_bridge_errors.cc",
-              "libcef/common/javascript/oh_gin_javascript_bridge_value.h",
-              "libcef/common/javascript/oh_gin_javascript_bridge_value.cc",
-              "libcef/common/soc_perf_util.h",
-              "libcef/common/soc_perf_util.cc",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_dispatcher.h",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_dispatcher.cc",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_object.h",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_object.cc",
-              "libcef/renderer/javascript/oh_gin_javascript_function_invocation_helper.h",
-              "libcef/renderer/javascript/oh_gin_javascript_function_invocation_helper.cc",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_value_converter.h",
-              "libcef/renderer/javascript/oh_gin_javascript_bridge_value_converter.cc",
-            ]
+    # Support for UI input events.
+    "//ui/views:test_support",
+  ]
 
-  if (is_ohos) {
-    sources += [
-      "libcef/browser/password/oh_password_manager_client.h",
-      "libcef/browser/password/oh_password_manager_client.cc",
-      "libcef/browser/password/oh_password_store_factory.h",
-      "libcef/browser/password/oh_password_store_factory.cc",
-      "libcef/browser/password/oh_sync_start_util.h",
-      "libcef/browser/password/oh_sync_start_util.cc",
-      "libcef/browser/autofill/oh_autofill_client.cc",
-      "libcef/browser/autofill/oh_autofill_client.h",
+  configs += [
+    ":libcef_includes_config",
+  ]
+}
 
-      "libcef/browser/autofill/oh_autofill_provider.cc",
-      "libcef/browser/autofill/oh_autofill_provider.h",
-      "libcef/browser/autofill/oh_autofill_manager.cc",
-      "libcef/browser/autofill/oh_autofill_manager.h",
-    ]
-  }
+
+#
+# libcef_static target.
+#
+
+source_set("libcef_static") {
+  sources = includes_common +
+            gypi_paths.autogen_cpp_includes + [
+    "libcef/browser/alloy/alloy_browser_host_impl.cc",
+    "libcef/browser/alloy/alloy_browser_host_impl.h",
+    "libcef/browser/alloy/browser_platform_delegate_alloy.cc",
+    "libcef/browser/alloy/browser_platform_delegate_alloy.h",
+    "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.cc",
+    "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.h",
+    "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.cc",
+    "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h",
+    "libcef/browser/audio_capturer.cc",
+    "libcef/browser/audio_capturer.h",
+    "libcef/browser/audio_loopback_stream_creator.cc",
+    "libcef/browser/audio_loopback_stream_creator.h",
+    "libcef/browser/browser_contents_delegate.cc",
+    "libcef/browser/browser_contents_delegate.h",
+    "libcef/browser/browser_context.cc",
+    "libcef/browser/browser_context.h",
+    "libcef/browser/browser_event_util.cc",
+    "libcef/browser/browser_event_util.h",
+    "libcef/browser/browser_frame.cc",
+    "libcef/browser/browser_frame.h",
+    "libcef/browser/browser_guest_util.cc",
+    "libcef/browser/browser_guest_util.h",
+    "libcef/browser/browser_host_base.cc",
+    "libcef/browser/browser_host_base.h",
+    "libcef/browser/browser_host_create.cc",
+    "libcef/browser/browser_info.cc",
+    "libcef/browser/browser_info.h",
+    "libcef/browser/browser_info_manager.cc",
+    "libcef/browser/browser_info_manager.h",
+    "libcef/browser/browser_manager.cc",
+    "libcef/browser/browser_manager.h",
+    "libcef/browser/browser_message_loop.cc",
+    "libcef/browser/browser_message_loop.h",
+    "libcef/browser/browser_platform_delegate.cc",
+    "libcef/browser/browser_platform_delegate.h",
+    "libcef/browser/browser_platform_delegate_create.cc",
+    "libcef/browser/certificate_query.cc",
+    "libcef/browser/certificate_query.h",
+    "libcef/browser/chrome/browser_delegate.h",
+    "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
+    "libcef/browser/chrome/browser_platform_delegate_chrome.h",
+    "libcef/browser/chrome/chrome_browser_context.cc",
+    "libcef/browser/chrome/chrome_browser_context.h",
+    "libcef/browser/chrome/chrome_browser_delegate.cc",
+    "libcef/browser/chrome/chrome_browser_delegate.h",
+    "libcef/browser/chrome/chrome_browser_host_impl.cc",
+    "libcef/browser/chrome/chrome_browser_host_impl.h",
+    "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.cc",
+    "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.h",
+    "libcef/browser/chrome/chrome_content_browser_client_cef.cc",
+    "libcef/browser/chrome/chrome_content_browser_client_cef.h",
+    "libcef/browser/chrome/chrome_context_menu_handler.cc",
+    "libcef/browser/chrome/chrome_context_menu_handler.h",
+    "libcef/browser/chrome/chrome_startup_browser_creator.cc",
+    "libcef/browser/chrome/chrome_startup_browser_creator.h",
+    "libcef/browser/chrome/chrome_web_contents_view_delegate_cef.h",
+    "libcef/browser/chrome/extensions/chrome_extension_util.cc",
+    "libcef/browser/chrome/extensions/chrome_extension_util.h",
+    "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.cc",
+    "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.h",
+    "libcef/browser/chrome/views/browser_platform_delegate_chrome_child_window.cc",
+    "libcef/browser/chrome/views/browser_platform_delegate_chrome_child_window.h",
+    "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.cc",
+    "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h",
+    "libcef/browser/chrome/views/chrome_browser_frame_view.cc",
+    "libcef/browser/chrome/views/chrome_browser_frame_view.h",
+    "libcef/browser/chrome/views/chrome_browser_view.cc",
+    "libcef/browser/chrome/views/chrome_browser_view.h",
+    "libcef/browser/chrome/views/chrome_browser_widget.cc",
+    "libcef/browser/chrome/views/chrome_browser_widget.h",
+    "libcef/browser/chrome/views/chrome_child_window.cc",
+    "libcef/browser/chrome/views/chrome_child_window.h",
+    "libcef/browser/chrome/views/chrome_views_util.cc",
+    "libcef/browser/chrome/views/chrome_views_util.h",
+    "libcef/browser/chrome/views/toolbar_view_impl.cc",
+    "libcef/browser/chrome/views/toolbar_view_impl.h",
+    "libcef/browser/chrome/views/toolbar_view_view.cc",
+    "libcef/browser/chrome/views/toolbar_view_view.h",
+    "libcef/browser/context.cc",
+    "libcef/browser/context.h",
+    "libcef/browser/context_menu_params_impl.cc",
+    "libcef/browser/context_menu_params_impl.h",
+    "libcef/browser/crashpad_runner.cc",
+    "libcef/browser/crashpad_runner.h",
+    "libcef/browser/devtools/devtools_controller.cc",
+    "libcef/browser/devtools/devtools_controller.h",
+    "libcef/browser/devtools/devtools_protocol_manager.cc",
+    "libcef/browser/devtools/devtools_protocol_manager.h",
+    "libcef/browser/devtools/devtools_window_runner.cc",
+    "libcef/browser/devtools/devtools_window_runner.h",
+    "libcef/browser/download_item_impl.cc",
+    "libcef/browser/download_item_impl.h",
+    "libcef/browser/download_manager_delegate.cc",
+    "libcef/browser/download_manager_delegate.h",
+    "libcef/browser/download_manager_delegate_impl.cc",
+    "libcef/browser/download_manager_delegate_impl.h",
+    "libcef/browser/file_dialog_manager.cc",
+    "libcef/browser/file_dialog_manager.h",
+    "libcef/browser/file_dialog_runner.cc",
+    "libcef/browser/file_dialog_runner.h",
+    "libcef/browser/frame_host_impl.cc",
+    "libcef/browser/frame_host_impl.h",
+    "libcef/browser/frame_service_base.h",
+    "libcef/browser/global_preference_manager_impl.cc",
+    "libcef/browser/global_preference_manager_impl.h",
+    "libcef/browser/hang_monitor.cc",
+    "libcef/browser/hang_monitor.h",
+    "libcef/browser/image_impl.cc",
+    "libcef/browser/image_impl.h",
+    "libcef/browser/iothread_state.cc",
+    "libcef/browser/iothread_state.h",
+    "libcef/browser/javascript_dialog_runner.h",
+    "libcef/browser/javascript_dialog_manager.cc",
+    "libcef/browser/javascript_dialog_manager.h",
+    "libcef/browser/main_runner.cc",
+    "libcef/browser/main_runner.h",
+    "libcef/browser/media_access_query.cc",
+    "libcef/browser/media_access_query.h",
+    "libcef/browser/media_router/media_route_impl.cc",
+    "libcef/browser/media_router/media_route_impl.h",
+    "libcef/browser/media_router/media_router_impl.cc",
+    "libcef/browser/media_router/media_router_impl.h",
+    "libcef/browser/media_router/media_router_manager.cc",
+    "libcef/browser/media_router/media_router_manager.h",
+    "libcef/browser/media_router/media_sink_impl.cc",
+    "libcef/browser/media_router/media_sink_impl.h",
+    "libcef/browser/media_router/media_source_impl.cc",
+    "libcef/browser/media_router/media_source_impl.h",
+    "libcef/browser/media_stream_registrar.cc",
+    "libcef/browser/media_stream_registrar.h",
+    "libcef/browser/menu_manager.cc",
+    "libcef/browser/menu_manager.h",
+    "libcef/browser/menu_model_impl.cc",
+    "libcef/browser/menu_model_impl.h",
+    "libcef/browser/menu_runner.h",
+    "libcef/browser/native/browser_platform_delegate_native.cc",
+    "libcef/browser/native/browser_platform_delegate_native.h",
+    "libcef/browser/native/cursor_util.h",
+    "libcef/browser/native/cursor_util.cc",
+    "libcef/browser/native/native_widget_delegate.cc",
+    "libcef/browser/native/native_widget_delegate.h",
+    "libcef/browser/navigation_entry_impl.cc",
+    "libcef/browser/navigation_entry_impl.h",
+    "libcef/browser/net/crlset_file_util_impl.cc",
+    "libcef/browser/net/throttle_handler.cc",
+    "libcef/browser/net/throttle_handler.h",
+    "libcef/browser/net_service/browser_urlrequest_impl.cc",
+    "libcef/browser/net_service/browser_urlrequest_impl.h",
+    "libcef/browser/net_service/cookie_helper.cc",
+    "libcef/browser/net_service/cookie_helper.h",
+    "libcef/browser/net_service/cookie_manager_impl.cc",
+    "libcef/browser/net_service/cookie_manager_impl.h",
+    "libcef/browser/net_service/login_delegate.cc",
+    "libcef/browser/net_service/login_delegate.h",
+    "libcef/browser/net_service/proxy_url_loader_factory.cc",
+    "libcef/browser/net_service/proxy_url_loader_factory.h",
+    "libcef/browser/net_service/resource_handler_wrapper.cc",
+    "libcef/browser/net_service/resource_handler_wrapper.h",
+    "libcef/browser/net_service/resource_request_handler_wrapper.cc",
+    "libcef/browser/net_service/resource_request_handler_wrapper.h",
+    "libcef/browser/net_service/response_filter_wrapper.cc",
+    "libcef/browser/net_service/response_filter_wrapper.h",
+    "libcef/browser/net_service/stream_reader_url_loader.cc",
+    "libcef/browser/net_service/stream_reader_url_loader.h",
+    "libcef/browser/net_service/url_loader_factory_getter.cc",
+    "libcef/browser/net_service/url_loader_factory_getter.h",
+    "libcef/browser/origin_whitelist_impl.cc",
+    "libcef/browser/origin_whitelist_impl.h",
+    "libcef/browser/osr/browser_platform_delegate_osr.cc",
+    "libcef/browser/osr/browser_platform_delegate_osr.h",
+    "libcef/browser/osr/host_display_client_osr.cc",
+    "libcef/browser/osr/host_display_client_osr.h",
+    "libcef/browser/osr/motion_event_osr.cc",
+    "libcef/browser/osr/motion_event_osr.h",
+    "libcef/browser/osr/osr_accessibility_util.cc",
+    "libcef/browser/osr/osr_accessibility_util.h",
+    "libcef/browser/osr/osr_util.cc",
+    "libcef/browser/osr/osr_util.h",
+    "libcef/browser/osr/render_widget_host_view_osr.cc",
+    "libcef/browser/osr/render_widget_host_view_osr.h",
+    "libcef/browser/osr/synthetic_gesture_target_osr.cc",
+    "libcef/browser/osr/synthetic_gesture_target_osr.h",
+    "libcef/browser/osr/touch_handle_drawable_osr.cc",
+    "libcef/browser/osr/touch_handle_drawable_osr.h",
+    "libcef/browser/osr/touch_selection_controller_client_osr.cc",
+    "libcef/browser/osr/touch_selection_controller_client_osr.h",
+    "libcef/browser/osr/video_consumer_osr.cc",
+    "libcef/browser/osr/video_consumer_osr.h",
+    "libcef/browser/osr/web_contents_view_osr.cc",
+    "libcef/browser/osr/web_contents_view_osr.h",
+    "libcef/browser/path_util_impl.cc",
+    "libcef/browser/permission_prompt.cc",
+    "libcef/browser/permission_prompt.h",
+    "libcef/browser/prefs/browser_prefs.cc",
+    "libcef/browser/prefs/browser_prefs.h",
+    "libcef/browser/prefs/pref_helper.cc",
+    "libcef/browser/prefs/pref_helper.h",
+    "libcef/browser/prefs/pref_names.h",
+    "libcef/browser/prefs/pref_registrar.cc",
+    "libcef/browser/prefs/pref_registrar.h",
+    "libcef/browser/prefs/renderer_prefs.cc",
+    "libcef/browser/prefs/renderer_prefs.h",
+    "libcef/browser/print_settings_impl.cc",
+    "libcef/browser/print_settings_impl.h",
+    "libcef/browser/printing/print_util.cc",
+    "libcef/browser/printing/print_util.h",
+    "libcef/browser/process_util_impl.cc",
+    "libcef/browser/request_context_handler_map.cc",
+    "libcef/browser/request_context_handler_map.h",
+    "libcef/browser/request_context_impl.cc",
+    "libcef/browser/request_context_impl.h",
+    "libcef/browser/scheme_impl.cc",
+    "libcef/browser/server_impl.cc",
+    "libcef/browser/server_impl.h",
+    "libcef/browser/setting_helper.cc",
+    "libcef/browser/setting_helper.h",
+    "libcef/browser/simple_menu_model_impl.cc",
+    "libcef/browser/simple_menu_model_impl.h",
+    "libcef/browser/ssl_info_impl.cc",
+    "libcef/browser/ssl_info_impl.h",
+    "libcef/browser/ssl_status_impl.cc",
+    "libcef/browser/ssl_status_impl.h",
+    "libcef/browser/stream_impl.cc",
+    "libcef/browser/stream_impl.h",
+    "libcef/browser/task_manager_impl.cc",
+    "libcef/browser/task_manager_impl.h",
+    "libcef/browser/trace_impl.cc",
+    "libcef/browser/trace_subscriber.cc",
+    "libcef/browser/trace_subscriber.h",
+    "libcef/browser/thread_util.h",
+    "libcef/browser/ui_thread.cc",
+    "libcef/browser/ui_thread.h",
+    "libcef/browser/views/basic_label_button_impl.cc",
+    "libcef/browser/views/basic_label_button_impl.h",
+    "libcef/browser/views/basic_label_button_view.cc",
+    "libcef/browser/views/basic_label_button_view.h",
+    "libcef/browser/views/basic_panel_impl.cc",
+    "libcef/browser/views/basic_panel_impl.h",
+    "libcef/browser/views/basic_panel_view.cc",
+    "libcef/browser/views/basic_panel_view.h",
+    "libcef/browser/views/box_layout_impl.cc",
+    "libcef/browser/views/box_layout_impl.h",
+    "libcef/browser/views/browser_platform_delegate_views.cc",
+    "libcef/browser/views/browser_platform_delegate_views.h",
+    "libcef/browser/views/browser_view_impl.cc",
+    "libcef/browser/views/browser_view_impl.h",
+    "libcef/browser/views/browser_view_view.cc",
+    "libcef/browser/views/browser_view_view.h",
+    "libcef/browser/views/button_impl.h",
+    "libcef/browser/views/button_view.h",
+    "libcef/browser/views/color_provider_tracker.cc",
+    "libcef/browser/views/color_provider_tracker.h",
+    "libcef/browser/views/display_impl.cc",
+    "libcef/browser/views/display_impl.h",
+    "libcef/browser/views/fill_layout_impl.cc",
+    "libcef/browser/views/fill_layout_impl.h",
+    "libcef/browser/views/label_button_impl.h",
+    "libcef/browser/views/label_button_view.h",
+    "libcef/browser/views/layout_impl.h",
+    "libcef/browser/views/layout_adapter.cc",
+    "libcef/browser/views/layout_adapter.h",
+    "libcef/browser/views/layout_util.cc",
+    "libcef/browser/views/layout_util.h",
+    "libcef/browser/views/menu_button_impl.cc",
+    "libcef/browser/views/menu_button_impl.h",
+    "libcef/browser/views/menu_button_view.cc",
+    "libcef/browser/views/menu_button_view.h",
+    "libcef/browser/views/menu_runner_views.cc",
+    "libcef/browser/views/menu_runner_views.h",
+    "libcef/browser/views/overlay_view_host.cc",
+    "libcef/browser/views/overlay_view_host.h",
+    "libcef/browser/views/panel_impl.h",
+    "libcef/browser/views/panel_view.h",
+    "libcef/browser/views/scroll_view_impl.cc",
+    "libcef/browser/views/scroll_view_impl.h",
+    "libcef/browser/views/scroll_view_view.cc",
+    "libcef/browser/views/scroll_view_view.h",
+    "libcef/browser/views/textfield_impl.cc",
+    "libcef/browser/views/textfield_impl.h",
+    "libcef/browser/views/textfield_view.cc",
+    "libcef/browser/views/textfield_view.h",
+    "libcef/browser/views/view_adapter.cc",
+    "libcef/browser/views/view_adapter.h",
+    "libcef/browser/views/view_impl.h",
+    "libcef/browser/views/view_util.cc",
+    "libcef/browser/views/view_util.h",
+    "libcef/browser/views/view_view.h",
+    "libcef/browser/views/widget.cc",
+    "libcef/browser/views/widget.h",
+    "libcef/browser/views/widget_destruction_observer.h",
+    "libcef/browser/views/widget_impl.cc",
+    "libcef/browser/views/widget_impl.h",
+    "libcef/browser/views/window_impl.cc",
+    "libcef/browser/views/window_impl.h",
+    "libcef/browser/views/window_view.cc",
+    "libcef/browser/views/window_view.h",
+    "libcef/browser/x509_certificate_impl.cc",
+    "libcef/browser/x509_certificate_impl.h",
+    "libcef/browser/x509_cert_principal_impl.cc",
+    "libcef/browser/x509_cert_principal_impl.h",
+    "libcef/browser/xml_reader_impl.cc",
+    "libcef/browser/xml_reader_impl.h",
+    "libcef/browser/zip_reader_impl.cc",
+    "libcef/browser/zip_reader_impl.h",
+    "libcef/common/api_version_util.h",
+    "libcef/common/app_manager.cc",
+    "libcef/common/app_manager.h",
+    "libcef/common/base_impl.cc",
+    "libcef/common/cef_switches.cc",
+    "libcef/common/cef_switches.h",
+    "libcef/common/chrome/chrome_content_client_cef.cc",
+    "libcef/common/chrome/chrome_content_client_cef.h",
+    "libcef/common/chrome/chrome_main_delegate_cef.cc",
+    "libcef/common/chrome/chrome_main_delegate_cef.h",
+    "libcef/common/command_line_impl.cc",
+    "libcef/common/command_line_impl.h",
+    "libcef/common/crash_reporter_client.cc",
+    "libcef/common/crash_reporter_client.h",
+    "libcef/common/crash_reporting.cc",
+    "libcef/common/crash_reporting.h",
+    "libcef/common/drag_data_impl.cc",
+    "libcef/common/drag_data_impl.h",
+    "libcef/common/file_util_impl.cc",
+    "libcef/common/frame_util.cc",
+    "libcef/common/frame_util.h",
+    "libcef/common/i18n_util_impl.cc",
+    "libcef/common/json_impl.cc",
+    "libcef/common/net/http_header_utils.cc",
+    "libcef/common/net/http_header_utils.h",
+    "libcef/common/net/scheme_registration.cc",
+    "libcef/common/net/scheme_registration.h",
+    "libcef/common/net/url_util.cc",
+    "libcef/common/net/url_util.h",
+    "libcef/common/net_service/net_service_util.cc",
+    "libcef/common/net_service/net_service_util.h",
+    "libcef/common/parser_impl.cc",
+    "libcef/common/process_message_impl.cc",
+    "libcef/common/process_message_impl.h",
+    "libcef/common/process_message_smr_impl.cc",
+    "libcef/common/process_message_smr_impl.h",
+    "libcef/common/request_impl.cc",
+    "libcef/common/request_impl.h",
+    "libcef/common/resource_bundle_delegate.cc",
+    "libcef/common/resource_bundle_delegate.h",
+    "libcef/common/resource_bundle_impl.cc",
+    "libcef/common/resource_bundle_impl.h",
+    "libcef/common/resource_util.cc",
+    "libcef/common/resource_util.h",
+    "libcef/common/response_impl.cc",
+    "libcef/common/response_impl.h",
+    "libcef/common/scheme_registrar_impl.cc",
+    "libcef/common/scheme_registrar_impl.h",
+    "libcef/common/string_list_impl.cc",
+    "libcef/common/string_map_impl.cc",
+    "libcef/common/string_multimap_impl.cc",
+    "libcef/common/string_types_impl.cc",
+    "libcef/common/string_util.cc",
+    "libcef/common/string_util.h",
+    "libcef/common/task_impl.cc",
+    "libcef/common/task_runner_impl.cc",
+    "libcef/common/task_runner_impl.h",
+    "libcef/common/task_runner_manager.cc",
+    "libcef/common/task_runner_manager.h",
+    "libcef/common/task_util.h",
+    "libcef/common/thread_impl.cc",
+    "libcef/common/thread_impl.h",
+    "libcef/common/time_impl.cc",
+    "libcef/common/time_util.h",
+    "libcef/common/tracker.cc",
+    "libcef/common/tracker.h",
+    "libcef/common/urlrequest_impl.cc",
+    "libcef/common/value_base.cc",
+    "libcef/common/value_base.h",
+    "libcef/common/values_impl.cc",
+    "libcef/common/values_impl.h",
+    "libcef/common/waitable_event_impl.cc",
+    "libcef/common/waitable_event_impl.h",
+    "libcef/renderer/browser_config.h",
+    "libcef/renderer/browser_impl.cc",
+    "libcef/renderer/browser_impl.h",
+    "libcef/renderer/chrome/chrome_content_renderer_client_cef.cc",
+    "libcef/renderer/chrome/chrome_content_renderer_client_cef.h",
+    "libcef/renderer/dom_document_impl.cc",
+    "libcef/renderer/dom_document_impl.h",
+    "libcef/renderer/dom_node_impl.cc",
+    "libcef/renderer/dom_node_impl.h",
+    "libcef/renderer/frame_impl.cc",
+    "libcef/renderer/frame_impl.h",
+    "libcef/renderer/render_frame_observer.cc",
+    "libcef/renderer/render_frame_observer.h",
+    "libcef/renderer/render_frame_util.cc",
+    "libcef/renderer/render_frame_util.h",
+    "libcef/renderer/render_manager.cc",
+    "libcef/renderer/render_manager.h",
+    "libcef/renderer/thread_util.h",
+    "libcef/renderer/v8_impl.cc",
+    "libcef/renderer/v8_impl.h",
+
+    # For Chrome runtime support.
+    "//chrome/app/chrome_main_delegate.cc",
+    "//chrome/app/chrome_main_delegate.h",
+  ]
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
   ]
 
-  public_configs = [ "libcef/features:config" ]
+  public_configs = [
+    "libcef/features:config",
+  ]
 
   include_dirs = [
     # Crashpad code uses paths relative to this directory.
     "//third_party/crashpad/crashpad",
   ]
 
-  if (defined(ohos_enable_cef_chrome_runtime) &&
-      !ohos_enable_cef_chrome_runtime) {
-    sources -= [
-      "//chrome/app/chrome_main_delegate.cc",
-      "//chrome/app/chrome_main_delegate.h",
-      "libcef/browser/chrome/browser_delegate.h",
-      "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
-      "libcef/browser/chrome/browser_platform_delegate_chrome.h",
-      "libcef/browser/chrome/chrome_browser_context.cc",
-      "libcef/browser/chrome/chrome_browser_context.h",
-      "libcef/browser/chrome/chrome_browser_delegate.cc",
-      "libcef/browser/chrome/chrome_browser_delegate.h",
-      "libcef/browser/chrome/chrome_browser_host_impl.cc",
-      "libcef/browser/chrome/chrome_browser_host_impl.h",
-      "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.cc",
-      "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.h",
-      "libcef/browser/chrome/chrome_content_browser_client_cef.cc",
-      "libcef/browser/chrome/chrome_content_browser_client_cef.h",
-      "libcef/browser/chrome/chrome_context_menu_handler.cc",
-      "libcef/browser/chrome/chrome_context_menu_handler.h",
-      "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.cc",
-      "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.h",
-      "libcef/browser/chrome_crash_reporter_client_stub.cc",
-      "libcef/browser/net/chrome_scheme_handler.cc",
-      "libcef/browser/net/chrome_scheme_handler.h",
-      "libcef/common/chrome/chrome_content_client_cef.cc",
-      "libcef/common/chrome/chrome_content_client_cef.h",
-      "libcef/common/chrome/chrome_main_delegate_cef.cc",
-      "libcef/common/chrome/chrome_main_delegate_cef.h",
-      "libcef/common/chrome/chrome_main_runner_delegate.cc",
-      "libcef/common/chrome/chrome_main_runner_delegate.h",
-      "libcef/renderer/chrome/chrome_content_renderer_client_cef.cc",
-      "libcef/renderer/chrome/chrome_content_renderer_client_cef.h",
-    ]
-  }
-
-  if (is_ohos) {
-    sources += [
-      "libcef/browser/predictors/predictor_database.cc",
-      "libcef/browser/predictors/predictor_database.h",
-    ]
-  }
-
-  if (is_ohos && !enable_print_preview) {
-    sources -= [
-      "libcef/browser/printing/constrained_window_views_client.cc",
-      "libcef/browser/printing/constrained_window_views_client.h",
-      "libcef/browser/printing/print_view_manager.cc",
-      "libcef/browser/printing/print_view_manager.h",
-    ]
-  }
-
-  if (is_ohos && !enable_plugins) {
-    sources -= [
-      "libcef/browser/web_plugin_impl.cc",
-      "libcef/browser/web_plugin_impl.h",
-    ]
-  }
-
-  if (is_ohos && !ohos_enable_media_router) {
-    sources -= [
-      "libcef/browser/media_router/media_route_impl.cc",
-      "libcef/browser/media_router/media_route_impl.h",
-      "libcef/browser/media_router/media_router_impl.cc",
-      "libcef/browser/media_router/media_router_impl.h",
-      "libcef/browser/media_router/media_router_manager.cc",
-      "libcef/browser/media_router/media_router_manager.h",
-      "libcef/browser/media_router/media_sink_impl.cc",
-      "libcef/browser/media_router/media_sink_impl.h",
-      "libcef/browser/media_router/media_source_impl.cc",
-      "libcef/browser/media_router/media_source_impl.h",
-    ]
-  }
-
   public_deps = [
     # Bring in feature flag defines.
-    "//cef/libcef/features",
+    "//cef/libcef/features:buildflags",
+    # Support relative include paths.
+    "//base",
+    "//third_party/abseil-cpp:absl",
   ]
 
   deps = [
     ":cef_make_headers",
-    ":libcef_static_unittested",
     "libcef/common/mojom",
 
-    # Generate API bindings for extensions.
-    # TODO(cef): Enable if/when CEF exposes its own Mojo APIs. See
-    # libcef/common/extensions/api/README.txt for details.
-    #"libcef/common/extensions/api",
-    #"libcef/common/extensions/api:api_registration",
-    "libcef/common/extensions/api:extensions_features",
+    ":libcef_static_unittested",
 
     # Normal build dependencies. Should be sorted alphabetically.
-    "//base",
     "//base:base_static",
-    "//base/third_party/dynamic_annotations",
     "//cc",
-    "//chrome:browser_dependencies",
-    "//chrome:child_dependencies",
+    "//chrome:dependencies",
     "//chrome:packed_resources",
     "//chrome:resources",
     "//chrome:strings",
     "//chrome/common:buildflags",
     "//chrome/services/printing:lib",
-    "//components/cdm/renderer",
     "//components/certificate_transparency",
     "//components/component_updater",
     "//components/content_settings/core/browser",
     "//components/content_settings/core/common",
     "//components/crx_file",
-    "//components/data_use_measurement/core",
     "//components/google/core/common",
     "//components/keyed_service/content:content",
     "//components/keyed_service/core:core",
@@ -1051,9 +953,6 @@ static_library("libcef_static") {
     "//components/url_formatter",
     "//components/user_prefs",
     "//components/version_info",
-    "//components/visitedlink/browser",
-    "//components/visitedlink/common",
-    "//components/visitedlink/renderer",
     "//components/viz/service",
     "//components/web_cache/renderer",
     "//content/public/app",
@@ -1066,17 +965,14 @@ static_library("libcef_static") {
     "//crypto",
     "//device/base",
     "//extensions/browser",
-    "//extensions/browser:core_api_provider",
     "//extensions/buildflags",
-    "//extensions/common:core_api_provider",
     "//extensions/common/api",
+    "//extensions/common:core_api_provider",
     "//extensions/renderer",
-    "//gpu",
     "//ipc",
     "//media",
     "//net",
     "//pdf",
-    "//ppapi/buildflags",
     "//printing/buildflags",
     "//services/network:network_service",
     "//services/network/public/cpp",
@@ -1086,16 +982,17 @@ static_library("libcef_static") {
     "//third_party/blink/public:blink",
     "//third_party/brotli:dec",
     "//third_party/cld_3/src/src:cld_3",
+    "//third_party/crashpad/crashpad/handler",
     "//third_party/hunspell",
-    "//third_party/icu",
     "//third_party/leveldatabase",
     "//third_party/libxml:libxml",
-    "//third_party/pdfium",
-    "//third_party/widevine/cdm",
     "//third_party/widevine/cdm:headers",
+    "//third_party/widevine/cdm",
+    "//third_party/icu",
     "//third_party/zlib:minizip",
     "//ui/base",
     "//ui/base/ime",
+    "//ui/events",
     "//ui/events:events_base",
     "//ui/gfx",
     "//ui/gfx/geometry",
@@ -1103,474 +1000,180 @@ static_library("libcef_static") {
     "//ui/gfx/ipc/geometry",
     "//ui/gfx/ipc/skia",
     "//ui/gl",
+    "//ui/strings",
+    "//ui/views",
+    "//ui/views/controls/webview",
     "//url",
     "//v8",
   ]
 
-  deps += [ "//components/no_state_prefetch/renderer" ]
-  
-  if (is_ohos) {
-    deps += [
-      "//components/js_injection/browser",
-      "//components/js_injection/renderer",
-      "//components/password_manager/content/browser",
-      "//components/ukm/content:content",
-    ]
-  }
-
-  if (defined(ohos_enable_cef_chrome_runtime) &&
-      !ohos_enable_cef_chrome_runtime) {
-    deps -= [
-      "//chrome:packed_resources",
-      "//chrome:resources",
-      "//chrome:strings",
-      "//chrome/services/printing:lib",
-    ]
-  }
-
-  if (is_ohos && !enable_print_preview) {
-    deps -= [
-      "//components/printing/browser",
-      "//components/printing/common",
-      "//components/printing/renderer",
-      "//components/services/print_compositor/public/cpp",
-      "//components/services/print_compositor/public/mojom",
-    ]
-  }
-
-  if (is_ohos && !enable_plugins) {
-    deps -= [ "//components/plugins/renderer" ]
-  }
-
-  if (is_ohos && !enable_pdf) {
-    deps -= [
-      "//components/pdf/browser",
-      "//components/pdf/renderer",
-      "//pdf",
-    ]
-  }
-
-  if (is_ohos && !ohos_enable_media_router) {
-    deps -= [ "//components/media_router/common/mojom:media_router" ]
-  }
-
-  if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
-    deps += [ "//ohos_nweb_ex/overrides/cef" ]
-  }
-
-  if (is_ohos) {
-    deps += [ "//components/network_hints/browser" ]
-  }
-
-  if (safe_browsing_mode != 0) {
-    deps += [ "//components/safe_browsing/core/db:test_database_manager" ]
-  }
-
   if (is_win) {
-    sources +=
-        includes_win + [
-          "libcef/browser/alloy/alloy_browser_main_win.cc",
-          "libcef/browser/native/browser_platform_delegate_native_win.cc",
-          "libcef/browser/native/browser_platform_delegate_native_win.h",
-          "libcef/browser/native/cursor_util_win.cc",
-          "libcef/browser/native/file_dialog_runner_win.cc",
-          "libcef/browser/native/file_dialog_runner_win.h",
-          "libcef/browser/native/javascript_dialog_runner_win.cc",
-          "libcef/browser/native/javascript_dialog_runner_win.h",
-          "libcef/browser/native/menu_2.cc",
-          "libcef/browser/native/menu_2.h",
-          "libcef/browser/native/menu_runner_win.cc",
-          "libcef/browser/native/menu_runner_win.h",
-          "libcef/browser/native/menu_wrapper.h",
-          "libcef/browser/native/native_menu_win.cc",
-          "libcef/browser/native/native_menu_win.h",
-          "libcef/browser/osr/browser_platform_delegate_osr_win.cc",
-          "libcef/browser/osr/browser_platform_delegate_osr_win.h",
-        ]
+    sources += includes_win + [
+      "libcef/browser/native/browser_platform_delegate_native_win.cc",
+      "libcef/browser/native/browser_platform_delegate_native_win.h",
+      "libcef/browser/osr/browser_platform_delegate_osr_win.cc",
+      "libcef/browser/osr/browser_platform_delegate_osr_win.h",
+      "libcef/browser/preferred_stack_size_win.inc",
+      "libcef_dll/bootstrap/bootstrap_util_win.cc",
+      "libcef_dll/bootstrap/bootstrap_util_win.h",
+    ]
 
     deps += [
-      "//chrome/chrome_elf",
       "//chrome/install_static:secondary_module",
+      "//chrome/chrome_elf",
     ]
 
     if (is_component_build) {
       deps += [ "//content:sandbox_helper_win" ]
     }
 
-    libs = [
-      "comctl32.lib",
-
-      # For D3D11_DECODER_PROFILE_H264_VLD_NOFGT.
-      "dxguid.lib",
+    data_deps = [
+      "//chrome/elevation_service",
     ]
-
-    data_deps = [ "//chrome/elevation_service" ]
-  }
-
-  if (is_ohos) {
-    sources +=
-        includes_linux + [
-          "libcef/browser/native/browser_platform_delegate_native_linux.cc",
-          "libcef/browser/native/browser_platform_delegate_native_linux.h",
-          "libcef/browser/native/cursor_util_linux.cc",
-          "libcef/browser/native/menu_runner_linux.cc",
-          "libcef/browser/native/menu_runner_linux.h",
-          "libcef/browser/osr/browser_platform_delegate_osr_linux.cc",
-          "libcef/browser/osr/browser_platform_delegate_osr_linux.h",
-        ]
   }
 
   if (is_linux) {
-    sources +=
-        includes_linux + [
-          "libcef/browser/native/browser_platform_delegate_native_linux.cc",
-          "libcef/browser/native/browser_platform_delegate_native_linux.h",
-          "libcef/browser/native/cursor_util_linux.cc",
-          "libcef/browser/native/menu_runner_linux.cc",
-          "libcef/browser/native/menu_runner_linux.h",
-          "libcef/browser/osr/browser_platform_delegate_osr_linux.cc",
-          "libcef/browser/osr/browser_platform_delegate_osr_linux.h",
-          "libcef/browser/printing/print_dialog_linux.cc",
-          "libcef/browser/printing/print_dialog_linux.h",
-        ]
+    sources += includes_linux + [
+      "libcef/browser/native/browser_platform_delegate_native_linux.cc",
+      "libcef/browser/native/browser_platform_delegate_native_linux.h",
+      "libcef/browser/osr/browser_platform_delegate_osr_linux.cc",
+      "libcef/browser/osr/browser_platform_delegate_osr_linux.h",
+      "libcef/browser/printing/print_dialog_linux.cc",
+      "libcef/browser/printing/print_dialog_linux.h",
+      "libcef/common/util_linux.h",
+      "libcef/common/util_linux.cc",
+    ]
+
+    deps += [
+      "//third_party/fontconfig",
+    ]
 
     if (ozone_platform_x11) {
       sources += [
         "libcef/browser/native/window_x11.cc",
         "libcef/browser/native/window_x11.h",
       ]
+    } else {
+      deps += [ "//third_party/angle:libEGL" ]
     }
 
-    deps += [
-      "//build/config/freetype",
-      "//third_party/fontconfig",
-    ]
-
-    if (is_linux && !ozone_platform_x11) {
-      deps += [ "//third_party/angle:libEGL" ]
+    if (use_dbus) {
+      deps += [ "//dbus" ]
+      defines = [ "USE_DBUS" ]
     }
   }
 
   if (is_mac) {
-    sources +=
-        includes_mac + [
-          "libcef/browser/native/browser_platform_delegate_native_mac.h",
-          "libcef/browser/native/browser_platform_delegate_native_mac.mm",
-          "libcef/browser/native/file_dialog_runner_mac.h",
-          "libcef/browser/native/file_dialog_runner_mac.mm",
-          "libcef/browser/native/javascript_dialog_runner_mac.h",
-          "libcef/browser/native/javascript_dialog_runner_mac.mm",
-          "libcef/browser/native/menu_runner_mac.h",
-          "libcef/browser/native/menu_runner_mac.mm",
-          "libcef/browser/osr/browser_platform_delegate_osr_mac.h",
-          "libcef/browser/osr/browser_platform_delegate_osr_mac.mm",
-          "libcef/common/util_mac.h",
-          "libcef/common/util_mac.mm",
+    sources += includes_mac + [
+      "libcef/browser/chrome/chrome_content_browser_client_cef_mac.mm",
+      "libcef/browser/chrome/chrome_web_contents_view_delegate_cef_mac.mm",
+      "libcef/browser/native/browser_platform_delegate_native_mac.h",
+      "libcef/browser/native/browser_platform_delegate_native_mac.mm",
+      "libcef/browser/native/cursor_util_mac.mm",
+      "libcef/browser/native/javascript_dialog_runner_mac.h",
+      "libcef/browser/native/javascript_dialog_runner_mac.mm",
+      "libcef/browser/native/menu_runner_mac.h",
+      "libcef/browser/native/menu_runner_mac.mm",
+      "libcef/browser/osr/browser_platform_delegate_osr_mac.h",
+      "libcef/browser/osr/browser_platform_delegate_osr_mac.mm",
+      "libcef/browser/views/native_widget_mac.h",
+      "libcef/browser/views/native_widget_mac.mm",
+      "libcef/browser/views/ns_window.h",
+      "libcef/browser/views/ns_window.mm",
+      "libcef/browser/views/view_util_mac.mm",
+      "libcef/common/util_mac.h",
+      "libcef/common/util_mac.mm",
 
-          # For Chrome runtime support.
-          "//chrome/app/chrome_main_mac.h",
-          "//chrome/app/chrome_main_mac.mm",
-        ]
-  }
-
-  if (is_win || is_mac) {
-    deps += [ "//third_party/crashpad/crashpad/handler" ]
+      # For Chrome runtime support.
+      "//chrome/app/chrome_main_mac.h",
+      "//chrome/app/chrome_main_mac.mm",
+    ]
+  } else {
+    sources += [
+      "libcef/browser/chrome/chrome_web_contents_view_delegate_cef.cc",
+    ]
   }
 
   if (ozone_platform_x11) {
     deps += [ "//ui/events/devices/x11" ]
   }
 
-  if (is_posix && !is_mac) {
-    sources += [
-      "libcef/common/cef_crash_report_utils.cc",
-      "libcef/common/cef_crash_report_utils.h",
-    ]
-
-    deps += [
-      "//components/crash/content/browser",
-      "//components/crash/core/app",
-    ]
-  }
-
   if (v8_use_external_startup_data && use_v8_context_snapshot) {
     deps += [ "//tools/v8_context_snapshot" ]
   }
 
-  if (toolkit_views) {
+  if (use_aura) {
     sources += [
-      "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.cc",
-      "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h",
-      "libcef/browser/chrome/views/chrome_browser_frame.cc",
-      "libcef/browser/chrome/views/chrome_browser_frame.h",
-      "libcef/browser/chrome/views/chrome_browser_view.cc",
-      "libcef/browser/chrome/views/chrome_browser_view.h",
-      "libcef/browser/chrome/views/chrome_views_util.cc",
-      "libcef/browser/chrome/views/chrome_views_util.h",
-      "libcef/browser/chrome/views/toolbar_view_impl.cc",
-      "libcef/browser/chrome/views/toolbar_view_impl.h",
-      "libcef/browser/chrome/views/toolbar_view_view.cc",
-      "libcef/browser/chrome/views/toolbar_view_view.h",
-      "libcef/browser/native/window_delegate_view.cc",
-      "libcef/browser/native/window_delegate_view.h",
-      "libcef/browser/views/basic_label_button_impl.cc",
-      "libcef/browser/views/basic_label_button_impl.h",
-      "libcef/browser/views/basic_label_button_view.cc",
-      "libcef/browser/views/basic_label_button_view.h",
-      "libcef/browser/views/basic_panel_impl.cc",
-      "libcef/browser/views/basic_panel_impl.h",
-      "libcef/browser/views/basic_panel_view.cc",
-      "libcef/browser/views/basic_panel_view.h",
-      "libcef/browser/views/box_layout_impl.cc",
-      "libcef/browser/views/box_layout_impl.h",
-      "libcef/browser/views/browser_platform_delegate_views.cc",
-      "libcef/browser/views/browser_platform_delegate_views.h",
-      "libcef/browser/views/browser_view_impl.cc",
-      "libcef/browser/views/browser_view_impl.h",
-      "libcef/browser/views/browser_view_view.cc",
-      "libcef/browser/views/browser_view_view.h",
-      "libcef/browser/views/button_impl.h",
-      "libcef/browser/views/button_view.h",
-      "libcef/browser/views/display_impl.cc",
-      "libcef/browser/views/display_impl.h",
-      "libcef/browser/views/fill_layout_impl.cc",
-      "libcef/browser/views/fill_layout_impl.h",
-      "libcef/browser/views/label_button_impl.h",
-      "libcef/browser/views/label_button_view.h",
-      "libcef/browser/views/layout_adapter.cc",
-      "libcef/browser/views/layout_adapter.h",
-      "libcef/browser/views/layout_impl.h",
-      "libcef/browser/views/layout_util.cc",
-      "libcef/browser/views/layout_util.h",
-      "libcef/browser/views/menu_button_impl.cc",
-      "libcef/browser/views/menu_button_impl.h",
-      "libcef/browser/views/menu_button_view.cc",
-      "libcef/browser/views/menu_button_view.h",
-      "libcef/browser/views/menu_runner_views.cc",
-      "libcef/browser/views/menu_runner_views.h",
-      "libcef/browser/views/overlay_view_host.cc",
-      "libcef/browser/views/overlay_view_host.h",
-      "libcef/browser/views/panel_impl.h",
-      "libcef/browser/views/panel_view.h",
-      "libcef/browser/views/scroll_view_impl.cc",
-      "libcef/browser/views/scroll_view_impl.h",
-      "libcef/browser/views/scroll_view_view.cc",
-      "libcef/browser/views/scroll_view_view.h",
-      "libcef/browser/views/textfield_impl.cc",
-      "libcef/browser/views/textfield_impl.h",
-      "libcef/browser/views/textfield_view.cc",
-      "libcef/browser/views/textfield_view.h",
-      "libcef/browser/views/view_adapter.cc",
-      "libcef/browser/views/view_adapter.h",
-      "libcef/browser/views/view_impl.h",
-      "libcef/browser/views/view_util.cc",
-      "libcef/browser/views/view_util.h",
-      "libcef/browser/views/view_view.h",
-      "libcef/browser/views/window_impl.cc",
-      "libcef/browser/views/window_impl.h",
-      "libcef/browser/views/window_view.cc",
-      "libcef/browser/views/window_view.h",
-
-      # Part of //ui/views:test_support which is testingonly.
-      "//ui/views/test/desktop_test_views_delegate.h",
-      "//ui/views/test/test_views_delegate.h",
-
-      # Support for UI input events.
-      # Part of //ui/base:test_support which is testingonly.
-      "//ui/base/test/ui_controls.h",
+      "libcef/browser/native/browser_platform_delegate_native_aura.cc",
+      "libcef/browser/native/browser_platform_delegate_native_aura.h",
+      "libcef/browser/native/cursor_util_aura.cc",
+      "libcef/browser/native/menu_runner_views_aura.cc",
+      "libcef/browser/native/menu_runner_views_aura.h",
+      "libcef/browser/views/view_util_aura.cc",
     ]
 
     deps += [
-      "//ui/events",
-      "//ui/strings",
-      "//ui/views",
-      "//ui/views/controls/webview",
-    ]
-
-    if (use_aura) {
-      sources += [
-        "libcef/browser/native/browser_platform_delegate_native_aura.cc",
-        "libcef/browser/native/browser_platform_delegate_native_aura.h",
-        "libcef/browser/views/view_util_aura.cc",
-
-        # Part of //ui/views:test_support which is testingonly.
-        "//ui/views/test/desktop_test_views_delegate_aura.cc",
-        "//ui/views/test/test_views_delegate_aura.cc",
-
-        # Support for UI input events.
-        # Part of //ui/base:test_support which is testingonly.
-        "//ui/aura/test/ui_controls_factory_aura.h",
-        "//ui/base/test/ui_controls_aura.cc",
-      ]
-
-      deps += [
-        "//ui/aura",
-        "//ui/wm",
-        "//ui/wm/public",
-      ]
-
-      if (is_win) {
-        sources += [
-          # Support for UI input events.
-          # Part of //base/test:test_config which is testingonly.
-          "//base/test/test_switches.cc",
-          "//base/test/test_switches.h",
-          "//base/test/test_timeouts.cc",
-          "//base/test/test_timeouts.h",
-
-          # Part of //ui/aura:test_support which is testingonly.
-          "//ui/aura/test/ui_controls_factory_aurawin.cc",
-
-          # Part of //ui/base:test_support which is testingonly.
-          "//ui/base/test/ui_controls_internal_win.cc",
-          "//ui/base/test/ui_controls_internal_win.h",
-        ]
-      }
-
-      if (is_linux) {
-        sources += [
-          # Support for UI input events.
-          # Part of //ui/aura:test_support which is testingonly.
-          "$root_gen_dir/ui/ozone/test_constructor_list.cc",
-          "//ui/aura/test/aura_test_utils.cc",
-          "//ui/aura/test/aura_test_utils.h",
-
-          # Part of //ui/events:test_support which is testingonly.
-          "//ui/events/test/x11_event_waiter.cc",
-          "//ui/events/test/x11_event_waiter.h",
-
-          # Part of //ui/ozone::ui_test_support which is testingonly.
-          "//ui/ozone/common/test/stub_ozone_ui_controls_test_helper.cc",
-          "//ui/ozone/common/test/stub_ozone_ui_controls_test_helper.h",
-          "//ui/ozone/public/ozone_ui_controls_test_helper.cc",
-          "//ui/ozone/public/ozone_ui_controls_test_helper.h",
-
-          # Part of //ui/views:test_support which is testingonly.
-          "//ui/views/test/test_desktop_screen_ozone.cc",
-          "//ui/views/test/test_desktop_screen_ozone.h",
-          "//ui/views/test/ui_controls_factory_desktop_aura_ozone.cc",
-          "//ui/views/test/ui_controls_factory_desktop_aura_ozone.h",
-        ]
-
-        deps += [ "//ui/ozone:generate_test_support_constructor_list" ]
-
-        if (ozone_platform_x11) {
-          sources += [
-            # Part of //ui/aura:test_support which is testingonly.
-            # Support for UI input events.
-            # Part of //ui/base/x:test_support which is testingonly.
-            "//ui/aura/test/x11_event_sender.h",
-            "//ui/base/x/test/x11_ui_controls_test_helper.cc",
-            "//ui/base/x/test/x11_ui_controls_test_helper.h",
-
-            # Part of //ui/ozone/platform/x11:test_support which is testingonly.
-            "//ui/ozone/platform/x11/x11_ozone_ui_controls_test_helper.cc",
-            "//ui/ozone/platform/x11/x11_ozone_ui_controls_test_helper.h",
-          ]
-        } else {
-          sources += [
-            # Support for UI input events.
-            # Part of //ui/base:test_support which is testingonly.
-            "//ui/aura/test/ui_controls_factory_ozone.cc",
-
-            # Part of //ui//events:test_support which is testingonly.
-            "//ui/events/test/events_test_utils.cc",
-          ]
-        }
-      }
-      if (is_ohos) {
-        sources += [
-          # Support for UI input events.
-          # Part of //ui/aura:test_support which is testingonly.
-          "//ui/aura/test/aura_test_utils.cc",
-          "//ui/aura/test/aura_test_utils.h",
-
-          # Part of //ui/events:test_support which is testingonly.
-          # "//ui/events/test/x11_event_waiter.cc",
-          # "//ui/events/test/x11_event_waiter.h",
-        ]
-      }
-    }
-
-    if (is_mac) {
-      sources += [
-        "libcef/browser/views/view_util_mac.mm",
-
-        # Part of //ui/views:test_support which is testingonly.
-        "//ui/views/test/desktop_test_views_delegate_mac.mm",
-        "//ui/views/test/test_views_delegate_mac.mm",
-
-        # Support for UI input events.
-        # Part of //ui/base:test_support which is testingonly.
-        "//ui/base/test/ui_controls_mac.mm",
-
-        # Part of //ui//events:test_support which is testingonly.
-        "//ui/events/test/cocoa_test_event_utils.mm",
-      ]
-    }
-  } else {
-    sources += [
-      # Provides stub implementations for the views static methods.
-      "libcef_dll/views_stub.cc",
+      "//ui/aura",
+      "//ui/wm",
+      "//ui/wm/public",
     ]
   }
 
-  if (is_ohos) {
+  if (enable_cdm_host_verification) {
     sources += [
-      "libcef/browser/chrome/views/chrome_views_util.cc",
-      "libcef/browser/chrome/views/chrome_views_util.h",
-      "libcef/browser/views/view_util.cc",
-      "libcef/browser/views/view_util.h",
+      "libcef/common/cdm_host_file_path.cc",
+      "libcef/common/cdm_host_file_path.h",
     ]
-
-    if (use_aura) {
-      sources += [
-        "libcef/browser/native/browser_platform_delegate_native_aura.cc",
-        "libcef/browser/native/browser_platform_delegate_native_aura.h",
-        "libcef/browser/views/view_util_aura.cc",
-
-        # Part of //ui/views:test_support which is testingonly.
-        "//ui/views/test/desktop_test_views_delegate_aura.cc",
-        "//ui/views/test/test_views_delegate_aura.cc",
-
-        # Support for UI input events.
-        # Part of //ui/base:test_support which is testingonly.
-        "//ui/aura/test/ui_controls_factory_aura.h",
-        "//ui/base/test/ui_controls_aura.cc",
-      ]
-
-      deps += [
-        "//ui/aura",
-        "//ui/wm",
-        "//ui/wm/public",
-      ]
-
-      if (is_ohos) {
-        sources += [
-          # Support for UI input events.
-          # Part of //ui/aura:test_support which is testingonly.
-          "//ui/aura/test/aura_test_utils.cc",
-          "//ui/aura/test/aura_test_utils.h",
-
-          # Part of //ui/events:test_support which is testingonly.
-          # "//ui/events/test/x11_event_waiter.cc",
-          # "//ui/events/test/x11_event_waiter.h",
-        ]
-
-        deps += [
-          "//ui/events",
-          "//ui/strings",
-          "//ui/views",
-          "//ui/views/controls/webview",
-        ]
-      }
-    }
   }
 }
+
 
 #
 # libcef_dll_wrapper static targets.
 #
+
+if (is_mac) {
+  # Minimal target for loading the CEF framework dynamically on macOS.
+  # This provides just the necessary C API functions without the full
+  # C++ wrapper.
+  static_library("cef_capi_library_loader") {
+    # Necessary because the generated file includes test API headers.
+    testonly = true
+
+    sources = [
+      "include/wrapper/cef_library_loader.h",
+      "libcef_dll/wrapper/libcef_dll_dylib.cc",
+      "libcef_dll/wrapper/cef_scoped_library_loader_mac.mm",
+    ]
+
+    defines = [ "WRAPPING_CEF_SHARED" ]
+
+    configs += [ ":libcef_includes_config" ]
+    public_configs = [ ":libcef_includes_config" ]
+
+    deps = [ ":cef_make_headers" ]
+  }
+
+  # Minimal target for loading the CEF sandbox dynamically on macOS.
+  # This provides just the necessary C API functions without the full
+  # C++ wrapper.
+  static_library("cef_capi_sandbox_loader") {
+    # Necessary because the generated file includes test API headers.
+    testonly = true
+
+    sources = [
+      "include/cef_sandbox_mac.h",
+      "libcef_dll/wrapper/cef_scoped_sandbox_context_mac.mm",
+    ]
+
+    defines = [ "WRAPPING_CEF_SHARED" ]
+
+    configs += [ ":libcef_includes_config" ]
+    public_configs = [ ":libcef_includes_config" ]
+
+    deps = [ ":cef_make_headers" ]
+  }
+}
 
 # Configuration that will be applied to all targets that build autogen files.
 config("libcef_autogen_config") {
@@ -1582,26 +1185,75 @@ config("libcef_autogen_config") {
   }
 }
 
+# Configuration that supports #include paths relative to src/cef/ for CEF
+# client-side code. CEF library-side code (Chromium code and cef/libcef/
+# directory) uses #include paths relative to src/. See libcef/features:config
+# for CEF library-side configuration.
+config("libcef_includes_config") {
+  include_dirs = [
+    # cef/include/ directory and CEF client-side code use #includes relative to
+    # the cef/ directory.
+    ".",
+    # CEF generated header files that also need to be discoverable.
+    # These #includes from client-side code will not be prefixed with cef/.
+    # They will be copied to the include/ directory in the binary distribution.
+    "$root_gen_dir/cef",
+  ]
+}
+
 # Configuration that will be applied to all targets that depend on
 # libcef_dll_wrapper.
 config("libcef_dll_wrapper_config") {
-  include_dirs = [
-    # CEF sources use include paths relative to the CEF root directory.
-    ".",
-
-    # CEF generates some header files that also need to be discoverable.
-    # They will be copied to the include/ directory in the binary distribution.
-    "$root_out_dir/includes",
+  configs = [
+    ":libcef_autogen_config",
+    ":libcef_includes_config",
   ]
 
-  configs = [ ":libcef_autogen_config" ]
+  if (is_win) {
+    if (current_cpu == "x86") {
+      # Set the initial stack size to 0.5MiB, instead of the 1.5MiB minimum
+      # needed by CEF's main thread. This saves significant memory on threads
+      # (like those in the Windows thread pool, and others) whose stack size we
+      # can only control through this setting. The main thread (in 32-bit builds
+      # only) uses fibers to switch to a 4MiB stack at runtime via
+      # CefRunWinMainWithPreferredStackSize().
+      ldflags = [ "/STACK:0x80000" ]
+    } else {
+      # Increase the initial stack size to 8MiB from the default 1MiB.
+      ldflags = [ "/STACK:0x800000" ]
+    }
+
+    # Required to support CefScopedLibraryLoader.
+    ldflags += [ "/DELAYLOAD:libcef.dll" ]
+  }
+
+  # Build using the minimum C++ version supported by the CEF binary distribution.
+  # Chromium (and libcef) may build with a newer C++ version so this helps to
+  # avoid accidental usage of new/unsupported language features in sample apps.
+  # For Chromium defaults see //build/config/compiler/BUILD.gn.
+  #
+  # Mixing C++17 and C++20 leads to build errors with modules enabled. Dependent
+  # targets must therefore also set use_libcxx_modules = false (see issue #3611).
+  if (is_win) {
+    cflags_cc = [ "/std:c++17" ]
+  } else {
+    cflags_cc = [ "-std=c++17" ]
+  }
+  if (is_mac) {
+    cflags_objcc = [ "-std=c++17" ]
+  }
+
+  if (cef_api_version != "") {
+    defines = [ "CEF_API_VERSION=$cef_api_version" ]
+  }
 }
 
 # libcef_dll_wrapper target.
 static_library("libcef_dll_wrapper") {
-  configs += [ "//build/config/sanitizers:cfi_config" ]
-  sources = includes_common + gypi_paths.autogen_cpp_includes +
-            gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes +
+  sources = includes_common +
+            gypi_paths.autogen_cpp_includes +
+            gypi_paths2.includes_capi +
+            gypi_paths.autogen_capi_includes +
             gypi_paths2.includes_wrapper +
             gypi_paths2.libcef_dll_wrapper_sources_base +
             gypi_paths2.libcef_dll_wrapper_sources_common +
@@ -1611,16 +1263,25 @@ static_library("libcef_dll_wrapper") {
     sources += gypi_paths2.libcef_dll_wrapper_sources_mac
   }
 
+  if (is_win) {
+    sources += gypi_paths2.libcef_dll_wrapper_sources_win
+    libs = [
+      "crypt32.lib",
+      "wintrust.lib",
+    ]
+  }
+
   defines = [ "WRAPPING_CEF_SHARED" ]
 
   configs += [ ":libcef_dll_wrapper_config" ]
   public_configs = [ ":libcef_dll_wrapper_config" ]
 
-  deps = [
-    ":cef_make_headers",
-    "//base",
-  ]
+  deps = [ ":cef_make_headers" ]
+
+  # Disable clang modules for this target (see issue #3611).
+  use_libcxx_modules = false
 }
+
 
 #
 # cef_sandbox target.
@@ -1629,25 +1290,113 @@ static_library("libcef_dll_wrapper") {
 if (is_win) {
   static_library("cef_sandbox") {
     sources = [ "libcef_dll/sandbox/sandbox_win.cc" ]
-
-    # CEF sources use include paths relative to the CEF root directory.
-    include_dirs = [ "." ]
+    configs += [ ":libcef_includes_config" ]
     deps = [
-      "libcef/features",
+      ":make_config_header",
       "//sandbox",
     ]
   }
 }
 
 if (is_mac) {
-  static_library("cef_sandbox") {
+  shared_library("cef_sandbox") {
     sources = [ "libcef_dll/sandbox/sandbox_mac.mm" ]
-
-    # CEF sources use include paths relative to the CEF root directory.
-    include_dirs = [ "." ]
+    configs += [ ":libcef_includes_config" ]
     deps = [
+      ":make_config_header",
       "//build/config:executable_deps",
       "//sandbox/mac:seatbelt",
+    ]
+  }
+}
+
+#
+# bootstrap target.
+#
+
+if (is_win) {
+  bootstrap_sources = includes_common +
+                      includes_win + [
+    "include/wrapper/cef_certificate_util_win.h",
+    "include/wrapper/cef_util_win.h",
+    "libcef_dll/bootstrap/bootstrap_util_win.cc",
+    "libcef_dll/bootstrap/bootstrap_util_win.h",
+    "libcef_dll/bootstrap/bootstrap_win.cc",
+    "libcef_dll/bootstrap/win/bootstrap.rc",
+    "libcef_dll/bootstrap/win/resource.h",
+    "libcef_dll/wrapper/cef_certificate_util_win.cc",
+    "libcef_dll/wrapper/cef_util_win.cc",
+    "libcef/browser/crashpad_runner.cc",
+    "libcef/browser/crashpad_runner.h",
+    "libcef/browser/preferred_stack_size_win.inc",
+    "//chrome/app/delay_load_failure_hook_win.cc",
+    "//chrome/app/delay_load_failure_hook_win.h",
+    "//chrome/common/win/delay_load_failure_support.cc",
+    "//chrome/common/win/delay_load_failure_support.h",
+    "//content/app/sandbox_helper_win.cc",
+    "//content/public/app/sandbox_helper_win.h",
+  ]
+
+  bootstrap_deps = [
+    ":make_api_versions_header",
+    ":make_config_header",
+    ":make_version_header",
+    "//base",
+    "//build/win:default_exe_manifest",
+    "//chrome/install_static:secondary_module",
+    "//chrome/chrome_elf",
+    "//sandbox",
+    "//sandbox/policy",
+    "//third_party/crashpad/crashpad/handler",
+  ]
+
+  bootstrap_libs = [
+    "crypt32.lib",
+    "wintrust.lib",
+  ]
+
+  bootstrap_configs = [
+    ":libcef_includes_config",
+
+    # Delay-load as many DLLs as possible for sandbox and startup perf
+    # improvements.
+    "//build/config/win:delayloads",
+    "//build/config/win:delayloads_not_for_child_dll",
+  ]
+
+  # Windows application that initializes the sandbox and then passes
+  # execution to a client-provided DLL.
+  executable("bootstrap") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = bootstrap_sources
+    deps = bootstrap_deps
+    libs = bootstrap_libs
+    configs += bootstrap_configs
+
+    # Set /SUBSYSTEM:WINDOWS.
+    configs -= [ "//build/config/win:console" ]
+    configs += [ "//build/config/win:windowed" ]
+
+    defines = [
+      "CEF_BUILD_BOOTSTRAP",
+    ]
+  }
+
+  # Like "bootstrap", but as a console application.
+  executable("bootstrapc") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = bootstrap_sources
+    deps = bootstrap_deps
+    libs = bootstrap_libs
+    configs += bootstrap_configs
+
+    defines = [
+      "CEF_BUILD_BOOTSTRAP",
+      "CEF_BUILD_BOOTSTRAP_CONSOLE",
     ]
   }
 }
@@ -1657,13 +1406,10 @@ if (is_mac) {
 #
 
 # Included in locales/*.pak via //chrome/chrome_repack_locales.gni.
-grit("cef_strings") {
+grit_strings("cef_strings") {
   source = "libcef/resources/cef_strings.grd"
   outputs = [ "grit/cef_strings.h" ]
-  all_locales = locales + [ "fake-bidi" ]
-  foreach(locale, all_locales) {
-    outputs += [ "cef_strings_${locale}.pak" ]
-  }
+  locales = platform_pak_locales + [ "fake-bidi" ]
 }
 
 # Included in resources.pak via //chrome/chrome_paks.gni.
@@ -1682,32 +1428,33 @@ grit("cef_resources") {
 # Helper for generating pack header files.
 template("make_pack_header") {
   assert(defined(invoker.header))
+  assert(defined(invoker.inc))
   assert(defined(invoker.inputs))
-  assert(defined(invoker.deps))
 
   action("make_pack_header_${target_name}") {
     script = "tools/make_pack_header.py"
 
     inputs = invoker.inputs
-    outputs = [ invoker.header ]
+    outputs = [ invoker.header, invoker.inc ]
 
-    args = rebase_path(outputs, root_build_dir) +
-           rebase_path(inputs, root_build_dir)
+    args = rebase_path(outputs + inputs, root_build_dir)
 
-    deps = invoker.deps
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
   }
 }
 
 # Generate cef_pack_resources.h.
 make_pack_header("resources") {
-  header = "$root_out_dir/includes/include/cef_pack_resources.h"
+  header = "$root_gen_dir/cef/include/cef_pack_resources.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_pack_resources.inc"
   inputs = [
     "$root_gen_dir/base/tracing/protos/grit/tracing_proto_resources.h",
     "$root_gen_dir/cef/grit/cef_resources.h",
     "$root_gen_dir/chrome/grit/browser_resources.h",
     "$root_gen_dir/chrome/grit/common_resources.h",
     "$root_gen_dir/chrome/grit/component_extension_resources.h",
-    "$root_gen_dir/chrome/grit/dev_ui_browser_resources.h",
     "$root_gen_dir/chrome/grit/pdf_resources.h",
     "$root_gen_dir/chrome/grit/renderer_resources.h",
     "$root_gen_dir/components/grit/components_resources.h",
@@ -1716,22 +1463,25 @@ make_pack_header("resources") {
     "$root_gen_dir/content/browser/tracing/grit/tracing_resources.h",
     "$root_gen_dir/content/browser/webrtc/resources/grit/webrtc_internals_resources.h",
     "$root_gen_dir/content/grit/content_resources.h",
-    "$root_gen_dir/content/grit/dev_ui_content_resources.h",
+    "$root_gen_dir/content/grit/gpu_resources.h",
+    "$root_gen_dir/content/grit/histograms_resources.h",
+    "$root_gen_dir/content/grit/process_resources.h",
+    "$root_gen_dir/content/grit/service_worker_resources.h",
     "$root_gen_dir/extensions/grit/extensions_browser_resources.h",
     "$root_gen_dir/extensions/grit/extensions_renderer_resources.h",
     "$root_gen_dir/extensions/grit/extensions_resources.h",
     "$root_gen_dir/mojo/public/js/grit/mojo_bindings_resources.h",
     "$root_gen_dir/net/grit/net_resources.h",
+    "$root_gen_dir/third_party/blink/public/resources/grit/blink_image_resources.h",
     "$root_gen_dir/third_party/blink/public/resources/grit/blink_resources.h",
     "$root_gen_dir/ui/resources/grit/ui_resources.h",
-    "$root_gen_dir/ui/resources/grit/webui_generated_resources.h",
-    "$root_gen_dir/ui/resources/grit/webui_resources.h",
+    "$root_gen_dir/ui/views/resources/grit/views_resources.h",
+    "$root_gen_dir/ui/webui/resources/grit/webui_resources.h",
   ]
 
   deps = [
     ":cef_resources",
     "//base/tracing/protos:chrome_track_event_resources",
-    "//chrome/browser:dev_ui_browser_resources",
     "//chrome/browser:resources",
     "//chrome/browser/resources:component_extension_resources",
     "//chrome/browser/resources/pdf:resources",
@@ -1739,138 +1489,179 @@ make_pack_header("resources") {
     "//chrome/renderer:resources",
     "//components/resources:components_resources",
     "//components/resources:dev_ui_components_resources",
-    "//content:content_resources",
-    "//content:dev_ui_content_resources",
     "//content/browser/devtools:devtools_resources",
+    "//content/browser/resources",
     "//content/browser/tracing:resources",
     "//content/browser/webrtc/resources",
+    "//content:content_resources",
     "//extensions:extensions_browser_resources",
     "//extensions:extensions_renderer_resources",
     "//extensions:extensions_resources_grd",
     "//mojo/public/js:resources",
     "//net:net_resources",
+    "//third_party/blink/public:image_resources",
     "//third_party/blink/public:resources",
     "//ui/resources:ui_resources_grd",
-    "//ui/resources:webui_generated_resources_grd",
-    "//ui/resources:webui_resources_grd",
+    "//ui/views/resources:resources_grd",
+    "//ui/webui/resources:resources_grit",
   ]
-
-  if (defined(ohos_enable_cef_chrome_runtime) &&
-      !ohos_enable_cef_chrome_runtime) {
-    inputs -= [
-      "$root_gen_dir/chrome/grit/browser_resources.h",
-      "$root_gen_dir/chrome/grit/common_resources.h",
-      "$root_gen_dir/chrome/grit/component_extension_resources.h",
-      "$root_gen_dir/chrome/grit/dev_ui_browser_resources.h",
-      "$root_gen_dir/chrome/grit/pdf_resources.h",
-      "$root_gen_dir/chrome/grit/renderer_resources.h",
-    ]
-    deps -= [
-      "//chrome/browser:dev_ui_browser_resources",
-      "//chrome/browser:resources",
-      "//chrome/browser/resources:component_extension_resources",
-      "//chrome/browser/resources/pdf:resources",
-      "//chrome/common:resources",
-      "//chrome/renderer:resources",
-    ]
-  }
-
-  if (toolkit_views) {
-    inputs += [ "$root_gen_dir/ui/views/resources/grit/views_resources.h" ]
-    deps += [ "//ui/views/resources:resources_grd" ]
-  }
 }
 
 # Generate cef_pack_strings.h.
 make_pack_header("strings") {
-  header = "$root_out_dir/includes/include/cef_pack_strings.h"
+  header = "$root_gen_dir/cef/include/cef_pack_strings.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_pack_strings.inc"
   inputs = [
     "$root_gen_dir/cef/grit/cef_strings.h",
-    "$root_gen_dir/chrome/grit/chromium_strings.h",
+    "$root_gen_dir/chrome/grit/branded_strings.h",
     "$root_gen_dir/chrome/grit/generated_resources.h",
     "$root_gen_dir/chrome/grit/locale_settings.h",
     "$root_gen_dir/chrome/grit/platform_locale_settings.h",
-    "$root_gen_dir/components/omnibox/resources/grit/omnibox_resources.h",
-    "$root_gen_dir/components/strings/grit/components_chromium_strings.h",
+    "$root_gen_dir/components/omnibox/resources/grit/omnibox_pedal_synonyms.h",
+    "$root_gen_dir/components/strings/grit/components_branded_strings.h",
     "$root_gen_dir/components/strings/grit/components_strings.h",
     "$root_gen_dir/extensions/strings/grit/extensions_strings.h",
     "$root_gen_dir/services/strings/grit/services_strings.h",
-    "$root_gen_dir/third_party/blink/public/strings/grit/blink_accessibility_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_strings.h",
+    "$root_gen_dir/third_party/blink/public/strings/grit/permission_element_generated_strings.h",
+    "$root_gen_dir/third_party/blink/public/strings/grit/permission_element_strings.h",
+    "$root_gen_dir/ui/strings/grit/app_locale_settings.h",
+    "$root_gen_dir/ui/strings/grit/auto_image_annotation_strings.h",
     "$root_gen_dir/ui/strings/grit/ui_strings.h",
   ]
 
   deps = [
     ":cef_strings",
-    "//chrome/app:chromium_strings",
+    "//chrome/app:branded_strings",
     "//chrome/app:generated_resources",
     "//chrome/app/resources:locale_settings",
     "//chrome/app/resources:platform_locale_settings",
-    "//components/omnibox/resources:omnibox_resources",
-    "//components/strings:components_chromium_strings",
+    "//components/omnibox/resources:omnibox_pedal_synonyms",
+    "//components/strings:components_branded_strings",
     "//components/strings:components_locale_settings",
     "//components/strings:components_strings",
     "//extensions/strings",
     "//services/strings",
     "//third_party/blink/public/strings",
-    "//third_party/blink/public/strings:accessibility_strings",
+    "//third_party/blink/public/strings:permission_element_generated_strings",
+    "//third_party/blink/public/strings:permission_element_strings",
     "//ui/strings:app_locale_settings",
+    "//ui/strings:auto_image_annotation_strings",
     "//ui/strings:ui_strings",
   ]
-
-  if (defined(ohos_enable_cef_chrome_runtime) &&
-      !ohos_enable_cef_chrome_runtime) {
-    inputs -= [
-      "$root_gen_dir/chrome/grit/chromium_strings.h",
-      "$root_gen_dir/chrome/grit/generated_resources.h",
-      "$root_gen_dir/chrome/grit/locale_settings.h",
-      "$root_gen_dir/chrome/grit/platform_locale_settings.h",
-    ]
-    deps -= [
-      "//chrome/app:chromium_strings",
-      "//chrome/app:generated_resources",
-      "//chrome/app/resources:locale_settings",
-      "//chrome/app/resources:platform_locale_settings",
-    ]
-  }
 }
 
-# Generate cef_api_hash.h.
-action("make_api_hash_header") {
-  script = "tools/make_api_hash_header.py"
+# Generate cef_command_ids.h.
+make_pack_header("command_ids") {
+  header = "$root_gen_dir/cef/include/cef_command_ids.h"
+  inc = "$root_gen_dir/cef/libcef_dll/cef_command_ids.inc"
+  inputs = [
+    "//chrome/app/chrome_command_ids.h",
+  ]
+}
 
-  # List of all C API files that will be checked for changes by cef_api_hash.py.
-  inputs = gypi_paths2.includes_common_capi + gypi_paths2.includes_linux_capi +
-           gypi_paths2.includes_mac_capi + gypi_paths2.includes_win_capi +
-           gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes
-  include_dir = [ "include" ]
-  outputs = [ "$root_out_dir/includes/include/cef_api_hash.h" ]
+# Generate cef_api_versions.h.
+action("make_api_versions_header") {
+  script = "tools/make_api_versions_header.py"
 
-  args = rebase_path(outputs + include_dir, root_build_dir)
+  inputs = [
+    "cef_api_versions.json",
+    "cef_api_untracked.json",
+  ]
+  outputs = [
+    "$root_gen_dir/cef/include/cef_api_versions.h",
+    "$root_gen_dir/cef/libcef_dll/cef_api_versions.inc",
+  ]
+
+  args = rebase_path(outputs + inputs, root_build_dir)
+}
+
+# Generate cef_version.h.
+action("make_version_header") {
+  script = "tools/make_version_header.py"
+
+  inputs = [
+    "VERSION.stamp",
+    "//chrome/VERSION",
+  ]
+  outputs = [ "$root_gen_dir/cef/include/cef_version.h" ]
+
+  args = rebase_path(outputs, root_build_dir)
+}
+
+# This no-op action lists args.gn as an output, allowing it to be referenced as
+# an input (trigger) for other actions. Otherwise, GN will complain that no
+# target generates the args.gn file because it’s below the $root_out_dir.
+action("args_gn_source") {
+  script = "//build/noop.py"
+  outputs = [ "$root_out_dir/args.gn" ]
 }
 
 # Generate cef_config.h.
 action("make_config_header") {
   script = "tools/make_config_header.py"
 
-  outputs = [ "$root_out_dir/includes/include/cef_config.h" ]
+  deps = [ ":args_gn_source" ]
 
-  args = rebase_path(outputs + [ "$root_out_dir/args.gn" ], root_build_dir)
+  inputs = [ "$root_out_dir/args.gn" ]
+  outputs = [ "$root_gen_dir/cef/include/cef_config.h" ]
+
+  args = rebase_path(outputs + inputs, root_build_dir)
+}
+
+# Generate cef_color_ids.h.
+action("make_colorids_header") {
+  script = "tools/make_colorids_header.py"
+
+  inputs = [
+    "//ui/color/color_id.h",
+    "//components/color/color_id.h",
+    "//chrome/browser/ui/color/chrome_color_id.h",
+  ]
+  outputs = [ "$root_gen_dir/cef/include/cef_color_ids.h" ]
+
+  args = rebase_path(outputs + inputs, root_build_dir)
 }
 
 # Generate pack files and associated CEF header files.
 group("cef_make_headers") {
   deps = [
-    ":make_api_hash_header",
-    ":make_config_header",
     ":make_pack_header_resources",
     ":make_pack_header_strings",
+    ":make_pack_header_command_ids",
+    ":make_api_versions_header",
+    ":make_version_header",
+    ":make_config_header",
+    ":make_colorids_header",
   ]
 }
+
 
 #
 # libcef dll/framework target.
 #
+
+libcef_sources_common = includes_common +
+                        gypi_paths.autogen_cpp_includes +
+                        gypi_paths2.includes_capi +
+                        gypi_paths.autogen_capi_includes +
+                        gypi_paths.autogen_capi_versions_includes +
+                        gypi_paths2.libcef_sources_common +
+                        gypi_paths.autogen_library_side + [
+  "$root_gen_dir/cef/libcef_dll/cef_pack_resources.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_pack_strings.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_command_ids.inc",
+  "$root_gen_dir/cef/libcef_dll/cef_api_versions.inc",
+]
+
+libcef_deps_common = [
+  ":libcef_static",
+  ":libcef_test_support",
+  ":make_pack_header_resources",
+  ":make_pack_header_strings",
+  ":make_pack_header_command_ids",
+  ":make_api_versions_header",
+]
 
 if (is_mac) {
   cef_framework_name = "Chromium Embedded Framework"
@@ -1894,61 +1685,88 @@ if (is_mac) {
 
     if (icu_use_data_file) {
       sources += [ "$root_out_dir/icudtl.dat" ]
-      public_deps += [ "//third_party/icu:icudata" ]
+      public_deps += [ "//third_party/icu:icudata", ]
     }
 
+    sources += [ "//ui/gl/resources/angle-metal/gpu_shader_cache.bin" ]
+
     if (v8_use_external_startup_data) {
-      sources += [ "$root_out_dir/snapshot_blob.bin" ]
       public_deps += [ "//v8" ]
       if (use_v8_context_snapshot) {
-        sources += [ "$root_out_dir/$v8_context_snapshot_filename" ]
+        sources += [ "$root_build_dir/$v8_context_snapshot_filename" ]
         public_deps += [ "//tools/v8_context_snapshot" ]
+      }
+      if (!use_v8_context_snapshot || include_both_v8_snapshots) {
+        sources += [ "$root_build_dir/snapshot_blob.bin" ]
       }
     }
 
-    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
   }
 
-  if (use_egl) {
+  if (!use_static_angle) {
     # Add the ANGLE .dylibs in the MODULE_DIR of the Framework app bundle.
     bundle_data("cef_framework_angle_binaries") {
       sources = [
         "$root_out_dir/egl_intermediates/libEGL.dylib",
         "$root_out_dir/egl_intermediates/libGLESv2.dylib",
       ]
-      outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
-      public_deps = [ "//ui/gl:angle_library_copy" ]
-    }
-
-    # Add the SwiftShader .dylibs in the MODULE_DIR of the Framework app bundle.
-    bundle_data("cef_framework_swiftshader_binaries") {
-      sources = [
-        "$root_out_dir/egl_intermediates/libswiftshader_libEGL.dylib",
-        "$root_out_dir/egl_intermediates/libswiftshader_libGLESv2.dylib",
-        "$root_out_dir/vk_intermediates/libvk_swiftshader.dylib",
-        "$root_out_dir/vk_intermediates/vk_swiftshader_icd.json",
+      outputs = [
+        "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
       ]
-      outputs = [ "{{bundle_contents_dir}}/Libraries/{{source_file_part}}" ]
       public_deps = [
-        "//ui/gl:swiftshader_egl_library_copy",
-        "//ui/gl:swiftshader_vk_library_copy",
+        "//ui/gl:angle_library_copy",
       ]
     }
   }
 
-  group("cef_framework_angle_library") {
-    if (use_egl) {
-      deps = [ ":cef_framework_angle_binaries" ]
-    }
+  # We need to copy the CEF libraries so that the bundle_data dependencies have
+  # a "copy" target type. Otherwise for "shared_library" target types it will
+  # try to link things into the CEF Framework when we want to keep the libraries
+  # separate instead.
+  copy("cef_library_copy") {
+    sources = [
+      "$root_out_dir/libcef_sandbox.dylib",
+    ]
+    outputs = [ "$root_out_dir/cef_intermediates/{{source_file_part}}" ]
+    deps = [
+      ":cef_sandbox",
+    ]
   }
 
-  group("cef_framework_swiftshader_library") {
-    if (use_egl) {
-      deps = [ ":cef_framework_swiftshader_binaries" ]
-    }
+  # Add the CEF .dylibs in the MODULE_DIR of the Framework app bundle.
+  bundle_data("cef_framework_cef_binaries") {
+    sources = [
+      "$root_out_dir/cef_intermediates/libcef_sandbox.dylib",
+    ]
+    outputs = [
+      "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
+    ]
+    public_deps = [
+      ":cef_library_copy",
+    ]
+  }
+
+  # Add the SwiftShader .dylibs in the MODULE_DIR of the Framework app bundle.
+  bundle_data("cef_framework_swiftshader_binaries") {
+    sources = [
+      "$root_out_dir/vk_intermediates/libvk_swiftshader.dylib",
+      "$root_out_dir/vk_intermediates/vk_swiftshader_icd.json",
+    ]
+    outputs = [
+      "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
+    ]
+    public_deps = [
+      "//ui/gl:swiftshader_vk_library_copy",
+    ]
   }
 
   mac_framework_bundle("cef_framework") {
+    # Necessary because the libcef_test_support target is testonly.
+    testonly = true
+
     output_name = cef_framework_name
 
     framework_version = "A"
@@ -1957,19 +1775,22 @@ if (is_mac) {
       "Resources",
     ]
 
-    sources =
-        includes_common + includes_mac + gypi_paths.autogen_cpp_includes +
-        gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes +
-        gypi_paths2.libcef_sources_common + gypi_paths.autogen_library_side
+    sources = libcef_sources_common + includes_mac
 
-    deps = [
-      ":cef_framework_angle_library",
+    deps = libcef_deps_common + [
+      ":cef_framework_cef_binaries",
       ":cef_framework_resources",
-      ":cef_framework_swiftshader_library",
-      ":libcef_static",
+      ":cef_framework_swiftshader_binaries",
     ]
 
-    configs += [ ":libcef_autogen_config" ]
+    if (!use_static_angle) {
+      deps += [ ":cef_framework_angle_binaries" ]
+    }
+
+    configs += [
+      ":libcef_autogen_config",
+      ":libcef_includes_config",
+    ]
 
     # We don't link the framework so just use the path from the main executable.
     ldflags = [
@@ -1994,19 +1815,23 @@ if (is_mac) {
     info_plist_target = ":cef_framework_plist"
   }
 } else {
-  shared_library("libweb_engine") {
-    configs += [ "//build/config/sanitizers:cfi_config" ]
-    sources =
-        includes_common + gypi_paths.autogen_cpp_includes +
-        gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes +
-        gypi_paths2.libcef_sources_common + gypi_paths.autogen_library_side
+  shared_library("libcef") {
+    # Necessary because the libcef_test_support target is testonly.
+    testonly = true
 
-    deps = [ ":libcef_static" ]
+    sources = libcef_sources_common
 
-    configs += [ ":libcef_autogen_config" ]
+    deps = libcef_deps_common
+
+    configs += [
+      ":libcef_autogen_config",
+      ":libcef_includes_config",
+    ]
 
     if (is_win) {
-      sources += includes_win + [ "libcef_dll/libcef_dll.rc" ]
+      sources += includes_win + [
+        "libcef_dll/libcef_dll.rc",
+      ]
 
       deps += [
         # Bring in ui_unscaled_resources.rc which contains custom cursors.
@@ -2014,31 +1839,36 @@ if (is_mac) {
         # ResourceBundle. See crbug.com/147663.
         "//ui/resources:ui_unscaled_resources_grd",
       ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements. Don't use "delayloads_not_for_child_dll" here because
+      # we need some DLLs loaded in child processes before sandbox lockdown.
+      configs += [ "//build/config/win:delayloads" ]
+
+      libs = [
+        "comctl32.lib",
+        # For D3D11_DECODER_PROFILE_H264_VLD_NOFGT.
+        "dxguid.lib",
+      ]
     }
 
-    if (is_linux && !is_debug && use_allocator == "none") {
-      # Only export necessary symbols from libcef.so.
-      # Don't do this in Debug builds because it causes the resulting
-      # application to crash.
-      # Also need to do this for ASAN builds to work around
-      # https://crbug.com/832808.
-      ldflags = [ "-Wl,--version-script=" +
-                  rebase_path("//cef/libcef_dll/libcef.lst") ]
-    }
+    if (is_linux) {
+      # Disable 'duplicate symbol' linker errors.
+      ldflags = [ "-Wl,--allow-multiple-definition" ]
 
-    if (is_ohos) {
-      deps += [ "//ohos_nweb:nweb_sources" ]
-      if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
-        deps += [ "//ohos_nweb_ex:nweb_ex" ]
-      }
-      configs += [ "//build/config/ohos:lld_pack_relocations" ]
-      if (!(defined(testonly) && testonly)) {
-        configs -= [ "//build/config/compiler:thinlto_optimize_default" ]
-        configs += [ "//build/config/compiler:thinlto_optimize_max" ]
+      if (!is_debug && !use_partition_alloc_as_malloc) {
+        # Only export necessary symbols from libcef.so.
+        # Don't do this in Debug builds because it causes the resulting
+        # application to crash.
+        # Also need to do this for ASAN builds to work around
+        # https://crbug.com/832808.
+        ldflags += [ "-Wl,--version-script=" +
+                     rebase_path("//cef/libcef_dll/libcef.lst") ]
       }
     }
   }
 }
+
 
 #
 # Executable/app targets.
@@ -2057,7 +1887,9 @@ source_set("gtest_teamcity") {
     "tests/gtest/teamcity/src/teamcity_messages.h",
   ]
 
-  deps = [ "//testing/gtest" ]
+  deps = [
+    "//testing/gtest",
+  ]
 
   configs += [
     "libcef/features:config",
@@ -2100,13 +1932,12 @@ if (is_mac) {
 
         sources = invoker.helper_sources
 
-        extra_substitutions =
-            [ "BUNDLE_ID_SUFFIX=${invoker.helper_bundle_id_suffix}" ]
+        extra_substitutions = [
+          "BUNDLE_ID_SUFFIX=${invoker.helper_bundle_id_suffix}",
+        ]
 
         deps = [
           ":cef_make_headers",
-          ":cef_sandbox",
-          ":libcef_dll_wrapper",
         ]
         if (defined(invoker.helper_deps)) {
           deps += invoker.helper_deps
@@ -2116,7 +1947,7 @@ if (is_mac) {
           # The helper is in $app_name.app/Contents/Frameworks/$app_name Helper.app/Contents/MacOS/
           # so set rpath up to the base.
           "-rpath",
-          "@executable_path/../../../../../..",
+           "@executable_path/../../../../../..",
         ]
 
         info_plist_target = ":${app_name}_helper_plist"
@@ -2128,10 +1959,30 @@ if (is_mac) {
         if (defined(invoker.helper_defines)) {
           defines = invoker.helper_defines
         }
+
+        if (defined(invoker.helper_cflags_c)) {
+          cflags_c = invoker.helper_cflags_c
+        }
+
+        # Disable clang modules for this target (see issue #3611).
+        use_libcxx_modules = false
       }
     }
 
-    foreach(helper_params, content_mac_helpers) {
+    # From //chrome/BUILD.gn:
+    # Helper app to display alert notifications. This is necessary as an app can
+    # only display either banner or alert style notifications and the main app
+    # will display banners.
+    alert_helper_params = [
+      "alerts",
+      ".alerts",
+      " (Alerts)",
+    ]
+
+    # Merge all helper apps needed by //content and //chrome.
+    chrome_mac_helpers = content_mac_helpers + [ alert_helper_params ]
+
+    foreach(helper_params, chrome_mac_helpers) {
       _helper_target = helper_params[0]
       _helper_bundle_id = helper_params[1]
       _helper_suffix = helper_params[2]
@@ -2146,6 +1997,9 @@ if (is_mac) {
         if (defined(invoker.helper_defines)) {
           helper_defines = invoker.helper_defines
         }
+        if (defined(invoker.helper_cflags_c)) {
+          helper_cflags_c = invoker.helper_cflags_c
+        }
 
         helper_name_suffix = _helper_suffix
         helper_bundle_id_suffix = _helper_bundle_id
@@ -2154,16 +2008,24 @@ if (is_mac) {
 
     bundle_data("${app_name}_framework_bundle_data") {
       testonly = app_testonly
-      sources = [ "$root_out_dir/$cef_framework_name.framework" ]
+      sources = [
+        "$root_out_dir/$cef_framework_name.framework",
+      ]
 
-      public_deps = [ ":cef_framework" ]
+      public_deps = [
+        ":cef_framework",
+      ]
 
-      foreach(helper_params, content_mac_helpers) {
-        sources += [ "$root_out_dir/${app_helper_name}${helper_params[2]}.app" ]
+      foreach(helper_params, chrome_mac_helpers) {
+        sources += [
+          "$root_out_dir/${app_helper_name}${helper_params[2]}.app",
+        ]
         public_deps += [ ":${app_name}_helper_app_${helper_params[0]}" ]
       }
 
-      outputs = [ "{{bundle_contents_dir}}/Frameworks/{{source_file_part}}" ]
+      outputs = [
+        "{{bundle_contents_dir}}/Frameworks/{{source_file_part}}",
+      ]
     }
 
     tweak_info_plist("${app_name}_plist") {
@@ -2182,11 +2044,9 @@ if (is_mac) {
 
       sources = invoker.sources
 
-      public_deps = [ ":libcef_dll_wrapper" ]
       deps = [
-        ":${app_name}_framework_bundle_data",
         ":cef_make_headers",
-        ":libcef_dll_wrapper",
+        ":${app_name}_framework_bundle_data",
       ]
       if (defined(invoker.deps)) {
         deps += invoker.deps
@@ -2200,9 +2060,17 @@ if (is_mac) {
         defines = invoker.defines
       }
 
+      if (defined(invoker.cflags_c)) {
+        cflags_c = invoker.cflags_c
+      }
+
       info_plist_target = ":${app_name}_plist"
+
+      # Disable clang modules for this target (see issue #3611).
+      use_libcxx_modules = false
     }
   }
+
 
   #
   # cefclient app targets.
@@ -2210,158 +2078,299 @@ if (is_mac) {
 
   bundle_data("cefclient_resources_bundle_data") {
     sources = gypi_paths2.shared_sources_resources +
-              gypi_paths2.cefclient_sources_resources +
-              [ "tests/cefclient/resources/mac/cefclient.icns" ]
+              gypi_paths2.cefclient_sources_resources + [
+      "tests/cefclient/mac/cefclient.icns",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
-  }
-
-  bundle_data("cefclient_resources_bundle_data_extensions_set_page_color") {
-    sources = gypi_paths2.cefclient_sources_resources_extensions_set_page_color
     outputs = [
-      "{{bundle_resources_dir}}/extensions/set_page_color/{{source_file_part}}",
+      "{{bundle_resources_dir}}/{{source_file_part}}",
     ]
   }
 
   bundle_data("cefclient_resources_bundle_data_english") {
-    sources =
-        [ "tests/cefclient/resources/mac/English.lproj/InfoPlist.strings" ]
+    sources = [
+      "tests/cefclient/mac/English.lproj/InfoPlist.strings",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}",
+    ]
   }
 
   mac_xib_bundle_data("cefclient_xibs") {
-    sources = [ "tests/cefclient/resources/mac/English.lproj/MainMenu.xib" ]
+    sources = [
+      "tests/cefclient/mac/English.lproj/MainMenu.xib",
+    ]
 
     output_path = "{{bundle_resources_dir}}/English.lproj"
   }
 
   cef_app("cefclient") {
-    helper_info_plist = "tests/cefclient/resources/mac/helper-Info.plist"
-    helper_sources =
-        includes_common + includes_mac + gypi_paths2.includes_wrapper +
-        gypi_paths2.includes_wrapper_mac + gypi_paths2.shared_sources_common +
-        gypi_paths2.shared_sources_renderer +
-        gypi_paths2.shared_sources_mac_helper +
-        gypi_paths2.cefclient_sources_common +
-        gypi_paths2.cefclient_sources_renderer
-    helper_defines = [ "CEF_USE_SANDBOX" ]
+    # Necessary because the cef_framework target is testonly.
+    testonly = true
 
-    info_plist = "tests/cefclient/resources/mac/Info.plist"
-    sources =
-        includes_common + includes_mac + gypi_paths2.includes_wrapper +
-        gypi_paths2.includes_wrapper_mac + gypi_paths2.shared_sources_browser +
-        gypi_paths2.shared_sources_common + gypi_paths2.shared_sources_mac +
-        gypi_paths2.cefclient_sources_browser +
-        gypi_paths2.cefclient_sources_common + gypi_paths2.cefclient_sources_mac
+    helper_info_plist = "tests/cefclient/mac/helper-Info.plist.in"
+    helper_sources = includes_common +
+                     includes_mac +
+                     gypi_paths2.includes_wrapper +
+                     gypi_paths2.includes_wrapper_mac +
+                     gypi_paths2.shared_sources_common +
+                     gypi_paths2.shared_sources_renderer +
+                     gypi_paths2.shared_sources_mac_helper +
+                     gypi_paths2.cefclient_sources_common +
+                     gypi_paths2.cefclient_sources_renderer
+    helper_deps = [
+      ":libcef_dll_wrapper",
+    ]
+    helper_defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    info_plist = "tests/cefclient/mac/Info.plist.in"
+    sources = includes_common +
+              includes_mac +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.includes_wrapper_mac +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_mac +
+              gypi_paths2.cefclient_sources_browser +
+              gypi_paths2.cefclient_sources_common +
+              gypi_paths2.cefclient_sources_mac
     deps = [
+      ":libcef_dll_wrapper",
       ":cefclient_resources_bundle_data",
       ":cefclient_resources_bundle_data_english",
-      ":cefclient_resources_bundle_data_extensions_set_page_color",
       ":cefclient_xibs",
     ]
     frameworks = [
       "AppKit.framework",
+      "IOSurface.framework",
       "OpenGL.framework",
     ]
-    defines = [ "CEF_USE_SANDBOX" ]
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
   }
+
 
   #
   # cefsimple app targets.
   #
 
   bundle_data("cefsimple_resources_bundle_data") {
-    sources = [ "tests/cefsimple/mac/cefsimple.icns" ]
+    sources = [
+      "tests/cefsimple/mac/cefsimple.icns",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
   }
 
   bundle_data("cefsimple_resources_bundle_data_english") {
-    sources = [ "tests/cefsimple/mac/English.lproj/InfoPlist.strings" ]
+    sources = [
+      "tests/cefsimple/mac/English.lproj/InfoPlist.strings",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}",
+    ]
   }
 
   mac_xib_bundle_data("cefsimple_xibs") {
-    sources = [ "tests/cefsimple/mac/English.lproj/MainMenu.xib" ]
+    sources = [
+      "tests/cefsimple/mac/English.lproj/MainMenu.xib",
+    ]
     output_path = "{{bundle_resources_dir}}/English.lproj"
   }
 
   cef_app("cefsimple") {
-    helper_info_plist = "tests/cefsimple/mac/helper-Info.plist"
-    helper_sources =
-        includes_common + includes_mac + gypi_paths2.includes_wrapper +
-        gypi_paths2.includes_wrapper_mac +
-        gypi_paths2.cefsimple_sources_mac_helper
-    helper_defines = [ "CEF_USE_SANDBOX" ]
+    # Necessary because the cef_framework target is testonly.
+    testonly = true
 
-    info_plist = "tests/cefsimple/mac/Info.plist"
-    sources =
-        includes_common + includes_mac + gypi_paths2.includes_wrapper +
-        gypi_paths2.includes_wrapper_mac +
-        gypi_paths2.cefsimple_sources_common + gypi_paths2.cefsimple_sources_mac
+    helper_info_plist = "tests/cefsimple/mac/helper-Info.plist.in"
+    helper_sources = includes_common +
+                     includes_mac +
+                     gypi_paths2.includes_wrapper +
+                     gypi_paths2.includes_wrapper_mac +
+                     gypi_paths2.cefsimple_sources_mac_helper
+    helper_deps = [
+      ":libcef_dll_wrapper",
+    ]
+    helper_defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    info_plist = "tests/cefsimple/mac/Info.plist.in"
+    sources = includes_common +
+              includes_mac +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.includes_wrapper_mac +
+              gypi_paths2.cefsimple_sources_common +
+              gypi_paths2.cefsimple_sources_mac
     deps = [
+      ":libcef_dll_wrapper",
       ":cefsimple_resources_bundle_data",
       ":cefsimple_resources_bundle_data_english",
       ":cefsimple_xibs",
     ]
-    frameworks = [ "AppKit.framework" ]
-    defines = [ "CEF_USE_SANDBOX" ]
+    frameworks = [
+      "AppKit.framework",
+    ]
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
   }
+
+
+  #
+  # cefsimple_capi app targets (Pure C API implementation).
+  #
+
+  bundle_data("cefsimple_capi_resources_bundle_data") {
+    sources = [
+      "tests/cefsimple_capi/mac/cefsimple_capi.icns",
+    ]
+
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
+  }
+
+  bundle_data("cefsimple_capi_resources_bundle_data_english") {
+    sources = [
+      "tests/cefsimple_capi/mac/English.lproj/InfoPlist.strings",
+    ]
+
+    outputs = [
+      "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}",
+    ]
+  }
+
+  mac_xib_bundle_data("cefsimple_capi_xibs") {
+    sources = [
+      "tests/cefsimple_capi/mac/English.lproj/MainMenu.xib",
+    ]
+    output_path = "{{bundle_resources_dir}}/English.lproj"
+  }
+
+  cef_app("cefsimple_capi") {
+    # Necessary because the cef_framework target is testonly.
+    testonly = true
+
+    helper_info_plist = "tests/cefsimple_capi/mac/helper-Info.plist.in"
+    helper_sources = includes_common_capi +
+                     includes_mac_capi +
+                     gypi_paths2.cefsimple_capi_sources_mac_helper
+    helper_deps = [
+      ":cef_capi_library_loader",
+      ":cef_capi_sandbox_loader",
+    ]
+    helper_defines = [
+      "CEF_USE_SANDBOX",
+    ]
+    helper_cflags_c = [ "-std=c11" ]
+
+    info_plist = "tests/cefsimple_capi/mac/Info.plist.in"
+    sources = includes_common_capi +
+              includes_mac_capi +
+              gypi_paths2.cefsimple_capi_sources_common +
+              gypi_paths2.cefsimple_capi_sources_mac
+    deps = [
+      ":cef_capi_library_loader",
+      ":cefsimple_capi_resources_bundle_data",
+      ":cefsimple_capi_resources_bundle_data_english",
+      ":cefsimple_capi_xibs",
+    ]
+    frameworks = [
+      "AppKit.framework",
+    ]
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+    cflags_c = [ "-std=c11" ]
+  }
+
 
   #
   # ceftests app targets.
   #
 
   bundle_data("ceftests_resources_bundle_data") {
-    sources = gypi_paths2.shared_sources_resources +
-              [ "tests/ceftests/resources/mac/ceftests.icns" ]
+    sources = gypi_paths2.shared_sources_resources + [
+      "tests/ceftests/mac/ceftests.icns",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
   }
 
   bundle_data("ceftests_resources_bundle_data_english") {
-    sources = [ "tests/ceftests/resources/mac/English.lproj/InfoPlist.strings" ]
+    sources = [
+      "tests/ceftests/mac/English.lproj/InfoPlist.strings",
+    ]
 
-    outputs = [ "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}" ]
+    outputs = [
+      "{{bundle_resources_dir}}/English.lproj/{{source_file_part}}",
+    ]
   }
 
   mac_xib_bundle_data("ceftests_xibs") {
-    sources = [ "tests/ceftests/resources/mac/English.lproj/MainMenu.xib" ]
+    sources = [
+      "tests/ceftests/mac/English.lproj/MainMenu.xib",
+    ]
     output_path = "{{bundle_resources_dir}}/English.lproj"
   }
 
   cef_app("ceftests") {
     testonly = true
 
-    helper_info_plist = "tests/ceftests/resources/mac/helper-Info.plist"
+    helper_info_plist = "tests/ceftests/mac/helper-Info.plist.in"
     helper_sources = gypi_paths2.shared_sources_common +
                      gypi_paths2.shared_sources_renderer +
                      gypi_paths2.shared_sources_mac_helper +
-                     gypi_paths2.ceftests_sources_mac_helper
+                     gypi_paths2.ceftests_sources_mac_helper +
+                     gypi_paths2.ceftests_sources_mac_helper_shared
     helper_deps = [
+      ":libcef_dll_wrapper",
       ":gtest_teamcity",
       "//testing/gtest",
     ]
-    helper_frameworks = [ "AppKit.framework" ]
-    helper_defines = [ "CEF_USE_SANDBOX" ]
+    helper_frameworks = [
+      "AppKit.framework",
+    ]
+    helper_defines = [
+      "CEF_USE_SANDBOX",
+      "CEF_TESTS_IN_SRC_DIRECTORY",
+    ]
 
-    info_plist = "tests/ceftests/resources/mac/Info.plist"
-    sources =
-        includes_common + includes_mac + gypi_paths2.includes_wrapper +
-        gypi_paths2.includes_wrapper_mac + gypi_paths2.shared_sources_browser +
-        gypi_paths2.shared_sources_common + gypi_paths2.shared_sources_mac +
-        gypi_paths2.ceftests_sources_common + gypi_paths2.ceftests_sources_mac
+    info_plist = "tests/ceftests/mac/Info.plist.in"
+    sources = includes_common +
+              includes_mac +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.includes_wrapper_mac +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_mac +
+              gypi_paths2.ceftests_sources_common +
+              gypi_paths2.ceftests_sources_mac
     deps = [
+      ":libcef_dll_wrapper",
       ":ceftests_resources_bundle_data",
       ":ceftests_resources_bundle_data_english",
       ":ceftests_xibs",
       ":gtest_teamcity",
       "//testing/gtest",
     ]
-    frameworks = [ "AppKit.framework" ]
-    defines = [ "CEF_USE_SANDBOX" ]
+    frameworks = [
+      "AppKit.framework",
+    ]
+    defines = [
+      "CEF_USE_SANDBOX",
+      "CEF_TESTS_IN_SRC_DIRECTORY",
+    ]
   }
 } else {
   #
@@ -2372,7 +2381,9 @@ if (is_mac) {
   # default sysroot environment.
   if (is_linux && !use_sysroot) {
     pkg_config("glib") {
-      packages = [ "glib-2.0" ]
+      packages = [
+        "glib-2.0",
+      ]
     }
   }
 
@@ -2394,39 +2405,54 @@ if (is_mac) {
                 gypi_paths2.cefclient_sources_resources
       outputs = [ "${root_out_dir}/cefclient_files/{{source_file_part}}" ]
     }
-
-    copy("copy_cefclient_files_extensions_set_page_color") {
-      sources =
-          gypi_paths2.cefclient_sources_resources_extensions_set_page_color
-      outputs = [ "${root_out_dir}/cefclient_files/extensions/set_page_color/{{source_file_part}}" ]
-    }
   }
 
   executable("cefclient") {
-    sources =
-        includes_common + gypi_paths2.includes_wrapper +
-        gypi_paths2.shared_sources_browser + gypi_paths2.shared_sources_common +
-        gypi_paths2.shared_sources_renderer +
-        gypi_paths2.cefclient_sources_browser +
-        gypi_paths2.cefclient_sources_common +
-        gypi_paths2.cefclient_sources_renderer
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_renderer +
+              gypi_paths2.cefclient_sources_browser +
+              gypi_paths2.cefclient_sources_common +
+              gypi_paths2.cefclient_sources_renderer
 
     deps = [
+      ":libcef",
       ":libcef_dll_wrapper",
-      ":libweb_engine",
     ]
 
-    defines = [ "CEF_USE_SANDBOX" ]
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    # Disable clang modules for this target (see issue #3611).
+    use_libcxx_modules = false
 
     if (is_win) {
-      sources += includes_win + gypi_paths2.shared_sources_win +
-                 gypi_paths2.cefclient_sources_win
+      sources += includes_win +
+                 gypi_paths2.includes_wrapper_win +
+                 gypi_paths2.shared_sources_win +
+                 gypi_paths2.cefclient_sources_win +
+                 gypi_paths2.cefclient_sources_resources_win_rc
 
       # Set /SUBSYSTEM:WINDOWS.
       configs -= [ "//build/config/win:console" ]
       configs += [ "//build/config/win:windowed" ]
 
-      defines += [ "CEF_USE_ATL" ]
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      defines += [
+        "CEF_USE_ATL",
+      ]
 
       deps += [
         ":cef_sandbox",
@@ -2444,19 +2470,24 @@ if (is_mac) {
 
       if (target_cpu != "arm64") {
         libs += [
-          "opengl32.lib",
           "glu32.lib",
+          "opengl32.lib",
+        ]
+        ldflags = [
+          "/DELAYLOAD:glu32.dll",
+          "/DELAYLOAD:oleaut32.dll",
+          "/DELAYLOAD:opengl32.dll",
         ]
       }
     }
 
     if (is_linux) {
-      sources += includes_linux + gypi_paths2.shared_sources_linux +
+      sources += includes_linux +
+                 gypi_paths2.shared_sources_linux +
                  gypi_paths2.cefclient_sources_linux
 
       deps += [
         ":copy_cefclient_files",
-        ":copy_cefclient_files_extensions_set_page_color",
       ]
 
       libs = [
@@ -2465,43 +2496,130 @@ if (is_mac) {
       ]
 
       if (cef_use_gtk) {
-        configs += [ ":gtk" ]
+        configs += [
+          ":gtk",
+        ]
+        cflags = [
+          # Don't warn about deprecated GDK/GTK functions.
+          "-Wno-deprecated-declarations",
+        ]
       }
 
-      if (is_component_build) {
-        if (use_allocator == "tcmalloc") {
-          # Link to base to initialize tcmalloc allocator shims, otherwise
-          # base::allocator::IsAllocatorInitialized check fails
-          deps += [ "//base" ]
-        }
-      } else {
+      if (!is_component_build) {
         # Set rpath to find our own libfreetype even in a non-component build.
         configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
       }
     }
   }
 
+  if (is_win) {
+    # Like the "cefclient" executable target, but building a DLL to be loaded by
+    # bootstrap.exe.
+    shared_library("cefclient_dll") {
+      # Necessary because the libcef target is testonly.
+      testonly = true
+
+      output_name = "cefclient"
+
+      sources = includes_common +
+                includes_win +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.shared_sources_browser +
+                gypi_paths2.shared_sources_common +
+                gypi_paths2.shared_sources_renderer +
+                gypi_paths2.shared_sources_win +
+                gypi_paths2.cefclient_sources_browser +
+                gypi_paths2.cefclient_sources_common +
+                gypi_paths2.cefclient_sources_renderer +
+                gypi_paths2.cefclient_sources_win +
+                gypi_paths2.cefclient_sources_resources_win_rc
+
+      deps = [
+        ":bootstrap",
+        ":libcef",
+        ":libcef_dll_wrapper",
+      ]
+
+      defines = [
+        "CEF_USE_ATL",
+        "CEF_USE_BOOTSTRAP",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "d3d11.lib",
+        "imm32.lib",
+        "oleacc.lib",
+        "rpcrt4.lib",
+        "shlwapi.lib",
+      ]
+
+      if (target_cpu != "arm64") {
+        libs += [
+          "glu32.lib",
+          "opengl32.lib",
+        ]
+        ldflags = [
+          "/DELAYLOAD:glu32.dll",
+          "/DELAYLOAD:oleaut32.dll",
+          "/DELAYLOAD:opengl32.dll",
+        ]
+      }
+
+      # Disable clang modules for this target (see issue #3611).
+      use_libcxx_modules = false
+    }
+  }
+
+
   #
   # cefsimple targets.
   #
 
   executable("cefsimple") {
-    sources = includes_common + gypi_paths2.includes_wrapper +
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
               gypi_paths2.cefsimple_sources_common
 
     deps = [
+      ":libcef",
       ":libcef_dll_wrapper",
-      ":libweb_engine",
     ]
 
-    defines = [ "CEF_USE_SANDBOX" ]
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    # Disable clang modules for this target (see issue #3611).
+    use_libcxx_modules = false
 
     if (is_win) {
-      sources += includes_win + gypi_paths2.cefsimple_sources_win
+      sources += includes_win +
+                 gypi_paths2.includes_wrapper_win +
+                 gypi_paths2.cefsimple_sources_win +
+                 gypi_paths2.cefsimple_sources_resources_win_rc
 
       # Set /SUBSYSTEM:WINDOWS.
       configs -= [ "//build/config/win:console" ]
       configs += [ "//build/config/win:windowed" ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
 
       deps += [
         ":cef_sandbox",
@@ -2516,10 +2634,13 @@ if (is_mac) {
     }
 
     if (is_linux) {
-      sources += includes_linux + gypi_paths2.cefsimple_sources_linux
+      sources += includes_linux +
+                 gypi_paths2.cefsimple_sources_linux
 
       if (ozone_platform_x11) {
-        libs = [ "X11" ]
+        libs = [
+          "X11",
+        ]
       }
 
       if (!is_component_build) {
@@ -2528,6 +2649,168 @@ if (is_mac) {
       }
     }
   }
+
+  if (is_win) {
+    # Like the "cefsimple" executable target, but building a DLL to be loaded by
+    # bootstrap.exe.
+    shared_library("cefsimple_dll") {
+      # Necessary because the libcef target is testonly.
+      testonly = true
+
+      output_name = "cefsimple"
+
+      sources = includes_common +
+                includes_win +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.cefsimple_sources_common +
+                gypi_paths2.cefsimple_sources_win +
+                gypi_paths2.cefsimple_sources_resources_win_rc
+
+      deps = [
+        ":bootstrap",
+        ":libcef",
+        ":libcef_dll_wrapper",
+      ]
+
+      defines = [
+        "CEF_USE_BOOTSTRAP",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "shlwapi.lib",
+        "rpcrt4.lib",
+      ]
+
+      # Disable clang modules for this target (see issue #3611).
+      use_libcxx_modules = false
+    }
+  }
+
+
+  #
+  # cefsimple_capi targets (Pure C API implementation).
+  #
+
+  executable("cefsimple_capi") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = includes_common_capi +
+              gypi_paths2.cefsimple_capi_sources_common
+
+    deps = [
+      ":libcef",
+    ]
+
+    configs += [ ":libcef_includes_config" ]
+
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    if (is_win) {
+      sources += includes_win_capi +
+                 gypi_paths2.cefsimple_capi_sources_win +
+                 gypi_paths2.cefsimple_capi_sources_resources_win_rc
+
+      # Set /SUBSYSTEM:WINDOWS.
+      configs -= [ "//build/config/win:console" ]
+      configs += [ "//build/config/win:windowed" ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      deps += [
+        ":cef_sandbox",
+        "//build/win:default_exe_manifest",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "shlwapi.lib",
+        "rpcrt4.lib",
+      ]
+
+      # Use C11 standard for C files.
+      cflags_c = [ "/std:c11" ]
+    }
+
+    if (is_linux) {
+      sources += includes_linux_capi +
+                 gypi_paths2.cefsimple_capi_sources_linux
+
+      if (ozone_platform_x11) {
+        libs = [
+          "X11",
+        ]
+      }
+
+      if (!is_component_build) {
+        # Set rpath to find our own libfreetype even in a non-component build.
+        configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+      }
+
+      # Use C11 standard for C files.
+      cflags_c = [ "-std=c11" ]
+    }
+  }
+
+  if (is_win) {
+    # Like the "cefsimple_capi" executable target, but building a DLL to be loaded by
+    # bootstrap.exe.
+    shared_library("cefsimple_capi_dll") {
+      # Necessary because the libcef target is testonly.
+      testonly = true
+
+      output_name = "cefsimple_capi"
+
+      sources = includes_common_capi +
+                includes_win_capi +
+                gypi_paths2.cefsimple_capi_sources_common +
+                gypi_paths2.cefsimple_capi_sources_win +
+                gypi_paths2.cefsimple_capi_sources_resources_win_rc
+
+      deps = [
+        ":bootstrap",
+        ":libcef",
+      ]
+
+      defines = [
+        "CEF_USE_BOOTSTRAP",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        ":libcef_includes_config",
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      libs = [
+        "comctl32.lib",
+        "shlwapi.lib",
+        "rpcrt4.lib",
+      ]
+
+      # Use C11 standard for C files.
+      cflags_c = [ "/std:c11" ]
+    }
+  }
+
 
   #
   # ceftests targets.
@@ -2543,24 +2826,40 @@ if (is_mac) {
   executable("ceftests") {
     testonly = true
 
-    sources =
-        includes_common + gypi_paths2.includes_wrapper +
-        gypi_paths2.shared_sources_browser + gypi_paths2.shared_sources_common +
-        gypi_paths2.shared_sources_renderer +
-        gypi_paths2.ceftests_sources_common
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_renderer +
+              gypi_paths2.ceftests_sources_common
 
     deps = [
-      ":gtest_teamcity",
+      ":libcef",
       ":libcef_dll_wrapper",
-      ":libweb_engine",
+      ":gtest_teamcity",
       "//testing/gtest",
     ]
 
-    defines = [ "CEF_USE_SANDBOX" ]
+    defines = [
+      "CEF_USE_SANDBOX",
+      "CEF_TESTS_IN_SRC_DIRECTORY",
+    ]
+
+    # Disable clang modules for this target (see issue #3611).
+    use_libcxx_modules = false
 
     if (is_win) {
-      sources +=
-          gypi_paths2.shared_sources_win + gypi_paths2.ceftests_sources_win
+      sources += gypi_paths2.includes_wrapper_win +
+                 gypi_paths2.shared_sources_win +
+                 gypi_paths2.ceftests_sources_win +
+                 gypi_paths2.ceftests_sources_resources_win_rc
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
 
       deps += [
         ":cef_sandbox",
@@ -2569,23 +2868,71 @@ if (is_mac) {
     }
 
     if (is_linux) {
-      sources +=
-          gypi_paths2.shared_sources_linux + gypi_paths2.ceftests_sources_linux
+      sources += gypi_paths2.shared_sources_linux +
+                 gypi_paths2.ceftests_sources_linux
 
       if (ozone_platform_x11) {
-        libs = [ "X11" ]
+        libs = [
+          "X11",
+        ]
       } else {
         if (!use_sysroot) {
           configs += [ ":glib" ]
         }
       }
 
-      deps += [ ":copy_ceftests_files" ]
+      deps += [
+        ":copy_ceftests_files",
+      ]
     }
 
     if (is_linux && !is_component_build) {
       # Set rpath to find our own libfreetype even in a non-component build.
       configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+    }
+  }
+
+  if (is_win) {
+    # Like the "ceftests" executable target, but building a DLL to be loaded by
+    # bootstrapc.exe.
+    shared_library("ceftests_dll") {
+      testonly = true
+
+      output_name = "ceftests"
+
+      sources = includes_common +
+                gypi_paths2.includes_wrapper +
+                gypi_paths2.includes_wrapper_win +
+                gypi_paths2.shared_sources_browser +
+                gypi_paths2.shared_sources_common +
+                gypi_paths2.shared_sources_renderer +
+                gypi_paths2.shared_sources_win +
+                gypi_paths2.ceftests_sources_common +
+                gypi_paths2.ceftests_sources_win +
+                gypi_paths2.ceftests_sources_resources_win_rc
+
+      deps = [
+        ":bootstrapc",
+        ":libcef",
+        ":libcef_dll_wrapper",
+        ":gtest_teamcity",
+        "//testing/gtest",
+      ]
+
+      defines = [
+        "CEF_USE_BOOTSTRAP",
+        "CEF_TESTS_IN_SRC_DIRECTORY",
+      ]
+
+      # Delay-load as many DLLs as possible for sandbox and startup perf
+      # improvements.
+      configs += [
+        "//build/config/win:delayloads",
+        "//build/config/win:delayloads_not_for_child_dll",
+      ]
+
+      # Disable clang modules for this target (see issue #3611).
+      use_libcxx_modules = false
     }
   }
 }

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/scroll_view_impl.h"
+#include "cef/libcef/browser/views/scroll_view_impl.h"
 
 // static
 CefRefPtr<CefScrollView> CefScrollView::CreateScrollView(
@@ -24,8 +24,9 @@ void CefScrollViewImpl::SetContentView(CefRefPtr<CefView> view) {
   DCHECK(view.get());
   DCHECK(view->IsValid());
   DCHECK(!view->IsAttached());
-  if (!view.get() || !view->IsValid() || view->IsAttached())
+  if (!view.get() || !view->IsValid() || view->IsAttached()) {
     return;
+  }
 
   root_view()->SetContents(view_util::PassOwnership(view));
 }
@@ -63,16 +64,15 @@ int CefScrollViewImpl::GetVerticalScrollbarWidth() {
   return root_view()->GetScrollBarLayoutWidth();
 }
 
-void CefScrollViewImpl::GetDebugInfo(base::DictionaryValue* info,
+void CefScrollViewImpl::GetDebugInfo(base::Value::Dict* info,
                                      bool include_children) {
   ParentClass::GetDebugInfo(info, include_children);
   if (include_children) {
     views::View* view = root_view()->contents();
     CefViewAdapter* adapter = CefViewAdapter::GetFor(view);
     if (adapter) {
-      std::unique_ptr<base::DictionaryValue> child_info(
-          new base::DictionaryValue());
-      adapter->GetDebugInfo(child_info.get(), include_children);
+      base::Value::Dict child_info;
+      adapter->GetDebugInfo(&child_info, include_children);
       info->Set("content_view", std::move(child_info));
     }
   }

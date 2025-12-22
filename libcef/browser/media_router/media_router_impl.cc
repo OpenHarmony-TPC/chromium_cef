@@ -2,13 +2,13 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/media_router/media_router_impl.h"
+#include "cef/libcef/browser/media_router/media_router_impl.h"
 
-#include "libcef/browser/media_router/media_route_impl.h"
-#include "libcef/browser/media_router/media_router_manager.h"
-#include "libcef/browser/media_router/media_sink_impl.h"
-#include "libcef/browser/media_router/media_source_impl.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/media_router/media_route_impl.h"
+#include "cef/libcef/browser/media_router/media_router_manager.h"
+#include "cef/libcef/browser/media_router/media_sink_impl.h"
+#include "cef/libcef/browser/media_router/media_source_impl.h"
+#include "cef/libcef/browser/thread_util.h"
 
 namespace {
 
@@ -38,12 +38,14 @@ class CefRegistrationImpl : public CefRegistration,
     CEF_REQUIRE_UIT();
 
     // May be null if OnMediaRouterDestroyed was called.
-    if (browser_context_getter_.is_null())
+    if (browser_context_getter_.is_null()) {
       return;
+    }
 
     auto browser_context = GetBrowserContext(browser_context_getter_);
-    if (!browser_context)
+    if (!browser_context) {
       return;
+    }
 
     browser_context->GetMediaRouterManager()->RemoveObserver(this);
   }
@@ -55,8 +57,9 @@ class CefRegistrationImpl : public CefRegistration,
     browser_context_getter_ = browser_context_getter;
 
     auto browser_context = GetBrowserContext(browser_context_getter_);
-    if (!browser_context)
+    if (!browser_context) {
       return;
+    }
 
     browser_context->GetMediaRouterManager()->AddObserver(this);
   }
@@ -117,6 +120,12 @@ class CefRegistrationImpl : public CefRegistration,
 
   static CefMediaObserver::ConnectionState ToConnectionState(
       blink::mojom::PresentationConnectionState state) {
+    static_assert(static_cast<int>(CEF_MRCS_NUM_VALUES) - 1 ==
+                      static_cast<int>(
+                          blink::mojom::PresentationConnectionState::kMaxValue),
+                  "Enum values in cef_media_route_connection_state_t must "
+                  "match blink::mojom::PresentationConnectionState");
+
     switch (state) {
       case blink::mojom::PresentationConnectionState::CONNECTING:
         return CEF_MRCS_CONNECTING;
@@ -127,7 +136,7 @@ class CefRegistrationImpl : public CefRegistration,
       case blink::mojom::PresentationConnectionState::TERMINATED:
         return CEF_MRCS_TERMINATED;
     }
-    NOTREACHED();
+    DCHECK(false);
     return CEF_MRCS_UNKNOWN;
   }
 
@@ -137,13 +146,7 @@ class CefRegistrationImpl : public CefRegistration,
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(CefRegistrationImpl);
 };
 
-CefMediaRouterImpl::CefMediaRouterImpl() {
-  // Verify that our enum matches Chromium's values.
-  static_assert(
-      static_cast<int>(CEF_MRCR_TOTAL_COUNT) ==
-          static_cast<int>(media_router::RouteRequestResult::TOTAL_COUNT),
-      "enum mismatch");
-}
+CefMediaRouterImpl::CefMediaRouterImpl() = default;
 
 void CefMediaRouterImpl::Initialize(
     const CefBrowserContext::Getter& browser_context_getter,
@@ -156,8 +159,8 @@ void CefMediaRouterImpl::Initialize(
 
   initialized_ = true;
   if (!init_callbacks_.empty()) {
-    for (auto& callback : init_callbacks_) {
-      std::move(callback).Run();
+    for (auto& init_callback : init_callbacks_) {
+      std::move(init_callback).Run();
     }
     init_callbacks_.clear();
   }
@@ -171,8 +174,9 @@ void CefMediaRouterImpl::Initialize(
 
 CefRefPtr<CefRegistration> CefMediaRouterImpl::AddObserver(
     CefRefPtr<CefMediaObserver> observer) {
-  if (!observer)
+  if (!observer) {
     return nullptr;
+  }
   CefRefPtr<CefRegistrationImpl> registration =
       new CefRegistrationImpl(observer);
   StoreOrTriggerInitCallback(base::BindOnce(
@@ -181,8 +185,9 @@ CefRefPtr<CefRegistration> CefMediaRouterImpl::AddObserver(
 }
 
 CefRefPtr<CefMediaSource> CefMediaRouterImpl::GetSource(const CefString& urn) {
-  if (urn.empty())
+  if (urn.empty()) {
     return nullptr;
+  }
 
   // Check for a valid URL and supported Cast/DIAL schemes.
   GURL presentation_url(urn.ToString());
@@ -228,8 +233,9 @@ void CefMediaRouterImpl::NotifyCurrentSinksInternal() {
   DCHECK(ValidContext());
 
   auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context)
+  if (!browser_context) {
     return;
+  }
 
   browser_context->GetMediaRouterManager()->NotifyCurrentSinks();
 }
@@ -274,8 +280,9 @@ void CefMediaRouterImpl::NotifyCurrentRoutesInternal() {
   DCHECK(ValidContext());
 
   auto browser_context = GetBrowserContext(browser_context_getter_);
-  if (!browser_context)
+  if (!browser_context) {
     return;
+  }
 
   browser_context->GetMediaRouterManager()->NotifyCurrentRoutes();
 }
@@ -283,18 +290,25 @@ void CefMediaRouterImpl::NotifyCurrentRoutesInternal() {
 void CefMediaRouterImpl::CreateRouteCallback(
     CefRefPtr<CefMediaRouteCreateCallback> callback,
     const media_router::RouteRequestResult& result) {
+  static_assert(static_cast<int>(CEF_MRCR_NUM_VALUES) - 1 ==
+                    static_cast<int>(
+                        media_router::mojom::RouteRequestResultCode::kMaxValue),
+                "Enum values in cef_media_route_create_result_t must match "
+                "media_router::mojom::RouteRequestResultCode");
+
   DCHECK(ValidContext());
 
-  if (result.result_code() != media_router::RouteRequestResult::OK) {
+  if (result.result_code() != media_router::mojom::RouteRequestResultCode::OK) {
     LOG(WARNING) << "Media route creation failed: " << result.error() << " ("
                  << result.result_code() << ")";
   }
 
-  if (!callback)
+  if (!callback) {
     return;
+  }
 
   CefRefPtr<CefMediaRoute> route;
-  if (result.result_code() == media_router::RouteRequestResult::OK &&
+  if (result.result_code() == media_router::mojom::RouteRequestResultCode::OK &&
       result.route()) {
     route = new CefMediaRouteImpl(*result.route(), browser_context_getter_);
   }

@@ -3,14 +3,14 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/common/net_service/net_service_util.h"
-
-#include "libcef/common/time_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 
 #include <set>
 
 #include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/include/internal/cef_time_wrappers.h"
+#include "cef/libcef/common/time_util.h"
 #include "net/cookies/canonical_cookie.h"
 #include "net/cookies/cookie_util.h"
 #include "net/cookies/parsed_cookie.h"
@@ -28,15 +28,19 @@ namespace net_service {
 namespace {
 
 // Determine the cookie domain to use for setting the specified cookie.
-// From net/cookies/cookie_store.cc.
+// From net/cookies/canonical_cookie.cc.
 bool GetCookieDomain(const GURL& url,
                      const net::ParsedCookie& pc,
                      std::string* result) {
-  std::string domain_string;
-  if (pc.HasDomain())
-    domain_string = pc.Domain();
-  return net::cookie_util::GetCookieDomainWithString(url, domain_string,
-                                                     result);
+  const auto& domain_string = pc.Domain().value_or(std::string_view());
+  net::CookieInclusionStatus status;
+  const auto& retval =
+      net::cookie_util::GetCookieDomainWithString(url, domain_string, status);
+  if (retval.has_value()) {
+    *result = *retval;
+    return true;
+  }
+  return false;
 }
 
 cef_cookie_same_site_t MakeCefCookieSameSite(net::CookieSameSite value) {
@@ -114,8 +118,9 @@ scoped_refptr<net::HttpResponseHeaders> MakeResponseHeaders(
     int64_t content_length,
     const std::multimap<std::string, std::string>& extra_headers,
     bool allow_existing_header_override) {
-  if (status_code <= 0)
+  if (status_code <= 0) {
     status_code = 200;
+  }
 
   auto headers = WrapRefCounted(new net::HttpResponseHeaders(
       MakeStatusLine(status_code, status_text, false)));
@@ -147,10 +152,11 @@ scoped_refptr<net::HttpResponseHeaders> MakeResponseHeaders(
       const std::string& name_lowercase = base::ToLowerASCII(pair.first);
       if (set_headers_lowercase.find(name_lowercase) !=
           set_headers_lowercase.end()) {
-        if (allow_existing_header_override)
+        if (allow_existing_header_override) {
           headers->RemoveHeader(pair.first);
-        else
+        } else {
           continue;
+        }
       }
     }
 
@@ -167,8 +173,9 @@ net::RedirectInfo MakeRedirectInfo(const network::ResourceRequest& request,
   bool insecure_scheme_was_upgraded = false;
 
   GURL location = new_location;
-  if (status_code == 0)
+  if (status_code == 0) {
     status_code = net::HTTP_TEMPORARY_REDIRECT;
+  }
 
   // If this a redirect to HTTP of a request that had the
   // 'upgrade-insecure-requests' policy set, upgrade it to HTTPS.
@@ -188,7 +195,7 @@ net::RedirectInfo MakeRedirectInfo(const network::ResourceRequest& request,
   return net::RedirectInfo::ComputeRedirectInfo(
       request.method, request.url, request.site_for_cookies,
       first_party_url_policy, request.referrer_policy, request.referrer.spec(),
-      status_code, location,
+      request.request_initiator, status_code, location,
       net::RedirectUtil::GetReferrerPolicyHeader(headers),
       insecure_scheme_was_upgraded);
 }
@@ -203,7 +210,12 @@ net::CookieSameSite MakeCookieSameSite(cef_cookie_same_site_t value) {
       return net::CookieSameSite::LAX_MODE;
     case CEF_COOKIE_SAME_SITE_STRICT_MODE:
       return net::CookieSameSite::STRICT_MODE;
+    case CEF_COOKIE_SAME_SITE_NUM_VALUES:
+      break;
   }
+
+  DCHECK(false);
+  return net::CookieSameSite::UNSPECIFIED;
 }
 
 net::CookiePriority MakeCookiePriority(cef_cookie_priority_t value) {
@@ -222,13 +234,14 @@ bool MakeCefCookie(const net::CanonicalCookie& cc, CefCookie& cookie) {
   CefString(&cookie.value).FromString(cc.Value());
   CefString(&cookie.domain).FromString(cc.Domain());
   CefString(&cookie.path).FromString(cc.Path());
-  cookie.secure = cc.IsSecure();
+  cookie.secure = cc.SecureAttribute();
   cookie.httponly = cc.IsHttpOnly();
-  cef_time_from_basetime(cc.CreationDate(), cookie.creation);
-  cef_time_from_basetime(cc.LastAccessDate(), cookie.last_access);
+  cookie.creation = CefBaseTime(cc.CreationDate());
+  cookie.last_access = CefBaseTime(cc.LastAccessDate());
   cookie.has_expires = cc.IsPersistent();
-  if (cookie.has_expires)
-    cef_time_from_basetime(cc.ExpiryDate(), cookie.expires);
+  if (cookie.has_expires) {
+    cookie.expires = CefBaseTime(cc.ExpiryDate());
+  }
   cookie.same_site = MakeCefCookieSameSite(cc.SameSite());
   cookie.priority = MakeCefCookiePriority(cc.Priority());
 
@@ -240,21 +253,21 @@ bool MakeCefCookie(const GURL& url,
                    CefCookie& cookie) {
   // Parse the cookie.
   net::ParsedCookie pc(cookie_line);
-  if (!pc.IsValid())
+  if (!pc.IsValid()) {
     return false;
+  }
 
   std::string cookie_domain;
-  if (!GetCookieDomain(url, pc, &cookie_domain))
+  if (!GetCookieDomain(url, pc, &cookie_domain)) {
     return false;
+  }
 
-  std::string path_string;
-  if (pc.HasPath())
-    path_string = pc.Path();
-  std::string cookie_path =
-      net::CanonicalCookie::CanonPathWithString(url, path_string);
-  base::Time creation_time = base::Time::Now();
-  base::Time cookie_expires =
-      net::CanonicalCookie::CanonExpiration(pc, creation_time, creation_time);
+  const auto& path_string = pc.Path().value_or(std::string_view());
+  const auto& cookie_path =
+      net::cookie_util::CanonPathWithString(url, path_string);
+  const auto& creation_time = base::Time::Now();
+  const auto& cookie_expires =
+      net::CanonicalCookie::ParseExpiration(pc, creation_time, creation_time);
 
   CefString(&cookie.name).FromString(pc.Name());
   CefString(&cookie.value).FromString(pc.Value());
@@ -262,12 +275,13 @@ bool MakeCefCookie(const GURL& url,
   CefString(&cookie.path).FromString(cookie_path);
   cookie.secure = pc.IsSecure();
   cookie.httponly = pc.IsHttpOnly();
-  cef_time_from_basetime(creation_time, cookie.creation);
-  cef_time_from_basetime(creation_time, cookie.last_access);
+  cookie.creation = CefBaseTime(creation_time);
+  cookie.last_access = CefBaseTime(creation_time);
   cookie.has_expires = !cookie_expires.is_null();
-  if (cookie.has_expires)
-    cef_time_from_basetime(cookie_expires, cookie.expires);
-  cookie.same_site = MakeCefCookieSameSite(pc.SameSite());
+  if (cookie.has_expires) {
+    cookie.expires = CefBaseTime(cookie_expires);
+  }
+  cookie.same_site = MakeCefCookieSameSite(pc.SameSite().first);
   cookie.priority = MakeCefCookiePriority(pc.Priority());
 
   return true;

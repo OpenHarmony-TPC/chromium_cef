@@ -2,74 +2,61 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/context.h"
+#include "cef/libcef/browser/context.h"
 
-#include "libcef/browser/browser_info_manager.h"
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/trace_subscriber.h"
-#include "libcef/common/cef_switches.h"
+#include <memory>
 
-#include "base/bind.h"
 #include "base/files/file_util.h"
+#include "base/functional/bind.h"
+#include "base/notimplemented.h"
 #include "base/run_loop.h"
 #include "base/task/current_thread.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/prefs/pref_helper.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/trace_subscriber.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "components/network_session_configurator/common/network_switches.h"
-#include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_types.h"
 #include "ui/base/ui_base_switches.h"
 
 #if BUILDFLAG(IS_WIN)
 #include "base/strings/utf_string_conversions.h"
+#include "cef/include/internal/cef_win.h"
+#include "cef/libcef/browser/preferred_stack_size_win.inc"
 #include "chrome/chrome_elf/chrome_elf_main.h"
 #include "chrome/install_static/initialize_from_primary_module.h"
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-#include "cef/libcef/browser/net_service/net_helpers.h"
-#include "content/public/browser/browser_context.h"
-#include "content/public/browser/download_manager_delegate.h"
-#include "content/public/browser/network_service_instance.h"
-#include "libcef/browser/download_manager_delegate.h"
-#include "libcef/browser/download_resume_util.h"
-#include "libcef/browser/received_slice_helper.h"
-#include "services/network/public/mojom/network_service.mojom.h"
 #endif
 
 namespace {
 
 CefContext* g_context = nullptr;
 
+// Invalid value before CefInitialize is called.
+int g_exit_code = -1;
+
 #if DCHECK_IS_ON()
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
 // When the process terminates check if CefShutdown() has been called.
 class CefShutdownChecker {
  public:
   ~CefShutdownChecker() { DCHECK(!g_context) << "CefShutdown was not called"; }
 } g_shutdown_checker;
+#pragma clang diagnostic pop
 #endif  // DCHECK_IS_ON()
 
 #if BUILDFLAG(IS_WIN)
-#if defined(ARCH_CPU_X86_64)
-// VS2013 only checks the existence of FMA3 instructions, not the enabled-ness
-// of them at the OS level (this is fixed in VS2015). We force off usage of
-// FMA3 instructions in the CRT to avoid using that path and hitting illegal
-// instructions when running on CPUs that support FMA3, but OSs that don't.
-void DisableFMA3() {
-  static bool disabled = false;
-  if (disabled)
-    return;
-  disabled = true;
-  _set_FMA3_enable(0);
-}
-#endif  // defined(ARCH_CPU_X86_64)
 
 // Transfer state from chrome_elf.dll to the libcef.dll. Accessed when
 // loading chrome://system.
 void InitInstallDetails() {
   static bool initialized = false;
-  if (initialized)
+  if (initialized) {
     return;
+  }
   initialized = true;
   install_static::InitializeFromPrimaryModule();
 }
@@ -78,17 +65,20 @@ void InitInstallDetails() {
 // DllMain. See https://crbug.com/656800 for details.
 void InitCrashReporter() {
   static bool initialized = false;
-  if (initialized)
+  if (initialized) {
     return;
+  }
   initialized = true;
   SignalInitializeCrashReporting();
 }
+
 #endif  // BUILDFLAG(IS_WIN)
 
 bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
   // Windowed browser colors must be fully opaque.
-  if (!is_windowless && CefColorGetA(cef_in) != SK_AlphaOPAQUE)
+  if (!is_windowless && CefColorGetA(cef_in) != SK_AlphaOPAQUE) {
     return false;
+  }
 
   // Windowless browser colors may be fully transparent.
   if (is_windowless && CefColorGetA(cef_in) == SK_AlphaTRANSPARENT) {
@@ -96,23 +86,19 @@ bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
     return true;
   }
 
-#if BUILDFLAG(IS_OHOS)
-  *sk_out = SkColorSetARGB(CefColorGetA(cef_in), CefColorGetR(cef_in), CefColorGetG(cef_in),
-                           CefColorGetB(cef_in));
-#else
   // Ignore the alpha component.
   *sk_out = SkColorSetRGB(CefColorGetR(cef_in), CefColorGetG(cef_in),
                           CefColorGetB(cef_in));
-#endif
   return true;
 }
 
-// Convert |path_str| tnew CefDownloadItemImpl(o a normalized FilePath.
+// Convert |path_str| to a normalized FilePath.
 base::FilePath NormalizePath(const cef_string_t& path_str,
                              const char* name,
                              bool* has_error = nullptr) {
-  if (has_error)
+  if (has_error) {
     *has_error = false;
+  }
 
   base::FilePath path = base::FilePath(CefString(&path_str));
   if (path.EndsWithSeparator()) {
@@ -121,12 +107,28 @@ base::FilePath NormalizePath(const cef_string_t& path_str,
     path = path.StripTrailingSeparators();
   }
 
-  if (!path.empty() && !path.IsAbsolute()) {
-    LOG(ERROR) << "The " << name << " directory (" << path.value()
-               << ") is not an absolute path. Defaulting to empty.";
-    if (has_error)
-      *has_error = true;
-    path = base::FilePath();
+  if (!path.empty()) {
+    if (!path.IsAbsolute()) {
+      LOG(ERROR) << "The " << name << " directory (" << path.value()
+                 << ") is not an absolute path. Defaulting to empty.";
+      if (has_error) {
+        *has_error = true;
+      }
+      return base::FilePath();
+    }
+
+#if BUILDFLAG(IS_POSIX)
+    // Always resolve symlinks to absolute paths. This avoids issues with
+    // mismatched paths when mixing Chromium and OS filesystem functions.
+    // See https://crbug.com/40229712.
+    base::ScopedAllowBlockingForTesting allow_blocking;
+    const base::FilePath& resolved_path = base::MakeAbsoluteFilePath(path);
+    if (!resolved_path.empty()) {
+      return resolved_path;
+    } else if (errno != 0 && errno != ENOENT) {
+      PLOG(ERROR) << "realpath(" << path.value() << ") failed";
+    }
+#endif  // BUILDFLAG(IS_POSIX)
   }
 
   return path;
@@ -150,8 +152,9 @@ base::FilePath NormalizePathAndSet(cef_string_t& path_str, const char* name) {
 // Verify that |cache_path| is valid and create it if necessary.
 bool ValidateCachePath(const base::FilePath& cache_path,
                        const base::FilePath& root_cache_path) {
-  if (cache_path.empty())
+  if (cache_path.empty()) {
     return true;
+  }
 
   if (!root_cache_path.empty() && root_cache_path != cache_path &&
       !root_cache_path.IsParent(cache_path)) {
@@ -161,7 +164,7 @@ bool ValidateCachePath(const base::FilePath& cache_path,
     return false;
   }
 
-  base::ThreadRestrictions::ScopedAllowIO allow_io;
+  base::ScopedAllowBlockingForTesting allow_blocking;
   if (!base::DirectoryExists(cache_path) &&
       !base::CreateDirectory(cache_path)) {
     LOG(ERROR) << "The cache_path directory (" << cache_path.value()
@@ -188,13 +191,11 @@ base::FilePath NormalizeCachePathAndSet(cef_string_t& path_str,
 
 }  // namespace
 
+NO_STACK_PROTECTOR
 int CefExecuteProcess(const CefMainArgs& args,
                       CefRefPtr<CefApp> application,
                       void* windows_sandbox_info) {
 #if BUILDFLAG(IS_WIN)
-#if defined(ARCH_CPU_X86_64)
-  DisableFMA3();
-#endif
   InitInstallDetails();
   InitCrashReporter();
 #endif
@@ -208,19 +209,17 @@ bool CefInitialize(const CefMainArgs& args,
                    CefRefPtr<CefApp> application,
                    void* windows_sandbox_info) {
 #if BUILDFLAG(IS_WIN)
-#if defined(ARCH_CPU_X86_64)
-  DisableFMA3();
-#endif
   InitInstallDetails();
   InitCrashReporter();
 #endif
 
   // Return true if the global context already exists.
-  if (g_context)
+  if (g_context) {
     return true;
+  }
 
-  if (settings.size != sizeof(cef_settings_t)) {
-    NOTREACHED() << "invalid CefSettings structure size";
+  if (!CEF_MEMBER_EXISTS(&settings, disable_signal_handlers)) {
+    DCHECK(false) << "invalid CefSettings structure size";
     return false;
   }
 
@@ -228,20 +227,35 @@ bool CefInitialize(const CefMainArgs& args,
   g_context = new CefContext();
 
   // Initialize the global context.
-  return g_context->Initialize(args, settings, application,
-                               windows_sandbox_info);
+  const bool initialized =
+      g_context->Initialize(args, settings, application, windows_sandbox_info);
+  g_exit_code = g_context->exit_code();
+
+  if (!initialized) {
+    // Initialization failed. Delete the global context object.
+    delete g_context;
+    g_context = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+int CefGetExitCode() {
+  DCHECK_NE(g_exit_code, -1) << "invalid call to CefGetExitCode";
+  return g_exit_code;
 }
 
 void CefShutdown() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 
   // Must always be called on the same thread as Initialize.
   if (!g_context->OnInitThread()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return;
   }
 
@@ -256,13 +270,13 @@ void CefShutdown() {
 void CefDoMessageLoopWork() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 
   // Must always be called on the same thread as Initialize.
   if (!g_context->OnInitThread()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return;
   }
 
@@ -273,13 +287,13 @@ void CefDoMessageLoopWork() {
 void CefRunMessageLoop() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 
   // Must always be called on the same thread as Initialize.
   if (!g_context->OnInitThread()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return;
   }
 
@@ -289,24 +303,25 @@ void CefRunMessageLoop() {
 void CefQuitMessageLoop() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 
   // Must always be called on the same thread as Initialize.
   if (!g_context->OnInitThread()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return;
   }
 
   g_context->QuitMessageLoop();
 }
 
-void CefSetOSModalLoop(bool osModalLoop) {
 #if BUILDFLAG(IS_WIN)
+
+void CefSetOSModalLoop(bool osModalLoop) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return;
   }
 
@@ -316,103 +331,24 @@ void CefSetOSModalLoop(bool osModalLoop) {
   }
 
   base::CurrentThread::Get()->set_os_modal_loop(osModalLoop);
-#endif  // BUILDFLAG(IS_WIN)
 }
 
-#if BUILDFLAG(IS_OHOS)
-void CefApplyHttpDns() {
-  if (!net_service::NetHelpers::HasValidDnsOverHttpConfig()) {
-    LOG(WARNING) << __func__ << " User input mal mode:"
-                 << net_service::NetHelpers::doh_mode;
+#endif  // BUILDFLAG(IS_WIN)
+
+void CefSetNestableTasksAllowed(bool allowed) {
+  if (!CONTEXT_STATE_VALID()) {
+    DCHECK(false) << "context not valid";
     return;
   }
 
-  network::mojom::NetworkService* network_service =
-      content::GetNetworkService();
-  if (network_service) {
-    auto config = net::DnsOverHttpsServerConfig::FromString(
-        net_service::NetHelpers::DnsOverHttpServerConfig());
-    if (config.has_value()) {
-      network_service->ConfigureStubHostResolver(
-          true, net_service::NetHelpers::DnsOverHttpMode(),
-          {{std::move(*config)}}, true);
-    } else {
-      LOG(INFO) << __func__ << "server config is invalid";
-    }
-  } else {
-    LOG(INFO) << __func__
-              << "will apply doh config after network service created";
-  }
+  g_context->SetNestableTasksAllowed(allowed);
 }
-
-void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  LOG(INFO) << "set download_handler for all browser contexts, browser context "
-               "all size:"
-            << browser_context_all.size();
-  if (browser_context_all.size() > 0) {
-    for (CefBrowserContext* context : browser_context_all) {
-      content::BrowserContext* browser_context = context->AsBrowserContext();
-      browser_context->GetDownloadManager();
-      content::DownloadManagerDelegate* download_manager_delegate =
-          browser_context->GetDownloadManagerDelegate();
-      CefDownloadManagerDelegate* cef_download_manager_delegate =
-          static_cast<CefDownloadManagerDelegate*>(download_manager_delegate);
-      cef_download_manager_delegate->SetDownloadHandler(download_handler);
-    }
-  }
-}
-
-void CefResumeDownload(const CefString& guid,
-                       const CefString& url,
-                       const CefString& full_path,
-                       int64 received_bytes,
-                       int64 total_bytes,
-                       const CefString& etag,
-                       const CefString& mime_type,
-                       const CefString& last_modified,
-                       const CefString& received_slices_string) {
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  if (browser_context_all.size() > 0) {
-    //  use first browser context to resume
-    CefBrowserContext* context = browser_context_all[0];
-    content::BrowserContext* browser_context = context->AsBrowserContext();
-    content::DownloadManager* manager = browser_context->GetDownloadManager();
-    if (!manager) {
-      LOG(ERROR) << "download manager not exists, resume download failed";
-      return;
-    }
-    GURL gurl = GURL(url.ToString());
-    if (gurl.is_empty() || !gurl.is_valid()) {
-      LOG(ERROR) << "download url is not valid, resume download failed, url:"
-                 << url.ToString();
-      return;
-    }
-    base::FilePath file_full_path =
-        base::FilePath::FromUTF8Unsafe(full_path.ToString());
-
-    std::vector<download::DownloadItem::ReceivedSlice> received_slices =
-        received_slice_helper::FromString(received_slices_string.ToString());
-    manager->GetNextId(base::BindOnce(
-        &download_resume_util::ResumeDownloadWithId, manager, guid.ToString(),
-        std::move(gurl), std::move(file_full_path), received_bytes, total_bytes,
-        etag.ToString(), mime_type.ToString(), last_modified.ToString(),
-        received_slices));
-  } else {
-    LOG(ERROR) << "browser contexts is empty, resume download failed";
-  }
-}
-
-#endif
 
 // CefContext
 
-CefContext::CefContext()
-    : initialized_(false), shutting_down_(false), init_thread_id_(0) {}
+CefContext::CefContext() = default;
 
-CefContext::~CefContext() {}
+CefContext::~CefContext() = default;
 
 // static
 CefContext* CefContext::Get() {
@@ -452,18 +388,28 @@ bool CefContext::Initialize(const CefMainArgs& args,
                       "browser_subprocess_path");
   NormalizePathAndSet(settings_.framework_dir_path, "framework_dir_path");
   NormalizePathAndSet(settings_.main_bundle_path, "main_bundle_path");
-  NormalizePathAndSet(settings_.user_data_path, "user_data_path");
   NormalizePathAndSet(settings_.resources_dir_path, "resources_dir_path");
   NormalizePathAndSet(settings_.locales_dir_path, "locales_dir_path");
 
-  browser_info_manager_.reset(new CefBrowserInfoManager);
+  browser_info_manager_ = std::make_unique<CefBrowserInfoManager>();
 
-  main_runner_.reset(new CefMainRunner(settings_.multi_threaded_message_loop,
-                                       settings_.external_message_pump));
-  return main_runner_->Initialize(
+  main_runner_ = std::make_unique<CefMainRunner>(
+      settings_.multi_threaded_message_loop, settings_.external_message_pump);
+
+  const bool initialized = main_runner_->Initialize(
       &settings_, application, args, windows_sandbox_info, &initialized_,
       base::BindOnce(&CefContext::OnContextInitialized,
                      base::Unretained(this)));
+  exit_code_ = main_runner_->exit_code();
+
+  CHECK_EQ(initialized, initialized_);
+
+  if (!initialized) {
+    Shutdown();
+    return false;
+  }
+
+  return true;
 }
 
 void CefContext::RunMessageLoop() {
@@ -512,17 +458,30 @@ SkColor CefContext::GetBackgroundColor(
       !GetColor(browser_settings->background_color, is_windowless, &sk_color)) {
     GetColor(settings_.background_color, is_windowless, &sk_color);
   }
-
   return sk_color;
 }
 
 CefTraceSubscriber* CefContext::GetTraceSubscriber() {
   CEF_REQUIRE_UIT();
-  if (shutting_down_)
+  if (shutting_down_) {
     return nullptr;
-  if (!trace_subscriber_.get())
-    trace_subscriber_.reset(new CefTraceSubscriber());
+  }
+  if (!trace_subscriber_) {
+    trace_subscriber_ = std::make_unique<CefTraceSubscriber>();
+  }
   return trace_subscriber_.get();
+}
+
+pref_helper::Registrar* CefContext::GetPrefRegistrar() {
+  CEF_REQUIRE_UIT();
+  if (shutting_down_) {
+    return nullptr;
+  }
+  if (!pref_registrar_) {
+    pref_registrar_ = std::make_unique<pref_helper::Registrar>();
+    pref_registrar_->Init(g_browser_process->local_state());
+  }
+  return pref_registrar_.get();
 }
 
 void CefContext::PopulateGlobalRequestContextSettings(
@@ -536,9 +495,6 @@ void CefContext::PopulateGlobalRequestContextSettings(
   settings->persist_session_cookies =
       settings_.persist_session_cookies ||
       command_line->HasSwitch(switches::kPersistSessionCookies);
-  settings->persist_user_preferences =
-      settings_.persist_user_preferences ||
-      command_line->HasSwitch(switches::kPersistUserPreferences);
 
   CefString(&settings->cookieable_schemes_list) =
       CefString(&settings_.cookieable_schemes_list);
@@ -551,6 +507,17 @@ void CefContext::NormalizeRequestContextSettings(
   // The |root_cache_path| value was already normalized in Initialize.
   const base::FilePath& root_cache_path = CefString(&settings_.root_cache_path);
   NormalizeCachePathAndSet(settings->cache_path, root_cache_path);
+}
+
+void CefContext::SetNestableTasksAllowed(bool allowed) {
+  CEF_REQUIRE_UIT();
+  CHECK(allowed != nestable_tasks_allowed_.has_value())
+      << "Invalid attempt at CefSetNestableTasksAllowed reentrancy";
+  if (allowed) {
+    nestable_tasks_allowed_.emplace();
+  } else {
+    nestable_tasks_allowed_.reset();
+  }
 }
 
 void CefContext::AddObserver(Observer* observer) {
@@ -580,26 +547,37 @@ void CefContext::OnContextInitialized() {
         [](CefRefPtr<CefApp> app) {
           CefRefPtr<CefBrowserProcessHandler> handler =
               app->GetBrowserProcessHandler();
-          if (handler)
+          if (handler) {
             handler->OnContextInitialized();
+          }
         },
         application_));
   }
 }
 
 void CefContext::ShutdownOnUIThread() {
+  // |initialized_| will be false if shutting down after early exit.
+  if (!initialized_) {
+    return;
+  }
+
   CEF_REQUIRE_UIT();
 
   browser_info_manager_->DestroyAllBrowsers();
 
-  for (auto& observer : observers_)
+  for (auto& observer : observers_) {
     observer.OnContextDestroyed();
+  }
 
-  if (trace_subscriber_.get())
-    trace_subscriber_.reset(nullptr);
+  if (trace_subscriber_) {
+    trace_subscriber_.reset();
+  }
+  if (pref_registrar_) {
+    pref_registrar_.reset();
+  }
 }
 
 void CefContext::FinalizeShutdown() {
-  browser_info_manager_.reset(nullptr);
+  browser_info_manager_.reset();
   application_ = nullptr;
 }

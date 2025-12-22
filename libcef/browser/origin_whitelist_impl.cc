@@ -2,19 +2,18 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/origin_whitelist_impl.h"
+#include "cef/libcef/browser/origin_whitelist_impl.h"
 
 #include <string>
 #include <vector>
 
-#include "include/cef_origin_whitelist.h"
-#include "libcef/browser/browser_manager.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/thread_util.h"
-
-#include "base/bind.h"
+#include "base/functional/bind.h"
 #include "base/lazy_instance.h"
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_origin_whitelist.h"
+#include "cef/libcef/browser/browser_manager.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "chrome/common/webui_url_constants.h"
 #include "content/public/browser/render_process_host.h"
@@ -52,8 +51,9 @@ class CefOriginWhitelistManager {
 
       // Verify that the origin entry doesn't already exist.
       for (const auto& entry : origin_list_) {
-        if (entry == info)
+        if (entry == info) {
           return false;
+        }
       }
 
       origin_list_.push_back(info->Clone());
@@ -88,8 +88,9 @@ class CefOriginWhitelistManager {
       }
     }
 
-    if (!found)
+    if (!found) {
       return false;
+    }
 
     SendModifyCrossOriginWhitelistEntry(false, info);
     return true;
@@ -105,7 +106,7 @@ class CefOriginWhitelistManager {
   }
 
   void GetCrossOriginWhitelistEntries(
-      absl::optional<CrossOriginWhiteList>* entries) const {
+      std::optional<CrossOriginWhiteList>* entries) const {
     base::AutoLock lock_scope(lock_);
 
     if (!origin_list_.empty()) {
@@ -123,8 +124,9 @@ class CefOriginWhitelistManager {
 
     if (!origin_list_.empty()) {
       for (const auto& entry : origin_list_) {
-        if (IsMatch(source, target, entry))
+        if (IsMatch(source, target, entry)) {
           return true;
+        }
       }
     }
 
@@ -211,14 +213,14 @@ bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
                                      bool allow_target_subdomains) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED();
+    DCHECK(false);
     return false;
   }
 
   std::string source_url = source_origin;
   GURL gurl = GURL(source_url);
   if (gurl.is_empty() || !gurl.is_valid()) {
-    NOTREACHED() << "Invalid source_origin URL: " << source_url;
+    DCHECK(false) << "Invalid source_origin URL: " << source_url;
     return false;
   }
 
@@ -242,14 +244,14 @@ bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
                                         bool allow_target_subdomains) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED();
+    DCHECK(false);
     return false;
   }
 
   std::string source_url = source_origin;
   GURL gurl = GURL(source_url);
   if (gurl.is_empty() || !gurl.is_valid()) {
-    NOTREACHED() << "Invalid source_origin URL: " << source_url;
+    DCHECK(false) << "Invalid source_origin URL: " << source_url;
     return false;
   }
 
@@ -270,7 +272,7 @@ bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
 bool CefClearCrossOriginWhitelist() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED();
+    DCHECK(false);
     return false;
   }
 
@@ -286,7 +288,7 @@ bool CefClearCrossOriginWhitelist() {
 }
 
 void GetCrossOriginWhitelistEntries(
-    absl::optional<CrossOriginWhiteList>* entries) {
+    std::optional<CrossOriginWhiteList>* entries) {
   CefOriginWhitelistManager::GetInstance()->GetCrossOriginWhitelistEntries(
       entries);
 }

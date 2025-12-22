@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/browser_manager.h"
+#include "cef/libcef/browser/browser_manager.h"
 
-#include "libcef/browser/browser_info_manager.h"
-#include "libcef/browser/origin_whitelist_impl.h"
-#include "libcef/common/frame_util.h"
-
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/origin_whitelist_impl.h"
+#include "cef/libcef/common/frame_util.h"
 #include "content/public/browser/render_process_host.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
@@ -23,14 +22,16 @@ void CefBrowserManager::ExposeInterfacesToRenderer(
     service_manager::BinderRegistry* registry,
     blink::AssociatedInterfaceRegistry* associated_registry,
     content::RenderProcessHost* host) {
-  registry->AddInterface(base::BindRepeating(
+  // TODO: Change to content::ChildProcessId usage once supported by
+  // GlobalRenderFrameHostToken. See https://crbug.com/379869738.
+  registry->AddInterface<cef::mojom::BrowserManager>(base::BindRepeating(
       [](int render_process_id,
          mojo::PendingReceiver<cef::mojom::BrowserManager> receiver) {
         mojo::MakeSelfOwnedReceiver(
             std::make_unique<CefBrowserManager>(render_process_id),
             std::move(receiver));
       },
-      host->GetID()));
+      host->GetDeprecatedID()));
 }
 
 // static
@@ -50,9 +51,10 @@ void CefBrowserManager::GetNewRenderThreadInfo(
 }
 
 void CefBrowserManager::GetNewBrowserInfo(
-    int32_t render_frame_routing_id,
+    const blink::LocalFrameToken& render_frame_token,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
   CefBrowserInfoManager::GetInstance()->OnGetNewBrowserInfo(
-      frame_util::MakeGlobalId(render_process_id_, render_frame_routing_id),
+      content::GlobalRenderFrameHostToken(render_process_id_,
+                                          render_frame_token),
       std::move(callback));
 }

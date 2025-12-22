@@ -13,19 +13,19 @@ void CreateBrowserDelegates(ClientAppBrowser::DelegateSet& delegates) {
   extern void CreateAudioOutputTests(ClientAppBrowser::DelegateSet & delegates);
   CreateAudioOutputTests(delegates);
 
-  // Bring in the plugin tests.
+  // Bring in the CORS tests.
   extern void CreateCorsBrowserTests(ClientAppBrowser::DelegateSet & delegates);
   CreateCorsBrowserTests(delegates);
-
-  // Bring in the PDF viewer tests.
-  extern void CreatePdfViewerBrowserTests(ClientAppBrowser::DelegateSet &
-                                          delegates);
-  CreatePdfViewerBrowserTests(delegates);
 
   // Bring in the preference tests.
   extern void CreatePreferenceBrowserTests(ClientAppBrowser::DelegateSet &
                                            delegates);
   CreatePreferenceBrowserTests(delegates);
+
+  // Bring in the media access tests.
+  extern void CreateMediaAccessBrowserTests(ClientAppBrowser::DelegateSet &
+                                            delegates);
+  CreateMediaAccessBrowserTests(delegates);
 
   // Bring in URLRequest tests.
   extern void CreateURLRequestBrowserTests(ClientAppBrowser::DelegateSet &
@@ -59,6 +59,11 @@ void CreateRenderDelegates(ClientAppRenderer::DelegateSet& delegates) {
                                                 delegates);
   CreateProcessMessageRendererTests(delegates);
 
+  // Bring in the shared process message tests.
+  extern void CreateSharedProcessMessageTests(ClientAppRenderer::DelegateSet &
+                                              delegates);
+  CreateSharedProcessMessageTests(delegates);
+
   // Bring in the RequestHandler tests.
   extern void CreateRequestHandlerRendererTests(ClientAppRenderer::DelegateSet &
                                                 delegates);
@@ -73,11 +78,6 @@ void CreateRenderDelegates(ClientAppRenderer::DelegateSet& delegates) {
   extern void CreateThreadRendererTests(ClientAppRenderer::DelegateSet &
                                         delegates);
   CreateThreadRendererTests(delegates);
-
-  // Bring in the URLRequest tests.
-  extern void CreateURLRequestRendererTests(ClientAppRenderer::DelegateSet &
-                                            delegates);
-  CreateURLRequestRendererTests(delegates);
 
   // Bring in the V8 tests.
   extern void CreateV8RendererTests(ClientAppRenderer::DelegateSet & delegates);

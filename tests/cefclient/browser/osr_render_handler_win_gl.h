@@ -14,7 +14,7 @@ namespace client {
 class OsrRenderHandlerWinGL : public OsrRenderHandlerWin {
  public:
   OsrRenderHandlerWinGL(const OsrRendererSettings& settings, HWND hwnd);
-  virtual ~OsrRenderHandlerWinGL();
+  ~OsrRenderHandlerWinGL() override;
 
   // Must be called immediately after object creation.
   void Initialize(CefRefPtr<CefBrowser> browser);
@@ -35,7 +35,7 @@ class OsrRenderHandlerWinGL : public OsrRenderHandlerWin {
   void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                           CefRenderHandler::PaintElementType type,
                           const CefRenderHandler::RectList& dirtyRects,
-                          void* share_handle) override;
+                          const CefAcceleratedPaintInfo& info) override;
 
  private:
   void Render() override;
@@ -45,9 +45,9 @@ class OsrRenderHandlerWinGL : public OsrRenderHandlerWin {
 
   // The below members are only accessed on the UI thread.
   OsrRenderer renderer_;
-  HDC hdc_;
-  HGLRC hrc_;
-  bool painting_popup_;
+  HDC hdc_ = nullptr;
+  HGLRC hrc_ = nullptr;
+  bool painting_popup_ = false;
 
   DISALLOW_COPY_AND_ASSIGN(OsrRenderHandlerWinGL);
 };

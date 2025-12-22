@@ -10,7 +10,9 @@ import os
 # Other headers that export C API functions.
 OTHER_HEADERS = [
     'cef_api_hash.h',
-    'cef_version.h',
+    'cef_id_mappers.h',
+    'cef_version_info.h',
+    'internal/cef_dump_without_crashing_internal.h',
     'internal/cef_logging_internal.h',
     'internal/cef_string_list.h',
     'internal/cef_string_map.h',
@@ -34,25 +36,22 @@ def make_libcef_dll_dylib_impl_parts(name, retval, args):
     arg_types += arg[0:pos]
     arg_names += arg[pos + 1:]
 
-  typedef = 'typedef %s (*%s_ptr)(%s);\n' % (retval, name, arg_types)
+  declare = 'decltype(&%s) %s;\n' % (name, name)
 
-  declare = '%s_ptr %s;\n' % (name, name)
-
-  init = '  INIT_ENTRY(%s);' % name
+  init = 'INIT_ENTRY(%s);\n' % name
 
   impl = """NO_SANITIZE("cfi-icall") %s %s(%s) {
   %sg_libcef_pointers.%s(%s);
 }
-
 """ % (retval, name, ', '.join(args), 'return '
        if retval != 'void' else '', name, arg_names)
 
-  return (typedef, declare, init, impl)
+  return (declare, init, impl)
 
 
 def make_libcef_dll_dylib_impl_func(func):
   name = func.get_capi_name()
-  parts = func.get_capi_parts([])
+  parts = func.get_capi_parts([], True)
   retval = parts['retval']
   args = parts['args']
   return make_libcef_dll_dylib_impl_parts(name, retval, args)
@@ -64,18 +63,17 @@ def make_libcef_dll_dylib_impl(header):
       '#include "include/base/cef_compiler_specific.h"',
       '#include "include/wrapper/cef_library_loader.h"',
   ]
-  ptr_typedef = ''
   ptr_declare = ''
   ptr_init = ''
   ptr_impl = ''
 
   # Include required headers for global functions.
   for func in header.get_funcs():
-    typedef, declare, init, impl = make_libcef_dll_dylib_impl_func(func)
-    ptr_typedef += typedef
-    ptr_declare += declare
-    ptr_init += init
-    ptr_impl += impl
+    declare, init, impl = make_libcef_dll_dylib_impl_func(func)
+    pre, post = get_version_surround(func)
+    ptr_declare += pre + declare + post
+    ptr_init += pre + init + post
+    ptr_impl += pre + impl + post + '\n'
 
     filename = func.get_file_name()
     if not filename in filenames:
@@ -87,11 +85,14 @@ def make_libcef_dll_dylib_impl(header):
   for cls in allclasses:
     funcs = cls.get_static_funcs()
     for func in funcs:
-      typedef, declare, init, impl = make_libcef_dll_dylib_impl_func(func)
-      ptr_typedef += typedef
-      ptr_declare += declare
-      ptr_init += init
-      ptr_impl += impl
+      declare, init, impl = make_libcef_dll_dylib_impl_func(func)
+      pre1, post1 = get_version_surround(func)
+      pre2, post2 = get_version_surround(cls)
+      pre = pre1 + pre2
+      post = post1 + post2
+      ptr_declare += pre + declare + post
+      ptr_init += pre + init + post
+      ptr_impl += pre + impl + post + '\n'
 
     if len(funcs) > 0:
       filename = cls.get_file_name()
@@ -106,12 +107,11 @@ def make_libcef_dll_dylib_impl(header):
     content = read_file(path)
     funcs = get_function_impls(content, 'CEF_EXPORT', False)
     for func in funcs:
-      typedef, declare, init, impl = make_libcef_dll_dylib_impl_parts(
+      declare, init, impl = make_libcef_dll_dylib_impl_parts(
           func['name'], func['retval'], func['args'])
-      ptr_typedef += typedef
       ptr_declare += declare
       ptr_init += init
-      ptr_impl += impl
+      ptr_impl += impl + '\n'
 
     includes.append('#include "include/%s"' % other)
 
@@ -137,14 +137,12 @@ void* libcef_get_ptr(const char* path, const char* name) {
   return ptr;
 }
 
-""" + ptr_typedef + """
-
 struct libcef_pointers {
 """ + ptr_declare + """
 } g_libcef_pointers = {0};
 
 #define INIT_ENTRY(name) \
-  g_libcef_pointers.name = (name##_ptr)libcef_get_ptr(path, #name); \
+  g_libcef_pointers.name = (decltype(&name))libcef_get_ptr(path, #name); \
   if (!g_libcef_pointers.name) { \
     return 0; \
   }
@@ -160,9 +158,14 @@ int cef_load_library(const char* path) {
   if (g_libcef_handle)
     return 0;
 
+  if (!path) {
+    fprintf(stderr, "cef_load_library: Invalid path argument");
+    return 0;
+  }
+
   g_libcef_handle = dlopen(path, RTLD_LAZY | RTLD_LOCAL | RTLD_FIRST);
   if (!g_libcef_handle) {
-    fprintf(stderr, "dlopen %s: %s\\n", path, dlerror());
+    fprintf(stderr, "cef_load_library: dlopen %s: %s\\n", path, dlerror());
     return 0;
   }
 
@@ -209,7 +212,9 @@ if __name__ == "__main__":
   # Create the header object. Should match the logic in translator.py.
   header = obj_header()
   header.set_root_directory(cpp_header_dir)
-  excluded_files = ['cef_api_hash.h', 'cef_application_mac.h', 'cef_version.h']
+  excluded_files = [
+      'cef_api_hash.h', 'cef_application_mac.h', 'cef_version_info.h'
+  ]
   header.add_directory(cpp_header_dir, excluded_files)
   header.add_directory(os.path.join(cpp_header_dir, 'test'))
   header.add_directory(os.path.join(cpp_header_dir, 'views'))

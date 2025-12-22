@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <set>
+#include <sstream>
 #include <vector>
 
 #include "include/base/cef_callback.h"
@@ -13,7 +14,7 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "tests/ceftests/routing_test_handler.h"
 #include "tests/ceftests/test_request.h"
-#include "tests/ceftests/test_server.h"
+#include "tests/ceftests/test_server_observer.h"
 #include "tests/ceftests/test_util.h"
 #include "tests/shared/browser/client_app_browser.h"
 
@@ -22,26 +23,26 @@ namespace {
 // Browser-side app delegate.
 class CorsBrowserTest : public client::ClientAppBrowser::Delegate {
  public:
-  CorsBrowserTest() {}
+  CorsBrowserTest() = default;
 
   void OnContextInitialized(CefRefPtr<client::ClientAppBrowser> app) override {
-    if (IsChromeRuntimeEnabled()) {
-      // Disable InsecureFormNavigationThrottle which blocks 307 redirect of
-      // POST requests from HTTPS to custom non-standard scheme causing the
-      // CorsTest.RedirectPost307HttpSchemeToCustomNonStandardScheme test to
-      // fail.
-      CefRefPtr<CefValue> value = CefValue::Create();
-      value->SetBool(false);
-      CefString error;
-      bool result = CefRequestContext::GetGlobalContext()->SetPreference(
-          "profile.mixed_forms_warnings", value, error);
-      CHECK(result) << error.ToString();
-    }
+    // Disable InsecureFormNavigationThrottle which blocks 307 redirect of
+    // POST requests from HTTPS to custom non-standard scheme causing the
+    // CorsTest.RedirectPost307HttpSchemeToCustomNonStandardScheme test to
+    // fail.
+    CefRefPtr<CefValue> value = CefValue::Create();
+    value->SetBool(false);
+    CefString error;
+    bool result = CefRequestContext::GetGlobalContext()->SetPreference(
+        "profile.mixed_forms_warnings", value, error);
+    CHECK(result) << error.ToString();
   }
 
  private:
   IMPLEMENT_REFCOUNTING(CorsBrowserTest);
 };
+
+constexpr bool kUseHttpsServerScheme = false;
 
 const char kMimeTypeHtml[] = "text/html";
 const char kMimeTypeText[] = "text/plain";
@@ -65,7 +66,15 @@ enum class HandlerType {
 std::string GetOrigin(HandlerType handler) {
   switch (handler) {
     case HandlerType::SERVER:
-      return test_server::kServerOrigin;
+      // TODO: Only call test_server::GetOrigin() after test server
+      // initialization.
+      if (!kUseHttpsServerScheme) {
+        std::stringstream ss;
+        ss << "http://" << test_server::kHttpServerAddress << ":"
+           << test_server::kHttpServerPort;
+        return ss.str();
+      }
+      return test_server::GetOrigin(kUseHttpsServerScheme);
     case HandlerType::HTTP_SCHEME:
       // Use HTTPS because requests from HTTP to the loopback address will be
       // blocked by https://chromestatus.com/feature/5436853517811712.
@@ -90,7 +99,7 @@ std::string GetOrigin(HandlerType handler) {
 std::string GetScheme(HandlerType handler) {
   switch (handler) {
     case HandlerType::SERVER:
-      return test_server::kServerScheme;
+      return test_server::GetScheme(kUseHttpsServerScheme);
     case HandlerType::HTTP_SCHEME:
       return "https";
     case HandlerType::CUSTOM_STANDARD_SCHEME:
@@ -145,7 +154,7 @@ struct Resource {
   int success_query_ct = 0;
   int failure_query_ct = 0;
 
-  Resource() {}
+  Resource() = default;
   Resource(HandlerType request_handler,
            const std::string& request_path,
            const std::string& mime_type = kMimeTypeHtml,
@@ -203,8 +212,16 @@ struct TestSetup {
   typedef std::vector<Resource*> ResourceList;
   ResourceList resources;
 
+  struct ConsoleMessage {
+    std::string message;
+
+    // Number of times the message was received. All registered messages are
+    // expected at least one time.
+    size_t count = 0;
+  };
+
   // Used for testing received console messages.
-  std::vector<std::string> console_messages;
+  std::vector<ConsoleMessage> console_messages;
 
   // If true cookies will be cleared after every test run.
   bool clear_cookies = false;
@@ -217,13 +234,14 @@ struct TestSetup {
 
   void AddConsoleMessage(const std::string& message) {
     DCHECK(!message.empty());
-    console_messages.push_back(message);
+    console_messages.push_back({message, 0U});
   }
 
   Resource* GetResource(const std::string& url,
                         const std::string& method = std::string()) const {
-    if (resources.empty())
+    if (resources.empty()) {
       return nullptr;
+    }
 
     std::set<std::string> matching_methods;
     if (method.empty()) {
@@ -251,34 +269,52 @@ struct TestSetup {
     return GetResource(request->GetURL(), request->GetMethod());
   }
 
+  // Optional initialization after the test server is started.
+  virtual void Initialize() {}
+
   // Validate expected initial state.
   void Validate() const { DCHECK(!resources.empty()); }
 
   std::string GetMainURL() const { return resources.front()->GetPathURL(); }
 
   // Returns true if the server will be used.
-  bool NeedsServer() const {
+  virtual bool NeedsServer() const {
     ResourceList::const_iterator it = resources.begin();
     for (; it != resources.end(); ++it) {
       Resource* resource = *it;
-      if (resource->handler == HandlerType::SERVER)
+      if (resource->handler == HandlerType::SERVER) {
         return true;
+      }
     }
     return false;
   }
 
+  bool GotAllExpectedConsoleMessages() const {
+    for (const auto& cm : console_messages) {
+      if (cm.count == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Returns true if all expectations have been met.
   bool IsDone() const {
+    if (!GotAllExpectedConsoleMessages()) {
+      return false;
+    }
     ResourceList::const_iterator it = resources.begin();
     for (; it != resources.end(); ++it) {
       Resource* resource = *it;
-      if (!resource->IsDone())
+      if (!resource->IsDone()) {
         return false;
+      }
     }
     return true;
   }
 
   void AssertDone() const {
+    EXPECT_TRUE(GotAllExpectedConsoleMessages());
     ResourceList::const_iterator it = resources.begin();
     for (; it != resources.end(); ++it) {
       (*it)->AssertDone();
@@ -299,10 +335,9 @@ class TestServerObserver : public test_server::ObserverHelper {
                      base::OnceClosure done_callback)
       : setup_(setup),
         ready_callback_(std::move(ready_callback)),
-        done_callback_(std::move(done_callback)),
-        weak_ptr_factory_(this) {
+        done_callback_(std::move(done_callback)) {
     DCHECK(setup);
-    Initialize();
+    Initialize(kUseHttpsServerScheme);
   }
 
   ~TestServerObserver() override { std::move(done_callback_).Run(); }
@@ -312,10 +347,8 @@ class TestServerObserver : public test_server::ObserverHelper {
     std::move(ready_callback_).Run();
   }
 
-  bool OnHttpRequest(CefRefPtr<CefServer> server,
-                     int connection_id,
-                     const CefString& client_address,
-                     CefRefPtr<CefRequest> request) override {
+  bool OnTestServerRequest(CefRefPtr<CefRequest> request,
+                           const ResponseCallback& response_callback) override {
     CEF_REQUIRE_UI_THREAD();
     Resource* resource = setup_->GetResource(request);
     if (!resource) {
@@ -326,8 +359,7 @@ class TestServerObserver : public test_server::ObserverHelper {
     resource->response_ct++;
     EXPECT_TRUE(resource->VerifyRequest(request))
         << request->GetURL().ToString();
-    test_server::SendResponse(server, connection_id, resource->response,
-                              resource->response_data);
+    response_callback.Run(resource->response, resource->response_data);
 
     // Stop propagating the callback.
     return true;
@@ -343,16 +375,12 @@ class TestServerObserver : public test_server::ObserverHelper {
   base::OnceClosure ready_callback_;
   base::OnceClosure done_callback_;
 
-  base::WeakPtrFactory<TestServerObserver> weak_ptr_factory_;
-
   DISALLOW_COPY_AND_ASSIGN(TestServerObserver);
 };
 
 class CorsTestHandler : public RoutingTestHandler {
  public:
-  explicit CorsTestHandler(TestSetup* setup) : setup_(setup) {
-    setup_->Validate();
-  }
+  explicit CorsTestHandler(TestSetup* setup) : setup_(setup) {}
 
   void RunTest() override {
     StartServer(base::BindOnce(&CorsTestHandler::TriggerCreateBrowser, this));
@@ -379,9 +407,10 @@ class CorsTestHandler : public RoutingTestHandler {
     }
 
     setup_->AssertDone();
-    EXPECT_TRUE(setup_->console_messages.empty())
-        << "Did not receive expected console message: "
-        << setup_->console_messages.front();
+    for (const auto& cm : setup_->console_messages) {
+      EXPECT_GT(cm.count, 0U)
+          << "Did not receive expected console message: " << cm.message;
+    }
 
     RoutingTestHandler::DestroyTest();
   }
@@ -413,8 +442,9 @@ class CorsTestHandler : public RoutingTestHandler {
                  int httpStatusCode) override {
     const std::string& url = frame->GetURL();
     Resource* resource = GetResource(url);
-    if (!resource)
+    if (!resource) {
       return;
+    }
 
     const int expected_status = resource->response->GetStatus();
     if (url == main_url_ || expected_status != 200) {
@@ -431,8 +461,9 @@ class CorsTestHandler : public RoutingTestHandler {
                    const CefString& errorText,
                    const CefString& failedUrl) override {
     Resource* resource = GetResource(failedUrl);
-    if (!resource)
+    if (!resource) {
       return;
+    }
 
     const cef_errorcode_t expected_error = resource->response->GetError();
 
@@ -446,21 +477,23 @@ class CorsTestHandler : public RoutingTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
     Resource* resource = GetResource(frame->GetURL());
-    if (!resource)
+    if (!resource) {
       return false;
+    }
 
     if (request.ToString() == kSuccessMsg ||
         request.ToString() == kFailureMsg) {
       callback->Success("");
-      if (request.ToString() == kSuccessMsg)
+      if (request.ToString() == kSuccessMsg) {
         resource->success_query_ct++;
-      else
+      } else {
         resource->failure_query_ct++;
+      }
       TriggerDestroyTestIfDone();
       return true;
     }
@@ -474,13 +507,11 @@ class CorsTestHandler : public RoutingTestHandler {
                         int line) override {
     bool expected = false;
     if (!setup_->console_messages.empty()) {
-      std::vector<std::string>::iterator it = setup_->console_messages.begin();
-      for (; it != setup_->console_messages.end(); ++it) {
-        const std::string& possible = *it;
-        const std::string& actual = message.ToString();
-        if (actual.find(possible) == 0U) {
+      const std::string& actual = message.ToString();
+      for (auto& cm : setup_->console_messages) {
+        if (actual.find(cm.message) == 0U) {
           expected = true;
-          setup_->console_messages.erase(it);
+          cm.count++;
           break;
         }
       }
@@ -488,11 +519,14 @@ class CorsTestHandler : public RoutingTestHandler {
 
     EXPECT_TRUE(expected) << "Unexpected console message: "
                           << message.ToString();
-    return false;
+    return TestHandler::OnConsoleMessage(browser, level, message, source, line);
   }
 
  protected:
   void TriggerCreateBrowser() {
+    setup_->Initialize();
+    setup_->Validate();
+
     main_url_ = setup_->GetMainURL();
     CreateBrowser(main_url_);
   }
@@ -504,8 +538,9 @@ class CorsTestHandler : public RoutingTestHandler {
 
   void DestroyTestIfDone() {
     CEF_REQUIRE_UI_THREAD();
-    if (shutting_down_)
+    if (shutting_down_) {
       return;
+    }
 
     if (setup_->IsDone()) {
       shutting_down_ = true;
@@ -563,7 +598,7 @@ class CorsTestHandler : public RoutingTestHandler {
     CEF_REQUIRE_UI_THREAD();
     DCHECK(setup_->clear_cookies);
     test_request::GetAllCookies(
-        CefCookieManager::GetGlobalManager(nullptr), /*delete_cookies=*/true,
+        CefCookieManager::GetGlobalManager(nullptr), /*deleteCookies=*/true,
         base::BindOnce(&CorsTestHandler::ClearedCookies, this));
   }
 
@@ -689,7 +724,7 @@ TEST(CorsTest, BasicCustomStandardSchemeWithQuery) {
 namespace {
 
 struct CookieTestSetup : TestSetup {
-  CookieTestSetup() {}
+  CookieTestSetup() = default;
 
   bool expect_cookie = false;
 
@@ -709,13 +744,13 @@ struct CookieTestSetup : TestSetup {
 };
 
 struct CookieResource : Resource {
-  CookieResource() {}
+  CookieResource() = default;
 
   bool expect_cookie = false;
 
   void InitSetCookie() {
     response->SetHeaderByName("Set-Cookie", kDefaultCookie,
-                              /*override=*/true);
+                              /*overwrite=*/true);
   }
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
@@ -806,9 +841,17 @@ void SetupIframeRequest(CookieTestSetup* setup,
           !has_same_origin || IsNonStandardType(iframe_handler)
               ? "null"
               : GetOrigin(iframe_handler);
-      setup->AddConsoleMessage("SecurityError: Blocked a frame with origin \"" +
-                               origin +
-                               "\" from accessing a cross-origin frame.");
+      setup->AddConsoleMessage(
+          "SecurityError: Failed to read a named property 'document' from "
+          "'Window': Blocked a frame with origin \"" +
+          origin + "\" from accessing a cross-origin frame.");
+    }
+
+    if (has_same_origin && main_handler == iframe_handler &&
+        IsStandardType(main_handler)) {
+      setup->AddConsoleMessage(
+          "An iframe which has both allow-scripts and allow-same-origin for "
+          "its sandbox attribute can escape its sandboxing.");
     }
   } else {
     // Expect JavaScript execution to fail.
@@ -821,21 +864,48 @@ void SetupIframeRequest(CookieTestSetup* setup,
   setup->AddResource(iframe_resource);
 }
 
+struct IframeTestSetup : CookieTestSetup {
+  IframeTestSetup(const std::string& test_name,
+                  HandlerType main_handler,
+                  HandlerType iframe_handler,
+                  const std::string& sandbox_attribs)
+      : test_name_(test_name),
+        main_handler_(main_handler),
+        iframe_handler_(iframe_handler),
+        sandbox_attribs_(sandbox_attribs) {}
+
+  bool NeedsServer() const override {
+    return main_handler_ == HandlerType::SERVER ||
+           iframe_handler_ == HandlerType::SERVER;
+  }
+
+  void Initialize() override {
+    SetupIframeRequest(this, test_name_, main_handler_, &resource_main_,
+                       iframe_handler_, &resource_iframe_, sandbox_attribs_);
+  }
+
+ private:
+  const std::string test_name_;
+  const HandlerType main_handler_;
+  const HandlerType iframe_handler_;
+  const std::string sandbox_attribs_;
+
+  CookieResource resource_main_;
+  CookieResource resource_iframe_;
+};
+
 }  // namespace
 
 // Test iframe sandbox attributes with different origin combinations.
-#define CORS_TEST_IFRAME(test_name, handler_main, handler_iframe,     \
-                         sandbox_attribs)                             \
-  TEST(CorsTest, Iframe##test_name) {                                 \
-    CookieTestSetup setup;                                            \
-    CookieResource resource_main, resource_iframe;                    \
-    SetupIframeRequest(&setup, "CorsTest.Iframe" #test_name,          \
-                       HandlerType::handler_main, &resource_main,     \
-                       HandlerType::handler_iframe, &resource_iframe, \
-                       sandbox_attribs);                              \
-    CefRefPtr<CorsTestHandler> handler = new CorsTestHandler(&setup); \
-    handler->ExecuteTest();                                           \
-    ReleaseAndWaitForDestructor(handler);                             \
+#define CORS_TEST_IFRAME(test_name, handler_main, handler_iframe,        \
+                         sandbox_attribs)                                \
+  TEST(CorsTest, Iframe##test_name) {                                    \
+    IframeTestSetup setup("CorsTest.Iframe" #test_name,                  \
+                          HandlerType::handler_main,                     \
+                          HandlerType::handler_iframe, sandbox_attribs); \
+    CefRefPtr<CorsTestHandler> handler = new CorsTestHandler(&setup);    \
+    handler->ExecuteTest();                                              \
+    ReleaseAndWaitForDestructor(handler);                                \
   }
 
 // Test all origin combinations (same and cross-origin).
@@ -917,7 +987,7 @@ const char kSubUnsafeHeaderName[] = "x-unsafe-header";
 const char kSubUnsafeHeaderValue[] = "not-safe";
 
 struct SubResource : CookieResource {
-  SubResource() {}
+  SubResource() = default;
 
   std::string main_origin;
   bool supports_cors = false;
@@ -953,21 +1023,24 @@ struct SubResource : CookieResource {
   }
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
-    if (!CookieResource::VerifyRequest(request))
+    if (!CookieResource::VerifyRequest(request)) {
       return false;
+    }
 
     const std::string& request_method = request->GetMethod();
     EXPECT_STREQ(method.c_str(), request_method.c_str()) << GetPathURL();
-    if (request_method != method)
+    if (request_method != method) {
       return false;
+    }
 
     // Verify that the "Origin" header contains the expected value.
     const std::string& origin = request->GetHeaderByName("Origin");
     const std::string& expected_origin =
         is_cross_origin ? main_origin : std::string();
     EXPECT_STREQ(expected_origin.c_str(), origin.c_str()) << GetPathURL();
-    if (expected_origin != origin)
+    if (expected_origin != origin) {
       return false;
+    }
 
     // Verify that the "X-Unsafe-Header" header contains the expected value.
     const std::string& unsafe_header =
@@ -1003,26 +1076,30 @@ struct PreflightResource : Resource {
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
     const std::string& request_method = request->GetMethod();
     EXPECT_STREQ(method.c_str(), request_method.c_str()) << GetPathURL();
-    if (request_method != method)
+    if (request_method != method) {
       return false;
+    }
 
     const std::string& origin = request->GetHeaderByName("Origin");
     EXPECT_STREQ(main_origin.c_str(), origin.c_str()) << GetPathURL();
-    if (main_origin != origin)
+    if (main_origin != origin) {
       return false;
+    }
 
     const std::string& ac_request_method =
         request->GetHeaderByName("Access-Control-Request-Method");
     EXPECT_STREQ(kSubRequestMethod, ac_request_method.c_str()) << GetPathURL();
-    if (ac_request_method != kSubRequestMethod)
+    if (ac_request_method != kSubRequestMethod) {
       return false;
+    }
 
     const std::string& ac_request_headers =
         request->GetHeaderByName("Access-Control-Request-Headers");
     EXPECT_STREQ(kSubUnsafeHeaderName, ac_request_headers.c_str())
         << GetPathURL();
-    if (ac_request_headers != kSubUnsafeHeaderName)
+    if (ac_request_headers != kSubUnsafeHeaderName) {
       return false;
+    }
 
     return true;
   }
@@ -1164,9 +1241,7 @@ void SetupExecRequest(ExecMode mode,
               "' has been blocked by CORS policy: No "
               "'Access-Control-Allow-Origin' header is present on the "
               "requested "
-              "resource. If an opaque response serves your needs, set the "
-              "request's mode to 'no-cors' to fetch the resource with CORS "
-              "disabled.");
+              "resource.");
         }
       }
     } else if (mode == ExecMode::XHR) {
@@ -1220,9 +1295,7 @@ void SetupExecRequest(ExecMode mode,
             "' has been blocked by CORS policy: Response to preflight request "
             "doesn't pass access control check: No "
             "'Access-Control-Allow-Origin' header is present on the requested "
-            "resource. If an opaque response serves your needs, set the "
-            "request's mode to 'no-cors' to fetch the resource with CORS "
-            "disabled.");
+            "resource.");
       }
     }
   }
@@ -1459,11 +1532,12 @@ enum class RedirectMode {
 };
 
 struct RedirectGetResource : CookieResource {
-  RedirectGetResource() {}
+  RedirectGetResource() = default;
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
-    if (!CookieResource::VerifyRequest(request))
+    if (!CookieResource::VerifyRequest(request)) {
       return false;
+    }
 
     // The "Origin" header should never be present for a redirect.
     const std::string& origin = request->GetHeaderByName("Origin");
@@ -1475,15 +1549,16 @@ struct RedirectGetResource : CookieResource {
 void SetupRedirectResponse(RedirectMode mode,
                            const std::string& redirect_url,
                            CefRefPtr<CefResponse> response) {
-  if (mode == RedirectMode::MODE_302)
+  if (mode == RedirectMode::MODE_302) {
     response->SetStatus(302);
-  else if (mode == RedirectMode::MODE_307)
+  } else if (mode == RedirectMode::MODE_307) {
     response->SetStatus(307);
-  else
+  } else {
     NOTREACHED();
+  }
 
   response->SetHeaderByName("Location", redirect_url,
-                            /*override=*/false);
+                            /*overwrite=*/false);
 }
 
 // Test redirect requests.
@@ -1595,7 +1670,7 @@ CORS_TEST_REDIRECT_GET_ALL(307, MODE_307)
 namespace {
 
 struct PostResource : CookieResource {
-  PostResource() {}
+  PostResource() = default;
 
   bool expect_downgrade_to_get = false;
   bool was_redirected = false;
@@ -1621,8 +1696,9 @@ struct PostResource : CookieResource {
   }
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
-    if (!CookieResource::VerifyRequest(request))
+    if (!CookieResource::VerifyRequest(request)) {
       return false;
+    }
 
     // The "Origin" header should be present if the request is POST, and was not
     // redirected cross-origin.
@@ -1638,8 +1714,9 @@ struct PostResource : CookieResource {
 
     const std::string& origin = request->GetHeaderByName("Origin");
     EXPECT_STREQ(expected_origin.c_str(), origin.c_str()) << GetPathURL();
-    if (expected_origin != origin)
+    if (expected_origin != origin) {
       return false;
+    }
 
     const std::string& req_method = request->GetMethod();
     const bool has_post_data = request->GetPostData() != nullptr;
@@ -1787,7 +1864,7 @@ void SetupRedirectPostRequest(RedirectMode mode,
 CORS_TEST_REDIRECT_POST_ALL(302, MODE_302)
 CORS_TEST_REDIRECT_POST_ALL(307, MODE_307)
 
-// Entry point for creating plugin browser test objects.
+// Entry point for creating CORS browser test objects.
 // Called from client_app_delegates.cc.
 void CreateCorsBrowserTests(client::ClientAppBrowser::DelegateSet& delegates) {
   delegates.insert(new CorsBrowserTest);

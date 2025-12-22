@@ -57,6 +57,7 @@
     elems.push(getElementBounds('LI11'));
     elems.push(getElementBounds('LI11select'));
     elems.push(getElementBounds('email'));
+    elems.push(getElementBounds('quickmenu'));
     elems.push(getElementBounds('editbox'));
     elems.push(getElementBounds('btnnavigate'));
     elems.push(getElementBounds('dropdiv'));
@@ -97,6 +98,11 @@
     // Results in a call to the OnQuery method in os_rendering_unittest.cc.
     if (window.testQuery)
       window.testQuery({request: param});
+  }
+
+  function onFocusTest(ev) {
+    if (window.testQuery)
+      window.testQuery({request: "osrfocus" + ev.target.id});
   }
 
   function allowDrop(ev) {
@@ -168,14 +174,15 @@
       </li>
   <li id='LI07'>Invalidate should trigger OnPaint once</li>
   <li id='LI08'>Click and write here with SendKeyEvent to trigger repaints:
-      <input id='editbox' type='text' value='' size="5"></li>
+      <input id='editbox' type='text' value='' size="5" onfocus="onFocusTest(event)"></li>
   <li id='LI09'>Click here with SendMouseClickEvent to navigate:
       <input id='btnnavigate' type='button' onclick='navigate()'
       value='Click here to navigate' /></li>
   <li id='LI10' title='EXPECTED_TOOLTIP'>Mouse over this element will
       trigger show a tooltip</li>
   <li id='LI11' onclick='selectText(event)'>SELECTED_TEXT_RANGE</li>
-  <li><input id='email' type='text' size=10 inputmode='email'></li>
+  <li><input id='email' type='text' size=10 inputmode='email' onfocus="onFocusTest(event)"></li>
+  <li id="quickmenu">Long touch press should trigger quick menu</li>
   </ol>
 
   <div class="dropdiv" id="dropdiv" ondrop="drop(event)" ondragover="allowDrop(event)">

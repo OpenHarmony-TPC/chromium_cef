@@ -2,7 +2,7 @@
 // 2011 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/common/string_util.h"
+#include "cef/libcef/common/string_util.h"
 
 #include "base/memory/read_only_shared_memory_region.h"
 #include "base/memory/ref_counted_memory.h"
@@ -23,13 +23,14 @@ void GetCefString(scoped_refptr<base::RefCountedMemory> source,
   if (source && source->size() > 0U) {
 #if defined(CEF_STRING_TYPE_UTF8) || defined(CEF_STRING_TYPE_UTF16)
     // Reference existing UTF8 or UTF16 data.
-    cef_string.FromString(source->front_as<CefString::char_type>(),
-                          source->size() / sizeof(CefString::char_type),
-                          /*copy=*/false);
+    cef_string.FromString(
+        reinterpret_cast<const CefString::char_type*>(source->data()),
+        source->size() / sizeof(CefString::char_type),
+        /*copy=*/false);
 #else
     // Must convert from UTF16.
     cef_string.FromString16(
-        source->front_as<std::u16string::value_type>(),
+        reinterpret_cast<const std::u16string::value_type*>(source->data()),
         source->size() / sizeof(std::u16string::value_type));
 #endif
   } else {

@@ -24,6 +24,7 @@ class BrowserWindowOsrMac : public BrowserWindow,
   // Constructor may be called on any thread.
   // |delegate| must outlive this object.
   BrowserWindowOsrMac(BrowserWindow::Delegate* delegate,
+                      bool with_controls,
                       const std::string& startup_url,
                       const OsrRendererSettings& settings);
   ~BrowserWindowOsrMac();
@@ -71,6 +72,10 @@ class BrowserWindowOsrMac : public BrowserWindow,
                const void* buffer,
                int width,
                int height) override;
+  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
+                          CefRenderHandler::PaintElementType type,
+                          const CefRenderHandler::RectList& dirtyRects,
+                          const CefAcceleratedPaintInfo& info) override;
   void OnCursorChange(CefRefPtr<CefBrowser> browser,
                       CefCursorHandle cursor,
                       cef_cursor_type_t type,

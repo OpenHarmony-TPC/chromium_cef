@@ -3,31 +3,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/touch_selection_controller_client_osr.h"
+#include "cef/libcef/browser/osr/touch_selection_controller_client_osr.h"
 
 #include <cmath>
 #include <set>
 
-#include "libcef/browser/osr/render_widget_host_view_osr.h"
-#include "libcef/browser/osr/touch_handle_drawable_osr.h"
-
-#include "base/bind.h"
+#include "base/functional/bind.h"
+#include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
+#include "cef/libcef/browser/osr/touch_handle_drawable_osr.h"
 #include "content/browser/renderer_host/render_widget_host_delegate.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/context_menu_params.h"
 #include "content/public/browser/render_view_host.h"
 #include "ui/base/clipboard/clipboard.h"
 #include "ui/base/data_transfer_policy/data_transfer_endpoint.h"
-#include "ui/base/pointer/touch_editing_controller.h"
+#include "ui/base/mojom/menu_source_type.mojom-forward.h"
 #include "ui/gfx/geometry/point_conversions.h"
 #include "ui/gfx/geometry/size_conversions.h"
-#include "base/logging.h"
-
-#if defined(OHOS_NWEB_EX)
-#include "base/base_switches.h"
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
-#endif
+#include "ui/touch_selection/touch_editing_controller.h"
 
 namespace {
 
@@ -36,7 +29,7 @@ constexpr int kQuickMenuDelayInMs = 100;
 
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
     QM_EDITFLAG_CAN_ELLIPSIS, QM_EDITFLAG_CAN_CUT, QM_EDITFLAG_CAN_COPY,
-    QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL};
+    QM_EDITFLAG_CAN_PASTE};
 
 constexpr int kInvalidCommandId = -1;
 constexpr cef_event_flags_t kEmptyEventFlags =
@@ -53,8 +46,7 @@ class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
   CefRunQuickMenuCallbackImpl& operator=(const CefRunQuickMenuCallbackImpl&) =
       delete;
 
-  ~CefRunQuickMenuCallbackImpl() {
-#if !BUILDFLAG(IS_OHOS)
+  ~CefRunQuickMenuCallbackImpl() override {
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
@@ -66,7 +58,6 @@ class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
                                      kEmptyEventFlags));
       }
     }
-#endif
   }
 
   void Continue(int command_id, cef_event_flags_t event_flags) override {
@@ -98,36 +89,6 @@ class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
   IMPLEMENT_REFCOUNTING(CefRunQuickMenuCallbackImpl);
 };
 
-void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
-                             CefTouchHandleState& state) {
-  if (handle == nullptr) {
-    state.enabled = 0;
-    return;
-  }
-
-  state.enabled = handle->GetEnabled();
-  state.origin = {handle->focus_bottom().x() + handle->viewport().x(),
-                  handle->focus_bottom().y() + handle->viewport().y()};
-  state.edge_height = handle->focus_bottom().y() - handle->focus_top().y();
-  state.alpha = handle->alpha();
-#if BUILDFLAG(IS_OHOS)
-  cef_horizontal_alignment_t orientation;
-  switch (handle->orientation()) {
-    case ui::TouchHandleOrientation::LEFT:
-      orientation = CEF_HORIZONTAL_ALIGNMENT_LEFT;
-      break;
-    case ui::TouchHandleOrientation::CENTER:
-      orientation = CEF_HORIZONTAL_ALIGNMENT_CENTER;
-      break;
-    case ui::TouchHandleOrientation::RIGHT:
-      orientation = CEF_HORIZONTAL_ALIGNMENT_RIGHT;
-      break;
-    default:
-      orientation = CEF_HORIZONTAL_ALIGNMENT_UNDEFINED;
-  }
-  state.orientation = orientation;
-#endif
-}
 }  // namespace
 
 CefTouchSelectionControllerClientOSR::CefTouchSelectionControllerClientOSR(
@@ -136,38 +97,25 @@ CefTouchSelectionControllerClientOSR::CefTouchSelectionControllerClientOSR(
       internal_client_(rwhv),
       active_client_(&internal_client_),
       active_menu_client_(this),
-      quick_menu_timer_(FROM_HERE,
-                        base::Milliseconds(kQuickMenuDelayInMs),
-                        base::BindRepeating(
-                            &CefTouchSelectionControllerClientOSR::RunQuickMenu,
-                            base::Unretained(this))),
+      quick_menu_timer_(
+          FROM_HERE,
+          base::Milliseconds(kQuickMenuDelayInMs),
+          base::BindRepeating(
+              &CefTouchSelectionControllerClientOSR::ShowQuickMenu,
+              base::Unretained(this))),
       weak_ptr_factory_(this) {
   DCHECK(rwhv_);
 }
 
 CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
-  for (auto& observer : observers_)
+  for (auto& observer : observers_) {
     observer.OnManagerWillDestroy(this);
+  }
 }
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
   CloseQuickMenu();
-  auto controller = rwhv_->selection_controller();
-  if (controller) {
-    if (!controller->GetInsertHandle() || !controller->GetInsertHandle()->GetEnabled()) {
-      rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
-    } else if (controller->GetInsertHandle()->GetEnabled()) {
-      rwhv_->selection_controller()->SetTemporarilyHidden(true);
-      NotifyTouchSelectionChanged(true);
-    }
-  }
-}
-
-void CefTouchSelectionControllerClientOSR::SetTemporarilyHidden(bool hidden) {
-  if (rwhv_ && rwhv_->selection_controller()) {
-    rwhv_->selection_controller()->SetTemporarilyHidden(hidden);
-    NotifyTouchSelectionChanged(false);
-  }
+  rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
 }
 
 void CefTouchSelectionControllerClientOSR::OnWindowMoved() {
@@ -181,9 +129,6 @@ void CefTouchSelectionControllerClientOSR::OnTouchDown() {
 
 void CefTouchSelectionControllerClientOSR::OnTouchUp() {
   touch_down_ = false;
-  if (quick_menu_running_) {
-    return;
-  }
   UpdateQuickMenu();
 }
 
@@ -202,54 +147,50 @@ void CefTouchSelectionControllerClientOSR::OnScrollCompleted() {
 
 bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
     const content::ContextMenuParams& params) {
-#if defined(OHOS_NWEB_EX)
-  bool is_browser =
-      base::CommandLine::ForCurrentProcess() &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
-  bool has_select = !rwhv_->GetSelectedText().empty();
-  if (is_browser && !has_select && params.selection_text.empty() && !params.is_editable) {
-    quick_menu_requested_ = false;
-    return false;
-  }
-#endif
-
-  if ((params.source_type == ui::MENU_SOURCE_LONG_PRESS ||
-       params.source_type == ui::MENU_SOURCE_TOUCH_EDIT_MENU ||
-       params.source_type == ui::MENU_SOURCE_LONG_TAP) &&
+  if ((params.source_type == ui::mojom::MenuSourceType::kLongPress ||
+       params.source_type == ui::mojom::MenuSourceType::kLongTap) &&
       params.is_editable && params.selection_text.empty() &&
       IsQuickMenuAvailable()) {
     quick_menu_requested_ = true;
-    ShowQuickMenu();
+    UpdateQuickMenu();
     return true;
   }
 
-  bool from_touch = params.source_type == ui::MENU_SOURCE_LONG_PRESS ||
-                    params.source_type == ui::MENU_SOURCE_LONG_TAP ||
-                    params.source_type == ui::MENU_SOURCE_TOUCH_EDIT_MENU ||
-                    params.source_type == ui::MENU_SOURCE_TOUCH;
-#if defined(OHOS_NWEB_EX)
-  if (is_browser) {
-    from_touch =
-        from_touch || params.source_type == ui::MENU_SOURCE_SELECT_AND_COPY;
-  }
-#endif
-
-  if (from_touch && (quick_menu_requested_ || !params.selection_text.empty())) {
-#if defined(OHOS_NWEB_EX)
-    if (is_browser) {
-      SelectionTextNotEmpty(!params.selection_text.empty());
-    }
-#endif
-    quick_menu_requested_ = true;
-    ShowQuickMenu();
+  const bool from_touch =
+      params.source_type == ui::mojom::MenuSourceType::kLongPress ||
+      params.source_type == ui::mojom::MenuSourceType::kLongTap ||
+      params.source_type == ui::mojom::MenuSourceType::kTouch;
+  if (from_touch && !params.selection_text.empty()) {
     return true;
   }
 
+  rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
   return false;
 }
 
 void CefTouchSelectionControllerClientOSR::DidStopFlinging() {
   OnScrollCompleted();
+}
+
+void CefTouchSelectionControllerClientOSR::OnSwipeToMoveCursorBegin() {
+  rwhv_->selection_controller()->OnSwipeToMoveCursorBegin();
+  OnSelectionEvent(ui::INSERTION_HANDLE_DRAG_STARTED);
+}
+
+void CefTouchSelectionControllerClientOSR::OnSwipeToMoveCursorEnd() {
+  rwhv_->selection_controller()->OnSwipeToMoveCursorEnd();
+  OnSelectionEvent(ui::INSERTION_HANDLE_DRAG_STOPPED);
+}
+
+void CefTouchSelectionControllerClientOSR::OnClientHitTestRegionUpdated(
+    ui::TouchSelectionControllerClient* client) {
+  if (client != active_client_ || !rwhv_->selection_controller() ||
+      rwhv_->selection_controller()->active_status() ==
+          ui::TouchSelectionController::INACTIVE) {
+    return;
+  }
+
+  active_client_->DidScroll();
 }
 
 void CefTouchSelectionControllerClientOSR::UpdateClientSelectionBounds(
@@ -317,8 +258,9 @@ bool CefTouchSelectionControllerClientOSR::IsQuickMenuAvailable() const {
 }
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
-  if (!quick_menu_running_)
+  if (!quick_menu_running_) {
     return;
+  }
 
   quick_menu_running_ = false;
 
@@ -326,16 +268,6 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   if (auto handler = browser->client()->GetContextMenuHandler()) {
     handler->OnQuickMenuDismissed(browser.get(), browser->GetFocusedFrame());
   }
-  if (browser->web_contents()) {
-    browser->web_contents()->SetShowingContextMenu(false);
-  }
-
-#if defined(OHOS_NWEB_EX)
-  if (base::CommandLine::ForCurrentProcess() &&
-          base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser)) {
-    isSelectionTextNotEmpty_ = false;
-  }
-#endif
 }
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
@@ -349,6 +281,9 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
     auto client_bounds = gfx::RectF(rwhv_->GetViewBounds());
     origin.SetToMax(client_bounds.origin());
     bottom_right.SetToMin(client_bounds.bottom_right());
+    if (origin.x() > bottom_right.x() || origin.y() > bottom_right.y()) {
+      return;
+    }
 
     gfx::Vector2dF diagonal = bottom_right - origin;
     gfx::SizeF size(diagonal.x(), diagonal.y());
@@ -364,6 +299,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
         new CefRunQuickMenuCallbackImpl(base::BindOnce(
             &CefTouchSelectionControllerClientOSR::ExecuteCommand,
             weak_ptr_factory_.GetWeakPtr())));
+
     quick_menu_running_ = true;
     if (!handler->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
@@ -376,11 +312,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
             callbackImpl)) {
       callbackImpl->Disconnect();
       CloseQuickMenu();
-    } else {
-      if (browser->web_contents()) {
-        browser->web_contents()->SetShowingContextMenu(true);
-      }
-      browser->SetTouchInsertHandleMenuShow(false);
     }
   }
 }
@@ -406,16 +337,16 @@ bool CefTouchSelectionControllerClientOSR::SupportsAnimation() const {
 
 bool CefTouchSelectionControllerClientOSR::InternalClient::SupportsAnimation()
     const {
-  NOTREACHED();
+  DCHECK(false);
   return false;
 }
 
 void CefTouchSelectionControllerClientOSR::SetNeedsAnimate() {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 void CefTouchSelectionControllerClientOSR::InternalClient::SetNeedsAnimate() {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 void CefTouchSelectionControllerClientOSR::MoveCaret(
@@ -457,81 +388,46 @@ void CefTouchSelectionControllerClientOSR::InternalClient::
   }
 }
 
-void CefTouchSelectionControllerClientOSR::NotifyTouchSelectionChanged(
-    bool need_report) {
-  ui::TouchSelectionController* controller = GetTouchSelectionController();
-  if (rwhv_ && controller) {
-    CefTouchHandleState insert_handle;
-    CefTouchHandleState start_selection_handle;
-    CefTouchHandleState end_selection_handle;
-    ConvertTouchHandleState(controller->GetInsertHandle(), insert_handle);
-    ConvertTouchHandleState(controller->GetStartSelectionHandle(),
-                            start_selection_handle);
-    ConvertTouchHandleState(controller->GetEndSelectionHandle(),
-                            end_selection_handle);
-    rwhv_->OnTouchSelectionChanged(insert_handle, start_selection_handle,
-                                   end_selection_handle, need_report);
-  }
-}
-
 void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     ui::SelectionEventType event) {
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
-  SetTemporarilyHidden(false);
-  auto browser = rwhv_->browser_impl();
   switch (event) {
     case ui::SELECTION_HANDLES_SHOWN:
       quick_menu_requested_ = true;
-      NotifyTouchSelectionChanged(false);
-      UpdateQuickMenu();
-      break;
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_SHOWN:
-      if (rwhv_ && rwhv_->browser_impl()) {
-        quick_menu_requested_ =
-            rwhv_->browser_impl()->GetTouchInsertHandleMenuShow();
-      }
-      NotifyTouchSelectionChanged(true);
-      if (quick_menu_requested_) {
-        ShowQuickMenu();
-      }
+      UpdateQuickMenu();
       break;
     case ui::SELECTION_HANDLES_CLEARED:
     case ui::INSERTION_HANDLE_CLEARED:
       quick_menu_requested_ = false;
-      NotifyTouchSelectionChanged(true);
       UpdateQuickMenu();
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
+      UpdateQuickMenu();
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
+      UpdateQuickMenu();
       break;
     case ui::SELECTION_HANDLES_MOVED:
     case ui::INSERTION_HANDLE_MOVED:
-      if (!handle_drag_in_progress_) {
-        UpdateQuickMenu();
-      }
-      NotifyTouchSelectionChanged(true);
+      UpdateQuickMenu();
       break;
     case ui::INSERTION_HANDLE_TAPPED:
       quick_menu_requested_ = !quick_menu_requested_;
-      if (quick_menu_requested_) {
-        UpdateQuickMenu();
-      } else {
-        CloseQuickMenu();
-        NotifyTouchSelectionChanged(true);
-      }
+      UpdateQuickMenu();
       break;
   }
 }
 
 void CefTouchSelectionControllerClientOSR::InternalClient::OnSelectionEvent(
     ui::SelectionEventType event) {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 void CefTouchSelectionControllerClientOSR::OnDragUpdate(
@@ -541,7 +437,7 @@ void CefTouchSelectionControllerClientOSR::OnDragUpdate(
 void CefTouchSelectionControllerClientOSR::InternalClient::OnDragUpdate(
     const ui::TouchSelectionDraggable::Type type,
     const gfx::PointF& position) {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 std::unique_ptr<ui::TouchHandleDrawable>
@@ -553,12 +449,12 @@ void CefTouchSelectionControllerClientOSR::DidScroll() {}
 
 std::unique_ptr<ui::TouchHandleDrawable>
 CefTouchSelectionControllerClientOSR::InternalClient::CreateDrawable() {
-  NOTREACHED();
+  DCHECK(false);
   return nullptr;
 }
 
 void CefTouchSelectionControllerClientOSR::InternalClient::DidScroll() {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
@@ -566,15 +462,6 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
   bool editable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE;
   bool readable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_PASSWORD;
   bool has_selection = !rwhv_->GetSelectedText().empty();
-#if BUILDFLAG(IS_OHOS)
-  bool has_text = !rwhv_->GetText().empty();
-#endif
-#if defined(OHOS_NWEB_EX)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    has_selection = has_selection || isSelectionTextNotEmpty_;
-  }
-#endif
   switch (command_id) {
     case QM_EDITFLAG_CAN_ELLIPSIS:
       return true;  // Always allowed to show the ellipsis button.
@@ -583,40 +470,13 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
     case QM_EDITFLAG_CAN_COPY:
       return readable && has_selection;
     case QM_EDITFLAG_CAN_PASTE: {
-      bool can_paste = false;
-      if (!editable) {
-        LOG(INFO) << "This area is not editable.";
-        return can_paste;
-      }
       std::u16string result;
       ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
-          ui::EndpointType::kDefault, /*notify_if_restricted=*/false);
+          ui::EndpointType::kDefault, {.notify_if_restricted = false});
       ui::Clipboard::GetForCurrentThread()->ReadText(
           ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
-      if (rwhv_->GetTextInputType() == ui::TEXT_INPUT_TYPE_CONTENT_EDITABLE &&
-          result.empty()) {
-        can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::BitmapType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
-        can_paste |= ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::HtmlType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
-      }
-      can_paste = can_paste ? can_paste : !result.empty();
-      return can_paste;
+      return editable && !result.empty();
     }
-    case QM_EDITFLAG_CAN_SELECT_ALL:
-#if BUILDFLAG(IS_OHOS)
-      if (!editable && readable) {
-        return true;
-      }
-      if (editable && has_text) {
-        return true;
-      }
-      return false;
-#else
-      return editable || readable;
-#endif
     default:
       return false;
   }
@@ -624,13 +484,11 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
 
 void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
                                                           int event_flags) {
-#if !BUILDFLAG(IS_OHOS)
   if (command_id == kInvalidCommandId) {
     return;
   }
-#endif
-  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
-      command_id != QM_EDITFLAG_CAN_SELECT_ALL) {
+
+  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS) {
     rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
   }
 
@@ -648,32 +506,23 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
     }
   }
 
-  absl::optional<std::u16string> value;
   switch (command_id) {
     case QM_EDITFLAG_CAN_CUT:
       host_delegate->Cut();
       break;
     case QM_EDITFLAG_CAN_COPY:
       host_delegate->Copy();
-      browser->web_contents()->CollapseSelection();
       break;
     case QM_EDITFLAG_CAN_PASTE:
       host_delegate->Paste();
       break;
-    case QM_EDITFLAG_CAN_SELECT_ALL:
-      host_delegate->SelectAll();
-      CloseQuickMenu();
-      ShowQuickMenu();
-      break;
     case QM_EDITFLAG_CAN_ELLIPSIS:
       CloseQuickMenu();
       RunContextMenu();
-      host_delegate->ExecuteEditCommand("Unselect", value);
       break;
     default:
       // Invalid command, do nothing.
       // Also reached when callback is destroyed/cancelled.
-      host_delegate->ExecuteEditCommand("Unselect", value);
       break;
   }
 }
@@ -683,8 +532,9 @@ void CefTouchSelectionControllerClientOSR::RunContextMenu() {
       rwhv_->selection_controller()->GetVisibleRectBetweenBounds();
   const gfx::PointF anchor_point =
       gfx::PointF(anchor_rect.CenterPoint().x(), anchor_rect.y());
-  rwhv_->host()->ShowContextMenuAtPoint(gfx::ToRoundedPoint(anchor_point),
-                                        ui::MENU_SOURCE_TOUCH_EDIT_MENU);
+  rwhv_->host()->ShowContextMenuAtPoint(
+      gfx::ToRoundedPoint(anchor_point),
+      ui::mojom::MenuSourceType::kTouchEditMenu);
 
   // Hide selection handles after getting rect-between-bounds from touch
   // selection controller; otherwise, rect would be empty and the above
@@ -692,36 +542,11 @@ void CefTouchSelectionControllerClientOSR::RunContextMenu() {
   rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
 }
 
-void CefTouchSelectionControllerClientOSR::RunQuickMenu() {
-  const gfx::RectF anchor_rect =
-      rwhv_->selection_controller()->GetVisibleRectBetweenBounds();
-  const gfx::PointF anchor_point =
-      gfx::PointF(anchor_rect.CenterPoint().x(), anchor_rect.y());
-  rwhv_->host()->ShowContextMenuAtPoint(gfx::ToRoundedPoint(anchor_point),
-                                        ui::MENU_SOURCE_TOUCH_EDIT_MENU);
-}
-
 bool CefTouchSelectionControllerClientOSR::ShouldShowQuickMenu() {
   return quick_menu_requested_ && !touch_down_ && !scroll_in_progress_ &&
-         IsQuickMenuAvailable();
+         !handle_drag_in_progress_ && IsQuickMenuAvailable();
 }
 
 std::u16string CefTouchSelectionControllerClientOSR::GetSelectedText() {
   return rwhv_->GetSelectedText();
 }
-
-bool CefTouchSelectionControllerClientOSR::
-    NeedPopupInsertTouchHandleQuickMenu() {
-  if (ShouldShowQuickMenu()) {
-    ShowQuickMenu();
-    return true;
-  }
-  return false;
-}
-
-#if defined(OHOS_NWEB_EX)
-void CefTouchSelectionControllerClientOSR::SelectionTextNotEmpty(
-    bool selectionTextNotEmpty) {
-  isSelectionTextNotEmpty_ = selectionTextNotEmpty;
-}
-#endif

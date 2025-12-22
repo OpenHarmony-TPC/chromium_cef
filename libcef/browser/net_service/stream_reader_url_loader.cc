@@ -3,28 +3,22 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include <regex>
+#include "cef/libcef/browser/net_service/stream_reader_url_loader.h"
 
-#include "libcef/browser/net_service/stream_reader_url_loader.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-
-#include "base/bind.h"
-#include "base/callback.h"
+#include "base/functional/bind.h"
+#include "base/functional/callback.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
-#include "base/task/post_task.h"
+#include "base/task/single_thread_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
-#include "base/threading/thread_task_runner_handle.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "content/public/browser/browser_thread.h"
-#include "net/base/features.h"
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
-#include "services/network/public/cpp/features.h"
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
 namespace net_service {
@@ -42,15 +36,15 @@ class OpenInputStreamWrapper
   OpenInputStreamWrapper(const OpenInputStreamWrapper&) = delete;
   OpenInputStreamWrapper& operator=(const OpenInputStreamWrapper&) = delete;
 
-  static base::OnceClosure Open(
+  [[nodiscard]] static base::OnceClosure Open(
       std::unique_ptr<StreamReaderURLLoader::Delegate> delegate,
       scoped_refptr<base::SequencedTaskRunner> work_thread_task_runner,
       int32_t request_id,
       const network::ResourceRequest& request,
-      OnInputStreamOpenedCallback callback) WARN_UNUSED_RESULT {
+      OnInputStreamOpenedCallback callback) {
     scoped_refptr<OpenInputStreamWrapper> wrapper = new OpenInputStreamWrapper(
         std::move(delegate), work_thread_task_runner,
-        base::ThreadTaskRunnerHandle::Get(), std::move(callback));
+        base::SingleThreadTaskRunner::GetCurrentDefault(), std::move(callback));
     wrapper->Start(request_id, request);
 
     return wrapper->GetCancelCallback();
@@ -84,8 +78,9 @@ class OpenInputStreamWrapper
 
   void CancelOnJobThread() {
     DCHECK(job_thread_task_runner_->RunsTasksInCurrentSequence());
-    if (callback_.is_null())
+    if (callback_.is_null()) {
       return;
+    }
 
     callback_.Reset();
 
@@ -96,8 +91,9 @@ class OpenInputStreamWrapper
 
   void CancelOnWorkThread() {
     DCHECK(work_thread_task_runner_->RunsTasksInCurrentSequence());
-    if (is_canceled_)
+    if (is_canceled_) {
       return;
+    }
     is_canceled_ = true;
     OnCallback(nullptr);
   }
@@ -105,8 +101,9 @@ class OpenInputStreamWrapper
   void OpenOnWorkThread(int32_t request_id,
                         const network::ResourceRequest& request) {
     DCHECK(work_thread_task_runner_->RunsTasksInCurrentSequence());
-    if (is_canceled_)
+    if (is_canceled_) {
       return;
+    }
 
     // |delegate_| will remain valid until OnCallback() is executed on
     // |job_thread_task_runner_|.
@@ -216,7 +213,8 @@ class InputStreamReader : public base::RefCountedThreadSafe<InputStreamReader> {
       InputStream::SkipCallback skip_callback);
   static void RunReadCallbackOnJobThread(
       int bytes_read,
-      InputStream::ReadCallback read_callback);
+      InputStream::ReadCallback read_callback,
+      scoped_refptr<net::IOBuffer> buffer);
 
   std::unique_ptr<InputStream> stream_;
 
@@ -244,13 +242,14 @@ InputStreamReader::InputStreamReader(
     scoped_refptr<base::SequencedTaskRunner> work_thread_task_runner)
     : stream_(std::move(stream)),
       work_thread_task_runner_(work_thread_task_runner),
-      job_thread_task_runner_(base::ThreadTaskRunnerHandle::Get()) {
+      job_thread_task_runner_(
+          base::SingleThreadTaskRunner::GetCurrentDefault()) {
   CEF_REQUIRE_IOT();
   DCHECK(stream_);
   DCHECK(work_thread_task_runner_);
 }
 
-InputStreamReader::~InputStreamReader() {}
+InputStreamReader::~InputStreamReader() = default;
 
 void InputStreamReader::Skip(int64_t skip_bytes,
                              InputStream::SkipCallback callback) {
@@ -317,8 +316,9 @@ void InputStreamReader::ReadOnWorkThread(scoped_refptr<net::IOBuffer> dest,
                      pending_callback_id_));
 
   // Check if the callback will execute asynchronously.
-  if (result && bytes_read == 0)
+  if (result && bytes_read == 0) {
     return;
+  }
 
   RunReadCallback(result || bytes_read <= 0 ? bytes_read : net::ERR_FAILED);
 }
@@ -340,8 +340,9 @@ void InputStreamReader::SkipToRequestedRange() {
                        pending_callback_id_));
 
     // Check if the callback will execute asynchronously.
-    if (result && skipped == 0)
+    if (result && skipped == 0) {
       return;
+    }
 
     if (!result || skipped <= 0) {
       RunSkipCallback(net::ERR_REQUEST_RANGE_NOT_SATISFIABLE);
@@ -388,13 +389,15 @@ void InputStreamReader::ContinueSkipCallbackOnWorkThread(
   DCHECK(work_thread_task_runner_->RunsTasksInCurrentSequence());
 
   // Check for out of order callbacks.
-  if (pending_callback_id_ != callback_id)
+  if (pending_callback_id_ != callback_id) {
     return;
+  }
 
   DCHECK_LE(bytes_skipped, bytes_to_skip_);
 
-  if (bytes_to_skip_ > 0 && bytes_skipped > 0)
+  if (bytes_to_skip_ > 0 && bytes_skipped > 0) {
     bytes_to_skip_ -= bytes_skipped;
+  }
 
   if (bytes_skipped <= 0) {
     RunSkipCallback(net::ERR_REQUEST_RANGE_NOT_SATISFIABLE);
@@ -414,8 +417,9 @@ void InputStreamReader::ContinueReadCallbackOnWorkThread(int callback_id,
   DCHECK(work_thread_task_runner_->RunsTasksInCurrentSequence());
 
   // Check for out of order callbacks.
-  if (pending_callback_id_ != callback_id)
+  if (pending_callback_id_ != callback_id) {
     return;
+  }
 
   RunReadCallback(bytes_read);
 }
@@ -439,8 +443,9 @@ void InputStreamReader::RunReadCallback(int bytes_read) {
 
   DCHECK(!pending_read_callback_.is_null());
   job_thread_task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(InputStreamReader::RunReadCallbackOnJobThread,
-                                bytes_read, std::move(pending_read_callback_)));
+      FROM_HERE,
+      base::BindOnce(InputStreamReader::RunReadCallbackOnJobThread, bytes_read,
+                     std::move(pending_read_callback_), buffer_));
 
   // Reset callback state.
   pending_callback_id_ = -1;
@@ -457,7 +462,8 @@ void InputStreamReader::RunSkipCallbackOnJobThread(
 // static
 void InputStreamReader::RunReadCallbackOnJobThread(
     int bytes_read,
-    InputStream::ReadCallback read_callback) {
+    InputStream::ReadCallback read_callback,
+    scoped_refptr<net::IOBuffer> buffer) {
   std::move(read_callback).Run(bytes_read);
 }
 
@@ -471,16 +477,18 @@ StreamReaderURLLoader::StreamReaderURLLoader(
     mojo::PendingRemote<network::mojom::URLLoaderClient> client,
     mojo::PendingRemote<network::mojom::TrustedHeaderClient> header_client,
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
+    std::optional<mojo_base::BigBuffer> cached_metadata,
     std::unique_ptr<Delegate> response_delegate)
     : request_id_(request_id),
       request_(request),
       client_(std::move(client)),
       header_client_(std::move(header_client)),
       traffic_annotation_(traffic_annotation),
+      cached_metadata_(std::move(cached_metadata)),
       response_delegate_(std::move(response_delegate)),
       writable_handle_watcher_(FROM_HERE,
                                mojo::SimpleWatcher::ArmingPolicy::MANUAL,
-                               base::SequencedTaskRunnerHandle::Get()),
+                               base::SequencedTaskRunner::GetCurrentDefault()),
       weak_factory_(this) {
   DCHECK(response_delegate_);
   // If there is a client error, clean up the request.
@@ -514,13 +522,36 @@ void StreamReaderURLLoader::Start() {
         base::BindOnce(&StreamReaderURLLoader::ContinueWithRequestHeaders,
                        weak_factory_.GetWeakPtr()));
   } else {
-    ContinueWithRequestHeaders(net::OK, absl::nullopt);
+    ContinueWithRequestHeaders(net::OK, std::nullopt);
   }
+}
+
+void StreamReaderURLLoader::Continue() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+
+  DCHECK(need_client_callback_ && !got_client_callback_);
+  got_client_callback_ = true;
+
+  writable_handle_watcher_.Watch(
+      producer_handle_.get(), MOJO_HANDLE_SIGNAL_WRITABLE,
+      base::BindRepeating(&StreamReaderURLLoader::OnDataPipeWritable,
+                          base::Unretained(this)));
+
+  ReadMore();
+}
+
+void StreamReaderURLLoader::Cancel() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+
+  DCHECK(need_client_callback_ && !got_client_callback_);
+  got_client_callback_ = true;
+
+  CleanUp();
 }
 
 void StreamReaderURLLoader::ContinueWithRequestHeaders(
     int32_t result,
-    const absl::optional<net::HttpRequestHeaders>& headers) {
+    const std::optional<net::HttpRequestHeaders>& headers) {
   if (result != net::OK) {
     RequestComplete(result);
     return;
@@ -546,16 +577,12 @@ void StreamReaderURLLoader::FollowRedirect(
     const std::vector<std::string>& removed_headers,
     const net::HttpRequestHeaders& modified_headers,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
-    const absl::optional<GURL>& new_url) {
-  NOTREACHED();
+    const std::optional<GURL>& new_url) {
+  DCHECK(false);
 }
 
 void StreamReaderURLLoader::SetPriority(net::RequestPriority priority,
                                         int intra_priority_value) {}
-
-void StreamReaderURLLoader::PauseReadingBodyFromNet() {}
-
-void StreamReaderURLLoader::ResumeReadingBodyFromNet() {}
 
 void StreamReaderURLLoader::OnInputStreamOpened(
     std::unique_ptr<StreamReaderURLLoader::Delegate> returned_delegate,
@@ -566,13 +593,8 @@ void StreamReaderURLLoader::OnInputStreamOpened(
   open_cancel_callback_.Reset();
 
   if (!input_stream) {
-    bool restarted = false;
-    response_delegate_->OnInputStreamOpenFailed(request_id_, &restarted);
-    if (restarted) {
-      // The request has been restarted with a new loader.
-      // |this| will be deleted.
-      CleanUp();
-    } else {
+    // May delete |this| iff returns true.
+    if (!response_delegate_->OnInputStreamOpenFailed(request_id_)) {
       HeadersComplete(net::HTTP_NOT_FOUND, -1);
     }
     return;
@@ -611,14 +633,6 @@ void StreamReaderURLLoader::OnReaderSkipCompleted(int64_t bytes_skipped) {
   }
 }
 
-bool checkResponseDataID(const std::string& identity) {
-  if (identity.empty() || identity.length() > kResponseDataIDMaxLength) {
-    return false;
-  }
-  static std::regex pattern(R"(\d+)");
-  return std::regex_match(identity, pattern);
-}
-
 void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                             int64_t expected_content_length) {
   DCHECK(thread_checker_.CalledOnValidThread());
@@ -640,67 +654,45 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   }
 
   auto pending_response = network::mojom::URLResponseHead::New();
-  pending_response->request_start = base::TimeTicks::Now();
-  pending_response->response_start = base::TimeTicks::Now();
-
-  // When user custom resource responses via 'onInterceptRequest',
-  // they can set 'ResponseDataID' value in the reponse header.
-  // This value will be utilized to generate codecache for interupt js resource.
-  //
-  // 'ResponseDataID': A string of 13 pure digits representing response data ID.
-  // When response data changes, a different 'ResponseDataID' must be set.
-  const auto& it = extra_headers.find(kResponseDataID);
-  if (it != extra_headers.end()) {
-    auto identity = it->second;
-    if (checkResponseDataID(identity)) {
-      pending_response->response_time =
-          base::Time::FromJsTime(std::stod(identity));
-      LOG(INFO) << "ResponseDataID have set";
-    } else {
-      LOG(WARNING) << "ResponseDataID[" << (identity)
-                   << "] not a reasonable value!";
-    }
-  }
+  base::TimeTicks now = base::TimeTicks::Now();
+  pending_response->request_start = now;
+  pending_response->response_start = now;
+  // blink depends this to caculate the request completion time.
+  pending_response->load_timing.request_start = now;
 
   auto headers = MakeResponseHeaders(
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
-#if BUILDFLAG(IS_OHOS)
-  if (status_code >= 400) {
-    if (!mime_type.empty()) {
-      headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
-    }
-  }
-#endif
-
   pending_response->headers = headers;
 
-  if (content_length >= 0)
+  if (content_length >= 0) {
     pending_response->content_length = content_length;
+  }
 
   if (!mime_type.empty()) {
     pending_response->mime_type = mime_type;
-    if (!charset.empty())
+    if (!charset.empty()) {
       pending_response->charset = charset;
+    }
   }
 
   if (header_client_.is_bound()) {
     header_client_->OnHeadersReceived(
-        headers->raw_headers(), net::IPEndPoint(),
+        headers->raw_headers(), net::IPEndPoint(), std::nullopt,
         base::BindOnce(&StreamReaderURLLoader::ContinueWithResponseHeaders,
                        weak_factory_.GetWeakPtr(),
                        std::move(pending_response)));
   } else {
     ContinueWithResponseHeaders(std::move(pending_response), net::OK,
-                                absl::nullopt, absl::nullopt);
+                                std::nullopt, std::nullopt);
   }
 }
 
 void StreamReaderURLLoader::ContinueWithResponseHeaders(
     network::mojom::URLResponseHeadPtr pending_response,
     int32_t result,
-    const absl::optional<std::string>& headers,
-    const absl::optional<GURL>& redirect_url) {
+    const std::optional<std::string>& headers,
+    const std::optional<GURL>& redirect_url) {
   if (result != net::OK) {
     RequestComplete(result);
     return;
@@ -724,68 +716,42 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
   const auto has_redirect_url = redirect_url && !redirect_url->is_empty();
   if (has_redirect_url || pending_headers->IsRedirect(&location)) {
     pending_response->encoded_data_length = header_length_;
-    pending_response->content_length = pending_response->encoded_body_length =
-        0;
+    pending_response->content_length = 0;
+    pending_response->encoded_body_length = nullptr;
     const GURL new_location =
         has_redirect_url ? *redirect_url : request_.url.Resolve(location);
+
+    CleanUp();
+
+    // The client will restart the request with a new loader.
+    // May delete |this|.
     client_->OnReceiveRedirect(
         MakeRedirectInfo(request_, pending_headers.get(), new_location,
                          pending_headers->response_code()),
         std::move(pending_response));
-    // The client will restart the request with a new loader.
-    // |this| will be deleted.
-    CleanUp();
   } else {
+    mojo::ScopedDataPipeConsumerHandle consumer_handle;
+    if (CreateDataPipe(nullptr /*options*/, producer_handle_,
+                       consumer_handle) != MOJO_RESULT_OK) {
+      RequestComplete(net::ERR_FAILED);
+      return;
+    }
+
+    need_client_callback_ = true;
     client_->OnReceiveResponse(std::move(pending_response),
-                               mojo::ScopedDataPipeConsumerHandle());
+                               std::move(consumer_handle),
+                               std::move(cached_metadata_));
+
+    // Wait for the client to call Continue() or Cancel().
   }
-}
-
-void StreamReaderURLLoader::ContinueResponse(bool was_redirected) {
-  DCHECK(thread_checker_.CalledOnValidThread());
-
-  if (was_redirected) {
-    // Special case where we allow the client to perform the redirect.
-    // The client will restart the request with a new loader.
-    // |this| will be deleted.
-    CleanUp();
-  } else {
-    SendBody();
-  }
-}
-
-void StreamReaderURLLoader::SendBody() {
-  DCHECK(thread_checker_.CalledOnValidThread());
-
-  MojoCreateDataPipeOptions options;
-  options.struct_size = sizeof(MojoCreateDataPipeOptions);
-  options.flags = MOJO_CREATE_DATA_PIPE_FLAG_NONE;
-  options.element_num_bytes = 1;
-  options.capacity_num_bytes =
-      network::features::GetDataPipeDefaultAllocationSize(
-          network::features::DataPipeAllocationSize::kLargerSizeIfPossible);
-  mojo::ScopedDataPipeConsumerHandle consumer_handle;
-  if (CreateDataPipe(&options /*options*/, producer_handle_, consumer_handle) !=
-      MOJO_RESULT_OK) {
-    RequestComplete(net::ERR_FAILED);
-    return;
-  }
-  writable_handle_watcher_.Watch(
-      producer_handle_.get(), MOJO_HANDLE_SIGNAL_WRITABLE,
-      base::BindRepeating(&StreamReaderURLLoader::OnDataPipeWritable,
-                          base::Unretained(this)));
-  client_->OnStartLoadingResponseBody(std::move(consumer_handle));
-
-  ReadMore();
 }
 
 void StreamReaderURLLoader::ReadMore() {
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(!pending_buffer_.get());
 
-  uint32_t num_bytes;
   MojoResult mojo_result = network::NetToMojoPendingBuffer::BeginWrite(
-      &producer_handle_, &pending_buffer_, &num_bytes);
+      &producer_handle_, &pending_buffer_);
   if (mojo_result == MOJO_RESULT_SHOULD_WAIT) {
     // The pipe is full. We need to wait for it to have more space.
     writable_handle_watcher_.ArmOrNotify();
@@ -811,7 +777,7 @@ void StreamReaderURLLoader::ReadMore() {
   }
 
   input_stream_reader_->Read(
-      buffer, base::checked_cast<int>(num_bytes),
+      buffer, base::checked_cast<int>(pending_buffer_->size()),
       base::BindOnce(&StreamReaderURLLoader::OnReaderReadCompleted,
                      weak_factory_.GetWeakPtr()));
 }
@@ -847,7 +813,7 @@ void StreamReaderURLLoader::OnReaderReadCompleted(int bytes_read) {
   client_->OnTransferSizeUpdated(bytes_read);
   total_bytes_read_ += bytes_read;
 
-  base::ThreadTaskRunnerHandle::Get()->PostTask(
+  base::SingleThreadTaskRunner::GetCurrentDefault()->PostTask(
       FROM_HERE, base::BindOnce(&StreamReaderURLLoader::ReadMore,
                                 weak_factory_.GetWeakPtr()));
 }
@@ -862,35 +828,36 @@ void StreamReaderURLLoader::RequestComplete(int status_code) {
   // We don't support decoders, so use the same value.
   status.decoded_body_length = total_bytes_read_;
 
-  client_->OnComplete(status);
   CleanUp();
+
+  // May delete |this|.
+  client_->OnComplete(status);
 }
 
 void StreamReaderURLLoader::CleanUp() {
   DCHECK(thread_checker_.CalledOnValidThread());
 
+  weak_factory_.InvalidateWeakPtrs();
+
   // Resets the watchers and pipes, so that we will never be called back.
   writable_handle_watcher_.Cancel();
   pending_buffer_ = nullptr;
   producer_handle_.reset();
-
-  // Manages its own lifetime.
-  delete this;
 }
 
 bool StreamReaderURLLoader::ParseRange(const net::HttpRequestHeaders& headers) {
   DCHECK(thread_checker_.CalledOnValidThread());
 
-  std::string range_header;
-  if (headers.GetHeader(net::HttpRequestHeaders::kRange, &range_header)) {
+  if (auto range_header = headers.GetHeader(net::HttpRequestHeaders::kRange)) {
     // This loader only cares about the Range header so that we know how many
     // bytes in the stream to skip and how many to read after that.
     std::vector<net::HttpByteRange> ranges;
-    if (net::HttpUtil::ParseRangeHeader(range_header, &ranges)) {
+    if (net::HttpUtil::ParseRangeHeader(*range_header, &ranges)) {
       // In case of multi-range request only use the first range.
       // We don't support multirange requests.
-      if (ranges.size() == 1)
+      if (ranges.size() == 1) {
         byte_range_ = ranges[0];
+      }
     } else {
       // This happens if the range header could not be parsed or is invalid.
       return false;

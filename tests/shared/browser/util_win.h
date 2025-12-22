@@ -7,6 +7,7 @@
 #pragma once
 
 #include <windows.h>
+
 #include <string>
 
 #include "include/internal/cef_types_wrappers.h"
@@ -38,6 +39,10 @@ bool IsKeyDown(WPARAM wparam);
 // Returns the device scale factor. For example, 200% display scaling will
 // return 2.0.
 float GetDeviceScaleFactor();
+
+// Returns the module handle that contains this code. When built as a DLL this
+// will be the DLL handle instead of the EXE handle.
+HINSTANCE GetCodeModuleHandle();
 
 }  // namespace client
 

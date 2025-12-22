@@ -8,14 +8,14 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
-#include "include/internal/cef_ptr.h"
-
+#include "cef/include/internal/cef_ptr.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
+#include "cef/libcef/renderer/browser_config.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace blink {
 class WebFrame;
@@ -24,7 +24,6 @@ class WebView;
 
 namespace content {
 class RenderFrame;
-class RenderView;
 }  // namespace content
 
 namespace mojo {
@@ -32,7 +31,7 @@ class BinderMap;
 }  // namespace mojo
 
 class CefBrowserImpl;
-class CefGuestView;
+class CefExcludedView;
 class CefRenderFrameObserver;
 
 // Singleton object for managing BrowserImpl instances. Only accessed on the
@@ -44,7 +43,7 @@ class CefRenderManager : public cef::mojom::RenderManager {
   CefRenderManager(const CefRenderManager&) = delete;
   CefRenderManager& operator=(const CefRenderManager&) = delete;
 
-  ~CefRenderManager();
+  ~CefRenderManager() override;
 
   // Returns this singleton instance of this class.
   static CefRenderManager* Get();
@@ -54,16 +53,16 @@ class CefRenderManager : public cef::mojom::RenderManager {
   void RenderFrameCreated(content::RenderFrame* render_frame,
                           CefRenderFrameObserver* render_frame_observer,
                           bool& browser_created,
-                          absl::optional<bool>& is_windowless);
+                          std::optional<cef::BrowserConfig>& config);
   void WebViewCreated(blink::WebView* web_view,
                       bool& browser_created,
-                      absl::optional<bool>& is_windowless);
+                      std::optional<cef::BrowserConfig>& config);
   void DevToolsAgentAttached();
   void DevToolsAgentDetached();
   void ExposeInterfacesToBrowser(mojo::BinderMap* binders);
 
   // Returns the browser associated with the specified RenderView.
-  CefRefPtr<CefBrowserImpl> GetBrowserForView(content::RenderView* view);
+  CefRefPtr<CefBrowserImpl> GetBrowserForView(blink::WebView* view);
 
   // Returns the browser associated with the specified main WebFrame.
   CefRefPtr<CefBrowserImpl> GetBrowserForMainFrame(blink::WebFrame* frame);
@@ -74,12 +73,9 @@ class CefRenderManager : public cef::mojom::RenderManager {
   // Returns true if this renderer process is hosting an extension.
   static bool IsExtensionProcess();
 
-  // Returns true if this renderer process is hosting a PDF.
-  static bool IsPdfProcess();
-
  private:
   friend class CefBrowserImpl;
-  friend class CefGuestView;
+  friend class CefExcludedView;
 
   // Binds receivers for the RenderManager interface.
   void BindReceiver(mojo::PendingReceiver<cef::mojom::RenderManager> receiver);
@@ -93,30 +89,30 @@ class CefRenderManager : public cef::mojom::RenderManager {
   void WebKitInitialized();
 
   // Maybe create a new browser object, return the existing one, or return
-  // nullptr for guest views.
+  // nullptr for excluded views.
   CefRefPtr<CefBrowserImpl> MaybeCreateBrowser(
-      content::RenderView* render_view,
+      blink::WebView* web_view,
       content::RenderFrame* render_frame,
-      bool* browser_created,
-      absl::optional<bool>* is_windowless);
+      bool& browser_created,
+      std::optional<cef::BrowserConfig>& config);
 
   // Called from CefBrowserImpl::OnDestruct().
   void OnBrowserDestroyed(CefBrowserImpl* browser);
 
-  // Returns the guest view associated with the specified RenderView if any.
-  CefGuestView* GetGuestViewForView(content::RenderView* view);
+  // Returns the excluded view associated with the specified RenderView if any.
+  CefExcludedView* GetExcludedViewForView(blink::WebView* view);
 
-  // Called from CefGuestView::OnDestruct().
-  void OnGuestViewDestroyed(CefGuestView* guest_view);
+  // Called from CefExcludedView::OnDestruct().
+  void OnExcludedViewDestroyed(CefExcludedView* excluded_view);
 
   // Map of RenderView pointers to CefBrowserImpl references.
-  using BrowserMap = std::map<content::RenderView*, CefRefPtr<CefBrowserImpl>>;
+  using BrowserMap = std::map<blink::WebView*, CefRefPtr<CefBrowserImpl>>;
   BrowserMap browsers_;
 
-  // Map of RenderView poiners to CefGuestView implementations.
-  using GuestViewMap =
-      std::map<content::RenderView*, std::unique_ptr<CefGuestView>>;
-  GuestViewMap guest_views_;
+  // Map of RenderView poiners to CefExcludedView implementations.
+  using ExcludedViewMap =
+      std::map<blink::WebView*, std::unique_ptr<CefExcludedView>>;
+  ExcludedViewMap excluded_views_;
 
   // Cross-origin white list entries that need to be registered with WebKit.
   std::vector<cef::mojom::CrossOriginWhiteListEntryPtr>

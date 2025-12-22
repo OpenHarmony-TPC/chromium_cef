@@ -2,27 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/iothread_state.h"
-
-#include "libcef/browser/net/scheme_handler.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net/scheme_registration.h"
+#include "cef/libcef/browser/iothread_state.h"
 
 #include "base/i18n/case_conversion.h"
 #include "base/logging.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
-#include "content/browser/resource_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net/scheme_registration.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/global_routing_id.h"
+#include "url/gurl.h"
 
-CefIOThreadState::CefIOThreadState() {
-  // Using base::Unretained() is safe because both this callback and possible
-  // deletion of |this| will execute on the IO thread, and this callback will
-  // be executed first.
-  CEF_POST_TASK(CEF_IOT, base::BindOnce(&CefIOThreadState::InitOnIOThread,
-                                        base::Unretained(this)));
-}
+CefIOThreadState::CefIOThreadState() = default;
 
 CefIOThreadState::~CefIOThreadState() {
   CEF_REQUIRE_IOT();
@@ -72,8 +64,9 @@ void CefIOThreadState::RegisterSchemeHandlerFactory(
   } else {
     // Remove the existing factory, if any.
     auto it = scheme_handler_factory_map_.find(key);
-    if (it != scheme_handler_factory_map_.end())
+    if (it != scheme_handler_factory_map_.end()) {
       scheme_handler_factory_map_.erase(it);
+    }
   }
 }
 
@@ -81,21 +74,19 @@ void CefIOThreadState::ClearSchemeHandlerFactories() {
   CEF_REQUIRE_IOT();
 
   scheme_handler_factory_map_.clear();
-
-  // Restore the default internal handlers.
-  scheme::RegisterInternalHandlers(this);
 }
 
 CefRefPtr<CefSchemeHandlerFactory> CefIOThreadState::GetSchemeHandlerFactory(
     const GURL& url) {
   CEF_REQUIRE_IOT();
 
-  if (scheme_handler_factory_map_.empty())
+  if (scheme_handler_factory_map_.empty()) {
     return nullptr;
+  }
 
-  const std::string& scheme_lower = url.scheme();
-  const std::string& domain_lower =
-      url.IsStandard() ? url.host() : std::string();
+  const std::string scheme_lower(url.scheme());
+  const std::string domain_lower =
+      url.IsStandard() ? std::string(url.host()) : std::string();
 
   if (!domain_lower.empty()) {
     // Sanity check.
@@ -104,22 +95,17 @@ CefRefPtr<CefSchemeHandlerFactory> CefIOThreadState::GetSchemeHandlerFactory(
     // Try for a match with hostname first.
     const auto it = scheme_handler_factory_map_.find(
         std::make_pair(scheme_lower, domain_lower));
-    if (it != scheme_handler_factory_map_.end())
+    if (it != scheme_handler_factory_map_.end()) {
       return it->second;
+    }
   }
 
   // Try for a match with no specified hostname.
   const auto it = scheme_handler_factory_map_.find(
       std::make_pair(scheme_lower, std::string()));
-  if (it != scheme_handler_factory_map_.end())
+  if (it != scheme_handler_factory_map_.end()) {
     return it->second;
+  }
 
   return nullptr;
-}
-
-void CefIOThreadState::InitOnIOThread() {
-  CEF_REQUIRE_IOT();
-
-  // Add the default internal handlers.
-  scheme::RegisterInternalHandlers(this);
 }

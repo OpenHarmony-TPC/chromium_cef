@@ -2,19 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/app_manager.h"
-
-#include "libcef/common/net/scheme_info.h"
-#include "libcef/common/net/scheme_registration.h"
-#include "libcef/common/scheme_registrar_impl.h"
+#include "cef/libcef/common/app_manager.h"
 
 #include "base/command_line.h"
 #include "base/logging.h"
+#include "cef/libcef/common/net/scheme_info.h"
+#include "cef/libcef/common/scheme_registrar_impl.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/common/content_switches.h"
 
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
+
 #include "base/path_service.h"
 #endif
 
@@ -39,7 +38,7 @@ CefAppManager::~CefAppManager() {
   g_manager = nullptr;
 }
 
-void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
+void CefAppManager::AddCustomScheme(const CefSchemeInfo* scheme_info) {
   DCHECK(!scheme_info_list_locked_);
   scheme_info_list_.push_back(*scheme_info);
 
@@ -50,20 +49,23 @@ void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
     // resource_dispatcher_host_impl.cc ShouldServiceRequest.
     content::ChildProcessSecurityPolicy* policy =
         content::ChildProcessSecurityPolicy::GetInstance();
-    if (!policy->IsWebSafeScheme(scheme_info->scheme_name))
+    if (!policy->IsWebSafeScheme(scheme_info->scheme_name)) {
       policy->RegisterWebSafeScheme(scheme_info->scheme_name);
+    }
   }
 }
 
 bool CefAppManager::HasCustomScheme(const std::string& scheme_name) {
   DCHECK(scheme_info_list_locked_);
-  if (scheme_info_list_.empty())
+  if (scheme_info_list_.empty()) {
     return false;
+  }
 
   SchemeInfoList::const_iterator it = scheme_info_list_.begin();
   for (; it != scheme_info_list_.end(); ++it) {
-    if (it->scheme_name == scheme_name)
+    if (it->scheme_name == scheme_name) {
       return true;
+    }
   }
 
   return false;
@@ -72,20 +74,6 @@ bool CefAppManager::HasCustomScheme(const std::string& scheme_name) {
 const CefAppManager::SchemeInfoList* CefAppManager::GetCustomSchemes() {
   DCHECK(scheme_info_list_locked_);
   return &scheme_info_list_;
-}
-
-std::vector<std::string> CefAppManager::CustomSchemeCmdLineSplit(std::string str, const char split)
-{
-  std::istringstream inStream(str);
-  std::vector<std::string> ret;
-  std::string token;
-  while (getline(inStream, token, split)) {
-    if (!token.empty()) {
-      ret.push_back(token);
-      token.clear();
-    }
-  }
-  return ret;
 }
 
 void CefAppManager::AddAdditionalSchemes(
@@ -98,36 +86,6 @@ void CefAppManager::AddAdditionalSchemes(
     application->OnRegisterCustomSchemes(&schemeRegistrar);
     schemeRegistrar.GetSchemes(schemes);
   }
-
-  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::GetGlobalCommandLine();
-  if (cmdLine->HasSwitch(switches::kProcessType)) {
-      LOG(INFO) << "render Add custom schemes";
-      if (cmdLine->HasSwitch(switches::kOhosCustomScheme)) {
-        std::string cmdlineSchemes = cmdLine->GetSwitchValue(switches::kOhosCustomScheme).ToString();
-        LOG(INFO) << "render cmdlineScheme:" << cmdlineSchemes;
-        std::vector<std::string> schemesInfo = CustomSchemeCmdLineSplit(cmdlineSchemes, ';');
-        for (auto it = schemesInfo.begin(); it != schemesInfo.end(); ++it) {
-          std::string schemeSplit = *it;
-          std::vector<std::string> scheme = CustomSchemeCmdLineSplit(schemeSplit, ',');
-          if (scheme.size() != 3) {
-            break;
-          }
-          CefSchemeInfo regScheme = {"", false, false, false, false, false, false, false};
-          regScheme.scheme_name = scheme[0];
-          if (scheme[1] == std::string("1")) {
-            regScheme.is_cors_enabled = true;
-          }
-          if (scheme[2] == std::string("1")) {
-            regScheme.is_fetch_enabled  = true;
-          }
-          LOG(INFO) << "render add custom scheme name:" << regScheme.scheme_name
-                    << " is_cors:"<< regScheme.is_cors_enabled << " is_fetch:" << regScheme.is_fetch_enabled;
-          AddCustomScheme(&regScheme);
-        }
-      }
-  }
-
-  scheme::AddInternalSchemes(schemes);
 
   scheme_info_list_locked_ = true;
 }

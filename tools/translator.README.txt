@@ -30,7 +30,7 @@ output file.
    // WARNING - CHANGED RETURN VALUE
    //   WAS: void
    //   NOW: int
-   #pragma message("Warning: "__FILE__": MyFunction prototype has changed")
+   #pragma message("Warning: " __FILE__ ": MyFunction prototype has changed")
 
 Auto-generated implementations will be added in the new output file for any
 methods/functions that exist in the CEF header file but did not exist in the
@@ -43,7 +43,7 @@ implementation manually.
    {
      // BEGIN DELETE BEFORE MODIFYING
      // AUTO-GENERATED CONTENT
-     #pragma message("Warning: "__FILE__": frame_new_func is not implemented")
+     #pragma message("Warning: " __FILE__ ": frame_new_func is not implemented")
      // END DELETE BEFORE MODIFYING
    }
 
@@ -285,10 +285,6 @@ follows.
 
       void CefClassCToCpp::Function(cpp_params)
       {
-        // Structure Verification
-        if (CEF_MEMBER_MISSING(struct_, function))
-          return;
-
         // Parameter Verification (Optional)
         // Verify the C++ parameter values.
         // ...
@@ -309,10 +305,6 @@ follows.
 
       cpp_retval CefClassCToCpp::Function(cpp_params)
       {
-        // Structure Verification
-        if (CEF_MEMBER_MISSING(struct_, function))
-          return default_retval; // Configured or defaulted automatically.
-
         // Parameter Verification (Optional)
         // Verify the C++ parameter values.
         // ...

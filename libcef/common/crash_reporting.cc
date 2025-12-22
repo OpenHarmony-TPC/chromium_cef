@@ -2,39 +2,33 @@
 // 2016 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/common/crash_reporting.h"
+#include "cef/libcef/common/crash_reporting.h"
 
-#include "include/cef_crash_util.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/features/runtime.h"
+#include <string_view>
 
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/debug/crash_logging.h"
 #include "base/logging.h"
 #include "base/stl_util.h"
-#include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
+#include "cef/include/cef_crash_util.h"
+#include "cef/libcef/common/cef_switches.h"
 #include "chrome/common/crash_keys.h"
 #include "components/crash/core/common/crash_key.h"
 #include "components/crash/core/common/crash_keys.h"
 #include "content/public/common/content_switches.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "base/mac/foundation_util.h"
-#include "components/crash/core/app/crashpad.h"
+#include "base/apple/foundation_util.h"
 #include "components/crash/core/common/crash_keys.h"
 #include "content/public/common/content_paths.h"
 #endif
 
 #if BUILDFLAG(IS_POSIX)
 #include "base/lazy_instance.h"
-#include "libcef/common/crash_reporter_client.h"
-#endif
-
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
-#include "components/crash/core/app/breakpad_linux.h"
-#include "v8/include/v8-wasm-trap-handler-posix.h"
+#include "cef/libcef/common/crash_reporter_client.h"
+#include "components/crash/core/app/crashpad.h"
 #endif
 
 namespace crash_reporting {
@@ -56,8 +50,8 @@ typedef int(__cdecl* SetCrashKeyValue)(const char*,
 //    int __declspec(dllexport) __cdecl IsCrashReportingEnabledImpl.
 typedef int(__cdecl* IsCrashReportingEnabled)();
 
-bool SetCrashKeyValueTrampoline(const base::StringPiece& key,
-                                const base::StringPiece& value) {
+bool SetCrashKeyValueTrampoline(const std::string_view& key,
+                                const std::string_view& value) {
   static SetCrashKeyValue set_crash_key = []() {
     HMODULE elf_module = GetModuleHandle(kChromeElfDllName);
     return reinterpret_cast<SetCrashKeyValue>(
@@ -95,8 +89,9 @@ base::LazyInstance<CefCrashReporterClient>::Leaky g_crash_reporter_client =
 void InitCrashReporter(const base::CommandLine& command_line,
                        const std::string& process_type) {
   CefCrashReporterClient* crash_client = g_crash_reporter_client.Pointer();
-  if (!crash_client->HasCrashConfigFile())
+  if (!crash_client->HasCrashConfigFile()) {
     return;
+  }
 
   crash_reporter::SetCrashReporterClient(crash_client);
 
@@ -107,18 +102,18 @@ void InitCrashReporter(const base::CommandLine& command_line,
   // framework dylib is even loaded, to catch potential early crashes.
   crash_reporter::InitializeCrashpad(process_type.empty(), process_type);
 
-  if (base::mac::AmIBundled()) {
+  if (base::apple::AmIBundled()) {
     // Mac Chrome is packaged with a main app bundle and a helper app bundle.
     // The main app bundle should only be used for the browser process, so it
     // should never see a --type switch (switches::kProcessType).  Likewise,
     // the helper should always have a --type switch.
     //
     // This check is done this late so there is already a call to
-    // base::mac::IsBackgroundOnlyProcess(), so there is no change in
+    // base::apple::IsBackgroundOnlyProcess(), so there is no change in
     // startup/initialization order.
 
     // The helper's Info.plist marks it as a background only app.
-    if (base::mac::IsBackgroundOnlyProcess()) {
+    if (base::apple::IsBackgroundOnlyProcess()) {
       CHECK(command_line.HasSwitch(switches::kProcessType) &&
             !process_type.empty())
           << "Helper application requires --type.";
@@ -131,11 +126,10 @@ void InitCrashReporter(const base::CommandLine& command_line,
 
   g_crash_reporting_enabled = true;
 #else   // !BUILDFLAG(IS_MAC)
-
   if (process_type != switches::kZygoteProcess) {
     // Crash reporting for subprocesses created using the zygote will be
     // initialized in ZygoteForked.
-    breakpad::InitCrashReporter(process_type);
+    crash_reporter::InitializeCrashpad(process_type.empty(), process_type);
 
     g_crash_reporting_enabled = true;
   }
@@ -145,8 +139,9 @@ void InitCrashReporter(const base::CommandLine& command_line,
 
 // Used to exclude command-line flags from crash reporting.
 bool IsBoringCEFSwitch(const std::string& flag) {
-  if (crash_keys::IsBoringChromeSwitch(flag))
+  if (crash_keys::IsBoringChromeSwitch(flag)) {
     return true;
+  }
 
   static const char* const kIgnoreSwitches[] = {
       // CEF internals.
@@ -160,14 +155,16 @@ bool IsBoringCEFSwitch(const std::string& flag) {
       "service-request-channel-token",
   };
 
-  if (!base::StartsWith(flag, "--", base::CompareCase::SENSITIVE))
+  if (!base::StartsWith(flag, "--", base::CompareCase::SENSITIVE)) {
     return false;
+  }
 
   size_t end = flag.find("=");
   size_t len = (end == std::string::npos) ? flag.length() - 2 : end - 2;
-  for (size_t i = 0; i < base::size(kIgnoreSwitches); ++i) {
-    if (flag.compare(2, len, kIgnoreSwitches[i]) == 0)
+  for (auto kIgnoreSwitche : kIgnoreSwitches) {
+    if (flag.compare(2, len, kIgnoreSwitche) == 0) {
       return true;
+    }
   }
   return false;
 }
@@ -178,10 +175,11 @@ bool Enabled() {
   return g_crash_reporting_enabled;
 }
 
-bool SetCrashKeyValue(const base::StringPiece& key,
-                      const base::StringPiece& value) {
-  if (!g_crash_reporting_enabled)
+bool SetCrashKeyValue(const std::string_view& key,
+                      const std::string_view& value) {
+  if (!g_crash_reporting_enabled) {
     return false;
+  }
 
 #if BUILDFLAG(IS_WIN)
   return SetCrashKeyValueTrampoline(key, value);
@@ -193,15 +191,7 @@ bool SetCrashKeyValue(const base::StringPiece& key,
 #if BUILDFLAG(IS_POSIX)
 // Be aware that logging is not initialized at the time this method is called.
 void BasicStartupComplete(base::CommandLine* command_line) {
-  CefCrashReporterClient* crash_client = g_crash_reporter_client.Pointer();
-  if (crash_client->ReadCrashConfigFile()) {
-#if !BUILDFLAG(IS_MAC)
-    // Breakpad requires this switch.
-    command_line->AppendSwitch(switches::kEnableCrashReporter);
-
-    breakpad::SetFirstChanceExceptionHandler(v8::TryHandleWebAssemblyTrapPosix);
-#endif
-  }
+  g_crash_reporter_client.Pointer()->ReadCrashConfigFile();
 }
 #endif
 
@@ -230,12 +220,6 @@ void PreSandboxStartup(const base::CommandLine& command_line,
 #if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_MAC)
 void ZygoteForked(base::CommandLine* command_line,
                   const std::string& process_type) {
-  CefCrashReporterClient* crash_client = g_crash_reporter_client.Pointer();
-  if (crash_client->HasCrashConfigFile()) {
-    // Breakpad requires this switch.
-    command_line->AppendSwitch(switches::kEnableCrashReporter);
-  }
-
   InitCrashReporter(*command_line, process_type);
 
   if (g_crash_reporting_enabled) {
@@ -259,12 +243,3 @@ void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
                  << " with value: " << value.ToString();
   }
 }
-
-// From libcef/features/runtime.h:
-namespace cef {
-
-bool IsCrashReportingEnabled() {
-  return crash_reporting::Enabled();
-}
-
-}  // namespace cef

@@ -10,8 +10,8 @@
 
 namespace {
 
-const char* kStartUrl = "http://tests/JSDialogTestHandler.Start";
-const char* kEndUrl = "http://tests/JSDialogTestHandler.End?r=";
+const char* kStartUrl = "https://tests/JSDialogTestHandler.Start";
+const char* kEndUrl = "https://tests/JSDialogTestHandler.End?r=";
 
 class JSDialogTestHandler : public TestHandler {
  public:
@@ -75,8 +75,9 @@ class JSDialogTestHandler : public TestHandler {
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                  CefRefPtr<CefFrame> frame,
                  int httpStatusCode) override {
-    if (!frame->IsMain())
+    if (!frame->IsMain()) {
       return;
+    }
 
     std::string url = frame->GetURL();
     if (url.find(kEndUrl) == 0) {
@@ -151,7 +152,7 @@ class JSDialogTestHandler : public TestHandler {
 
     if (type_ == TYPE_ONBEFOREUNLOAD) {
       // The message is no longer configurable via JavaScript.
-      // See http://crbug.com/587940.
+      // See https://crbug.com/587940.
       EXPECT_STREQ("Is it OK to leave/reload this page?",
                    message_text.ToString().c_str());
       EXPECT_FALSE(is_reload);
@@ -173,6 +174,12 @@ class JSDialogTestHandler : public TestHandler {
     got_onresetdialogstate_.yes();
   }
 
+  void OnDialogClosed(CefRefPtr<CefBrowser> browser) override {
+    got_ondialogclosed_.yes();
+    EXPECT_TRUE(browser.get());
+    EXPECT_TRUE(browser->IsSame(GetBrowser()));
+  }
+
   TestType type_;
   TestMode mode_;
   bool success_;
@@ -182,6 +189,7 @@ class JSDialogTestHandler : public TestHandler {
   TrackCallback got_onjsdialog_;
   TrackCallback got_onbeforeunloaddialog_;
   TrackCallback got_onresetdialogstate_;
+  TrackCallback got_ondialogclosed_;
   TrackCallback got_onloadend_;
 
   IMPLEMENT_REFCOUNTING(JSDialogTestHandler);
@@ -201,6 +209,7 @@ TEST(JSDialogTest, AlertSuppress) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_FALSE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -218,6 +227,7 @@ TEST(JSDialogTest, AlertRunImmediate) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -235,6 +245,7 @@ TEST(JSDialogTest, AlertRunDelayed) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -252,6 +263,7 @@ TEST(JSDialogTest, ConfirmSuppress) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_FALSE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -270,6 +282,7 @@ TEST(JSDialogTest, ConfirmRunImmediateOk) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -288,6 +301,7 @@ TEST(JSDialogTest, ConfirmRunImmediateCancel) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -305,6 +319,7 @@ TEST(JSDialogTest, ConfirmRunDelayedOk) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -322,6 +337,7 @@ TEST(JSDialogTest, ConfirmRunDelayedCancel) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -339,6 +355,7 @@ TEST(JSDialogTest, PromptSuppress) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_FALSE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -356,6 +373,7 @@ TEST(JSDialogTest, PromptRunImmediateOk) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -373,6 +391,7 @@ TEST(JSDialogTest, PromptRunImmediateCancel) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -390,6 +409,7 @@ TEST(JSDialogTest, PromptRunDelayedOk) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -407,6 +427,7 @@ TEST(JSDialogTest, PromptRunDelayedCancel) {
   EXPECT_TRUE(handler->got_onjsdialog_);
   EXPECT_FALSE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -425,6 +446,7 @@ TEST(JSDialogTest, OnBeforeUnloadRunImmediate) {
   EXPECT_FALSE(handler->got_onjsdialog_);
   EXPECT_TRUE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);
@@ -443,6 +465,7 @@ TEST(JSDialogTest, OnBeforeUnloadRunDelayed) {
   EXPECT_FALSE(handler->got_onjsdialog_);
   EXPECT_TRUE(handler->got_onbeforeunloaddialog_);
   EXPECT_TRUE(handler->got_onresetdialogstate_);
+  EXPECT_TRUE(handler->got_ondialogclosed_);
   EXPECT_TRUE(handler->got_onloadend_);
 
   ReleaseAndWaitForDestructor(handler);

@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/net/url_util.h"
+#include "cef/libcef/common/net/url_util.h"
 
 #include "base/logging.h"
 #include "components/url_formatter/url_fixer.h"
@@ -18,8 +18,9 @@ GURL MakeGURL(const CefString& url, bool fixup) {
     new_url.insert(0, fixed_scheme);
     gurl = GURL(new_url);
   }
-  if (fixup)
+  if (fixup) {
     FixupGURL(gurl);
+  }
   return gurl;
 }
 

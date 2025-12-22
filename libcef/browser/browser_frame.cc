@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/browser_frame.h"
+#include "cef/libcef/browser/browser_frame.h"
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/thread_util.h"
-
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/frame_util.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
@@ -16,7 +17,12 @@
 CefBrowserFrame::CefBrowserFrame(
     content::RenderFrameHost* render_frame_host,
     mojo::PendingReceiver<cef::mojom::BrowserFrame> receiver)
-    : FrameServiceBase(render_frame_host, std::move(receiver)) {}
+    : CefFrameServiceBase(render_frame_host, std::move(receiver)) {
+  DVLOG(1) << __func__ << ": frame "
+           << frame_util::GetFrameDebugString(
+                  render_frame_host->GetGlobalFrameToken())
+           << " bound";
+}
 
 CefBrowserFrame::~CefBrowserFrame() = default;
 
@@ -34,11 +40,21 @@ void CefBrowserFrame::RegisterBrowserInterfaceBindersForFrame(
 }
 
 void CefBrowserFrame::SendMessage(const std::string& name,
-                                  base::Value arguments) {
+                                  base::Value::List arguments) {
   // Always send to the newly created RFH, which may be speculative when
   // navigating cross-origin.
   if (auto host = GetFrameHost(/*prefer_speculative=*/true)) {
     host->SendMessage(name, std::move(arguments));
+  }
+}
+
+void CefBrowserFrame::SendSharedMemoryRegion(
+    const std::string& name,
+    base::WritableSharedMemoryRegion region) {
+  // Always send to the newly created RFH, which may be speculative when
+  // navigating cross-origin.
+  if (auto host = GetFrameHost(/*prefer_speculative=*/true)) {
+    host->SendSharedMemoryRegion(name, std::move(region));
   }
 }
 
@@ -47,46 +63,33 @@ void CefBrowserFrame::FrameAttached(
     bool reattached) {
   // Always send to the newly created RFH, which may be speculative when
   // navigating cross-origin.
-  if (auto host = GetFrameHost(/*prefer_speculative=*/true)) {
+  bool is_excluded;
+  if (auto host = GetFrameHost(/*prefer_speculative=*/true, &is_excluded)) {
     host->FrameAttached(std::move(render_frame), reattached);
-  }
-}
-
-void CefBrowserFrame::DidFinishFrameLoad(const GURL& validated_url,
-                                         int http_status_code) {
-  if (auto host = GetFrameHost()) {
-    host->DidFinishFrameLoad(validated_url, http_status_code);
+  } else if (is_excluded) {
+    DVLOG(1) << __func__ << ": frame "
+             << frame_util::GetFrameDebugString(
+                    render_frame_host()->GetGlobalFrameToken())
+             << " attach denied";
+    mojo::Remote<cef::mojom::RenderFrame> render_frame_remote;
+    render_frame_remote.Bind(std::move(render_frame));
+    render_frame_remote->FrameAttachedAck(/*allow=*/false);
+    render_frame_remote.ResetWithReason(
+        static_cast<uint32_t>(frame_util::ResetReason::kExcluded), "Excluded");
   }
 }
 
 void CefBrowserFrame::UpdateDraggableRegions(
-    absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions) {
-  if (auto host = GetFrameHost()) {
+    std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions) {
+  if (auto host = GetFrameHost(/*prefer_speculative=*/false)) {
     host->UpdateDraggableRegions(std::move(regions));
   }
 }
 
 CefRefPtr<CefFrameHostImpl> CefBrowserFrame::GetFrameHost(
-    bool prefer_speculative) const {
-  CEF_REQUIRE_UIT();
-  auto rfh = render_frame_host();
-  if (auto browser = CefBrowserHostBase::GetBrowserForHost(rfh)) {
-    return browser->browser_info()->GetFrameForHost(rfh, nullptr,
-                                                    prefer_speculative);
-  }
-  NOTREACHED();
-  return nullptr;
-}
-
-void CefBrowserFrame::OnGetImageForContextNode(
-    cef::mojom::GetImageForContextNodeParamsPtr params) {
-  if (auto host = GetFrameHost()) {
-    host->OnGetImageForContextNode(std::move(params));
-  }
-}
-
-void CefBrowserFrame::OnGetImageForContextNodeNull() {
-  if (auto host = GetFrameHost()) {
-    host->OnGetImageForContextNodeNull();
-  }
+    bool prefer_speculative,
+    bool* is_excluded) const {
+  return CefBrowserInfoManager::GetFrameHost(
+      render_frame_host(), prefer_speculative,
+      /*browser_info=*/nullptr, is_excluded);
 }

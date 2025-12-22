@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "base/compiler_specific.h"
+#include "build/build_config.h"
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
@@ -15,18 +15,16 @@
 #endif
 #endif
 
-#include "libcef/renderer/render_frame_observer.h"
-
-#include "libcef/common/app_manager.h"
-#include "libcef/renderer/blink_glue.h"
-#include "libcef/renderer/browser_impl.h"
-#include "libcef/renderer/dom_document_impl.h"
-#include "libcef/renderer/v8_impl.h"
-
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/browser_impl.h"
+#include "cef/libcef/renderer/dom_document_impl.h"
+#include "cef/libcef/renderer/render_frame_observer.h"
+#include "cef/libcef/renderer/v8_impl.h"
 #include "content/public/renderer/render_frame.h"
-#include "content/public/renderer/render_view.h"
 #include "third_party/blink/public/web/blink.h"
 #include "third_party/blink/public/web/web_document.h"
+#include "third_party/blink/public/web/web_element.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_node.h"
 
@@ -38,8 +36,11 @@ CefRenderFrameObserver::~CefRenderFrameObserver() = default;
 
 void CefRenderFrameObserver::DidCommitProvisionalLoad(
     ui::PageTransition transition) {
-  if (!frame_)
+  if (!frame_) {
     return;
+  }
+
+  frame_->OnDidCommitProvisionalLoad();
 
   if (frame_->GetParent() == nullptr) {
     blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
@@ -68,7 +69,7 @@ void CefRenderFrameObserver::DidFinishLoad() {
   }
 }
 
-void CefRenderFrameObserver::WillDetach() {
+void CefRenderFrameObserver::WillDetach(blink::DetachReason detach_reason) {
   if (frame_) {
     frame_->OnDetached();
     frame_ = nullptr;
@@ -77,21 +78,25 @@ void CefRenderFrameObserver::WillDetach() {
 
 void CefRenderFrameObserver::FocusedElementChanged(
     const blink::WebElement& element) {
-  if (!frame_)
+  if (!frame_) {
     return;
-  frame_->OnFocusedNodeChanged(element);
+  }
+
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   CefRefPtr<CefBrowserImpl> browserPtr =
       CefBrowserImpl::GetBrowserForMainFrame(frame->Top());
-  if (!browserPtr)
+  if (!browserPtr) {
     return;
+  }
 
   CefRefPtr<CefRenderProcessHandler> handler;
   CefRefPtr<CefApp> application = CefAppManager::Get()->GetApplication();
-  if (application)
+  if (application) {
     handler = application->GetRenderProcessHandler();
-  if (!handler)
+  }
+  if (!handler) {
     return;
+  }
 
   CefRefPtr<CefFrameImpl> framePtr = browserPtr->GetWebFrameImpl(frame);
 
@@ -100,8 +105,9 @@ void CefRenderFrameObserver::FocusedElementChanged(
     return;
   }
 
-  if (element.GetDocument().IsNull())
+  if (element.GetDocument().IsNull()) {
     return;
+  }
 
   CefRefPtr<CefDOMDocumentImpl> documentImpl =
       new CefDOMDocumentImpl(browserPtr.get(), frame);
@@ -110,36 +116,33 @@ void CefRenderFrameObserver::FocusedElementChanged(
   documentImpl->Detach();
 }
 
-void CefRenderFrameObserver::DraggableRegionsChanged() {
-  if (frame_) {
-    frame_->OnDraggableRegionsChanged();
-  }
-}
-
 void CefRenderFrameObserver::DidCreateScriptContext(
     v8::Handle<v8::Context> context,
     int world_id) {
-  if (!frame_)
+  if (!frame_) {
     return;
+  }
 
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   CefRefPtr<CefBrowserImpl> browserPtr =
       CefBrowserImpl::GetBrowserForMainFrame(frame->Top());
-  if (!browserPtr)
+  if (!browserPtr) {
     return;
+  }
 
   CefRefPtr<CefRenderProcessHandler> handler;
   CefRefPtr<CefApp> application = CefAppManager::Get()->GetApplication();
-  if (application)
+  if (application) {
     handler = application->GetRenderProcessHandler();
+  }
 
   CefRefPtr<CefFrameImpl> framePtr = browserPtr->GetWebFrameImpl(frame);
 
   if (handler) {
-    v8::Isolate* isolate = blink::MainThreadIsolate();
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
     v8::HandleScope handle_scope(isolate);
     v8::Context::Scope scope(context);
-    v8::MicrotasksScope microtasks_scope(isolate,
+    v8::MicrotasksScope microtasks_scope(isolate, context->GetMicrotaskQueue(),
                                          v8::MicrotasksScope::kRunMicrotasks);
 
     CefRefPtr<CefV8Context> contextPtr(new CefV8ContextImpl(isolate, context));
@@ -148,7 +151,7 @@ void CefRenderFrameObserver::DidCreateScriptContext(
   }
 
   // Do this last, in case the client callback modified the window object.
-  framePtr->OnContextCreated();
+  framePtr->OnContextCreated(context);
 }
 
 void CefRenderFrameObserver::WillReleaseScriptContext(
@@ -157,30 +160,33 @@ void CefRenderFrameObserver::WillReleaseScriptContext(
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   CefRefPtr<CefBrowserImpl> browserPtr =
       CefBrowserImpl::GetBrowserForMainFrame(frame->Top());
-  if (browserPtr) {
-    CefRefPtr<CefApp> application = CefAppManager::Get()->GetApplication();
-    if (application) {
-      CefRefPtr<CefRenderProcessHandler> handler =
-          application->GetRenderProcessHandler();
-      if (handler) {
-        CefRefPtr<CefFrameImpl> framePtr = browserPtr->GetWebFrameImpl(frame);
-
-        v8::Isolate* isolate = blink::MainThreadIsolate();
-        v8::HandleScope handle_scope(isolate);
-
-        // The released context should not be used for script execution.
-        // Depending on how the context is released this may or may not already
-        // be set.
-        blink_glue::CefScriptForbiddenScope forbidScript;
-
-        CefRefPtr<CefV8Context> contextPtr(
-            new CefV8ContextImpl(isolate, context));
-
-        handler->OnContextReleased(browserPtr.get(), framePtr.get(),
-                                   contextPtr);
-      }
-    }
+  if (!browserPtr) {
+    return;
   }
+
+  CefRefPtr<CefRenderProcessHandler> handler;
+  CefRefPtr<CefApp> application = CefAppManager::Get()->GetApplication();
+  if (application) {
+    handler = application->GetRenderProcessHandler();
+  }
+
+  CefRefPtr<CefFrameImpl> framePtr = browserPtr->GetWebFrameImpl(frame);
+
+  if (handler) {
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
+    v8::HandleScope handle_scope(isolate);
+
+    // The released context should not be used for script execution.
+    // Depending on how the context is released this may or may not already
+    // be set.
+    blink_glue::CefScriptForbiddenScope forbidScript;
+
+    CefRefPtr<CefV8Context> contextPtr(new CefV8ContextImpl(isolate, context));
+
+    handler->OnContextReleased(browserPtr.get(), framePtr.get(), contextPtr);
+  }
+
+  framePtr->OnContextReleased();
 
   CefV8ReleaseContext(context);
 }
@@ -189,23 +195,10 @@ void CefRenderFrameObserver::OnDestruct() {
   delete this;
 }
 
-void CefRenderFrameObserver::OnInterfaceRequestForFrame(
-    const std::string& interface_name,
-    mojo::ScopedMessagePipeHandle* interface_pipe) {
-  registry_.TryBindInterface(interface_name, interface_pipe);
-}
-
-bool CefRenderFrameObserver::OnAssociatedInterfaceRequestForFrame(
-    const std::string& interface_name,
-    mojo::ScopedInterfaceEndpointHandle* handle) {
-  return associated_interfaces_.TryBindInterface(interface_name, handle);
-}
-
 void CefRenderFrameObserver::AttachFrame(CefFrameImpl* frame) {
   DCHECK(frame);
   DCHECK(!frame_);
   frame_ = frame;
-  frame_->OnAttached();
 }
 
 void CefRenderFrameObserver::OnLoadStart() {
@@ -218,7 +211,7 @@ void CefRenderFrameObserver::OnLoadStart() {
         blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
         CefRefPtr<CefBrowserImpl> browserPtr =
             CefBrowserImpl::GetBrowserForMainFrame(frame->Top());
-        load_handler->OnLoadStart(browserPtr.get(), frame_, frame_->GetURL(), TT_EXPLICIT);
+        load_handler->OnLoadStart(browserPtr.get(), frame_, TT_EXPLICIT);
       }
     }
   }

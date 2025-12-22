@@ -3,26 +3,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/renderer/render_frame_util.h"
-
-#include "libcef/common/frame_util.h"
-#include "libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/render_frame_util.h"
 
 #include "base/logging.h"
+#include "cef/libcef/common/frame_util.h"
+#include "cef/libcef/renderer/blink_glue.h"
 #include "content/public/renderer/render_thread.h"
-#include "content/public/renderer/render_view.h"
 #include "content/renderer/render_frame_impl.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 
 namespace render_frame_util {
 
-int64_t GetIdentifier(blink::WebLocalFrame* frame) {
+std::string GetIdentifier(blink::WebLocalFrame* frame) {
   // Each WebFrame will have an associated RenderFrame. The RenderFrame
   // routing IDs are unique within a given renderer process.
-  content::RenderFrame* render_frame =
-      content::RenderFrame::FromWebFrame(frame);
-  return frame_util::MakeFrameId(content::RenderThread::Get()->GetClientId(),
-                                 render_frame->GetRoutingID());
+  return frame_util::MakeFrameIdentifier(content::GlobalRenderFrameHostToken(
+      content::RenderThread::Get()->GetClientId(),
+      frame->GetLocalFrameToken()));
 }
 
 std::string GetName(blink::WebLocalFrame* frame) {
@@ -37,9 +34,20 @@ std::string GetName(blink::WebLocalFrame* frame) {
   content::RenderFrameImpl* render_frame =
       content::RenderFrameImpl::FromWebFrame(frame);
   DCHECK(render_frame);
-  if (render_frame)
+  if (render_frame) {
     return render_frame->unique_name();
+  }
   return std::string();
+}
+
+std::optional<blink::LocalFrameToken> ParseFrameTokenFromIdentifier(
+    const std::string& identifier) {
+  const auto& global_token = frame_util::ParseFrameIdentifier(identifier);
+  if (!global_token ||
+      global_token->child_id != content::RenderThread::Get()->GetClientId()) {
+    return std::nullopt;
+  }
+  return global_token->frame_token;
 }
 
 }  // namespace render_frame_util

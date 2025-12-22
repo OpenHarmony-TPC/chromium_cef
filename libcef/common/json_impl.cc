@@ -2,30 +2,33 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_parser.h"
-#include "libcef/common/values_impl.h"
-
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/values.h"
+#include "cef/include/cef_parser.h"
+#include "cef/libcef/common/values_impl.h"
 
 namespace {
 
 int GetJSONReaderOptions(cef_json_parser_options_t options) {
   int op = base::JSON_PARSE_RFC;
-  if (options & JSON_PARSER_ALLOW_TRAILING_COMMAS)
+  if (options & JSON_PARSER_ALLOW_TRAILING_COMMAS) {
     op |= base::JSON_ALLOW_TRAILING_COMMAS;
+  }
   return op;
 }
 
 int GetJSONWriterOptions(cef_json_writer_options_t options) {
   int op = 0;
-  if (options & JSON_WRITER_OMIT_BINARY_VALUES)
+  if (options & JSON_WRITER_OMIT_BINARY_VALUES) {
     op |= base::JSONWriter::OPTIONS_OMIT_BINARY_VALUES;
-  if (options & JSON_WRITER_OMIT_DOUBLE_TYPE_PRESERVATION)
+  }
+  if (options & JSON_WRITER_OMIT_DOUBLE_TYPE_PRESERVATION) {
     op |= base::JSONWriter::OPTIONS_OMIT_DOUBLE_TYPE_PRESERVATION;
-  if (options & JSON_WRITER_PRETTY_PRINT)
+  }
+  if (options & JSON_WRITER_PRETTY_PRINT) {
     op |= base::JSONWriter::OPTIONS_PRETTY_PRINT;
+  }
   return op;
 }
 
@@ -40,15 +43,14 @@ CefRefPtr<CefValue> CefParseJSON(const CefString& json_string,
 CefRefPtr<CefValue> CefParseJSON(const void* json,
                                  size_t json_size,
                                  cef_json_parser_options_t options) {
-  if (!json || json_size == 0)
+  if (!json || json_size == 0) {
     return nullptr;
-  absl::optional<base::Value> parse_result = base::JSONReader::Read(
-      base::StringPiece(static_cast<const char*>(json), json_size),
+  }
+  std::optional<base::Value> parse_result = base::JSONReader::Read(
+      std::string_view(static_cast<const char*>(json), json_size),
       GetJSONReaderOptions(options));
   if (parse_result) {
-    return new CefValueImpl(
-        base::Value::ToUniquePtrValue(std::move(parse_result.value()))
-            .release());
+    return new CefValueImpl(std::move(parse_result.value()));
   }
   return nullptr;
 }
@@ -60,23 +62,21 @@ CefRefPtr<CefValue> CefParseJSONAndReturnError(
   const std::string& json = json_string.ToString();
 
   std::string error_msg;
-  base::JSONReader::ValueWithError value_and_error =
-      base::JSONReader::ReadAndReturnValueWithError(
-          json, GetJSONReaderOptions(options));
-  if (value_and_error.value) {
-    return new CefValueImpl(
-        base::Value::ToUniquePtrValue(std::move(value_and_error.value.value()))
-            .release());
+  auto result = base::JSONReader::ReadAndReturnValueWithError(
+      json, GetJSONReaderOptions(options));
+  if (result.has_value()) {
+    return new CefValueImpl(std::move(*result));
   }
 
-  error_msg_out = value_and_error.error_message;
+  error_msg_out = result.error().message;
   return nullptr;
 }
 
 CefString CefWriteJSON(CefRefPtr<CefValue> node,
                        cef_json_writer_options_t options) {
-  if (!node.get() || !node->IsValid())
+  if (!node.get() || !node->IsValid()) {
     return CefString();
+  }
 
   CefValueImpl* impl = static_cast<CefValueImpl*>(node.get());
   CefValueImpl::ScopedLockedValue scoped_value(impl);

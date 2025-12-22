@@ -7,14 +7,16 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
+#include <utility>
 
-#include "include/cef_frame.h"
-
-#include "base/memory/read_only_shared_memory_region.h"
+#include "base/memory/raw_ptr.h"
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_frame.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
+#include "content/public/browser/global_routing_id.h"
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "ui/base/page_transition_types.h"
@@ -34,8 +36,9 @@ class CefBrowserHostBase;
 class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
  public:
   // Create a temporary sub-frame.
-  CefFrameHostImpl(scoped_refptr<CefBrowserInfo> browser_info,
-                   int64_t parent_frame_id);
+  CefFrameHostImpl(
+      scoped_refptr<CefBrowserInfo> browser_info,
+      std::optional<content::GlobalRenderFrameHostToken> parent_frame_token);
 
   // Create a frame backed by a RFH and owned by CefBrowserInfo.
   CefFrameHostImpl(scoped_refptr<CefBrowserInfo> browser_info,
@@ -53,6 +56,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void Cut() override;
   void Copy() override;
   void Paste() override;
+  void PasteAndMatchStyle() override;
   void Delete() override;
   void SelectAll() override;
   void ViewSource() override;
@@ -60,14 +64,13 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void GetText(CefRefPtr<CefStringVisitor> visitor) override;
   void LoadRequest(CefRefPtr<CefRequest> request) override;
   void LoadURL(const CefString& url) override;
-  void PostURL(const CefString& url, const std::vector<char>& post_data) override;
   void ExecuteJavaScript(const CefString& jsCode,
                          const CefString& scriptUrl,
                          int startLine) override;
   bool IsMain() override;
   bool IsFocused() override;
   CefString GetName() override;
-  int64 GetIdentifier() override;
+  CefString GetIdentifier() override;
   CefRefPtr<CefFrame> GetParent() override;
   CefString GetURL() override;
   CefRefPtr<CefBrowser> GetBrowser() override;
@@ -79,18 +82,11 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
 
-  bool is_temporary() const { return frame_id_ == kInvalidFrameId; }
-
   void SetFocused(bool focused);
   void RefreshAttributes();
 
-  void OnGetImageFromCache(std::string url,
-                           uint32_t buffer_size,
-                           base::ReadOnlySharedMemoryRegion region);
-  void UpdateLocale(const CefString& locale);
-
   // Notification that a move or resize of the renderer's containing window has
-  // started. Used on Windows and Linux with the Alloy runtime.
+  // started. Used on Windows and Linux with Alloy style.
   void NotifyMoveOrResizeStarted();
 
   // Load the specified request.
@@ -100,13 +96,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void LoadURLWithExtras(const std::string& url,
                          const content::Referrer& referrer,
                          ui::PageTransition transition,
-#if BUILDFLAG(IS_OHOS)
-                         const std::string& extra_headers,
-                         const std::string& method = std::string(),
-                         const std::vector<char>& post_data = std::vector<char>());
-#else
                          const std::string& extra_headers);
-#endif
 
   // Send a command to the renderer for execution.
   void SendCommand(const std::string& command);
@@ -125,69 +115,57 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 
   void ExecuteJavaScriptWithUserGestureForTests(const CefString& javascript);
 
-  // Returns the RFH associated with this frame. Must be called on the UI
-  // thread.
+  // Returns the RFH currently associated with this frame. May return nullptr if
+  // this frame is currenly detached. Do not directly compare RFH pointers; use
+  // IsSameFrame() instead. Must be called on the UI thread.
   content::RenderFrameHost* GetRenderFrameHost() const;
+
+  // Returns true if this frame and |frame_host| represent the same frame.
+  // Frames are considered the same if they share the same frame token value,
+  // so this method is safe to call even for detached frames. Must be called on
+  // the UI thread.
+  bool IsSameFrame(content::RenderFrameHost* frame_host) const;
+
+  // Returns true if this frame is currently detached (e.g. no associated RFH).
+  // Must be called on the UI thread.
+  bool IsDetached() const;
+
+  enum class DetachReason {
+    RENDER_FRAME_DELETED,
+    NEW_MAIN_FRAME,
+    BROWSER_DESTROYED,
+  };
 
   // Owned frame objects will be detached explicitly when the associated
   // RenderFrame is deleted. Temporary frame objects will be detached
-  // implicitly via CefBrowserInfo::browser() returning nullptr. Returns true
-  // if this was the first call to Detach() for the frame.
-  bool Detach();
+  // implicitly via CefBrowserInfo::browser() returning nullptr. If
+  // |is_current_main_frame| is true then only the RenderFrameHost references
+  // will be released as we want the frame object itself to remain valid.
+  // Returns (bool, bool) to indicate if frame detached and/or frame destroyed
+  // notifications should be triggered respectively.
+  std::pair<bool, bool> Detach(DetachReason reason, bool is_current_main_frame);
 
-  // A frame has swapped to active status from prerendering or the back-forward
-  // cache. We may need to re-attach if the RFH has changed. See
-  // https://crbug.com/1179502#c8 for additional background.
-  void MaybeReAttach(scoped_refptr<CefBrowserInfo> browser_info,
-                     content::RenderFrameHost* render_frame_host);
+  // A new frame was created or a frame has swapped to active status from
+  // prerendering or the back-forward cache. Update internal state if the RFH
+  // has changed. See https://crbug.com/1179502#c8 for additional background.
+  void MaybeAttach(scoped_refptr<CefBrowserInfo> browser_info,
+                   content::RenderFrameHost* render_frame_host);
 
   // cef::mojom::BrowserFrame methods forwarded from CefBrowserFrame.
-  void SendMessage(const std::string& name, base::Value arguments) override;
+  void SendMessage(const std::string& name,
+                   base::Value::List arguments) override;
+  void SendSharedMemoryRegion(const std::string& name,
+                              base::WritableSharedMemoryRegion region) override;
   void FrameAttached(mojo::PendingRemote<cef::mojom::RenderFrame> render_frame,
                      bool reattached) override;
-  void DidFinishFrameLoad(const GURL& validated_url,
-                          int32_t http_status_code) override;
   void UpdateDraggableRegions(
-      absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
+      std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
-#if BUILDFLAG(IS_OHOS)
-  void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params) override;
-  void OnGetImageForContextNodeNull() override;
-  void LoadHeaderUrl(const CefString& url,
-                     const CefString& additionalHttpHeaders) override;
-  // Send the touch point to the rederer to get hitdata.
-  void SendTouchEvent(const CefTouchEvent& event);
-  void SendHitEvent(float x, float y, float width, float height);
 
-  void SetInitialScale(float scale);
-  void SetJsOnlineProperty(bool network_up);
-
-  void GetImageForContextNode();
-
-  // Sets the zoom factor for text only. Used in layout modes other than
-  // Text Autosizing.
-  void PutZoomingForTextFactor(float factor);
-
-  void GetImagesCallback(CefRefPtr<CefFrameHostImpl> frame,
-                         CefRefPtr<CefGetImagesCallback> callback, bool response);
-  void GetImagesWithResponse(cef::mojom::RenderFrame::GetImagesWithResponseCallback
-                             response_callback);
-  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
-  void RemoveCache(bool include_disk_files);
-  void ScrollPageUpDown(bool is_up, bool is_half, float view_height);
-  void ScrollTo(float x, float y);
-  void ScrollBy(float delta_x, float delta_y);
-  void SlideScroll(float vx, float vy);
-  void ZoomBy(float delta, float width, float height);
-  void GetHitData(int& type, CefString& extra_data);
-  void SetOverscrollMode(int mode);
-#endif  // BUILDFLAG(IS_OHOS)
-
-  static const int64_t kMainFrameId;
-  static const int64_t kFocusedFrameId;
-  static const int64_t kUnspecifiedFrameId;
-  static const int64_t kInvalidFrameId;
+  bool is_temporary() const { return !frame_token_.has_value(); }
+  std::optional<content::GlobalRenderFrameHostToken> frame_token() const {
+    return frame_token_;
+  }
 
   // PageTransition type for explicit navigations. This must pass the check in
   // ContentBrowserClient::IsExplicitNavigation for debug URLs (HandleDebugURL)
@@ -195,7 +173,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   static const ui::PageTransition kPageTransitionExplicit;
 
  private:
-  int64 GetFrameId() const;
   scoped_refptr<CefBrowserInfo> GetBrowserInfo() const;
   CefRefPtr<CefBrowserHostBase> GetBrowserHostBase() const;
 
@@ -208,20 +185,25 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 
   void OnRenderFrameDisconnect();
 
-  const bool is_main_frame_;
+  void DetachRenderFrame();
 
-  // The following members may be read/modified from any thread. All access must
-  // be protected by |state_lock_|.
+  std::string GetDebugString() const;
+
+  const bool is_main_frame_;
+  const std::optional<content::GlobalRenderFrameHostToken> frame_token_;
+
+  // The following members are only modified on the UI thread but may be read
+  // from any thread. Any modification on the UI thread, or any access from
+  // non-UI threads, must be protected by |state_lock_|.
   mutable base::Lock state_lock_;
-  int64 frame_id_;
   scoped_refptr<CefBrowserInfo> browser_info_;
   bool is_focused_;
   CefString url_;
   CefString name_;
-  int64 parent_frame_id_;
+  std::optional<content::GlobalRenderFrameHostToken> parent_frame_token_;
 
   // The following members are only accessed on the UI thread.
-  content::RenderFrameHost* render_frame_host_ = nullptr;
+  raw_ptr<content::RenderFrameHost> render_frame_host_ = nullptr;
 
   std::queue<std::pair<std::string, RenderFrameAction>>
       queued_renderer_actions_;

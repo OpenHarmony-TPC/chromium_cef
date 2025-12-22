@@ -6,16 +6,16 @@
 #ifndef LIBCEF_BROWSER_PRINTING_PRINT_DIALOG_LINUX_H_
 #define LIBCEF_BROWSER_PRINTING_PRINT_DIALOG_LINUX_H_
 
-#include "include/cef_print_handler.h"
-#include "libcef/browser/browser_host_base.h"
-
-#include "base/compiler_specific.h"
 #include "base/files/file_path.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
 #include "base/task/sequenced_task_runner_helpers.h"
+#include "cef/include/cef_print_handler.h"
+#include "cef/libcef/browser/browser_host_base.h"
 #include "content/public/browser/browser_thread.h"
-#include "printing/print_dialog_gtk_interface.h"
-#include "printing/printing_context_linux.h"
+#include "printing/buildflags/buildflags.h"
+#include "printing/print_dialog_linux_interface.h"
+#include "ui/linux/linux_ui.h"
 
 namespace printing {
 class MetafilePlayer;
@@ -24,8 +24,28 @@ class PrintSettings;
 
 using printing::PrintingContextLinux;
 
+class CefPrintingContextLinuxDelegate
+    : public ui::PrintingContextLinuxDelegate {
+ public:
+  CefPrintingContextLinuxDelegate();
+
+  CefPrintingContextLinuxDelegate(const CefPrintingContextLinuxDelegate&) =
+      delete;
+  CefPrintingContextLinuxDelegate& operator=(
+      const CefPrintingContextLinuxDelegate&) = delete;
+
+  printing::PrintDialogLinuxInterface* CreatePrintDialog(
+      printing::PrintingContextLinux* context) override;
+  gfx::Size GetPdfPaperSize(printing::PrintingContextLinux* context) override;
+
+  void SetDefaultDelegate(ui::PrintingContextLinuxDelegate* delegate);
+
+ private:
+  raw_ptr<ui::PrintingContextLinuxDelegate> default_delegate_ = nullptr;
+};
+
 // Needs to be freed on the UI thread to clean up its member variables.
-class CefPrintDialogLinux : public printing::PrintDialogGtkInterface,
+class CefPrintDialogLinux : public printing::PrintDialogLinuxInterface,
                             public base::RefCountedThreadSafe<
                                 CefPrintDialogLinux,
                                 content::BrowserThread::DeleteOnUIThread> {
@@ -33,27 +53,19 @@ class CefPrintDialogLinux : public printing::PrintDialogGtkInterface,
   CefPrintDialogLinux(const CefPrintDialogLinux&) = delete;
   CefPrintDialogLinux& operator=(const CefPrintDialogLinux&) = delete;
 
-  // Creates and returns a print dialog.
-  static printing::PrintDialogGtkInterface* CreatePrintDialog(
-      PrintingContextLinux* context);
-
-  // Returns the paper size in device units.
-  static gfx::Size GetPdfPaperSize(printing::PrintingContextLinux* context);
-
-  // Notify the client when printing has started.
-  static void OnPrintStart(CefRefPtr<CefBrowserHostBase> browser);
-
-  // PrintDialogGtkInterface implementation.
+  // PrintDialogLinuxInterface implementation.
   void UseDefaultSettings() override;
   void UpdateSettings(
       std::unique_ptr<printing::PrintSettings> settings) override;
+#if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+  void LoadPrintSettings(const printing::PrintSettings& settings) override;
+#endif
   void ShowDialog(
       gfx::NativeView parent_view,
       bool has_selection,
       PrintingContextLinux::PrintSettingsCallback callback) override;
   void PrintDocument(const printing::MetafilePlayer& metafile,
                      const std::u16string& document_name) override;
-  void AddRefToDialog() override;
   void ReleaseDialog() override;
 
  private:
@@ -65,12 +77,12 @@ class CefPrintDialogLinux : public printing::PrintDialogGtkInterface,
       content::BrowserThread::UI>;
   friend class CefPrintDialogCallbackImpl;
   friend class CefPrintJobCallbackImpl;
+  friend class CefPrintingContextLinuxDelegate;
 
-  explicit CefPrintDialogLinux(PrintingContextLinux* context);
+  CefPrintDialogLinux(PrintingContextLinux* context,
+                      CefRefPtr<CefBrowserHostBase> browser,
+                      CefRefPtr<CefPrintHandler> handler);
   ~CefPrintDialogLinux() override;
-
-  void SetHandler();
-  void ReleaseHandler();
 
   bool UpdateSettings(std::unique_ptr<printing::PrintSettings> settings,
                       bool get_defaults);
@@ -85,12 +97,12 @@ class CefPrintDialogLinux : public printing::PrintDialogGtkInterface,
   // Handles print job response.
   void OnJobCompleted();
 
-  CefRefPtr<CefPrintHandler> handler_;
-
   // Printing dialog callback.
   PrintingContextLinux::PrintSettingsCallback callback_;
-  PrintingContextLinux* context_;
+
+  raw_ptr<PrintingContextLinux> context_;
   CefRefPtr<CefBrowserHostBase> browser_;
+  CefRefPtr<CefPrintHandler> handler_;
 
   base::FilePath path_to_pdf_;
 };

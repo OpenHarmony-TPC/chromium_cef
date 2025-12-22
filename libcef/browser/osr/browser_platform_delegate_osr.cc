@@ -2,75 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/browser_platform_delegate_osr.h"
+#include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
 
 #include <utility>
 
-#include "libcef/browser/image_impl.h"
-#include "libcef/browser/osr/osr_accessibility_util.h"
-#include "libcef/browser/osr/render_widget_host_view_osr.h"
-#include "libcef/browser/osr/web_contents_view_osr.h"
-#include "libcef/common/drag_data_impl.h"
-
 #include "base/task/current_thread.h"
-#include "content/browser/renderer_host/render_widget_host_input_event_router.h"
+#include "cef/libcef/browser/image_impl.h"
+#include "cef/libcef/browser/osr/osr_accessibility_util.h"
+#include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
+#include "cef/libcef/browser/osr/touch_selection_controller_client_osr.h"
+#include "cef/libcef/browser/osr/web_contents_view_osr.h"
+#include "cef/libcef/browser/views/view_util.h"
+#include "cef/libcef/common/drag_data_impl.h"
+#include "components/input/render_widget_host_input_event_router.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/render_view_host.h"
+#include "ui/display/screen.h"
 #include "ui/events/base_event_utils.h"
-
-namespace {
-void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
-                            CefSelectPopupItem& menu_item) {
-  CefString label = CefString(menu_ptr->label.value_or(""));
-  CefString tool_tip = CefString(menu_ptr->tool_tip.value_or(""));
-  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
-  cef_string_set(tool_tip.c_str(), tool_tip.length(), &(menu_item.tool_tip),
-                 true);
-  menu_item.action = menu_ptr->action;
-  menu_item.enabled = menu_ptr->enabled;
-  menu_item.checked = menu_ptr->checked;
-  menu_item.type = static_cast<cef_select_popup_item_type_t>(menu_ptr->type);
-  menu_item.text_direction =
-      static_cast<cef_text_direction_t>(menu_ptr->text_direction);
-  menu_item.has_text_direction_override = menu_ptr->has_text_direction_override;
-}
-
-#if defined(OHOS_NWEB_EX)
-void ConvertAutofillPopupItem(const autofill::Suggestion& suggestion,
-                              CefAutofillPopupItem& menu_item) {
-  CefString label = CefString(base::UTF16ToUTF8(suggestion.value));
-  CefString sublabel = CefString(suggestion.label);
-  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
-  cef_string_set(sublabel.c_str(), sublabel.length(), &(menu_item.sublabel),
-                 true);
-}
-#endif
-
-}  // namespace
-
-class CefSelectPopupCallbackImpl : public CefSelectPopupCallback {
- public:
-  explicit CefSelectPopupCallbackImpl(
-      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client) {
-    popup_client_.Bind(std::move(popup_client));
-  }
-
-  void Continue(const std::vector<int>& indices) override {
-    if (popup_client_) {
-      popup_client_->DidAcceptIndices(indices);
-    }
-  }
-
-  void Cancel() override {
-    if (popup_client_) {
-      popup_client_->DidCancel();
-    }
-  }
-
- private:
-  mojo::Remote<blink::mojom::PopupMenuClient> popup_client_;
-  IMPLEMENT_REFCOUNTING(CefSelectPopupCallbackImpl);
-};
 
 CefBrowserPlatformDelegateOsr::CefBrowserPlatformDelegateOsr(
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
@@ -83,8 +31,8 @@ CefBrowserPlatformDelegateOsr::CefBrowserPlatformDelegateOsr(
 }
 
 void CefBrowserPlatformDelegateOsr::CreateViewForWebContents(
-    content::WebContentsView** view,
-    content::RenderViewHostDelegateView** delegate_view) {
+    raw_ptr<content::WebContentsView>* view,
+    raw_ptr<content::RenderViewHostDelegateView>* delegate_view) {
   DCHECK(!view_osr_);
 
   // Use the OSR view instead of the default platform view.
@@ -106,10 +54,21 @@ void CefBrowserPlatformDelegateOsr::WebContentsCreated(
   view_osr_->WebContentsCreated(web_contents);
 }
 
+void CefBrowserPlatformDelegateOsr::WebContentsDestroyed(
+    content::WebContents* web_contents) {
+  DCHECK_EQ(web_contents, web_contents_);
+  if (auto* view = GetOSRHostView()) {
+    view->ReleaseCompositor();
+  }
+
+  CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(web_contents);
+}
+
 void CefBrowserPlatformDelegateOsr::RenderViewCreated(
     content::RenderViewHost* render_view_host) {
-  if (view_osr_)
+  if (view_osr_) {
     view_osr_->RenderViewCreated();
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::BrowserCreated(
@@ -119,36 +78,18 @@ void CefBrowserPlatformDelegateOsr::BrowserCreated(
   if (browser->IsPopup()) {
     // Associate the RenderWidget host view with the browser now because the
     // browser wasn't known at the time that the host view was created.
-    content::RenderViewHost* host = web_contents_->GetRenderViewHost();
-    DCHECK(host);
-    CefRenderWidgetHostViewOSR* view =
-        static_cast<CefRenderWidgetHostViewOSR*>(host->GetWidget()->GetView());
     // |view| will be null if the popup is a DevTools window.
-    if (view) {
-      view->set_browser_impl(static_cast<AlloyBrowserHostImpl*>(browser));
+    if (auto* view = GetOSRHostView()) {
+      view->set_browser_impl(AlloyBrowserHostImpl::FromBaseChecked(browser));
     }
   }
-}
-
-void CefBrowserPlatformDelegateOsr::NotifyBrowserDestroyed() {
-  content::RenderViewHost* host = web_contents_->GetRenderViewHost();
-  if (host) {
-    CefRenderWidgetHostViewOSR* view =
-        static_cast<CefRenderWidgetHostViewOSR*>(host->GetWidget()->GetView());
-    if (view) {
-      LOG(INFO) << "NotifyBrowserDestroyed";
-      view->ReleaseCompositor();
-    }
-  }
-
-  CefBrowserPlatformDelegateAlloy::NotifyBrowserDestroyed();
 }
 
 void CefBrowserPlatformDelegateOsr::BrowserDestroyed(
     CefBrowserHostBase* browser) {
-  CefBrowserPlatformDelegateAlloy::BrowserDestroyed(browser);
-
   view_osr_ = nullptr;
+  current_rvh_for_drag_ = nullptr;
+  CefBrowserPlatformDelegateAlloy::BrowserDestroyed(browser);
 }
 
 SkColor CefBrowserPlatformDelegateOsr::GetBackgroundColor() const {
@@ -157,16 +98,18 @@ SkColor CefBrowserPlatformDelegateOsr::GetBackgroundColor() const {
 
 void CefBrowserPlatformDelegateOsr::WasResized() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->WasResized();
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SendKeyEvent(const CefKeyEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view)
+  if (!view) {
     return;
+  }
 
-  content::NativeWebKeyboardEvent web_event =
+  input::NativeWebKeyboardEvent web_event =
       native_delegate_->TranslateWebKeyEvent(event);
   view->SendKeyEvent(web_event);
 }
@@ -177,8 +120,9 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     bool mouseUp,
     int clickCount) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view)
+  if (!view) {
     return;
+  }
 
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
       event, type, mouseUp, clickCount);
@@ -189,8 +133,9 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     const CefMouseEvent& event,
     bool mouseLeave) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view)
+  if (!view) {
     return;
+  }
 
   blink::WebMouseEvent web_event =
       native_delegate_->TranslateWebMoveEvent(event, mouseLeave);
@@ -202,8 +147,9 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     int deltaX,
     int deltaY) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view)
+  if (!view) {
     return;
+  }
 
   blink::WebMouseWheelEvent web_event =
       native_delegate_->TranslateWebWheelEvent(event, deltaX, deltaY);
@@ -212,43 +158,38 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
 
 void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view)
-    return;
-
-  CefTouchEvent event_adjust = event;
-#ifdef OHOS_NWEB_EX
-  if (event.type == CEF_TET_PRESSED) {
-    shrink_viewport_height_ = view->GetShrinkViewportHeight();
-  } else if (event.type == CEF_TET_CANCELLED) {
-    shrink_viewport_height_ = 0;
-  }
-  event_adjust.y -= shrink_viewport_height_;
-  if (event.type == CEF_TET_RELEASED) {
-    shrink_viewport_height_ = 0;
-  }
-#endif
-
-  view->SendTouchEvent(event_adjust);
-
-  if (event.type == CEF_TET_PRESSED) {
-    SendTouchEventToRender(event_adjust);
+  if (view) {
+    view->SendTouchEvent(event);
   }
 }
 
 void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->SetFocus(setFocus);
+  }
 }
 
 gfx::Point CefBrowserPlatformDelegateOsr::GetScreenPoint(
-    const gfx::Point& view) const {
+    const gfx::Point& view,
+    bool want_dip_coords) const {
   CefRefPtr<CefRenderHandler> handler = browser_->client()->GetRenderHandler();
   if (handler.get()) {
     int screenX = 0, screenY = 0;
-    if (handler->GetScreenPoint(browser_, view.x(), view.y(), screenX,
+    if (handler->GetScreenPoint(browser_.get(), view.x(), view.y(), screenX,
                                 screenY)) {
-      return gfx::Point(screenX, screenY);
+      gfx::Point screen_point(screenX, screenY);
+#if !BUILDFLAG(IS_MAC)
+      // Mac always operates in DIP coordinates so |want_dip_coords| is ignored.
+      if (want_dip_coords) {
+        // Convert to DIP coordinates.
+        const auto& display = view_util::GetDisplayNearestPoint(
+            screen_point, /*input_pixel_coords=*/true);
+        view_util::ConvertPointFromPixels(&screen_point,
+                                          display.device_scale_factor());
+      }
+#endif
+      return screen_point;
     }
   }
   return view;
@@ -259,18 +200,13 @@ void CefBrowserPlatformDelegateOsr::ViewText(const std::string& text) {
 }
 
 bool CefBrowserPlatformDelegateOsr::HandleKeyboardEvent(
-    const content::NativeWebKeyboardEvent& event) {
+    const input::NativeWebKeyboardEvent& event) {
   return native_delegate_->HandleKeyboardEvent(event);
 }
 
 CefEventHandle CefBrowserPlatformDelegateOsr::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   return native_delegate_->GetEventHandle(event);
-}
-
-std::unique_ptr<CefFileDialogRunner>
-CefBrowserPlatformDelegateOsr::CreateFileDialogRunner() {
-  return native_delegate_->CreateFileDialogRunner();
 }
 
 std::unique_ptr<CefJavaScriptDialogRunner>
@@ -292,49 +228,48 @@ void CefBrowserPlatformDelegateOsr::WasHidden(bool hidden) {
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
   if (web_contents) {
-    if (hidden)
+    if (hidden) {
       web_contents->WasHidden();
-    else
+    } else {
       web_contents->WasShown();
+    }
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
-void CefBrowserPlatformDelegateOsr::WasOccluded(bool occluded) {
-  // The WebContentsImpl will notify the OSR view.
-  content::WebContentsImpl* web_contents =
-      static_cast<content::WebContentsImpl*>(web_contents_);
-  if (web_contents) {
-    if (occluded)
-      web_contents->WasOccluded();
-    else
-      web_contents->WasShown();
+bool CefBrowserPlatformDelegateOsr::IsHidden() const {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    return view->is_hidden();
   }
+  return true;
 }
-#endif
 
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->OnScreenInfoChanged();
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::Invalidate(cef_paint_element_type_t type) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->Invalidate(type);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SendExternalBeginFrame() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->SendExternalBeginFrame();
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SetWindowlessFrameRate(int frame_rate) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->UpdateFrameRate();
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::ImeSetComposition(
@@ -354,59 +289,25 @@ void CefBrowserPlatformDelegateOsr::ImeCommitText(
     const CefRange& replacement_range,
     int relative_cursor_pos) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->ImeCommitText(text, replacement_range, relative_cursor_pos);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::ImeFinishComposingText(
     bool keep_selection) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->ImeFinishComposingText(keep_selection);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::ImeCancelComposition() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
     view->ImeCancelComposition();
+  }
 }
-
-#if BUILDFLAG(IS_OHOS)
-bool CefBrowserPlatformDelegateOsr::GetCurRWH(content::WebContentsImpl* web_contents,
-    const gfx::PointF& client_pt, gfx::PointF* transformed_pt) {
-  auto event_router = web_contents->GetInputEventRouter();
-  if (!event_router) {
-    LOG(WARNING) << "DragDrop Get event router failed";
-    return false;
-  }
-
-  auto rvh = web_contents->GetRenderViewHost();
-  if (!rvh) {
-    LOG(WARNING) << "DragDrop Get render view host failed";
-    return false;
-  }
-  auto rvh_widget = rvh->GetWidget();
-  if (!rvh_widget) {
-    LOG(WARNING) << "DragDrop Get render widget failed";
-    return false;
-  }
-  auto root_view =  rvh_widget->GetView();
-  if (!root_view) {
-    LOG(WARNING) << "DragDrop Get view failed";
-    return false;
-  }
-
-  auto current_rwh_for_drag = event_router->GetRenderWidgetHostAtPoint(root_view,
-    gfx::PointF(client_pt), transformed_pt);
-  if (!current_rwh_for_drag) {
-    LOG(WARNING) << "DragDrop Get render widget host failed ";
-    return false;
-  }
-
-  current_rwh_for_drag_ = current_rwh_for_drag->GetWeakPtr();
-  return true;
-}
-#endif
 
 void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
     CefRefPtr<CefDragData> drag_data,
@@ -414,27 +315,34 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
     cef_drag_operations_mask_t allowed_ops) {
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!web_contents)
+  if (!web_contents) {
     return;
+  }
 
-  if (current_rvh_for_drag_)
+  if (current_rvh_for_drag_) {
     DragTargetDragLeave();
+  }
 
   const gfx::Point client_pt(event.x, event.y);
   gfx::PointF transformed_pt;
-#if BUILDFLAG(IS_OHOS)
-  if (!GetCurRWH(web_contents, gfx::PointF(client_pt), &transformed_pt)) {
-    LOG(WARNING) << "DragDrop Get render widget host failed";
+
+  // Some random crashes occured when GetWeakPtr is called on a null pointer
+  // that is the return of GetRenderWidgetHostViewInputAtPoint. As the root
+  // cause is not yet understood (no reproducible scenario yet), the current fix
+  // is only a protection against null pointer dereferencing.
+  auto* view =
+      web_contents->GetInputEventRouter()->GetRenderWidgetHostViewInputAtPoint(
+          web_contents->GetRenderViewHost()->GetWidget()->GetView(),
+          gfx::PointF(client_pt), &transformed_pt);
+  if (!view) {
     return;
   }
-#else
-  current_rwh_for_drag_ =
-      web_contents->GetInputEventRouter()
-          ->GetRenderWidgetHostAtPoint(
-              web_contents->GetRenderViewHost()->GetWidget()->GetView(),
-              gfx::PointF(client_pt), &transformed_pt)
-          ->GetWeakPtr();
-#endif
+  auto* target_rwh = content::RenderWidgetHostImpl::From(
+      static_cast<content::RenderWidgetHostViewBase*>(view)
+          ->GetRenderWidgetHost());
+
+  current_rwh_for_drag_ = target_rwh->GetWeakPtr();
+
   current_rvh_for_drag_ = web_contents->GetRenderViewHost();
 
   drag_data_ = drag_data;
@@ -443,17 +351,13 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
   CefDragDataImpl* data_impl = static_cast<CefDragDataImpl*>(drag_data.get());
   base::AutoLock lock_scope(data_impl->lock());
   content::DropData* drop_data = data_impl->drop_data();
-  const gfx::Point& screen_pt = GetScreenPoint(client_pt);
+  drop_data->document_is_handling_drag = document_is_handling_drag_;
+  const gfx::Point& screen_pt =
+      GetScreenPoint(client_pt, /*want_dip_coords=*/false);
   blink::DragOperationsMask ops =
       static_cast<blink::DragOperationsMask>(allowed_ops);
   int modifiers = TranslateWebEventModifiers(event.modifiers);
 
-#if BUILDFLAG(IS_OHOS)
-  if (!current_rwh_for_drag_) {
-    LOG(WARNING) << "DragDrop current render widget host is null";
-    return;
-  }
-#endif
   current_rwh_for_drag_->FilterDropData(drop_data);
 
   // Give the delegate an opportunity to cancel the drag.
@@ -471,22 +375,28 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
 void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
     const CefMouseEvent& event,
     cef_drag_operations_mask_t allowed_ops) {
-  if (!drag_data_)
+  if (!drag_data_) {
     return;
+  }
 
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!web_contents)
+  if (!web_contents) {
     return;
+  }
 
   const gfx::Point client_pt(event.x, event.y);
-  const gfx::Point& screen_pt = GetScreenPoint(client_pt);
+  const gfx::Point& screen_pt =
+      GetScreenPoint(client_pt, /*want_dip_coords=*/false);
 
   gfx::PointF transformed_pt;
-  content::RenderWidgetHostImpl* target_rwh =
-      web_contents->GetInputEventRouter()->GetRenderWidgetHostAtPoint(
+  auto* view =
+      web_contents->GetInputEventRouter()->GetRenderWidgetHostViewInputAtPoint(
           web_contents->GetRenderViewHost()->GetWidget()->GetView(),
           gfx::PointF(client_pt), &transformed_pt);
+  auto* target_rwh = content::RenderWidgetHostImpl::From(
+      static_cast<content::RenderWidgetHostViewBase*>(view)
+          ->GetRenderWidgetHost());
 
   if (target_rwh != current_rwh_for_drag_.get()) {
     if (current_rwh_for_drag_) {
@@ -512,8 +422,9 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
     DragTargetDragEnter(drag_data_, event, drag_allowed_ops_);
   }
 
-  if (!drag_data_)
+  if (!drag_data_) {
     return;
+  }
 
   blink::DragOperationsMask ops =
       static_cast<blink::DragOperationsMask>(allowed_ops);
@@ -538,22 +449,28 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragLeave() {
 }
 
 void CefBrowserPlatformDelegateOsr::DragTargetDrop(const CefMouseEvent& event) {
-  if (!drag_data_)
+  if (!drag_data_) {
     return;
+  }
 
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!web_contents)
+  if (!web_contents) {
     return;
+  }
 
   gfx::Point client_pt(event.x, event.y);
-  const gfx::Point& screen_pt = GetScreenPoint(client_pt);
+  const gfx::Point& screen_pt =
+      GetScreenPoint(client_pt, /*want_dip_coords=*/false);
 
   gfx::PointF transformed_pt;
-  content::RenderWidgetHostImpl* target_rwh =
-      web_contents->GetInputEventRouter()->GetRenderWidgetHostAtPoint(
+  auto* view =
+      web_contents->GetInputEventRouter()->GetRenderWidgetHostViewInputAtPoint(
           web_contents->GetRenderViewHost()->GetWidget()->GetView(),
           gfx::PointF(client_pt), &transformed_pt);
+  auto* target_rwh = content::RenderWidgetHostImpl::From(
+      static_cast<content::RenderWidgetHostViewBase*>(view)
+          ->GetRenderWidgetHost());
 
   if (target_rwh != current_rwh_for_drag_.get()) {
     if (current_rwh_for_drag_) {
@@ -579,14 +496,16 @@ void CefBrowserPlatformDelegateOsr::DragTargetDrop(const CefMouseEvent& event) {
     DragTargetDragEnter(drag_data_, event, drag_allowed_ops_);
   }
 
-  if (!drag_data_)
+  if (!drag_data_) {
     return;
+  }
 
   {
     CefDragDataImpl* data_impl =
         static_cast<CefDragDataImpl*>(drag_data_.get());
     base::AutoLock lock_scope(data_impl->lock());
     content::DropData* drop_data = data_impl->drop_data();
+    drop_data->document_is_handling_drag = document_is_handling_drag_;
     int modifiers = TranslateWebEventModifiers(event.modifiers);
 
     target_rwh->DragTargetDrop(*drop_data, transformed_pt,
@@ -607,6 +526,7 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
   drag_start_rwh_ = source_rwh->GetWeakPtr();
 
   bool handled = false;
+
   CefRefPtr<CefRenderHandler> handler =
       browser_->GetClient()->GetRenderHandler();
   if (handler.get()) {
@@ -615,108 +535,29 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
     CefRefPtr<CefDragDataImpl> drag_data(
         new CefDragDataImpl(drop_data, cef_image, cef_image_pos));
     drag_data->SetReadOnly(true);
-    base::CurrentThread::ScopedNestableTaskAllower allow;
-#ifdef OHOS_NWEB_EX
-    int shrink_viewport_height = 0;
-    if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-      shrink_viewport_height = view->GetShrinkViewportHeight();
-    }
+    base::CurrentThread::ScopedAllowApplicationTasksInNativeNestedLoop allow;
     handled = handler->StartDragging(
-        browser_, drag_data.get(),
-        static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
-        event_info.location.x(),
-        event_info.location.y() + shrink_viewport_height);
-#else
-    handled = handler->StartDragging(
-        browser_, drag_data.get(),
+        browser_.get(), drag_data.get(),
         static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
         event_info.location.x(), event_info.location.y());
-#endif
   }
 
-  if (!handled)
+  if (!handled) {
     DragSourceSystemDragEnded();
-}
-
-void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    std::vector<CefSelectPopupItem> item_list;
-    for (int i = 0; i < menu_items.size(); i++) {
-      CefSelectPopupItem menu_item;
-      ConvertSelectPopupItem(menu_items[i], menu_item);
-      item_list.push_back(menu_item);
-    }
-    CefRefPtr<CefSelectPopupCallback> callback =
-        new CefSelectPopupCallbackImpl(std::move(popup_client));
-    handler->OnSelectPopupMenu(
-        browser_,
-        CefRect(bounds.x(), bounds.y(), bounds.width(), bounds.height()),
-        item_height, item_font_size, selected_item, item_list, right_aligned,
-        allow_multiple_selection, callback);
   }
 }
 
-#if defined(OHOS_NWEB_EX)
-void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
-    const gfx::RectF& element_bounds,
-    bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    std::vector<CefAutofillPopupItem> item_list;
-    for (auto& item : suggestions) {
-      CefAutofillPopupItem menu_item;
-      ConvertAutofillPopupItem(item, menu_item);
-      item_list.push_back(menu_item);
-    }
-    LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
-              << ", y: " << element_bounds.y()
-              << ", element_bounds width: " << element_bounds.width()
-              << ", element_bounds height:" << element_bounds.height();
-    handler->OnShowAutofillPopup(
-        browser_,
-        CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
-                element_bounds.height()),
-        is_rtl, item_list);
-  }
-}
+void CefBrowserPlatformDelegateOsr::UpdateDragOperation(
+    ui::mojom::DragOperation operation,
+    bool document_is_handling_drag) {
+  document_is_handling_drag_ = document_is_handling_drag;
 
-void CefBrowserPlatformDelegateOsr::OnHideAutofillPopup() {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->OnHideAutofillPopup();
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
-                                                       const std::string& url) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->ShowPasswordDialog(is_update, url);
-  }
-}
-#endif
-
-void CefBrowserPlatformDelegateOsr::UpdateDragCursor(
-    ui::mojom::DragOperation operation) {
   CefRefPtr<CefRenderHandler> handler =
       browser_->GetClient()->GetRenderHandler();
   if (handler.get()) {
     handler->UpdateDragCursor(
-        browser_, static_cast<CefRenderHandler::DragOperation>(operation));
+        browser_.get(),
+        static_cast<CefRenderHandler::DragOperation>(operation));
   }
 }
 
@@ -724,17 +565,20 @@ void CefBrowserPlatformDelegateOsr::DragSourceEndedAt(
     int x,
     int y,
     cef_drag_operations_mask_t op) {
-  if (!drag_start_rwh_)
+  if (!drag_start_rwh_) {
     return;
+  }
 
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!web_contents)
+  if (!web_contents) {
     return;
+  }
 
   content::RenderWidgetHostImpl* source_rwh = drag_start_rwh_.get();
   const gfx::Point client_loc(gfx::Point(x, y));
-  const gfx::Point& screen_loc = GetScreenPoint(client_loc);
+  const gfx::Point& screen_loc =
+      GetScreenPoint(client_loc, /*want_dip_coords=*/false);
   ui::mojom::DragOperation drag_op = static_cast<ui::mojom::DragOperation>(op);
 
   // |client_loc| and |screen_loc| are in the root coordinate space, for
@@ -765,13 +609,15 @@ void CefBrowserPlatformDelegateOsr::DragSourceEndedAt(
 }
 
 void CefBrowserPlatformDelegateOsr::DragSourceSystemDragEnded() {
-  if (!drag_start_rwh_)
+  if (!drag_start_rwh_) {
     return;
+  }
 
   content::WebContentsImpl* web_contents =
       static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!web_contents)
+  if (!web_contents) {
     return;
+  }
 
   web_contents->SystemDragEnded(drag_start_rwh_.get());
 
@@ -779,29 +625,23 @@ void CefBrowserPlatformDelegateOsr::DragSourceSystemDragEnded() {
 }
 
 void CefBrowserPlatformDelegateOsr::AccessibilityEventReceived(
-    const content::AXEventNotificationDetails& eventData) {
-  CefRefPtr<CefRenderHandler> handler = browser_->client()->GetRenderHandler();
-  if (handler.get()) {
-    CefRefPtr<CefAccessibilityHandler> acchandler =
-        handler->GetAccessibilityHandler();
-
-    if (acchandler.get()) {
-      acchandler->OnAccessibilityTreeChange(
-          osr_accessibility_util::ParseAccessibilityEventData(eventData));
+    const ui::AXUpdatesAndEvents& details) {
+  if (auto handler = browser_->client()->GetRenderHandler()) {
+    if (auto acc_handler = handler->GetAccessibilityHandler()) {
+      acc_handler->OnAccessibilityTreeChange(
+          osr_accessibility_util::ParseAccessibilityEventData(details));
     }
   }
 }
 
 void CefBrowserPlatformDelegateOsr::AccessibilityLocationChangesReceived(
-    const std::vector<content::AXLocationChangeNotificationDetails>& locData) {
-  CefRefPtr<CefRenderHandler> handler = browser_->client()->GetRenderHandler();
-  if (handler.get()) {
-    CefRefPtr<CefAccessibilityHandler> acchandler =
-        handler->GetAccessibilityHandler();
-
-    if (acchandler.get()) {
-      acchandler->OnAccessibilityLocationChange(
-          osr_accessibility_util::ParseAccessibilityLocationData(locData));
+    const ui::AXTreeID& tree_id,
+    ui::AXLocationAndScrollUpdates& details) {
+  if (auto handler = browser_->client()->GetRenderHandler()) {
+    if (auto acc_handler = handler->GetAccessibilityHandler()) {
+      acc_handler->OnAccessibilityLocationChange(
+          osr_accessibility_util::ParseAccessibilityLocationData(tree_id,
+                                                                 details));
     }
   }
 }
@@ -811,12 +651,16 @@ CefWindowHandle CefBrowserPlatformDelegateOsr::GetParentWindowHandle() const {
 }
 
 gfx::Point CefBrowserPlatformDelegateOsr::GetParentScreenPoint(
-    const gfx::Point& view) const {
-  return GetScreenPoint(view);
+    const gfx::Point& view,
+    bool want_dip_coords) const {
+  return GetScreenPoint(view, want_dip_coords);
 }
 
 CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
     const {
+  if (!web_contents_) {
+    return nullptr;
+  }
   content::RenderViewHost* host = web_contents_->GetRenderViewHost();
   if (host) {
     return static_cast<CefRenderWidgetHostViewOSR*>(
@@ -825,45 +669,3 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 
   return nullptr;
 }
-
-#if BUILDFLAG(IS_OHOS)
-void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    view->SetDrawRect(gfx::Rect(x, y, width, height));
-}
-
-void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->SetDrawMode(mode);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
-    bool should) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    view->SetShouldFrameSubmissionBeforeDraw(should);
-}
-
-void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    view->WasKeyboardResized();
-}
-
-void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(
-  int32_t width, int32_t height, double keyboard) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    view->SetVirtualKeyBoardArg(width, height, keyboard);
-}
-
-bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    return view->ShouldVirtualKeyboardOverlayContent();
-  return false;
-}
-#endif

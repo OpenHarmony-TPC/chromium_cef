@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/menu_runner_views.h"
+#include "cef/libcef/browser/views/menu_runner_views.h"
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
 
 CefMenuRunnerViews::CefMenuRunnerViews(CefBrowserViewImpl* browser_view)
     : browser_view_(browser_view) {}
@@ -15,8 +15,9 @@ bool CefMenuRunnerViews::RunContextMenu(
     CefMenuModelImpl* model,
     const content::ContextMenuParams& params) {
   CefRefPtr<CefWindow> window = browser_view_->GetWindow();
-  if (!window)
+  if (!window) {
     return false;
+  }
 
   CefPoint screen_point(params.x, params.y);
   browser_view_->ConvertPointToScreen(screen_point);
@@ -27,8 +28,9 @@ bool CefMenuRunnerViews::RunContextMenu(
 
 void CefMenuRunnerViews::CancelContextMenu() {
   CefRefPtr<CefWindow> window = browser_view_->GetWindow();
-  if (window)
+  if (window) {
     window->CancelMenu();
+  }
 }
 
 bool CefMenuRunnerViews::FormatLabel(std::u16string& label) {

@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/context_menu_params_impl.h"
+#include "cef/libcef/browser/context_menu_params_impl.h"
 
 #include "base/logging.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
@@ -33,18 +33,24 @@ CefContextMenuParamsImpl::TypeFlags CefContextMenuParamsImpl::GetTypeFlags() {
   CEF_VALUE_VERIFY_RETURN(false, CM_TYPEFLAG_NONE);
   const content::ContextMenuParams& params = const_value();
   int type_flags = CM_TYPEFLAG_NONE;
-  if (!params.page_url.is_empty())
+  if (!params.page_url.is_empty()) {
     type_flags |= CM_TYPEFLAG_PAGE;
-  if (!params.frame_url.is_empty())
+  }
+  if (!params.frame_url.is_empty()) {
     type_flags |= CM_TYPEFLAG_FRAME;
-  if (!params.link_url.is_empty())
+  }
+  if (!params.link_url.is_empty()) {
     type_flags |= CM_TYPEFLAG_LINK;
-  if (params.media_type != blink::mojom::ContextMenuDataMediaType::kNone)
+  }
+  if (params.media_type != blink::mojom::ContextMenuDataMediaType::kNone) {
     type_flags |= CM_TYPEFLAG_MEDIA;
-  if (!params.selection_text.empty())
+  }
+  if (!params.selection_text.empty()) {
     type_flags |= CM_TYPEFLAG_SELECTION;
-  if (params.is_editable)
+  }
+  if (params.is_editable) {
     type_flags |= CM_TYPEFLAG_EDITABLE;
+  }
   return static_cast<TypeFlags>(type_flags);
 }
 
@@ -113,16 +119,19 @@ bool CefContextMenuParamsImpl::GetDictionarySuggestions(
     std::vector<CefString>& suggestions) {
   CEF_VALUE_VERIFY_RETURN(false, false);
 
-  if (!suggestions.empty())
+  if (!suggestions.empty()) {
     suggestions.clear();
+  }
 
-  if (const_value().dictionary_suggestions.empty())
+  if (const_value().dictionary_suggestions.empty()) {
     return false;
+  }
 
   std::vector<std::u16string>::const_iterator it =
       const_value().dictionary_suggestions.begin();
-  for (; it != const_value().dictionary_suggestions.end(); ++it)
+  for (; it != const_value().dictionary_suggestions.end(); ++it) {
     suggestions.push_back(*it);
+  }
 
   return true;
 }
@@ -147,14 +156,3 @@ bool CefContextMenuParamsImpl::IsCustomMenu() {
   CEF_VALUE_VERIFY_RETURN(false, false);
   return !const_value().custom_items.empty();
 }
-
-CefContextMenuParamsImpl::InputFieldType CefContextMenuParamsImpl::GetInputFieldType() {
-  CEF_VALUE_VERIFY_RETURN(false, CM_INPUTFIELDTYPE_NONE);
-  return static_cast<InputFieldType>(const_value().input_field_type);
-}
-
-CefContextMenuParamsImpl::SourceType CefContextMenuParamsImpl::GetSourceType() {
-  CEF_VALUE_VERIFY_RETURN(false, CM_SOURCETYPE_NONE);
-  return static_cast<SourceType>(const_value().source_type);
-}
-

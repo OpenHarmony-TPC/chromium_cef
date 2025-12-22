@@ -5,8 +5,11 @@
 #ifndef CEF_LIBCEF_BROWSER_CHROME_VIEWS_BROWSER_PLATFORM_DELEGATE_CHROME_VIEWS_H_
 #define CEF_LIBCEF_BROWSER_CHROME_VIEWS_BROWSER_PLATFORM_DELEGATE_CHROME_VIEWS_H_
 
-#include "libcef/browser/chrome/browser_platform_delegate_chrome.h"
-#include "libcef/browser/views/browser_view_impl.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/chrome/browser_platform_delegate_chrome.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+
+class CefWindowImpl;
 
 // Implementation of Chrome-based browser functionality.
 class CefBrowserPlatformDelegateChromeViews
@@ -19,27 +22,32 @@ class CefBrowserPlatformDelegateChromeViews
   // CefBrowserPlatformDelegate overrides.
   void WebContentsCreated(content::WebContents* web_contents,
                           bool owned) override;
+  void WebContentsDestroyed(content::WebContents* web_contents) override;
   void BrowserCreated(CefBrowserHostBase* browser) override;
   void NotifyBrowserCreated() override;
   void NotifyBrowserDestroyed() override;
   void BrowserDestroyed(CefBrowserHostBase* browser) override;
   void CloseHostWindow() override;
+  CefWindowHandle GetHostWindowHandle() const override;
   views::Widget* GetWindowWidget() const override;
   CefRefPtr<CefBrowserView> GetBrowserView() const override;
-  void PopupWebContentsCreated(
-      const CefBrowserSettings& settings,
-      CefRefPtr<CefClient> client,
-      content::WebContents* new_web_contents,
-      CefBrowserPlatformDelegate* new_platform_delegate,
-      bool is_devtools) override;
-  void PopupBrowserCreated(CefBrowserHostBase* new_browser,
-                           bool is_devtools) override;
+  void SetBrowserView(CefRefPtr<CefBrowserView> browser_view) override;
+  void SetFocus(bool setFocus) override;
   bool IsViewsHosted() const override;
+  bool IsMovePictureInPictureEnabled() const override;
+  bool AllowPictureInPictureWithoutUserActivation() const override;
+
+  CefBrowserViewImpl* browser_view() const { return browser_view_.get(); }
 
  private:
-  void SetBrowserView(CefRefPtr<CefBrowserViewImpl> browser_view);
+  CefWindowImpl* GetWindowImpl() const;
 
-  CefRefPtr<CefBrowserViewImpl> browser_view_;
+  // Holding a weak reference here because we want the CefBrowserViewImpl to be
+  // destroyed first if all references are released by the client.
+  // CefBrowserViewImpl destruction will then trigger destruction of any
+  // associated CefBrowserHostBase (which owns this CefBrowserPlatformDelegate
+  // object).
+  base::WeakPtr<CefBrowserViewImpl> browser_view_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_VIEWS_BROWSER_PLATFORM_DELEGATE_CHROME_VIEWS_H_

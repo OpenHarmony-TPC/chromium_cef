@@ -32,12 +32,7 @@
 #define CEF_INCLUDE_BASE_CEF_COMPILER_SPECIFIC_H_
 #pragma once
 
-#if defined(BASE_COMPILER_SPECIFIC_H_)
-// Do nothing if the Chromium header has already been included.
-// This can happen in cases where Chromium code is used directly by the
-// client application. When using Chromium code directly always include
-// the Chromium header first to avoid type conflicts.
-#elif defined(USING_CHROMIUM_INCLUDES)
+#if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/compiler_specific.h"
 #else  // !USING_CHROMIUM_INCLUDES
@@ -75,23 +70,6 @@
 #if !defined(__has_attribute)
 #define __has_attribute(x) 0
 #endif  // !defined(__has_attribute)
-
-// Annotate a variable indicating it's ok if the variable is not used.
-// (Typically used to silence a compiler warning when the assignment
-// is important for some other reason.)
-// Use like:
-//   int x = ...;
-//   ALLOW_UNUSED_LOCAL(x);
-#define ALLOW_UNUSED_LOCAL(x) (void)x
-
-// Annotate a typedef or function indicating it's ok if it's not used.
-// Use like:
-//   typedef Foo Bar ALLOW_UNUSED_TYPE;
-#if defined(COMPILER_GCC) || defined(__clang__)
-#define ALLOW_UNUSED_TYPE __attribute__((unused))
-#else
-#define ALLOW_UNUSED_TYPE
-#endif
 
 // Annotate a function indicating it should not be inlined.
 // Use like:
@@ -151,17 +129,6 @@
 #define ALIGNAS(byte_alignment) __declspec(align(byte_alignment))
 #elif defined(COMPILER_GCC)
 #define ALIGNAS(byte_alignment) __attribute__((aligned(byte_alignment)))
-#endif
-
-// Annotate a function indicating the caller must examine the return value.
-// Use like:
-//   int foo() WARN_UNUSED_RESULT;
-// To explicitly ignore a result, use std::ignore from <tuple>.
-#undef WARN_UNUSED_RESULT
-#if defined(COMPILER_GCC) || defined(__clang__)
-#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-#else
-#define WARN_UNUSED_RESULT
 #endif
 
 // In case the compiler supports it NO_UNIQUE_ADDRESS evaluates to the C++20
@@ -284,13 +251,6 @@
 #define HAS_FEATURE(FEATURE) 0
 #endif
 
-// Macro for telling -Wimplicit-fallthrough that a fallthrough is intentional.
-#if defined(__clang__)
-#define FALLTHROUGH [[clang::fallthrough]]
-#else
-#define FALLTHROUGH
-#endif
-
 #if defined(COMPILER_GCC)
 #define PRETTY_FUNCTION __PRETTY_FUNCTION__
 #elif defined(COMPILER_MSVC)
@@ -351,6 +311,30 @@
 #define STACK_UNINITIALIZED __attribute__((uninitialized))
 #else
 #define STACK_UNINITIALIZED
+#endif
+
+// Attribute "no_stack_protector" disables -fstack-protector for the specified
+// function.
+//
+// "stack_protector" is enabled on most POSIX builds. The flag adds a canary
+// to each stack frame, which on function return is checked against a reference
+// canary. If the canaries do not match, it's likely that a stack buffer
+// overflow has occurred, so immediately crashing will prevent exploitation in
+// many cases.
+//
+// In some cases it's desirable to remove this, e.g. on hot functions, or if
+// we have purposely changed the reference canary.
+//
+// On Linux systems the reference canary will be purposely changed when forking
+// sub-processes (see https://crbug.com/40181003). To avoid sub-process shutdown
+// crashes the NO_STACK_PROTECTOR annotation must be added to all functions in
+// the call stack leading to CefExecuteProcess(). Applications that cannot add
+// this annotation must instead pass the `--change-stack-guard-on-fork=disable`
+// command-line flag.
+#if defined(COMPILER_GCC) || defined(__clang__)
+#define NO_STACK_PROTECTOR __attribute__((no_stack_protector))
+#else
+#define NO_STACK_PROTECTOR
 #endif
 
 // The ANALYZER_ASSUME_TRUE(bool arg) macro adds compiler-specific hints
@@ -419,5 +403,4 @@ inline constexpr bool AnalyzerAssumeTrue(bool arg) {
 #endif
 
 #endif  // !USING_CHROMIUM_INCLUDES
-
 #endif  // CEF_INCLUDE_BASE_CEF_COMPILER_SPECIFIC_H_

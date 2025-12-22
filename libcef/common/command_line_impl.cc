@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/command_line_impl.h"
+#include "cef/libcef/common/command_line_impl.h"
 
 #include "base/files/file_path.h"
 #include "base/logging.h"
@@ -17,6 +17,11 @@ CefCommandLineImpl::CefCommandLineImpl(base::CommandLine* value,
           will_delete ? kOwnerWillDelete : kOwnerNoDelete,
           read_only,
           nullptr) {}
+
+CefCommandLineImpl::CefCommandLineImpl(const base::CommandLine& value)
+    : CefCommandLineImpl(const_cast<base::CommandLine*>(&value),
+                         /*will_delete=*/false,
+                         /*read_only=*/true) {}
 
 bool CefCommandLineImpl::IsValid() {
   return !detached();
@@ -37,7 +42,7 @@ void CefCommandLineImpl::InitFromArgv(int argc, const char* const* argv) {
   CEF_VALUE_VERIFY_RETURN_VOID(true);
   mutable_value()->InitFromArgv(argc, argv);
 #else
-  NOTREACHED() << "method not supported on this platform";
+  DCHECK(false) << "method not supported on this platform";
 #endif
 }
 
@@ -47,7 +52,7 @@ void CefCommandLineImpl::InitFromString(const CefString& command_line) {
   const std::wstring& str16 = command_line;
   mutable_value()->ParseFromString(str16);
 #else
-  NOTREACHED() << "method not supported on this platform";
+  DCHECK(false) << "method not supported on this platform";
 #endif
 }
 
@@ -65,8 +70,9 @@ void CefCommandLineImpl::GetArgv(std::vector<CefString>& argv) {
   CEF_VALUE_VERIFY_RETURN_VOID(false);
   const base::CommandLine::StringVector& cmd_argv = const_value().argv();
   base::CommandLine::StringVector::const_iterator it = cmd_argv.begin();
-  for (; it != cmd_argv.end(); ++it)
+  for (; it != cmd_argv.end(); ++it) {
     argv.push_back(*it);
+  }
 }
 
 CefString CefCommandLineImpl::GetCommandLineString() {
@@ -104,8 +110,9 @@ void CefCommandLineImpl::GetSwitches(SwitchMap& switches) {
   CEF_VALUE_VERIFY_RETURN_VOID(false);
   const base::CommandLine::SwitchMap& map = const_value().GetSwitches();
   base::CommandLine::SwitchMap::const_iterator it = map.begin();
-  for (; it != map.end(); ++it)
+  for (; it != map.end(); ++it) {
     switches.insert(std::make_pair(it->first, it->second));
+  }
 }
 
 void CefCommandLineImpl::AppendSwitch(const CefString& name) {
@@ -123,6 +130,11 @@ void CefCommandLineImpl::AppendSwitchWithValue(const CefString& name,
 #endif
 }
 
+void CefCommandLineImpl::RemoveSwitch(const CefString& name) {
+  CEF_VALUE_VERIFY_RETURN_VOID(true);
+  mutable_value()->RemoveSwitch(base::ToLowerASCII(name.ToString()));
+}
+
 bool CefCommandLineImpl::HasArguments() {
   CEF_VALUE_VERIFY_RETURN(false, false);
   return (const_value().GetArgs().size() > 0);
@@ -132,8 +144,9 @@ void CefCommandLineImpl::GetArguments(ArgumentList& arguments) {
   CEF_VALUE_VERIFY_RETURN_VOID(false);
   const base::CommandLine::StringVector& vec = const_value().GetArgs();
   base::CommandLine::StringVector::const_iterator it = vec.begin();
-  for (; it != vec.end(); ++it)
+  for (; it != vec.end(); ++it) {
     arguments.push_back(*it);
+  }
 }
 
 void CefCommandLineImpl::AppendArgument(const CefString& argument) {
@@ -164,12 +177,16 @@ CefRefPtr<CefCommandLine> CefCommandLine::CreateCommandLine() {
 
 // static
 CefRefPtr<CefCommandLine> CefCommandLine::GetGlobalCommandLine() {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
   // Uses a singleton reference object.
   static CefRefPtr<CefCommandLineImpl> commandLinePtr;
+#pragma clang diagnostic pop
   if (!commandLinePtr.get()) {
     base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-    if (command_line)
+    if (command_line) {
       commandLinePtr = new CefCommandLineImpl(command_line, false, true);
+    }
   }
   return commandLinePtr.get();
 }

@@ -2,13 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/devtools/devtools_controller.h"
-
-#include "libcef/browser/devtools/devtools_util.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/devtools/devtools_controller.h"
 
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
+#include "cef/libcef/browser/devtools/devtools_util.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "content/public/browser/devtools_agent_host.h"
 
 CefDevToolsController::CefDevToolsController(
@@ -29,43 +28,48 @@ CefDevToolsController::~CefDevToolsController() {
 }
 
 bool CefDevToolsController::SendDevToolsMessage(
-    const base::StringPiece& message) {
+    const std::string_view& message) {
   CEF_REQUIRE_UIT();
-  if (!EnsureAgentHost())
+  if (!EnsureAgentHost()) {
     return false;
+  }
 
-  agent_host_->DispatchProtocolMessage(
-      this, base::as_bytes(base::make_span(message)));
+  agent_host_->DispatchProtocolMessage(this,
+                                       base::as_bytes(base::span(message)));
   return true;
 }
 
 int CefDevToolsController::ExecuteDevToolsMethod(
     int suggested_message_id,
     const std::string& method,
-    const base::DictionaryValue* params) {
+    const base::Value::Dict* params) {
   CEF_REQUIRE_UIT();
-  if (!EnsureAgentHost())
+  if (!EnsureAgentHost()) {
     return 0;
+  }
 
   // Message IDs must always be increasing and unique.
   int message_id = suggested_message_id;
-  if (message_id < next_message_id_)
+  if (message_id < next_message_id_) {
     message_id = next_message_id_++;
-  else
+  } else {
     next_message_id_ = message_id + 1;
+  }
 
-  base::DictionaryValue message;
-  message.SetIntKey("id", message_id);
-  message.SetStringKey("method", method);
-  if (params)
-    message.SetKey("params", params->Clone());
+  base::Value::Dict message;
+  message.Set("id", message_id);
+  message.Set("method", method);
+  if (params) {
+    message.Set("params", params->Clone());
+  }
 
   std::string protocol_message;
-  if (!base::JSONWriter::Write(message, &protocol_message))
+  if (!base::JSONWriter::Write(message, &protocol_message)) {
     return 0;
+  }
 
   agent_host_->DispatchProtocolMessage(
-      this, base::as_bytes(base::make_span(protocol_message)));
+      this, base::as_bytes(base::span(protocol_message)));
   return message_id;
 }
 
@@ -91,11 +95,12 @@ void CefDevToolsController::RemoveObserver(Observer* observer) {
 void CefDevToolsController::DispatchProtocolMessage(
     content::DevToolsAgentHost* agent_host,
     base::span<const uint8_t> message) {
-  if (observers_.empty())
+  if (observers_.empty()) {
     return;
+  }
 
-  base::StringPiece str_message(reinterpret_cast<const char*>(message.data()),
-                                message.size());
+  std::string_view str_message(reinterpret_cast<const char*>(message.data()),
+                               message.size());
   if (!devtools_util::ProtocolParser::IsValidMessage(str_message)) {
     LOG(WARNING) << "Invalid message: " << str_message.substr(0, 100);
     return;

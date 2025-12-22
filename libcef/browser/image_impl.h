@@ -6,9 +6,11 @@
 #define CEF_LIBCEF_BROWSER_IMAGE_IMPL_H_
 #pragma once
 
-#include "include/cef_image.h"
-#include "libcef/browser/thread_util.h"
+#include <optional>
+#include <vector>
 
+#include "cef/include/cef_image.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/gfx/image/image.h"
 
@@ -82,10 +84,10 @@ class CefImageImpl : public CefImage {
   // Returns the skia representation of this Image.
   gfx::ImageSkia AsImageSkia() const;
 
+ private:
   // Add a bitmap.
   bool AddBitmap(float scale_factor, const SkBitmap& bitmap);
 
- private:
   // Returns the bitmap that most closely matches |scale_factor| or nullptr if
   // one doesn't exist.
   const SkBitmap* GetBitmap(float scale_factor) const;
@@ -97,26 +99,26 @@ class CefImageImpl : public CefImage {
                             SkAlphaType target_at);
 
   // The |bitmap| argument will be RGBA or BGRA and either opaque or transparent
-  // with post-multiplied alpha. Writes the compressed output into |compressed|.
+  // with post-multiplied alpha. Returns the compressed output or std::nullopt.
   using CompressionMethod =
-      base::OnceCallback<bool(const SkBitmap& /*bitmap*/,
-                              std::vector<unsigned char>* /*compressed*/)>;
+      base::OnceCallback<std::optional<std::vector<uint8_t>>(
+          const SkBitmap& /*bitmap*/)>;
 
-  // Write |bitmap| into |compressed| using |method|.
-  static bool WriteCompressedFormat(const SkBitmap& bitmap,
-                                    std::vector<unsigned char>* compressed,
-                                    CompressionMethod method);
+  // Write |bitmap| using |method|. Returns the compressed output or
+  // std::nullopt.
+  static std::optional<std::vector<uint8_t>> WriteCompressedFormat(
+      const SkBitmap& bitmap,
+      CompressionMethod method);
 
-  // Write |bitmap| into |compressed| using PNG encoding.
-  static bool WritePNG(const SkBitmap& bitmap,
-                       std::vector<unsigned char>* compressed,
-                       bool with_transparency);
+  // Write |bitmap|using PNG encoding. Returns the compressed output or
+  // std::nullopt.
+  static std::optional<std::vector<uint8_t>> WritePNG(const SkBitmap& bitmap,
+                                                      bool with_transparency);
 
-  // Write |bitmap| into |compressed| using JPEG encoding. The alpha channel
-  // will be ignored.
-  static bool WriteJPEG(const SkBitmap& bitmap,
-                        std::vector<unsigned char>* compressed,
-                        int quality);
+  // Write |bitmap| using JPEG encoding. The alpha channel will be ignored.
+  // Returns the compressed output or std::nullopt.
+  static std::optional<std::vector<uint8_t>> WriteJPEG(const SkBitmap& bitmap,
+                                                       int quality);
 
   mutable base::Lock lock_;
 

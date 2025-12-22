@@ -2,15 +2,15 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/response_impl.h"
+#include "cef/libcef/common/response_impl.h"
 
 #include <string>
 
-#include "libcef/common/net/http_header_utils.h"
-#include "libcef/common/net_service/net_service_util.h"
-
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
 #include "base/strings/string_util.h"
+#include "cef/libcef/common/net/http_header_utils.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
 #include "third_party/blink/public/platform/web_http_header_visitor.h"
@@ -18,10 +18,10 @@
 #include "third_party/blink/public/platform/web_url.h"
 #include "third_party/blink/public/platform/web_url_response.h"
 
-#define CHECK_READONLY_RETURN_VOID()       \
-  if (read_only_) {                        \
-    NOTREACHED() << "object is read only"; \
-    return;                                \
+#define CHECK_READONLY_RETURN_VOID()        \
+  if (read_only_) {                         \
+    DCHECK(false) << "object is read only"; \
+    return;                                 \
   }
 
 // CefResponse ----------------------------------------------------------------
@@ -34,8 +34,7 @@ CefRefPtr<CefResponse> CefResponse::Create() {
 
 // CefResponseImpl ------------------------------------------------------------
 
-CefResponseImpl::CefResponseImpl()
-    : error_code_(ERR_NONE), status_code_(0), read_only_(false) {}
+CefResponseImpl::CefResponseImpl() = default;
 
 bool CefResponseImpl::IsReadOnly() {
   base::AutoLock lock_scope(lock_);
@@ -104,8 +103,9 @@ CefString CefResponseImpl::GetHeaderByName(const CefString& name) {
   HttpHeaderUtils::MakeASCIILower(&nameLower);
 
   auto it = HttpHeaderUtils::FindHeaderInMap(nameLower, header_map_);
-  if (it != header_map_.end())
+  if (it != header_map_.end()) {
     return it->second;
+  }
 
   return CefString();
 }
@@ -122,8 +122,9 @@ void CefResponseImpl::SetHeaderByName(const CefString& name,
   // There may be multiple values, so remove any first.
   for (auto it = header_map_.begin(); it != header_map_.end();) {
     if (base::EqualsCaseInsensitiveASCII(it->first.ToString(), nameLower)) {
-      if (!overwrite)
+      if (!overwrite) {
         return;
+      }
       it = header_map_.erase(it);
     } else {
       ++it;
@@ -159,12 +160,14 @@ scoped_refptr<net::HttpResponseHeaders> CefResponseImpl::GetResponseHeaders() {
   base::AutoLock lock_scope(lock_);
 
   std::string mime_type = mime_type_;
-  if (mime_type.empty())
+  if (mime_type.empty()) {
     mime_type = "text/html";
+  }
 
   std::multimap<std::string, std::string> extra_headers;
-  for (const auto& pair : header_map_)
+  for (const auto& pair : header_map_) {
     extra_headers.insert(std::make_pair(pair.first, pair.second));
+  }
 
   return net_service::MakeResponseHeaders(
       status_code_, status_text_, mime_type, charset_, -1, extra_headers,
@@ -180,8 +183,9 @@ void CefResponseImpl::SetResponseHeaders(
 
   size_t iter = 0;
   std::string name, value;
-  while (headers.EnumerateHeaderLines(&iter, &name, &value))
+  while (headers.EnumerateHeaderLines(&iter, &name, &value)) {
     header_map_.insert(std::make_pair(name, value));
+  }
 
   status_code_ = headers.response_code();
   status_text_ = headers.GetStatusText();
@@ -223,7 +227,7 @@ void CefResponseImpl::Set(const blink::WebURLResponse& response) {
     }
 
    private:
-    HeaderMap* map_;
+    raw_ptr<HeaderMap> map_;
   };
 
   HeaderVisitor visitor(&header_map_);

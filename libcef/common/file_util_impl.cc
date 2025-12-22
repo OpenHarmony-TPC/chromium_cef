@@ -2,20 +2,19 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_file_util.h"
-
-#include "include/cef_task.h"
-
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/logging.h"
+#include "cef/include/cef_file_util.h"
+#include "cef/libcef/common/task_util.h"
 #include "third_party/zlib/google/zip.h"
 
 namespace {
 
 bool AllowFileIO() {
-  if (CefCurrentlyOn(TID_UI) || CefCurrentlyOn(TID_IO)) {
-    NOTREACHED() << "file IO is not allowed on the current thread";
+  // Use internal variant that doesn't log before CefInitialize.
+  if (cef::CurrentlyOnThread(TID_UI) || cef::CurrentlyOnThread(TID_IO)) {
+    DCHECK(false) << "file IO is not allowed on the current thread";
     return false;
   }
   return true;
@@ -24,14 +23,16 @@ bool AllowFileIO() {
 }  // namespace
 
 bool CefCreateDirectory(const CefString& full_path) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   return base::CreateDirectory(full_path);
 }
 
 bool CefGetTempDirectory(CefString& temp_dir) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   base::FilePath result;
   if (base::GetTempDir(&result)) {
     temp_dir = result.value();
@@ -42,10 +43,13 @@ bool CefGetTempDirectory(CefString& temp_dir) {
 
 bool CefCreateNewTempDirectory(const CefString& prefix,
                                CefString& new_temp_path) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   base::FilePath result;
-  if (base::CreateNewTempDirectory(prefix, &result)) {
+  base::FilePath::StringType prefix_str = prefix;
+  if (base::CreateNewTempDirectory(base::FilePath::StringViewType(prefix_str),
+                                   &result)) {
     new_temp_path = result.value();
     return true;
   }
@@ -55,10 +59,13 @@ bool CefCreateNewTempDirectory(const CefString& prefix,
 bool CefCreateTempDirectoryInDirectory(const CefString& base_dir,
                                        const CefString& prefix,
                                        CefString& new_dir) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   base::FilePath result;
-  if (base::CreateTemporaryDirInDir(base_dir, prefix, &result)) {
+  base::FilePath::StringType prefix_str = prefix;
+  if (base::CreateTemporaryDirInDir(
+          base_dir, base::FilePath::StringViewType(prefix_str), &result)) {
     new_dir = result.value();
     return true;
   }
@@ -66,14 +73,16 @@ bool CefCreateTempDirectoryInDirectory(const CefString& base_dir,
 }
 
 bool CefDirectoryExists(const CefString& path) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   return base::DirectoryExists(path);
 }
 
 bool CefDeleteFile(const CefString& path, bool recursive) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   if (recursive) {
     return base::DeletePathRecursively(path);
   } else {
@@ -84,7 +93,8 @@ bool CefDeleteFile(const CefString& path, bool recursive) {
 bool CefZipDirectory(const CefString& src_dir,
                      const CefString& dest_file,
                      bool include_hidden_files) {
-  if (!AllowFileIO())
+  if (!AllowFileIO()) {
     return false;
+  }
   return zip::Zip(src_dir, dest_file, include_hidden_files);
 }
