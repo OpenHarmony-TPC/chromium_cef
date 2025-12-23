@@ -2497,7 +2497,7 @@ bool ArkWebRenderWidgetHostViewOSRExt::HasFocus() {
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UpdateBackgroundColor() {
-#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR) || BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kEnableNwebEx) || 
       SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
@@ -2513,7 +2513,7 @@ void ArkWebRenderWidgetHostViewOSRExt::UpdateBackgroundColor() {
     }
 #endif
   }
-#endif // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+#endif // BUILDFLAG(ARKWEB_BACKGROUND_COLOR) || BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UpdateCursor(const ui::Cursor& cursor) {
