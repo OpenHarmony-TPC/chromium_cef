@@ -82,6 +82,7 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_AI)
   SET_STATE(cef.image_analyzer_enabled, web.image_analyzer_enabled);
   SET_STATE(cef.arkweb_agent_enabled, web.arkweb_agent_enabled);
+  SET_STATE(cef.agent_need_highlight, web.agent_need_highlight);
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
