@@ -272,7 +272,6 @@ void ArkWebRenderWidgetHostViewOSRUtils::SendTouchEventEx(
     const CefTouchEvent& event) {
 #if BUILDFLAG(IS_ARKWEB) && BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   if (event.type == CEF_TET_PRESSED) {
-    view_->is_editable_node_ = false;
     auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
         view_->browser_impl_->GetAcceleratedWidget(view_->is_popup_));
     if (compositor) {

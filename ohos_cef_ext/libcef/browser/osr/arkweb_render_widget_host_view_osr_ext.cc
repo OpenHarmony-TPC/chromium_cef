@@ -362,7 +362,7 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
       case blink::WebInputEvent::Type::kGestureShowPress:
         break;
       case blink::WebInputEvent::Type::kGestureTap:
-        if (web_event.TapCount() == TAP_TWICE) {
+        if (web_event.TapCount() == TAP_TWICE && is_editable_node_) {
           is_tap_down_twice_ = true;
         }
         break;
@@ -553,7 +553,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SendTouchEventList(const std::vector<CefT
   for (const auto& event : event_list) {
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
     if (event.type == CEF_TET_PRESSED) {
-      is_editable_node_ = false;
       auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
           browser_impl_->GetAcceleratedWidget(is_popup_));
       if (compositor) {
