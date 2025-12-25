@@ -15,6 +15,7 @@
 
 #include "fallback_proxy_service.h"
 
+#include "arkweb/chromium_ext/net/proxy_resolution/fallback_proxy_config.h"
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/net/proxy_resolution/fallback_proxy_utils.h"
 #endif
@@ -24,7 +25,6 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/network_service_instance.h"
-#include "arkweb/chromium_ext/net/proxy_resolution/fallback_proxy_config.h"
 #include "arkweb/ohos_nweb/src/nweb_impl.h"
 
 
