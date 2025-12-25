@@ -157,6 +157,11 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
       int transition_type,
       bool is_key_request) { return ""; }
 #endif
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+ virtual void OnMediaCastEnter() {}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

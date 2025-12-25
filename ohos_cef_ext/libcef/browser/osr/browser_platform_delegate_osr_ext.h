@@ -187,6 +187,10 @@ public:
   void OnPdfLoadEvent(int32_t result, const std::string& url) override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
 
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  void OnMediaCastEnter() override;
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK

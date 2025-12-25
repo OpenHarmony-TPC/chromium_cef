@@ -480,6 +480,14 @@ void AlloyBrowserHostImplExt::OnPdfLoadEvent(int32_t result, const std::string& 
 }
 #endif  // BUILDFLAG(ARKWEB_PDF)
 
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+void AlloyBrowserHostImplExt::OnMediaCastEnter() {
+  LOG(INFO) << "AlloyBrowserHostImplExt::OnMediaCastEnter";
+  if (platform_delegate_) {
+    platform_delegate_->OnMediaCastEnter();
+  }
+}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
 void AlloyBrowserHostImplExt::OnNativeEmbedStatusUpdate(

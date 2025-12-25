@@ -925,6 +925,17 @@ void CefBrowserPlatformDelegateOsrExt::OnPdfLoadEvent(int32_t result, const std:
 }
 #endif  // BUILDFLAG(ARKWEB_PDF)
 
+void CefBrowserPlatformDelegateOsrExt::OnMediaCastEnter() {
+  LOG(INFO) << "CefBrowserPlatformDelegateOsrExt::OnMediaCastEnter";
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnMediaCastEnter();
+  }
+}
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
 bool CefBrowserPlatformDelegateOsrExt::OnStartBackgroundTask(
     int32_t type,

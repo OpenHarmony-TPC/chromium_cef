@@ -417,6 +417,11 @@ class CefBrowserPlatformDelegate {
   virtual void OnPdfScrollAtBottom(const std::string& url) {}
   virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
 #endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+ virtual void OnMediaCastEnter() {}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
