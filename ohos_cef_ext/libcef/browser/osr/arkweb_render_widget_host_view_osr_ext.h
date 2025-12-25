@@ -423,6 +423,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
   bool is_event_from_touch_ = false;
   bool is_tap_down_twice_ = false;
+  bool is_editable_node_ = fasle;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_AI)
