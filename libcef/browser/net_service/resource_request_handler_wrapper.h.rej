@@ -1,0 +1,28 @@
+--- src/cef/libcef/browser/net_service/resource_request_handler_wrapper.h
++++ src/cef/libcef/browser/net_service/resource_request_handler_wrapper.h
+@@ -32,19 +32,25 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
+     content::BrowserContext* browser_context,
+     content::RenderFrameHost* frame,
+     int render_process_id,
+     bool is_navigation,
+     bool is_download,
++#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
++    const net::IsolationInfo& isolation_info,
++#endif
+     const url::Origin& request_initiator);
+ 
+ // Create an InterceptedRequestHandler that will delegate to a
+ // CefResourceRequestHandler. The resulting object should be passed to
+ // ProxyURLLoaderFactory::CreateProxy. Called on the UI thread only.
+ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
+     content::WebContents::Getter web_contents_getter,
+     content::FrameTreeNodeId frame_tree_node_id,
+     const network::ResourceRequest& request,
++#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
++    const net::IsolationInfo& isolation_info,
++#endif
+     const base::RepeatingClosure& unhandled_request_callback);
+ 
+ }  // namespace net_service
+ 
+ #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_RESOURCE_REQUEST_HANDLER_WRAPPER_H_

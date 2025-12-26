@@ -35,7 +35,6 @@
 #include "include/base/cef_build.h"
 #endif
 
-#include "include/base/cef_atomic_ref_count.h"
 #include "include/base/cef_macros.h"
 
 // Bring in common C++ type definitions used by CEF consumers.
@@ -46,7 +45,7 @@
 #include "include/internal/cef_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_mac.h"
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_OHOS)
 #include "include/internal/cef_linux.h"
 #endif
 

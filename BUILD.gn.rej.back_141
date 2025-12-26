@@ -1,0 +1,50 @@
+--- BUILD.gn	2025-10-20 19:52:47.965922285 +0800
++++ BUILD.gn	2025-10-16 15:55:22.330882852 +0800
+@@ -1894,31 +2221,39 @@
+       # yet.
+       ldflags = [ "/pdbpagesize:8192" ]
+     }
+   }
+ 
+-  shared_library("libcef") {
+-    # Necessary because the libcef_test_support target is testonly.
+-    testonly = true
+-
++  if (is_component_build) {
++    shared_library("libarkweb_engine") {
++      deps = [ "//base" ]
++    }
++  } else {
++    shared_library("libarkweb_engine") {
++      configs += [ "//arkweb/build/config/sanitizers:cfi_config" ]
++      defines = [ "LOGGING_TAG=\"cef#\"" ]
+     sources = includes_common +
+               gypi_paths.autogen_cpp_includes +
+               gypi_paths2.includes_capi +
+               gypi_paths.autogen_capi_includes +
+               gypi_paths2.libcef_sources_common +
+               gypi_paths.autogen_library_side
+ 
+-    deps = [
+-      ":libcef_static",
+-      ":libcef_test_support",
+-    ]
++      sources += [ "libcef/browser/test/test_helpers_impl.cc" ]
++
++      deps = [ ":libcef_static" ]
+ 
+     configs += [
+       ":libcef_autogen_config",
+       ":pdb_larger_than_4gb",
+     ]
+ 
++      deps += [ "//ohos_nweb:nweb_sources" ]
++      if (is_arkweb_ext) {
++        deps += [ "//ohos_nweb_ex:nweb_ex" ]
++      }
++
+     if (is_win) {
+       sources += includes_win + [
+         "libcef_dll/libcef_dll.rc",
+       ]
+ 

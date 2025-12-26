@@ -40,6 +40,11 @@ class CefHostDisplayClientOSR : public viz::HostDisplayClient {
   void DidCompleteSwapWithNewSize(const gfx::Size& size) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  void DidCompleteSwapWithNewSizeOHOS(const gfx::Size& size) override;
+  CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+
   const raw_ptr<CefRenderWidgetHostViewOSR> view_;
   std::unique_ptr<CefLayeredWindowUpdaterOSR> layered_window_updater_;
   bool active_ = false;

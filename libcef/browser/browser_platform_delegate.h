@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "arkweb/build/features/features.h"
 #include "base/functional/callback_forward.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/include/cef_client.h"
@@ -16,11 +17,17 @@
 #include "cef/include/internal/cef_types.h"
 #include "cef/include/views/cef_browser_view.h"
 #include "cef/libcef/renderer/browser_config.h"
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
+#include "content/common/native_embed_first_paint_event.h"
 #include "third_party/blink/public/common/page/drag_operation.h"
 #include "third_party/blink/public/mojom/drag/drag.mojom-forward.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-forward.h"
 #include "ui/base/window_open_disposition.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 class GURL;
 
@@ -75,12 +82,21 @@ struct CefBrowserCreateParams;
 class CefBrowserHostBase;
 class CefJavaScriptDialogRunner;
 class CefMenuRunner;
+#if BUILDFLAG(IS_ARKWEB)
+class ArkWebCefBrowserPlatformDelegateExt;
+#endif
 
 // Provides platform-specific implementations of browser functionality. All
 // methods are called on the browser process UI thread unless otherwise
 // indicated.
 class CefBrowserPlatformDelegate {
  public:
+#if BUILDFLAG(IS_ARKWEB)
+  virtual ArkWebCefBrowserPlatformDelegateExt* AsArkWebCefBrowserPlatformDelegateExt() {
+    return nullptr;
+  }
+  friend class ArkWebCefBrowserPlatformDelegateExt;
+#endif  // BUILDFLAG(IS_ARKWEB)
   CefBrowserPlatformDelegate(const CefBrowserPlatformDelegate&) = delete;
   CefBrowserPlatformDelegate& operator=(const CefBrowserPlatformDelegate&) =
       delete;
@@ -384,4 +400,7 @@ class CefBrowserPlatformDelegate {
   raw_ptr<CefBrowserHostBase> browser_ = nullptr;
 };
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#endif
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_H_

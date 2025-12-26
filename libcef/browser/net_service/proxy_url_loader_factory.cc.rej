@@ -1,0 +1,77 @@
+--- src/cef/libcef/browser/net_service/proxy_url_loader_factory.cc
++++ src/cef/libcef/browser/net_service/proxy_url_loader_factory.cc
+@@ -9,10 +9,15 @@
+ 
+ #include "base/barrier_closure.h"
+ #include "base/command_line.h"
+ #include "base/memory/raw_ptr.h"
+ #include "base/strings/string_number_conversions.h"
++#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
++#include "base/trace_event/trace_event.h"
++#endif
++#include "arkweb/build/features/features.h"
++#include "arkweb/chromium_ext/url/ohos/log_utils.h"
+ #include "cef/libcef/browser/context.h"
+ #include "cef/libcef/browser/origin_whitelist_impl.h"
+ #include "cef/libcef/browser/thread_util.h"
+ #include "cef/libcef/common/cef_switches.h"
+ #include "cef/libcef/common/net/scheme_registration.h"
+@@ -31,10 +36,34 @@
+ #include "services/network/public/cpp/cors/cors.h"
+ #include "services/network/public/cpp/features.h"
+ #include "services/network/public/mojom/early_hints.mojom.h"
+ #include "third_party/blink/public/common/loader/referrer_utils.h"
+ 
++#if BUILDFLAG(ARKWEB_NETWORK_BASE)
++#include "cef/ohos_cef_ext/libcef/browser/res_reporter.h"
++#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
++#include "net/base/load_flags.h"
++#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
++#include "content/public/browser/download_utils.h"
++#include "third_party/blink/public/common/mime_util/mime_util.h"
++#endif
++#endif
++
++#if BUILDFLAG(ARKWEB_NETWORK_BASE)
++#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
++#endif
++
++#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
++#include "extensions/common/constants.h"
++#endif
++
++#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
++#include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
++#include "base/command_line.h"
++#include "content/public/common/content_switches.h"
++#endif
++
+ namespace net_service {
+ 
+ namespace {
+ 
+ // User data key for ResourceContextData.
+@@ -1624,10 +1921,11 @@ void ProxyURLLoaderFactory::SetDisconnectCallback(
+   DCHECK(!destroyed_);
+   DCHECK(!on_disconnect_);
+   on_disconnect_ = std::move(on_disconnect);
+ }
+ 
++#if !BUILDFLAG(ARKWEB_NETWORK_LOAD)
+ // static
+ void ProxyURLLoaderFactory::CreateProxy(
+     content::BrowserContext* browser_context,
+     network::URLLoaderFactoryBuilder& factory_builder,
+     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
+@@ -1653,10 +1951,11 @@ void ProxyURLLoaderFactory::CreateProxy(
+       base::BindOnce(
+           &ProxyURLLoaderFactory::CreateOnIOThread, std::move(factory_receiver),
+           std::move(target_factory_remote), std::move(header_client_receiver),
+           base::Unretained(resource_context), std::move(request_handler)));
+ }
++#endif
+ 
+ // static
+ void ProxyURLLoaderFactory::CreateProxy(
+     content::WebContents::Getter web_contents_getter,
+     mojo::PendingReceiver<network::mojom::URLLoaderFactory> loader_receiver,

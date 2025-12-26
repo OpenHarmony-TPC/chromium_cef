@@ -1,0 +1,24 @@
+--- src/cef/libcef/common/chrome/chrome_main_delegate_cef.cc
++++ src/cef/libcef/common/chrome/chrome_main_delegate_cef.cc
+@@ -358,10 +371,21 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
+       disable_features.push_back(
+           net::features::kTcpSocketIoCompletionPortWin.name);
+     }
+ #endif  // BUILDFLAG(IS_WIN)
+ 
++#if BUILDFLAG(ARKWEB_BFCACHE)
++    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
++            switches::kEnableBFCache)) {
++      disable_features.push_back(features::kBackForwardCache.name);
++    }
++#endif
++
++#if !BUILDFLAG(ARKWEB_BFCACHE)
++    ManageBackForwardCacheExt(disable_features);
++#endif
++
+     if (IsFeatureEnabledByDefault(features::kSideBySide)) {
+       // Disable Split Screen support which crashes during Chrome
+       // browser initialization. See issue #3980.
+       disable_features.push_back(features::kSideBySide.name);
+     }

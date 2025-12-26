@@ -44,6 +44,10 @@
 #include "components/spellcheck/browser/spellcheck_platform.h"
 #endif
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "ohos_cef_ext/libcef/browser/browser_host_base_for_include.cc"
+#endif
+
 namespace {
 
 // Associates a CefBrowserHostBase instance with a WebContents. This object will
@@ -88,7 +92,7 @@ class WebContentsUserDataAdapter : public base::SupportsUserData::Data {
 // static
 CefRefPtr<CefBrowserHostBase> CefBrowserHostBase::FromBrowser(
     CefRefPtr<CefBrowser> browser) {
-  return static_cast<CefBrowserHostBase*>(browser.get());
+  return browser.get()->AsCefBrowserHostBase();
 }
 
 // static
@@ -547,6 +551,9 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
   std::unique_ptr<download::DownloadUrlParameters> params(
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  StartDownloadExt(gurl, web_contents, params, this);
+#endif
   manager->DownloadUrl(std::move(params));
 }
 
@@ -797,7 +804,9 @@ void CefBrowserHostBase::GetNavigationEntries(
     CefRefPtr<CefNavigationEntryImpl> entry =
         new CefNavigationEntryImpl(controller.GetEntryAtIndex(current));
     visitor->Visit(entry.get(), true, current, total);
+#if !BUILDFLAG(ARKWEB_NAVIGATION)
     std::ignore = entry->Detach(nullptr);
+#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
   } else {
     // Visit all entries.
     bool cont = true;
@@ -805,7 +814,9 @@ void CefBrowserHostBase::GetNavigationEntries(
       CefRefPtr<CefNavigationEntryImpl> entry =
           new CefNavigationEntryImpl(controller.GetEntryAtIndex(i));
       cont = visitor->Visit(entry.get(), (i == current), i, total);
+#if !BUILDFLAG(ARKWEB_NAVIGATION)
       std::ignore = entry->Detach(nullptr);
+#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
     }
   }
 }
@@ -1084,13 +1095,17 @@ bool CefBrowserHostBase::IsValid() {
   return browser_info_->IsValid();
 }
 
-CefRefPtr<CefBrowserHost> CefBrowserHostBase::GetHost() {
-  return this;
-}
-
 bool CefBrowserHostBase::CanGoBack() {
-  base::AutoLock lock_scope(state_lock_);
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  auto wc = GetWebContents();
+  if (wc == nullptr) {
+    LOG(ERROR) << "getWebContents falied, wc is null";
+    return false;
+  }
+  return wc->GetController().CanGoBack();
+#else
   return can_go_back_;
+#endif
 }
 
 void CefBrowserHostBase::GoBack() {
@@ -1106,13 +1121,25 @@ void CefBrowserHostBase::GoBack() {
 
   auto wc = GetWebContents();
   if (wc && wc->GetController().CanGoBack()) {
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+    wc->CollapseAllFramesSelection();
+#endif  // defined(ARKWEB_CLIPBOARD)
     wc->GetController().GoBack();
   }
 }
 
 bool CefBrowserHostBase::CanGoForward() {
   base::AutoLock lock_scope(state_lock_);
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  auto wc = GetWebContents();
+  if (wc == nullptr) {
+    LOG(ERROR) << "getWebContents falied, wc is null";
+    return false;
+  }
+  return wc->GetController().CanGoForward();
+#else
   return can_go_forward_;
+#endif
 }
 
 void CefBrowserHostBase::GoForward() {
@@ -1299,8 +1326,10 @@ void CefBrowserHostBase::OnStateChanged(CefBrowserContentsState state_changed) {
   if ((state_changed & CefBrowserContentsState::kNavigation) ==
       CefBrowserContentsState::kNavigation) {
     is_loading_ = contents_delegate_.is_loading();
+#if !BUILDFLAG(ARKWEB_NETWORK_BASE)
     can_go_back_ = contents_delegate_.can_go_back();
     can_go_forward_ = contents_delegate_.can_go_forward();
+#endif
   }
   if ((state_changed & CefBrowserContentsState::kDocument) ==
       CefBrowserContentsState::kDocument) {
@@ -1381,8 +1410,18 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       return false;
     }
 
+#if BUILDFLAG(ARKWEB_POST_URL)
+    if (params.post_data) {
+      content::NavigationController::LoadURLParams LoadURLParams(params);
+      web_contents->GetController().LoadURLWithParams(LoadURLParams);
+    } else {
     web_contents->GetController().LoadURL(
         gurl, params.referrer, params.transition, params.extra_headers);
+    }
+#else
+    web_contents->GetController().LoadURL(
+        gurl, params.referrer, params.transition, params.extra_headers);
+#endif
     return true;
   }
   return false;
@@ -1426,7 +1465,13 @@ void CefBrowserHostBase::RunSelectFile(
     const ui::SelectFileDialog::FileTypeInfo* file_types,
     int file_type_index,
     const base::FilePath::StringType& default_extension,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+    gfx::NativeWindow owning_window,
+    std::vector<std::u16string> accept_types,
+    bool use_media_capture) {
+#else
     gfx::NativeWindow owning_window) {
+#endif
   if (!EnsureFileDialogManager()) {
     LOG(ERROR) << "File dialog canceled due to invalid state.";
     listener->FileSelectionCanceled();
@@ -1434,7 +1479,12 @@ void CefBrowserHostBase::RunSelectFile(
   }
   file_dialog_manager_->RunSelectFile(listener, std::move(policy), type, title,
                                       default_path, file_types, file_type_index,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+                                      default_extension, owning_window,
+                                      accept_types, use_media_capture);
+#else
                                       default_extension, owning_window);
+#endif
 }
 
 void CefBrowserHostBase::SelectFileListenerDestroyed(
@@ -1663,3 +1713,14 @@ bool CefBrowserHostBase::EnsureFileDialogManager() {
   }
   return true;
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+bool CefBrowserHostBase::SetFocusByPosition(float x, float y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    y -= GetShrinkViewportHeight() * GetVirtualPixelRatio();
+    return static_cast<CefFrameHostImpl*>(frame.get())->SetFocusByPosition(x, y);
+  }
+  return false;
+}
+#endif // defined(OHOS_INPUT_EVENTS)

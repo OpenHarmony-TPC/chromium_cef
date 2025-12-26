@@ -1,0 +1,18 @@
+--- chrome_content_browser_client_cef.cc	2025-10-20 19:52:47.981885965 +0800
++++ chrome_content_browser_client_cef.cc	2025-10-16 15:55:22.350389751 +0800
+@@ -626,10 +814,15 @@
+ ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
+     content::NavigationHandle* navigation_handle) {
+   auto throttles = ChromeContentBrowserClient::CreateThrottlesForNavigation(
+       navigation_handle);
+   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
++
++#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
++  ArkWebInnerCreateThrottlesForNavigation(navigation_handle, throttles);
++#endif
++
+   return throttles;
+ }
+ 
+ bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
+     content::BrowserContext* context,

@@ -9,6 +9,7 @@
 #include <optional>
 #include <string_view>
 
+#include "arkweb/build/features/features.h"
 #include "base/containers/unique_ptr_adapters.h"
 #include "base/functional/callback.h"
 #include "base/hash/hash.h"
@@ -56,6 +57,9 @@ class InterceptedRequestHandler {
   virtual void OnBeforeRequest(int32_t request_id,
                                network::ResourceRequest* request,
                                bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               base::WeakPtr<InterceptedRequest> intercepted_request,
+#endif
                                OnBeforeRequestResultCallback callback,
                                CancelRequestCallback cancel_callback);
 
@@ -131,6 +135,28 @@ class InterceptedRequestHandler {
                               const network::ResourceRequest& request,
                               int error_code,
                               bool safebrowsing_hit) {}
+
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+  // To get setting of net helper.
+  virtual void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) {}
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  // Called on received http request error.
+  virtual void OnHttpError(int32_t request_id,
+                           CefRefPtr<CefRequest> request,
+                           bool is_main_frame,
+                           bool has_user_gesture,
+                           CefRefPtr<CefResponse> error_response) {}
+#endif
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  virtual std::string GetCustomUserAgent() { return ""; }
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer) { return ""; }
+#endif
 };
 
 // URL Loader Factory that supports request/response interception, processing
@@ -219,6 +245,15 @@ class ProxyURLLoaderFactory
   void OnProxyBindingError();
   void RemoveRequest(InterceptedRequest* request);
   void MaybeDestroySelf();
+#if BUILDFLAG(ARKWEB_DOWNLOAD)
+  void CreateLoaderAndStartForDownloadRequest(
+      mojo::PendingReceiver<network::mojom::URLLoader> receiver,
+      int32_t request_id,
+      uint32_t options,
+      network::ResourceRequest request,
+      mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+      const net::MutableNetworkTrafficAnnotationTag& traffic_annotation);
+#endif
 
   mojo::ReceiverSet<network::mojom::URLLoaderFactory> proxy_receivers_;
   mojo::Remote<network::mojom::URLLoaderFactory> target_factory_;
@@ -231,8 +266,14 @@ class ProxyURLLoaderFactory
   DisconnectCallback on_disconnect_;
 
   // Map of request ID to request object.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  std::map<int32_t,
+           std::pair<std::unique_ptr<InterceptedRequest>,
+                     base::WeakPtr<InterceptedRequest>>>
+      requests_;
+#else
   std::map<int32_t, std::unique_ptr<InterceptedRequest>> requests_;
-
+#endif
   base::WeakPtrFactory<ProxyURLLoaderFactory> weak_factory_;
 };
 

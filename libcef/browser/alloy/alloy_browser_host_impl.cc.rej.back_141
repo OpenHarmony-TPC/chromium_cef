@@ -1,0 +1,36 @@
+--- alloy_browser_host_impl.cc	2025-10-20 19:52:47.981885965 +0800
++++ alloy_browser_host_impl.cc	2025-10-16 15:55:22.346488372 +0800
+@@ -470,12 +515,16 @@
+   }
+ 
+   if (platform_delegate_) {
+     platform_delegate_->NotifyScreenInfoChanged();
+   }
++#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
++  base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
++#endif
+ }
+ 
++
+ void AlloyBrowserHostImpl::Invalidate(PaintElementType type) {
+   if (!IsWindowless()) {
+     DCHECK(false) << "Window rendering is not disabled";
+     return;
+   }
+@@ -1395,10 +1546,16 @@
+ // -----------------------------------------------------------------------------
+ 
+ void AlloyBrowserHostImpl::DidFinishNavigation(
+     content::NavigationHandle* navigation_handle) {
+   if (web_contents()) {
++#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
++    if (web_contents()->GetBrowserContext() &&
++        web_contents()->GetBrowserContext()->IsOffTheRecord()) {
++      return;
++    }
++#endif
+     auto cef_browser_context = CefBrowserContext::FromBrowserContext(
+         web_contents()->GetBrowserContext());
+     if (cef_browser_context) {
+       cef_browser_context->AddVisitedURLs(
+           navigation_handle->GetURL(), navigation_handle->GetRedirectChain(),
