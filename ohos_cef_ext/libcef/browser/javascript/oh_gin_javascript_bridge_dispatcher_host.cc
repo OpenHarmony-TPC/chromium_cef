@@ -1263,6 +1263,8 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   if (!client_) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod: "
                   "client_ is null";
+    *error_code =
+        OhGinJavascriptBridgeError::kOhGinJavascriptBridgeClientDeleted;
     return;
   }
   // 为了兼容老版本webcotroller方式, classname可能为空
@@ -1397,6 +1399,8 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   if (!client_) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf: "
                   "client_ is null";
+    *error_code =
+        OhGinJavascriptBridgeError::kOhGinJavascriptBridgeClientDeleted;
     return;
   }
   // 为了兼容老版本webcotroller方式, classname可能为空

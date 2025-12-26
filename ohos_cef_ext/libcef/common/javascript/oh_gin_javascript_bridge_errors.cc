@@ -29,6 +29,8 @@ const char* OhGinJavascriptBridgeErrorToString(
       return "RenderFrame has been deleted";
     case kOhGinJavascriptBridgePermissionDenied:
       return "Jsb Permission Denied";
+    case kOhGinJavascriptBridgeClientDeleted:
+      return "Client has been deleted";
   }
   NOTREACHED();
 }

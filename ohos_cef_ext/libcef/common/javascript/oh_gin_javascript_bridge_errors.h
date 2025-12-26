@@ -17,7 +17,8 @@ enum OhGinJavascriptBridgeError {
   kOhGinJavascriptBridgeNonAssignableTypes,
   kOhGinJavascriptBridgeRenderFrameDeleted,
   kOhGinJavascriptBridgePermissionDenied,
-  kOhGinJavascriptBridgeErrorLast = kOhGinJavascriptBridgePermissionDenied
+  kOhGinJavascriptBridgeClientDeleted,
+  kOhGinJavascriptBridgeErrorLast = kOhGinJavascriptBridgeClientDeleted
 };
 
 __attribute__((visibility("default"))) const char*

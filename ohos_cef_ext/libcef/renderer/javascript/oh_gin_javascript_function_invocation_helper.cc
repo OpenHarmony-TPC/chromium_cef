@@ -129,7 +129,8 @@ v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
   }
 
   base::Value::List arguments;
-  OhGinJavascriptBridgeError error;
+  OhGinJavascriptBridgeError error =
+      OhGinJavascriptBridgeError::kOhGinJavascriptBridgeNoError;
   std::unique_ptr<base::Value> result;
   if (usedFd_.load() < maxFdNum_) {
     result = InvokeJavascriptMethodFlowbuf(arguments, error, args, object);
