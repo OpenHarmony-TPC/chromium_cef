@@ -6,6 +6,7 @@
 #include "base/logging.h"
 #include "base/ohos/sys_info_utils_ext.h"
 #include "base/path_service.h"
+#include "base/synchronization/lock.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/threading/thread_restrictions.h"
 #include "cc/base/completion_event.h"
@@ -403,25 +404,29 @@ void CefCookieManagerImplExt::RunCookieTaskSync(
 }
 
 void CefCookieManagerImplExt::RunCookieTaskAsync(base::OnceClosure task) {
+  base::AutoLock lock(task_queue_lock_);
+  tasks_.push_back(std::move(task));
+
   cookie_store_task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(&CefCookieManagerImplExt::RunCookieTasks,
-                                base::Unretained(this), std::move(task)));
+      FROM_HERE, base::BindOnce(&CefCookieManagerImplExt::RunPendingCookieTasks,
+                                base::Unretained(this)));
 }
 
-void CefCookieManagerImplExt::RunCookieTasks(base::OnceClosure task) {
+void CefCookieManagerImplExt::RunPendingCookieTasks() {
   DCHECK(cookie_store_task_runner_->RunsTasksInCurrentSequence());
-  if (!task.is_null()) {
-    tasks_.push(std::move(task));
-  }
   if (setting_network_cookie_manager_) {
     LOG(DEBUG) << "network service starting";
     return;
   }
 
-  while (!tasks_.empty()) {
-    auto t = std::move(tasks_.front());
-    tasks_.pop();
-    std::move(t).Run();
+  base::circular_deque<base::OnceClosure> temp_queue;
+  {
+    base::AutoLock lock(task_queue_lock_);
+    temp_queue.swap(tasks_);
+  }
+  while (!temp_queue.empty()) {
+    std::move(temp_queue.front()).Run();
+    temp_queue.pop_front();
   }
 }
 
@@ -489,7 +494,7 @@ void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete(
           base::BindOnce([](net::CookieAccessResult access_result) {}));
     }
   }
-  RunCookieTasks(base::NullCallback());
+  RunPendingCookieTasks();
   remote_network_cookie_manager_inited_ = true;
 }
 
