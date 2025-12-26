@@ -522,7 +522,6 @@ class CefRenderWidgetHostViewOSR
   int32_t is_fit_content_ = 0;
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  bool is_editable_node_ = false;
   bool isKeyboardResized_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
