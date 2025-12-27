@@ -25,7 +25,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/network_service_instance.h"
 #include "arkweb/chromium_ext/net/proxy_resolution/fallback_proxy_config.h"
-#include "arkweb/ohos_nweb/src/nweb_impl.h"
+#include "arkweb/ohos_nweb/src/nweb_fallback_proxy.h"
 
 
 namespace fallback_proxy {
@@ -38,7 +38,7 @@ void FallbackProxyService_OnUpdateProxyToken(const std::string& old_token) {
   // Triggering Client Callback
   LOG(DEBUG) << "Fallback FallbackProxyService_OnUpdateProxyToken old_token:"
              << old_token;
-  OHOS::NWeb::NWebImpl::OnUpdateProxyToken(old_token);
+  OHOS::NWeb::NwebFallbackProxy::OnUpdateProxyToken(old_token);
 }
 
 // static
@@ -392,7 +392,7 @@ void FallbackProxyService::SetFallbackProxyConfigData(
 
 void FallbackProxyService::UpdateProxyToken(const std::string& token,
                                             const std::string& token_info) {
-  LOG(DEBUG) << "Fallback proxy service updates proxy token, token " << token;
+  LOG(DEBUG) << "Fallback proxy service updates proxy token";
   config_->UpdateProxyToken(token, token_info);
 }
 
