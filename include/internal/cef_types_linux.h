@@ -35,13 +35,12 @@
 #include "include/base/cef_build.h"
 #endif
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_OHOS)
 
 #include "include/internal/cef_export.h"
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_types_color.h"
 #include "include/internal/cef_types_geometry.h"
-#include "include/internal/cef_types_osr.h"
 #include "include/internal/cef_types_runtime.h"
 
 #define kNullCursorHandle 0
@@ -204,11 +203,6 @@ typedef struct _cef_accelerated_paint_info_t {
   /// The pixel format of the texture.
   ///
   cef_color_type_t format;
-
-  ///
-  /// The extra common info.
-  ///
-  cef_accelerated_paint_info_common_t extra;
 } cef_accelerated_paint_info_t;
 
 #ifdef __cplusplus

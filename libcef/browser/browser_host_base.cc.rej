@@ -1,0 +1,38 @@
+--- src/cef/libcef/browser/browser_host_base.cc
++++ src/cef/libcef/browser/browser_host_base.cc
+@@ -270,18 +274,35 @@ CefBrowserHostBase::CefBrowserHostBase(
+   CEF_REQUIRE_UIT();
+   DCHECK(!browser_info_->browser().get());
+   browser_info_->SetBrowser(this);
+ 
+   contents_delegate_.AddObserver(this);
++#if BUILDFLAG(ARKWEB_SENSOR) || BUILDFLAG(ARKWEB_PERMISSION)
++  if (client) {
++    permission_request_handler_.reset(new AlloyPermissionRequestHandler(
++        client->AsArkWebClient()->GetPermissionRequest(), GetWebContents()));
++  }
++#endif
+ }
+ 
+ void CefBrowserHostBase::InitializeBrowser() {
+   CEF_REQUIRE_UIT();
+ 
+   // Associate the WebContents with this browser object.
+   DCHECK(GetWebContents());
+   WebContentsUserDataAdapter::Register(this);
++
++#if BUILDFLAG(ARKWEB_FAVICON)
++  contents_delegate_.InitIconHelper();
++  contents_delegate_.ObserveWebContents(GetWebContents());
++#endif
++
++#if BUILDFLAG(ARKWEB_JAVASCRIPT_BRIDGE)
++  if (client_) {
++    // new NWEB::OhJavascriptInjector(GetWebContents(), client_->AsArkWebClient());
++  }
++#endif
+ }
+ 
+ void CefBrowserHostBase::DestroyWebContents(
+     content::WebContents* web_contents) {
+   CEF_REQUIRE_UIT();

@@ -12,6 +12,10 @@
 #include <string>
 
 #include "cef/include/internal/cef_types.h"
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#include "cef/ohos_cef_ext/libcef/renderer/blink_glue_ex.h"
+#include "ui/gfx/geometry/size.h"
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #include "third_party/blink/public/mojom/frame/lifecycle.mojom-blink-forward.h"
 #include "third_party/blink/public/platform/web_common.h"
 #include "v8/include/v8.h"
@@ -121,6 +125,11 @@ BLINK_EXPORT bool HasPluginFrameOwner(blink::WebLocalFrame* frame);
 
 BLINK_EXPORT void StartNavigation(blink::WebLocalFrame* frame,
                                   const blink::WebURLRequest& request);
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+BLINK_EXPORT extern const int64_t kInvalidFrameId;
+BLINK_EXPORT void PenTouchInputFocus(blink::WebNode webNode);
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 // Sets whether select popup menus should be rendered by the browser.
 BLINK_EXPORT void SetUseExternalPopupMenus(blink::WebView* view, bool value);

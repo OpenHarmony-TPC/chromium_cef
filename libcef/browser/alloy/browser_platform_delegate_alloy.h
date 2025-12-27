@@ -6,6 +6,7 @@
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "cef/libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
@@ -14,8 +15,17 @@
 #include "content/public/browser/web_contents.h"
 #include "ui/gfx/geometry/size.h"
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "ui/accessibility/platform/browser_accessibility_manager.h"
+#endif
+
 // Implementation of Alloy-based browser functionality.
+#if BUILDFLAG(IS_ARKWEB)
+class ArkWebCefBrowserPlatformDelegateExt;
+class CefBrowserPlatformDelegateAlloy : public ArkWebCefBrowserPlatformDelegateExt {
+#else
 class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
+#endif
  public:
   CefBrowserPlatformDelegateAlloy(const CefBrowserPlatformDelegateAlloy&) =
       delete;

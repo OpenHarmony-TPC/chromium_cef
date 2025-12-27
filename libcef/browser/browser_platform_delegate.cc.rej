@@ -1,0 +1,20 @@
+--- src/cef/libcef/browser/browser_platform_delegate.cc
++++ src/cef/libcef/browser/browser_platform_delegate.cc
+@@ -579,11 +583,16 @@ cef::BrowserConfig CefBrowserPlatformDelegate::GetBrowserConfig() const {
+ }
+ 
+ void CefBrowserPlatformDelegate::Find(const CefString& searchText,
+                                       bool forward,
+                                       bool matchCase,
+-                                      bool findNext) {
++                                      bool findNext
++#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
++                                      ,
++                                      bool newSession
++#endif
++) {
+   NOTIMPLEMENTED();
+ }
+ 
+ void CefBrowserPlatformDelegate::StopFinding(bool clearSelection) {
+   NOTIMPLEMENTED();

@@ -1,0 +1,33 @@
+--- src/cef/libcef/browser/alloy/browser_platform_delegate_alloy.cc
++++ src/cef/libcef/browser/alloy/browser_platform_delegate_alloy.cc
+@@ -198,11 +239,11 @@ void CefBrowserPlatformDelegateAlloy::NotifyMoveOrResizeStarted() {
+   }
+ 
+   // Dismiss any existing popups.
+   auto frame = browser_->GetMainFrame();
+   if (frame && frame->IsValid()) {
+-    static_cast<CefFrameHostImpl*>(frame.get())->NotifyMoveOrResizeStarted();
++    frame.get()->AsCefFrameHostImpl()->NotifyMoveOrResizeStarted();
+   }
+ }
+ #endif
+ 
+ void CefBrowserPlatformDelegateAlloy::SetAutoResizeEnabled(
+@@ -237,11 +278,16 @@ void CefBrowserPlatformDelegateAlloy::ConfigureAutoResize() {
+ }
+ 
+ void CefBrowserPlatformDelegateAlloy::Find(const CefString& searchText,
+                                            bool forward,
+                                            bool matchCase,
+-                                           bool findNext) {
++                                           bool findNext
++#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
++                                           ,
++                                           bool newSession = false
++#endif
++) {
+   if (!web_contents_) {
+     return;
+   }
+ 
+   find_in_page::FindTabHelper::FromWebContents(web_contents_)

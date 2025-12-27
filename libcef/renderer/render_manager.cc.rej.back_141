@@ -1,0 +1,22 @@
+--- render_manager.cc	2025-10-20 19:52:47.997849645 +0800
++++ render_manager.cc	2025-10-16 15:55:22.369896651 +0800
+@@ -344,37 +359,47 @@
+     // Don't create a CefBrowser for excluded content (PDF renderer, PDF
+     // extension or print preview dialog), or if the new browser info response
+     // has timed out.
+     excluded_views_.insert(std::make_pair(
+         web_view,
+         std::make_unique<CefExcludedView>(this, web_view, params->is_windowless,
+                                           params->print_preview_enabled)));
+     return nullptr;
+   }
+ 
+-  browser = new CefBrowserImpl(web_view, params->browser_id, *params->is_popup,
+-                               *params->is_windowless,
++  browser = new ArkWebBrowserExtImpl(web_view, params->browser_id,
++                                     *params->is_popup, *params->is_windowless,
+                                *params->print_preview_enabled);
+   browsers_.insert(std::make_pair(web_view, browser));
+ 
+   // Notify the render process handler.
+   CefRefPtr<CefApp> application = CefAppManager::Get()->GetApplication();

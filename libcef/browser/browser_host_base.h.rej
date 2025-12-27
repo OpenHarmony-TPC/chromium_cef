@@ -1,0 +1,91 @@
+--- src/cef/libcef/browser/browser_host_base.h
++++ src/cef/libcef/browser/browser_host_base.h
+@@ -22,10 +23,28 @@
+ #include "cef/libcef/browser/file_dialog_manager.h"
+ #include "cef/libcef/browser/frame_host_impl.h"
+ #include "cef/libcef/browser/javascript_dialog_manager.h"
+ #include "cef/libcef/browser/media_stream_registrar.h"
+ #include "cef/libcef/browser/request_context_impl.h"
++#include "cef/libcef/features/features.h"
++#include "ohos_cef_ext/libcef/browser/arkweb_browser_contents_delegate_ext.h"
++#include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
++
++#if BUILDFLAG(IS_ARKWEB_EXT)
++#include "arkweb/ohos_nweb_ex/build/features/features.h"
++#endif
++
++#if BUILDFLAG(ARKWEB_PERMISSION)
++#include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
++#endif
++#if BUILDFLAG(ARKWEB_DEVTOOLS)
++#include "include/cef_devtools_message_handler_delegate.h"
++#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
++
++namespace extensions {
++class Extension;
++}
+ 
+ class RenderViewContextMenuObserver;
+ 
+ // Parameters that are passed to the runtime-specific Create methods.
+ struct CefBrowserCreateParams {
+@@ -299,19 +353,25 @@ class CefBrowserHostBase : public CefBrowserHost,
+                             bool current_only) override;
+   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
+   void SetAudioMuted(bool mute) override;
+   bool IsAudioMuted() override;
+   void NotifyMoveOrResizeStarted() override;
++#if BUILDFLAG(ARKWEB_DEVTOOLS)
++  void ShowDevToolsWith(
++      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
++      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
++      const CefPoint& inspect_element_at) override {}
++#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+   void NotifyScreenInfoChanged() override;
+   bool IsFullscreen() override;
+   void ExitFullscreen(bool will_cause_resize) override;
+   bool IsRenderProcessUnresponsive() override;
+   cef_runtime_style_t GetRuntimeStyle() override;
+ 
+   // CefBrowser methods:
+   bool IsValid() override;
+-  CefRefPtr<CefBrowserHost> GetHost() override;
++  // CefRefPtr<CefBrowserHost> GetHost() override { return this; }
+   bool CanGoBack() override;
+   void GoBack() override;
+   bool CanGoForward() override;
+   void GoForward() override;
+   bool IsLoading() override;
+@@ -605,10 +753,32 @@ class CefBrowserHostBase : public CefBrowserHost,
+ 
+   std::unique_ptr<CefMediaStreamRegistrar> media_stream_registrar_;
+ 
+   int next_popup_id_ = 1;
+ 
++#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
++  friend class ArkWebBrowserHostExtImpl;
++  friend class ArkWebBrowserHostExt;
++#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
++#if BUILDFLAG(ARKWEB_PERMISSION)
++  bool UseLegacyGeolocationPermissionAPI();
++  CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
++  std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
++  // GURL is supplied by the content layer as requesting frame.
++  // Callback is supplied by the content layer, and is invoked with the result
++  // from the permission prompt.
++  typedef std::pair<std::string, cef_permission_callback_t> OriginCallback;
++  // The first element in the list is always the currently pending request.
++  std::list<OriginCallback> unhandled_geolocation_prompts_;
++#endif  // BUILDFLAG(ARKWEB_PERMISSION)
++
+  private:
++#if BUILDFLAG(ARKWEB_USERAGENT)
++  std::string custom_user_agent_;
++#endif
+   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
++#if defined(OHOS_INPUT_EVENTS)
++  bool SetFocusByPosition(float x, float y) override;
++#endif // defined(OHOS_INPUT_EVENTS)
+ };
+ 
+ #endif  // CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_
