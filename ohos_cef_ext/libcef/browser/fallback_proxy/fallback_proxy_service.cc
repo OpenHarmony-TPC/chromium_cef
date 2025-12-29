@@ -25,7 +25,6 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/network_service_instance.h"
-#include "arkweb/ohos_nweb/src/nweb_impl.h"
 
 #include "arkweb/chromium_ext/net/proxy_resolution/fallback_proxy_config.h"
 #include "arkweb/ohos_nweb/src/nweb_fallback_proxy.h"
