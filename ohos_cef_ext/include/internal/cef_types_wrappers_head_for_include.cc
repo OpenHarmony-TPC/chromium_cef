@@ -53,6 +53,7 @@ static inline void setForInclude(const struct_type* src,
 
 #if BUILDFLAG(ARKWEB_AI)
   target->arkweb_agent_enabled = src->arkweb_agent_enabled;
+  target->agent_need_highlight = src->agent_need_highlight;
 #endif
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
