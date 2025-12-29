@@ -148,6 +148,10 @@ void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host) {
                                    ->render_manager()
                                    ->current_frame_host() != host);
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  bool is_prerendering = CefBrowserInfo::IsPrerendering(host);
+#endif
+
   {
     NotificationStateLock lock_scope(this);
     DCHECK(browser_);
@@ -163,15 +167,26 @@ void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host) {
 #endif
 
       // Update the associated RFH, which may have changed.
-      info->frame_->MaybeAttach(this, host);
+      info->frame_->MaybeReAttach(this, host, /*require_detached=*/false);
 
-      if (info->is_speculative_ && !is_speculative) {
+      if (info->is_speculative_ && !is_speculative
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+&&
+        !is_prerendering
+#endif
+        ) {
         // Upgrade the frame info from speculative to non-speculative.
         if (info->is_main_frame_) {
           // Set the main frame object.
           SetMainFrame(browser_, info->frame_);
         }
         info->is_speculative_ = false;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+        ::switches::kEnableNwebEx)) {
+        info->is_prerendering_ = false;
+      }
+#endif
       }
       return;
     }
@@ -180,11 +195,22 @@ void CefBrowserInfo::MaybeCreateFrame(content::RenderFrameHost* host) {
     frame_info->global_id_ = global_id;
     frame_info->is_main_frame_ = is_main_frame;
     frame_info->is_speculative_ = is_speculative;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+    ::switches::kEnableNwebEx)) {
+    frame_info->is_prerendering_ = is_prerendering;
+  }
+#endif
 
     // Create a new frame object.
-    frame_info->frame_ = new CefFrameHostImpl(this, host);
+    frame_info->frame_ = new ArkwebFrameHostExtImpl(this, host);
     MaybeNotifyFrameCreated(frame_info->frame_);
-    if (is_main_frame && !is_speculative) {
+    if (is_main_frame && !is_speculative
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+&&
+      !is_prerendering
+#endif
+      ) {
       SetMainFrame(browser_, frame_info->frame_);
     }
 

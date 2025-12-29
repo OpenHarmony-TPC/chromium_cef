@@ -14,6 +14,11 @@
 #include "base/memory/raw_ptr.h"
 #include "base/no_destructor.h"
 #include "base/strings/string_number_conversions.h"
+#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
+#include "base/trace_event/trace_event.h"
+#endif
+#include "arkweb/build/features/features.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/origin_whitelist_impl.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -34,6 +39,30 @@
 #include "services/network/public/cpp/features.h"
 #include "services/network/public/mojom/early_hints.mojom.h"
 #include "third_party/blink/public/common/loader/referrer_utils.h"
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/browser/res_reporter.h"
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#include "net/base/load_flags.h"
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+#include "content/public/browser/download_utils.h"
+#include "third_party/blink/public/common/mime_util/mime_util.h"
+#endif
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
 
 namespace net_service {
 
@@ -1665,6 +1694,7 @@ void ProxyURLLoaderFactory::SetDisconnectCallback(
   on_disconnect_ = std::move(on_disconnect);
 }
 
+#if !BUILDFLAG(ARKWEB_NETWORK_LOAD)
 // static
 void ProxyURLLoaderFactory::CreateProxy(
     content::BrowserContext* browser_context,
@@ -1694,6 +1724,7 @@ void ProxyURLLoaderFactory::CreateProxy(
                                std::move(header_client_receiver), context_id,
                                std::move(request_handler)));
 }
+#endif
 
 // static
 void ProxyURLLoaderFactory::ClearProxiesForBrowserContextAsync(

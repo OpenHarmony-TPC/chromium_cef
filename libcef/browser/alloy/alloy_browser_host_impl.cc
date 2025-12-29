@@ -626,13 +626,24 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     return false;
   }
 
-  if (!is_guest_view && params.url.SchemeIs(content::kChromeUIScheme) &&
+  if (!is_guest_view &&
+      (params.url.SchemeIs(content::kChromeUIScheme)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+       || params.url.SchemeIs(content::kArkWebUIScheme)
+#endif
+           ) &&
       !IsAllowedWebUIHost(params.url.host())) {
     // Block navigation to non-allowlisted WebUI pages.
     LOG(WARNING) << "Navigation to " << params.url.spec()
                  << " is blocked in Alloy-style browser.";
     return false;
   }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (AsAlloyBrowserHostImplExt()->IsURLBlockedInIncognito(is_guest_view, params)) {
+    return false;
+  }
+#endif
 
   return true;
 }

@@ -22,6 +22,14 @@
 #include "services/network/public/mojom/network_context.mojom.h"
 #include "services/network/public/mojom/url_loader_factory.mojom.h"
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "include/internal/cef_ptr.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
+
+class CefRequest;
+class CefResponse;
+#endif
+
 namespace net_service {
 
 class InterceptedRequest;
@@ -172,6 +180,16 @@ class ProxyURLLoaderFactory
 
   ~ProxyURLLoaderFactory() override;
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  // Create a proxy object on the UI thread.
+  static void CreateProxy(
+      content::BrowserContext* browser_context,
+      network::URLLoaderFactoryBuilder& factory_builder,
+      mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
+          header_client,
+      std::unique_ptr<InterceptedRequestHandler> request_handler,
+      network::mojom::URLLoaderFactoryOverridePtr* factory_override);
+#else
   // Create a proxy object on the UI thread.
   static void CreateProxy(
       content::BrowserContext* browser_context,
@@ -179,6 +197,7 @@ class ProxyURLLoaderFactory
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
+#endif
 
   // Create a proxy object on the IO thread for a WebContents.
   static void CreateProxyForWebContents(
@@ -223,6 +242,7 @@ class ProxyURLLoaderFactory
 
  private:
   friend class InterceptedRequest;
+  friend class InterceptedRequestUtils;
 
   ProxyURLLoaderFactory(
       mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,

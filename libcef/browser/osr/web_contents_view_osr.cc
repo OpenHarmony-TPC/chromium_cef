@@ -103,7 +103,7 @@ void CefWebContentsViewOSR::TakeFocus(bool reverse) {
 }
 
 gfx::Rect CefWebContentsViewOSR::GetViewBounds() const {
-  CefRenderWidgetHostViewOSR* view = GetView();
+  ArkWebRenderWidgetHostViewOSRExt* view = GetView();
   return view ? view->GetViewBounds() : gfx::Rect();
 }
 
@@ -123,8 +123,8 @@ content::RenderWidgetHostViewBase* CefWebContentsViewOSR::CreateViewForWidget(
         render_widget_host->GetView());
   }
 
-  return new CefRenderWidgetHostViewOSR(background_color_, use_shared_texture_,
-                                        use_external_begin_frame_,
+  return new ArkWebRenderWidgetHostViewOSRExt(
+      background_color_, use_shared_texture_, use_external_begin_frame_,
                                         render_widget_host, nullptr);
 }
 
@@ -132,11 +132,11 @@ content::RenderWidgetHostViewBase* CefWebContentsViewOSR::CreateViewForWidget(
 content::RenderWidgetHostViewBase*
 CefWebContentsViewOSR::CreateViewForChildWidget(
     content::RenderWidgetHost* render_widget_host) {
-  CefRenderWidgetHostViewOSR* view = GetView();
+  ArkWebRenderWidgetHostViewOSRExt* view = GetView();
   CHECK(view);
 
-  return new CefRenderWidgetHostViewOSR(background_color_, use_shared_texture_,
-                                        use_external_begin_frame_,
+  return new ArkWebRenderWidgetHostViewOSRExt(
+      background_color_, use_shared_texture_, use_external_begin_frame_,
                                         render_widget_host, view);
 }
 

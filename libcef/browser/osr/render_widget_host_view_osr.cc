@@ -300,15 +300,26 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
   if (browser_impl_ && !parent_host_view_) {
     // For child/popup views this will be called from the associated InitAs*()
     // method.
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+    arkweb_rwhv_osr_utils_->SetRootLayerSizeEx(false /* force */);
+#else
     SetRootLayerSize(false /* force */);
+#endif
     if (!render_widget_host_->IsHidden()) {
       Show();
     }
   }
 
   selection_controller_client_ =
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+      std::make_unique<ArkWebTouchSelectionControllerClientOSRExt>(this);
+#else
       std::make_unique<CefTouchSelectionControllerClientOSR>(this);
+#endif
   CreateSelectionController();
+#if BUILDFLAG(ARKWEB_ZOOM)
+  arkweb_rwhv_osr_utils_->SetDoubleTapSupportForPlatformEnabledEx();
+#endif
 }
 
 CefRenderWidgetHostViewOSR::~CefRenderWidgetHostViewOSR() {
@@ -1202,8 +1213,14 @@ bool CefRenderWidgetHostViewOSR::UseProxyOutputDevice() {
 }
 
 bool CefRenderWidgetHostViewOSR::InstallTransparency() {
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+#else
   if (background_color_ == SK_ColorTRANSPARENT) {
+#endif  // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
     SetBackgroundColor(background_color_);
+    auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor_) {
       compositor_->SetBackgroundColor(background_color_);
     }
@@ -1214,7 +1231,15 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 
 void CefRenderWidgetHostViewOSR::WasResized() {
   // Only one resize will be in-flight at a time.
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  TRACE_EVENT2("base", "CefRenderWidgetHostViewOSR::WasResized",
+               "hold_resize_", hold_resize_,
+               "pending_resize_", pending_resize_);
+#endif
   if (hold_resize_) {
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+    isKeyboardResized_ = false;
+#endif
     if (!pending_resize_) {
       pending_resize_ = true;
     }
@@ -1413,9 +1438,11 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
       browser_impl_->CancelContextMenu();
     }
 
-    if (selection_controller_client_) {
-      selection_controller_client_->CloseQuickMenuAndHideHandles();
-    }
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+    arkweb_rwhv_osr_utils_->SendMouseEventEx(event);
+#else
+    if (selection_controller_client_) { selection_controller_client_->CloseQuickMenuAndHideHandles(); }
+#endif
 
     if (popup_host_view_) {
       if (popup_host_view_->popup_position_.Contains(
@@ -1467,6 +1494,9 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
                                                         latency_info);
     }
   }
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+  else { LOG(ERROR) << "SendMouseEvent event dropped because render_widget_host " << !!render_widget_host_; }
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
@@ -1485,9 +1515,11 @@ void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
       browser_impl_->CancelContextMenu();
     }
 
+#if !BUILDFLAG(ARKWEB_CLIPBOARD)
     if (selection_controller_client_) {
       selection_controller_client_->CloseQuickMenuAndHideHandles();
     }
+#endif
 
     if (popup_host_view_) {
       if (popup_host_view_->popup_position_.Contains(
@@ -1536,9 +1568,13 @@ void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
 
   ui::LatencyInfo latency_info = CreateLatencyInfo(web_event);
   if (render_widget_host_ && render_widget_host_->GetView()) {
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+    arkweb_rwhv_osr_utils_->SendMouseWheelEventEx(web_event);
+#else
     mouse_wheel_phase_handler_.SendWheelEndForTouchpadScrollingIfNeeded(false);
     mouse_wheel_phase_handler_.AddPhaseIfNeededAndScheduleEndEvent(
         web_event, false, /*is_fling_capable=*/false);
+#endif
 
     if (ShouldRouteEvents()) {
       render_widget_host_->delegate()
@@ -1574,10 +1610,16 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   }
 
   // Update the touch event first.
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  pointer_state_.SetFromOverlay(event.from_overlay);
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
   if (!pointer_state_.OnTouch(event)) {
     return;
   }
 
+#if BUILDFLAG(IS_ARKWEB) && BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
+  arkweb_rwhv_osr_utils_->OnTouchDown();
+#endif
   if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
     pointer_state_.CleanupRemovedTouchPoints(event);
     return;
@@ -1587,7 +1629,11 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
       gesture_provider_.OnTouchEvent(pointer_state_);
 
   blink::WebTouchEvent touch_event = ui::CreateWebTouchEventFromMotionEvent(
+#if BUILDFLAG(ARKWEB_FIT_CONTENT)
+      pointer_state_, result.moved_beyond_slop_region, false, is_fit_content_);
+#else
       pointer_state_, result.moved_beyond_slop_region, false);
+#endif
 
   // Null timestamps can trigger debug assertions in UkmManager.
   if (touch_event.TimeStamp().is_null()) {

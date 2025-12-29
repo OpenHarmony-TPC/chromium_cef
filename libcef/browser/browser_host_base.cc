@@ -274,6 +274,12 @@ CefBrowserHostBase::CefBrowserHostBase(
   browser_info_->SetBrowser(this);
 
   contents_delegate_.AddObserver(this);
+#if BUILDFLAG(ARKWEB_SENSOR) || BUILDFLAG(ARKWEB_PERMISSION)
+  if (client) {
+    permission_request_handler_.reset(new AlloyPermissionRequestHandler(
+        client->AsArkWebClient()->GetPermissionRequest(), GetWebContents()));
+  }
+#endif
 }
 
 void CefBrowserHostBase::InitializeBrowser() {
@@ -283,6 +289,17 @@ void CefBrowserHostBase::InitializeBrowser() {
   auto* web_contents = GetWebContents();
   DCHECK(web_contents);
   WebContentsUserDataAdapter::Register(this);
+
+#if BUILDFLAG(ARKWEB_FAVICON)
+  contents_delegate_.InitIconHelper();
+  contents_delegate_.ObserveWebContents(GetWebContents());
+#endif
+
+#if BUILDFLAG(ARKWEB_JAVASCRIPT_BRIDGE)
+  if (client_) {
+    // new NWEB::OhJavascriptInjector(GetWebContents(), client_->AsArkWebClient());
+  }
+#endif
 
   // Trigger a web preferences update now that the browser is attached.
   // This ensures that OverrideWebPreferences can access browser settings.

@@ -11,6 +11,7 @@
 #include "base/memory/raw_ptr.h"
 #include "base/memory/shared_memory_mapping.h"
 #include "components/viz/host/host_display_client.h"
+#include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "ui/gfx/native_ui_types.h"
 
 class CefLayeredWindowUpdaterOSR;
