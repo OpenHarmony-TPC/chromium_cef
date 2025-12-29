@@ -122,6 +122,7 @@ void MaybeOverrideUserAgentOnStartNavigation(
 
   std::string final_ua;
   std::string host = url.host();
+  bool override_by_same_domain = false;
 
   auto match_type = MatchUserAgent(navigation, url.host(), final_ua);
   if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
@@ -137,13 +138,21 @@ void MaybeOverrideUserAgentOnStartNavigation(
   }
 
   LOG(DEBUG) << __func__ << " host " << url::LogUtils::ConvertUrlWithMask(host)
-             << ", final_ua " << final_ua
-             << ", user_gesture " << navigation->HasUserGesture()
-             << ", main_frame " << navigation->IsInMainFrame() << ", reload "
-             << is_reload << ", serverd_from_bfcache "
+             << ", final_ua " << final_ua << ", user_gesture "
+             << navigation->HasUserGesture() << ", main_frame "
+             << navigation->IsInMainFrame() << ", reload " << is_reload
+             << ", serverd_from_bfcache "
              << navigation->IsServedFromBackForwardCache() << ", match_type "
              << match_type;
 
+  LOG_FEEDBACK(INFO, kNavigation)
+      << "MatchUserAgentForStartNav matchType:" << match_type
+      << " override:" << override_by_same_domain
+      << " userGesture:" << navigation->HasUserGesture()
+      << " mainFrame:" << navigation->IsInMainFrame()
+      << " fromBFCache:" << navigation->IsServedFromBackForwardCache()
+      << " isReload:" << is_reload
+      << " url:" << url::LogUtils::ConvertUrlWithMask(url.spec());
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 
@@ -166,6 +175,7 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
   }
 
   std::string final_ua;
+  bool override_by_same_domain = false;
   auto match_type = MatchUserAgent(navigation, current_url.host(), final_ua);
   if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
     for (int i = chain_size - 1; i > 0; i--) {
@@ -180,18 +190,20 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
       match_type =
           MatchUserAgent(navigation, redirect_chain[i - 1].host(), final_ua);
       if (match_type < UserAgentOverridePolicy::APP_DEFAULT) {
+        override_by_same_domain = true;
         break;
       }
     }
   }
 
-  LOG(DEBUG) << __func__ << " host "
-             << url::LogUtils::ConvertUrlWithMask(current_url.host())
-             << " match_type:" << match_type << ", final_ua " << final_ua
-             << ", user_gesture " << navigation->HasUserGesture()
-             << ", main_frame " << navigation->IsInMainFrame()
-             << ", serverd_from_bfcache "
-             << navigation->IsServedFromBackForwardCache();
+  LOG_FEEDBACK(INFO, kNavigation)
+      << "MatchUserAgentForRedirectNav matchType:" << match_type
+      << " override:" << override_by_same_domain
+      << " redirectChainsSize:" << chain_size
+      << " userGesture:" << navigation->HasUserGesture()
+      << " mainFrame:" << navigation->IsInMainFrame()
+      << " fromBFCache:" << navigation->IsServedFromBackForwardCache()
+      << " url:" << url::LogUtils::ConvertUrlWithMask(current_url.spec());
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 

@@ -165,10 +165,6 @@ void CefBrowserPlatformDelegateOsrExt::OnShowAutofillPopup(
     }
 #endif
 
-    LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
-              << ", y: " << element_bounds.y()
-              << ", element_bounds width: " << element_bounds.width()
-              << ", element_bounds height:" << element_bounds.height();
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(INFO) << "element is screen bounds x:" << element_bounds.x()
                        << ", y: " << element_bounds.y()
