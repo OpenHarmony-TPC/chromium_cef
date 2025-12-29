@@ -133,6 +133,8 @@ class CefRequestContextImpl : public CefRequestContext {
   bool ClearSchemeHandlerFactories() override;
   void ClearCertificateExceptions(
       CefRefPtr<CefCompletionCallback> callback) override;
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+#endif  // ARKWEB_CERT_AUTHENTICATION
   void ClearHttpCache(CefRefPtr<CefCompletionCallback> callback) override;
   void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) override;
@@ -219,6 +221,7 @@ class CefRequestContextImpl : public CefRequestContext {
   void ClearCertificateExceptionsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
+
   void ClearHttpCacheInternal(CefRefPtr<CefCompletionCallback> callback,
                               CefBrowserContext::Getter browser_context_getter);
   void ClearHttpAuthCredentialsInternal(

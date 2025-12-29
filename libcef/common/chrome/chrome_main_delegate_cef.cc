@@ -365,6 +365,17 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
                             disable_features);
 #endif  // BUILDFLAG(IS_WIN)
 
+#if BUILDFLAG(ARKWEB_BFCACHE)
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEnableBFCache)) {
+      disable_features.push_back(features::kBackForwardCache.name);
+    }
+#endif
+
+#if !BUILDFLAG(ARKWEB_BFCACHE)
+    ManageBackForwardCacheExt(disable_features);
+#endif
+
     // Disable features that crash during Chrome browser initialization.
     // -- Split Screen support. See issue #3980.
     DisableFeatureByDefault(features::kSideBySide, disable_features);

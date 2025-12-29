@@ -52,6 +52,49 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void NotifyMoveOrResizeStarted() override;
 #endif
   bool IsAlloyStyle() const override { return true; }
+#if BUILDFLAG(IS_ARKWEB)
+  void SetAccessibilityState(cef_state_t accessibility_state) override;
+  ui::BrowserAccessibilityManager* GetRootBrowserAccessibilityManager()
+      override;
+#endif
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void SendTouchEventToRender(const CefTouchEvent& event);
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_PRINT)
+  void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
+#endif  // BUILDFLAG(ARKWEB_PRINT)
+
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
+  void WebContentsDestroyed(content::WebContents* web_contents) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void OnShareFile(const std::string& filePath,
+                   const std::string& utdTypeId) override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+  void OnOnlineRenderToForeground() override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  void WasOccluded(bool occluded) override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type,
+                             const std::string& message) override {
+    return true;
+  }
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
  protected:
   CefBrowserPlatformDelegateAlloy();

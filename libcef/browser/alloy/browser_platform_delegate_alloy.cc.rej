@@ -1,18 +1,5 @@
 --- src/cef/libcef/browser/alloy/browser_platform_delegate_alloy.cc
 +++ src/cef/libcef/browser/alloy/browser_platform_delegate_alloy.cc
-@@ -198,11 +239,11 @@ void CefBrowserPlatformDelegateAlloy::NotifyMoveOrResizeStarted() {
-   }
- 
-   // Dismiss any existing popups.
-   auto frame = browser_->GetMainFrame();
-   if (frame && frame->IsValid()) {
--    static_cast<CefFrameHostImpl*>(frame.get())->NotifyMoveOrResizeStarted();
-+    frame.get()->AsCefFrameHostImpl()->NotifyMoveOrResizeStarted();
-   }
- }
- #endif
- 
- void CefBrowserPlatformDelegateAlloy::SetAutoResizeEnabled(
 @@ -237,11 +278,16 @@ void CefBrowserPlatformDelegateAlloy::ConfigureAutoResize() {
  }
  

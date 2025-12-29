@@ -379,6 +379,28 @@ class CefBrowserPlatformDelegate {
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
   virtual bool IsPrintPreviewSupported() const;
 
+#if BUILDFLAG(ARKWEB_PIP)
+  virtual void OnPip(int status,
+                     int delegate_id,
+                     int child_id,
+                     int frame_routing_id,
+                     int width,
+                     int height) {}
+  virtual void SetPipNativeWindow(int delegate_id,
+                                  int child_id,
+                                  int frame_routing_id,
+                                  cef_native_window_t window);
+  virtual void SendPipEvent(int delegate_id,
+                            int child_id,
+                            int frame_routing_id,
+                            int event);
+  virtual void OnPipEvent(int event);
+#endif
+#if BUILDFLAG(ARKWEB_PDF)
+  virtual void OnPdfScrollAtBottom(const std::string& url) {}
+  virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
   virtual bool IsMovePictureInPictureEnabled() const;
   virtual bool AllowPictureInPictureWithoutUserActivation() const;
 

@@ -8,6 +8,8 @@
 
 #include <string_view>
 
+#include "ohos_cef_ext/libcef/common/net/scheme_registration_ex.h"
+
 namespace scheme {
 
 // Returns true if the specified |scheme| is handled internally.

@@ -35,11 +35,41 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/web_contents.h"
 #include "ipc/constants.mojom.h"
+#include "libcef/common/frame_util.h"
 #include "net/base/load_flags.h"
 #include "net/http/http_status_code.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
 #include "ui/base/page_transition_types.h"
 #include "url/origin.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/arkweb_load_handler_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h"
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_PREFETCH_POST)
+#include "base/trace_event/trace_event.h"
+#include "libcef/browser/predictors/loading_predictor.h"
+#include "libcef/browser/predictors/loading_predictor_factory.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "cef/ohos_cef_ext/include/arkweb_resource_request_handler_ext.h"
+#include "services/network/sec_header_helpers.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#include "base/command_line.h"
+#include "libcef/browser/net_service/cookie_manager_impl_ext.h"
+#endif
 
 namespace net_service {
 
@@ -346,6 +376,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     bool initialized_ = false;
 
     CefRefPtr<CefBrowserHostBase> browser_;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    CefRefPtr<CefFrame> real_frame_;
+    bool is_off_the_record_ = false;
+#endif
     scoped_refptr<CefIOThreadState> iothread_state_;
     CefBrowserContext::CookieableSchemes cookieable_schemes_;
     content::GlobalRenderFrameHostId global_id_;
@@ -606,6 +640,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                              TryCreateURLLoaderNetworkObserver,
                          std::make_unique<PendingRequest>(
                              request_id, request, request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                             intercepted_request,
+#endif
                              std::move(callback), std::move(cancel_callback)),
                          init_state_->GetFrame(),
                          init_state_->browser_context_getter_,
@@ -757,6 +794,23 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
           init_state_->browser_, init_state_->GetFrame(),
           state->pending_request_.get(), cef_cookie);
     }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
+      CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+        CefCookieManagerImplExt::GetInstance(init_state_->is_off_the_record_);
+      if (cookie_manager) {
+        *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+      }
+    }
+#endif // ARKWEB_EXT_EXCEPTION_LIST
+
+#if BUILDFLAG(ARKWEB_ITP)
+    if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(
+                               init_state_->browser_, state->request_, allow)) {
+      return;
+    }
+#endif
   }
 
   void ContinueWithLoadedCookies(int32_t request_id,
@@ -819,7 +873,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       CefRefPtr<RequestCallbackWrapper> callbackPtr =
           new RequestCallbackWrapper(base::BindOnce(
               &InterceptedRequestHandlerWrapper::ContinueShouldInterceptRequest,
-              weak_ptr_factory_.GetWeakPtr(), request_id, std::move(callback)));
+              weak_ptr_factory_.GetWeakPtr(), request_id,
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+              base::Unretained(request),
+#endif
+              std::move(callback)));
 
       cef_return_value_t retval = state->handler_->OnBeforeResourceLoad(
           init_state_->browser_, init_state_->GetFrame(),
@@ -1483,12 +1541,19 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     int render_process_id,
     bool is_navigation,
     bool is_download,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info,
+#endif
     const url::Origin& request_initiator) {
   CEF_REQUIRE_UIT();
   CHECK(browser_context);
 
   CefRefPtr<CefBrowserHostBase> browserPtr;
   CefRefPtr<CefFrame> framePtr;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  // Maybe speculative RFH.
+  CefRefPtr<CefFrame> realFramePtr;
+#endif
 
   // Default to handlers for the same process in case |frame| doesn't have an
   // associated CefBrowserHost.
@@ -1579,6 +1644,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   CefRefPtr<CefBrowserHostBase> browserPtr;
   CefRefPtr<CefFrame> framePtr;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  CefRefPtr<CefFrame> realFramePtr;
+#endif
 
   // Default to handlers for the same process in case |frame| doesn't have an
   // associated CefBrowserHost.
@@ -1588,6 +1656,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
       frame->GetProcess()->GetDeprecatedID(), IPC::mojom::kRoutingIdNone);
 
   browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (browserPtr->browser_info()) {
+    realFramePtr = browserPtr->browser_info()->GetFrameForHost(frame, true);
+  }
+#endif
   if (browserPtr) {
     // May return nullptr for excluded view requests.
     framePtr = browserPtr->GetFrameForHost(frame);

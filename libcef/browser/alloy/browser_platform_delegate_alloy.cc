@@ -196,7 +196,7 @@ void CefBrowserPlatformDelegateAlloy::NotifyMoveOrResizeStarted() {
   // Dismiss any existing popups.
   auto frame = browser_->GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->NotifyMoveOrResizeStarted();
+    frame.get()->AsCefFrameHostImpl()->NotifyMoveOrResizeStarted();
   }
 }
 #endif

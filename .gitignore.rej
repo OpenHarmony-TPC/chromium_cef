@@ -1,8 +1,0 @@
---- src/cef/.gitignore
-+++ src/cef/.gitignore
-@@ -1,5 +0,0 @@
--tools/__pycache__/
--
--*.sw?
--include/capi/
--libcef_dll/
