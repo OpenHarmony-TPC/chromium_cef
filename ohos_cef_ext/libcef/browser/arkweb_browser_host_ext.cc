@@ -678,6 +678,8 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
       browser_settings.image_analyzer_enabled;
   settings_.arkweb_agent_enabled =
       browser_settings.arkweb_agent_enabled;
+  settings_.agent_need_highlight =
+      browser_settings.agent_need_highlight;
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   settings_.hide_vertical_scrollbars =

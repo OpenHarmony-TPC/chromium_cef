@@ -1,6 +1,7 @@
 #ifndef COOKIE_MANAGER_IMPL_EXT_H_
 #define COOKIE_MANAGER_IMPL_EXT_H_
 #pragma once
+#include "base/containers/circular_deque.h"
 #include "base/feature_list.h"
 #include "base/files/file_path.h"
 #include "base/threading/thread.h"
@@ -146,7 +147,7 @@ void UpdateHostContentSettingsMap();
   void RunCookieTaskSync(
       base::OnceCallback<void(base::OnceCallback<void(uint32_t)>)> task,
       const CefRefPtr<CefDeleteCookiesCallback>& callback);
-  void RunCookieTasks(base::OnceClosure task);
+  void RunPendingCookieTasks();
   void RunCookieTaskAsync(base::OnceClosure task);
   network::mojom::CookieManager* GetNetworkCookieManager();
   void Initialize(CefBrowserContext::Getter browser_context_getter,
@@ -213,7 +214,8 @@ void UpdateHostContentSettingsMap();
   bool setting_network_cookie_manager_;
   std::unique_ptr<net::CookieStore> cookie_store_;
   base::FilePath cookie_store_path_;
-  std::queue<base::OnceClosure> tasks_;
+  base::Lock task_queue_lock_;
+  base::circular_deque<base::OnceClosure> tasks_ GUARDED_BY(task_queue_lock_);
   base::Thread cookie_store_task_thread_;
   base::Thread cookie_store_backend_thread_;
   mutable bool remote_network_cookie_manager_inited_{false};
