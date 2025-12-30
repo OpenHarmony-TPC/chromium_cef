@@ -48,6 +48,7 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
   ~ArkWebInterceptedRequestHandlerWrapperHelper() = default;
   bool ProceedAllowCookieLoad(CefRefPtr<CefBrowserHostBase> browser,
                               network::ResourceRequest* request,
+                              const GURL& main_frame_url,
                               bool* allow);
   void OnRequestError(CefRefPtr<CefBrowserHostBase> browser,
                       CefRefPtr<CefFrame> frame,

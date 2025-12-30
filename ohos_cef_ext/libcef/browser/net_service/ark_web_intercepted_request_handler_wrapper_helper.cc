@@ -46,6 +46,7 @@ void OhosInterceptCallbackWrapper::ContinueLoad(
 bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
     CefRefPtr<CefBrowserHostBase> browser,
     network::ResourceRequest* request,
+    const GURL& main_frame_url,
     bool* allow) {
 #if BUILDFLAG(ARKWEB_ITP)
   if (*allow == true) {
@@ -53,8 +54,7 @@ bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
     if (itp_cookies_enabled && request) {
       bool third_party_cookie_access_policy =
           ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
-              ->AllowGetCookies(*request,
-                                request->site_for_cookies.RepresentativeUrl());
+              ->AllowGetCookies(*request, main_frame_url);
       LOG(DEBUG) << "ITP Allow Get Cookies: " << third_party_cookie_access_policy;
       if (!third_party_cookie_access_policy) {
         ReportITPResult(browser, *request);
