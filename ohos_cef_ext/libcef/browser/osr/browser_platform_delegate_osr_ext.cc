@@ -253,7 +253,11 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchEventList(
     } else if (event_adjust.type == CEF_TET_CANCELLED) {
       shrink_viewport_height_ = 0;
     }
-    event_adjust.y -= shrink_viewport_height_;
+    if (event_adjust.from_overlay) {
+      event_adjust.y -= view->GetShrinkViewportHeight();
+    } else {
+      event_adjust.y -= shrink_viewport_height_;
+    }
     if (event_adjust.type == CEF_TET_RELEASED) {
       shrink_viewport_height_ = 0;
     }

@@ -142,7 +142,11 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     } else if (event.type == CEF_TET_CANCELLED) {
         cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_ = 0;
     }
-    event_adjust.y -= cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_;
+    if (event.from_overlay) {
+        event_adjust.y -= view->GetShrinkViewportHeight();
+    } else {
+        event_adjust.y -= cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_;
+    }
     if (event.type == CEF_TET_RELEASED) {
         cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_ = 0;
     }
