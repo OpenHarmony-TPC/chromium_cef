@@ -797,10 +797,13 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
 #if BUILDFLAG(ARKWEB_ITP)
+    GURL main_frame_url = GURL();
     const net::IsolationInfo& isolation_info = GetIsolationInfo(*(state->request_));
+    if (isolation_info.top_frame_origin()) {
+      main_frame_url = isolation_info.top_frame_origin()->GetURL();
+    }
     if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(
-                               init_state_->browser_, state->request_,
-                               isolation_info.top_frame_origin()->GetURL(), allow)) {
+                               init_state_->browser_, state->request_, main_frame_url, allow)) {
       return;
     }
 #endif
