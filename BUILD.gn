@@ -3061,7 +3061,7 @@ if (is_mac) {
               gypi_paths2.cefsimple_capi_sources_common
 
     deps = [
-      ":libcef",
+      ":libarkweb_engine",
     ]
 
     configs += [ ":libcef_includes_config" ]
