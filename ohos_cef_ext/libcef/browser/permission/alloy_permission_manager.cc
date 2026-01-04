@@ -459,8 +459,6 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
 #if BUILDFLAG(ARKWEB_WEBRTC)
   } else if (permission == PermissionType::AUDIO_CAPTURE) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)    
-    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
-        switches::kEnableNwebExPermission)) {
 #endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
@@ -469,12 +467,9 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
         return PermissionStatus::ASK;
       }
 #if BUILDFLAG(ARKWEB_NWEB_EX)      
-    }
 #endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
   } else if (permission == PermissionType::VIDEO_CAPTURE) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)    
-    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
-        switches::kEnableNwebExPermission)) {
 #endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
@@ -483,7 +478,6 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
         return PermissionStatus::ASK;
       }
 #if BUILDFLAG(ARKWEB_NWEB_EX)      
-    }
 #endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
 #endif // BUILDFLAG(ARKWEB_WEBRTC)
   }
