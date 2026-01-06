@@ -22,8 +22,14 @@ class HistoryGetVisitsFunction : public HistoryFunctionWithCallback {
 
   ResponseAction Run() override;
 
-  // Callback for the history function to provide results.
-  void QueryComplete(history::QueryURLResult result);
+ private:
+  static void OnHistoryGetVisits(
+      const base::WeakPtr<HistoryGetVisitsFunction>& function,
+      const std::string& error,
+      const std::vector<OHOS::NWeb::NWebExtensionVisitItem>& results);
+
+  bool call_history_get_visits_ = false;
+  base::WeakPtrFactory<HistoryGetVisitsFunction> weak_ptr_factory_{this};
 };
 
 class HistorySearchFunction : public HistoryFunctionWithCallback {
@@ -113,6 +119,11 @@ class HistoryDeleteRangeFunction : public HistoryFunctionWithCallback {
 
   ResponseAction Run() override;
 
-  // Callback for the history service to acknowledge deletion.
-  void DeleteComplete();
+ private:
+  static void OnHistoryDeleteRange(
+      const base::WeakPtr<HistoryDeleteRangeFunction>& function,
+      const std::string& error);
+
+  bool call_history_delete_range_ = false;
+  base::WeakPtrFactory<HistoryDeleteRangeFunction> weak_ptr_factory_{this};
 };
