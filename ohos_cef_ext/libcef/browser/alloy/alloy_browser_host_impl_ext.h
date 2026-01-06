@@ -48,6 +48,10 @@ public:
   void OnPdfLoadEvent(int32_t result, const std::string& url) override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
 
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  void OnMediaCastEnter() override;
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   void OnNativeEmbedStatusUpdate(
       const content::NativeEmbedInfo& native_embed_info,
