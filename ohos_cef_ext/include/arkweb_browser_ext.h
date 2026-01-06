@@ -356,7 +356,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Set url trust list.
   ///
   virtual int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                        CefString& detailErrMsg) = 0;
+    bool allowOpaqueOrigin, bool supportWildcard, CefString& detailErrMsg) = 0;
 
   ///
   /// Set tabId.

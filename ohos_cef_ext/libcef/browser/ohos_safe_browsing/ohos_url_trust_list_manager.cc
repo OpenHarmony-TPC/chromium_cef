@@ -20,6 +20,91 @@
 #include "third_party/abseil-cpp/absl/types/optional.h"
 #include "arkweb/chromium_ext/url/ohos/log_utils.h"
 
+namespace {
+std::vector<std::string> SplitString(const std::string& str, char ch) {
+    std::vector<std::string> parts;
+    std::stringstream ss(str);
+    std::string part;
+    while (std::getline(ss, part, ch)) {
+        if (!part.empty()) {
+            parts.push_back(part);
+        }
+    }
+    return parts;
+}
+
+bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHost) {
+    std::vector<std::string> ruleHostParts = SplitString(ruleHost, '.');
+    std::vector<std::string> urlHostParts = SplitString(urlHost, '.');
+    if (ruleHostParts.size() != urlHostParts.size()) {
+        return false;
+    }
+
+    auto ruleHostIt = ruleHostParts.begin();
+    auto urlHostIt = urlHostParts.begin();
+
+    for (; ruleHostIt != ruleHostParts.end() && urlHostIt != urlHostParts.end(); ++ruleHostIt, ++urlHostIt) {
+        if (*ruleHostIt == "*") {
+            continue;
+        }
+        if (*ruleHostIt != *urlHostIt) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool PathMatch(const std::string& rulePath, const std::string& urlPath) {
+    if (rulePath.empty()) {
+      return true;
+    }
+
+    if (urlPath.find(rulePath) != 0) {
+        return false;
+    }
+    size_t next = rulePath.size();
+    if (next < urlPath.size() && !rulePath.ends_with('/') && urlPath[next] != '/') {
+        return false;
+    }
+    return true;
+}
+
+bool PathMatchWithWildcard(const std::string& rulePath, const std::string& urlPath) {
+    if (rulePath.find('*') == std::string::npos) {
+        return PathMatch(rulePath, urlPath);
+    }
+
+    std::vector<std::string> rulePathParts = SplitString(rulePath, '/');
+    std::vector<std::string> urlPathParts = SplitString(urlPath, '/');
+    if (rulePath.size() > urlPath.size() || rulePathParts.size() > urlPathParts.size()) {
+        return false;
+    }
+
+    for (size_t i = 0, j = 0; i < rulePathParts.size() && j < urlPathParts.size();) {
+        if (rulePathParts[i] == urlPathParts[j]) {
+            i++;
+            j++;
+            continue;
+        }
+
+        if (rulePathParts[i] == "*" && i + 1 >= rulePathParts.size()) {
+            break;
+        }
+
+        if (rulePathParts[i] == "*") {
+            i++;
+            j++;
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+}
+
 namespace ohos_safe_browsing {
 static constexpr int MAX_PATH_SIZE = 0x10000;
 
@@ -27,7 +112,12 @@ char UrlTrustListInterface::interfaceKey;
 
 UrlTrustListManager::UrlTrustListManager() {}
 
-static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err) {
+static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err, bool supportWildcard) {
+  if (supportWildcard && 
+      (urlRule.host.find('*') != std::string::npos || urlRule.path.find('*') != std::string::npos)) {
+      return true;
+  }
+
   std::string scheme = urlRule.scheme.empty() ? "http" : urlRule.scheme;
   std::string path = urlRule.path.empty() ? "" : urlRule.path;
   std::string port = urlRule.port > 0 ? ":" + std::to_string(urlRule.port) : "";
@@ -58,7 +148,7 @@ static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err) {
   return true;
 }
 
-static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
+static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err, bool supportWildcard) {
   if (!urlRule.scheme.empty()) {
     if (urlRule.scheme != "http" && urlRule.scheme != "https") {
       LOG(ERROR) << "parse: host "
@@ -85,7 +175,7 @@ static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
     err = "host " + urlRule.host + " path len too long";
     return false;
   }
-  if (!FormatUrlRule(urlRule, err)) {
+  if (!FormatUrlRule(urlRule, err, supportWildcard)) {
     return false;
   }
   LOG(DEBUG) << "parse: url host "
@@ -94,11 +184,13 @@ static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
 }
 
 UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
-    const std::string& urlTrustList,
+    const std::string& urlTrustList, bool allowOpaqueOrigin, bool supportWildcard,
     std::string& detailErrMsg) {
   if (urlTrustList.empty()) {
     LOG(INFO) << "parse: list is empty, disable url trust list.";
     ruleMap_.clear();
+    allowOpaqueOrigin_ = allowOpaqueOrigin;
+    supportWildcard_ = supportWildcard;
     return UrlListSetResult::SET_OK;
   }
   absl::optional<base::Value> jsonParsed = base::JSONReader::Read(urlTrustList);
@@ -117,6 +209,8 @@ UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
   if (list->size() == 0) {
     LOG(INFO) << "parse: list is empty, disable url trust list.";
     ruleMap_.clear();
+    allowOpaqueOrigin_ = allowOpaqueOrigin;
+    supportWildcard_ = supportWildcard;
     return UrlListSetResult::SET_OK;
   }
 
@@ -127,7 +221,7 @@ UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
     UrlTrustRule rule;
     base::JSONValueConverter<UrlTrustRule> converter;
     converter.Convert(ruleJson, &rule);
-    if (!CheckUrlRuleValid(rule, ruleErr)) {
+    if (!CheckUrlRuleValid(rule, ruleErr, supportWildcard)) {
       detailErrMsg =
           "rule " + std::to_string(ruleId) + " check error, " + ruleErr;
       return UrlListSetResult::PARAM_ERROR;
@@ -137,15 +231,53 @@ UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
     ruleId++;
   }
   ruleMap_ = map;
+  allowOpaqueOrigin_ = allowOpaqueOrigin;
+  supportWildcard_ = supportWildcard;
   return UrlListSetResult::SET_OK;
 }
 
+UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustListWithWildcard(const GURL& url) {
+  for (const auto& rule_pair : ruleMap_) {
+    auto& rule = rule_pair.second;
+    if (!HostMatchWithWildcard(rule.host, url.host())) {
+      continue;
+    }
+    
+    if (!rule.scheme.empty() && (rule.scheme != url.scheme())) {
+      continue;
+    }
+    if (rule.port > 0 && (rule.port != url.EffectiveIntPort())) {
+      continue;
+    }
+    if (!PathMatchWithWildcard(rule.path, url.path())) {
+      continue;
+    }
+    return UrlTrustCheckResult::RESULT_ALLOW;
+  }
+  LOG(ERROR) << "Deny url.";
+  LOG(DEBUG) << "Url detail: scheme:" << url.scheme()
+             << ",host:" << url::LogUtils::ConvertUrlWithMask(url.host())
+             << ",port:" << url.EffectiveIntPort() << ",path: ***";
+  return UrlTrustCheckResult::RESULT_DENY;
+}
+
 UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(const GURL& url) {
+  if (url::Origin::Create(url).opaque()) {
+    if (allowOpaqueOrigin_) {
+      return UrlTrustCheckResult::RESULT_ALLOW;
+    }
+    return UrlTrustCheckResult::RESULT_DENY;
+  }
+
   if (ruleMap_.size() == 0) {
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
   if (!url.SchemeIsHTTPOrHTTPS()) {
     return UrlTrustCheckResult::RESULT_ALLOW;
+  }
+
+  if (supportWildcard_) {
+    return CheckUrlTrustListWithWildcard(url);
   }
 
   auto range = ruleMap_.equal_range(url.host());
@@ -158,15 +290,8 @@ UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(const GURL& url) {
     if (rule.port > 0 && (rule.port != url.EffectiveIntPort())) {
       continue;
     }
-    if (!rule.path.empty()) {
-      if (path.find(rule.path) != 0) {
-        continue;
-      }
-      size_t next = rule.path.size();
-      if (next < path.size() && !rule.path.ends_with('/') &&
-          path[next] != '/') {
-        continue;
-      }
+    if (!PathMatch(rule.path, path)) {
+      continue;
     }
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
