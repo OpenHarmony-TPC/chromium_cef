@@ -789,6 +789,10 @@ typedef struct _cef_browser_settings_t {
   int32_t gesture_focus_mode;
 #endif
 
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  cef_state_t cast_enabled;
+#endif
+
   ///
   /// Controls whether the Chrome status bubble will be used. Only supported
   /// with Chrome style. For details about the status bubble see

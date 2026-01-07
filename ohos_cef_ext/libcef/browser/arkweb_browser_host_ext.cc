@@ -788,6 +788,10 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
   settings_.clipboard_site_permission_enabled = browser_settings.clipboard_site_permission_enabled;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  settings_.cast_enabled = browser_settings.cast_enabled;
+#endif  // BUILDFLAG(ARKWEB_MEDIA_CAST)
 }
 
 void ArkWebBrowserHostExtImpl::SetDrawRect(int x,
