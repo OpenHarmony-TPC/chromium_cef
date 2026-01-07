@@ -14,7 +14,8 @@
             "yuzhouhang1"
         ],
         "arkweb-DFX": [
-            "StringChen"
+            "StringChen",
+            "hjoksky"
         ],
         "arkweb-peripherals": [
             "zhang-yinglie"
@@ -44,6 +45,9 @@
             "info": "[存储]"
         },
         "StringChen": {
+            "info": "[DFX]"
+        },
+        "hjoksky": {
             "info": "[DFX]"
         },
         "zhang-yinglie": {
