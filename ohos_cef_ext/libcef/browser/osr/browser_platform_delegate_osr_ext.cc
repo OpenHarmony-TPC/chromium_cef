@@ -35,7 +35,7 @@
 
 #if BUILDFLAG(ARKWEB_PIP)
 #include "content/browser/media/media_web_contents_observer.h"
-#include "gpu/ipc/common/nweb_video_native_window.h"
+#include "gpu/ipc/common/nweb_native_window_tracker.h"
 
 namespace {
 const base::TimeDelta kPictureInPictureDelta = base::Seconds(15);
@@ -750,7 +750,7 @@ void CefBrowserPlatformDelegateOsrExt::SetPipNativeWindow(
   }
   bool status = false;
   int32_t surface_widget =
-      NWebVideoNativeWindow::Get()->AddNativeWindow(window);
+      NWebNativeWindowTracker::Get()->AddNativeWindow(window);
   auto it = web_contents_impl->AsWebContentsImplExt()->GetMediaPlayerId(delegate_id,
                                                 child_id,
                                                 frame_routing_id,
