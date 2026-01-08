@@ -188,7 +188,7 @@ public:
   bool ShouldAllowPartialParamMismatchOfPrerender2(
       content::NavigationHandle& navigation_handle) override;
   content::NavigationController::UserAgentOverrideOption
-      ShouldOverrideUserAgentForPrerender2() override;
+      ShouldOverrideUserAgentForPreloading(const GURL& url) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
