@@ -260,17 +260,17 @@ bool ParaseRenderFrameHostId(const std::string& frameId, int* childId, int* rout
   if (frameId.size() < kFrameIdMinLength) {
     return false;
   }
- 
+
   const size_t pos = frameId.find('_');
   if (pos == std::string::npos || pos == 0 || pos == frameId.size() - 1) {
     return false;
   }
- 
+
   if (!base::StringToInt(frameId.substr(0, pos), childId) ||
       !base::StringToInt(frameId.substr(pos + 1), routingId)) {
     return false;
   }
- 
+
   return true;
 }
 
@@ -964,7 +964,7 @@ void ArkWebBrowserHostExtImpl::SetNWebId(int NWebID) {
 void ArkWebBrowserHostExtImpl::EnableAppLinking(bool enable) {
   is_arkweb_applinking_enabled_ = enable;
 }
- 
+
 bool ArkWebBrowserHostExtImpl::IsAppLinkingEnabled() const {
   return is_arkweb_applinking_enabled_;
 }
@@ -1078,8 +1078,9 @@ void ArkWebBrowserHostExtImpl::LoadWithData(const CefString& data,
   }
 }
 
-void ArkWebDealWithPostData(const std::string& post_data, 
-                           content::NavigationController::LoadURLParams* params) {
+void ArkWebDealWithPostData(
+    const std::string& post_data,
+    content::NavigationController::LoadURLParams* params) {
   if (post_data.empty()) {
       params->post_data = new network::ResourceRequestBody();
   } else {
@@ -1107,13 +1108,14 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
   }
   GURL new_url = GURL(url);
   content::NavigationController::LoadURLParams loadUrlParams(new_url);
- 
+
   loadUrlParams.url = GURL(new_url);
   loadUrlParams.load_type = static_cast<content::NavigationController::LoadURLType>(load_type);
-  
-  loadUrlParams.referrer = content::Referrer(GURL(static_cast<std::optional<std::string>>(refer).value_or("")), 
-                           network::mojom::ReferrerPolicy::kDefault);
-  
+
+  loadUrlParams.referrer = content::Referrer(
+      GURL(static_cast<std::optional<std::string>>(refer).value_or("")),
+      network::mojom::ReferrerPolicy::kDefault);
+
   loadUrlParams.extra_headers = headers;
   ArkWebDealWithPostData(post_data, &loadUrlParams);
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
@@ -1126,7 +1128,7 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
   }
   // if url_typed_with_http_scheme == true, it means user dont want to upgrade.
   loadUrlParams.url_typed_with_http_scheme = !allow_https_upgrade;
-                                                       
+
   if (auto web_contents = GetWebContents()) {
     LOG(DEBUG) << "load Url With Params";
     web_contents->GetController().LoadURLWithParams(loadUrlParams);
@@ -1779,7 +1781,7 @@ int ArkWebBrowserHostExtImpl::PrerenderPage(const CefString& url,
     return ARKWEB_INIT_ERROR;
   }
 }
- 
+
 void ArkWebBrowserHostExtImpl::CancelAllPrerendering() {
   prerender_handles_.clear();
 }
@@ -3096,8 +3098,6 @@ void ArkWebBrowserHostExtImpl::EnableAdsBlock(bool enable) {
   }
   GetWebContents()->EnableAdsBlock(enable);
 
-  LOG(INFO) << "web adblock enabled : " << enable;
-
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO) << "web adblock enabled :" << enable;
 #endif
@@ -3106,7 +3106,6 @@ void ArkWebBrowserHostExtImpl::EnableAdsBlock(bool enable) {
   if (!OHOS::adblock::AdBlockConfig::GetInstance()
            ->GetUserEasylistReplaceSwitch() &&
       enable) {
-    LOG(INFO) << "[Adblock] enable cloud control for easylist";
 
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(INFO) << "[Adblock] enable cloud control for easylist";
@@ -3268,7 +3267,6 @@ void ArkWebBrowserHostExtImpl::EnableIntelligentTrackingPrevention(
     base::AutoLock locker(lock_);
     intelligent_tracking_prevention_cookies_enabled_ = enable;
   }
-  LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO) << "Intelligent tracking prevention cookies enabled "
                      << enable;
@@ -3557,7 +3555,6 @@ bool ArkWebBrowserHostExtImpl::IsSafeBrowsingEnabled() {
 
 void ArkWebBrowserHostExtImpl::EnableSafeBrowsing(bool enable) {
   if (settings_.is_safe_browsing_enable != enable) {
-    LOG(INFO) << "enable safe browsing" << enable;
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(INFO) << "enable safe browsing" << enable;
 #endif
@@ -3672,20 +3669,16 @@ void ArkWebBrowserHostExtImpl::SetBackForwardCacheOptions(int32_t size,
                                                           int32_t timeToLive) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "SetBackForwardCacheOptions failed to get web contents in "
-                  "CefBrowserHostBase.";
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-    LOG_FEEDBACK(ERROR) << "SetBackForwardCacheOptions failed to get web "
-                           "contents in CefBrowserHostBase.";
+    LOG_FEEDBACK(ERROR, kNetwork)
+        << "SetBackForwardCacheOptions message:noWebContents";
 #endif
     return;
   }
 
-  LOG(INFO) << "SetBackForwardCacheOptions size: " << size
-            << " timeToLive: " << timeToLive;
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-  LOG_FEEDBACK(INFO) << "SetBackForwardCacheOptions size: " << size
-                     << " timeToLive: " << timeToLive;
+  LOG_FEEDBACK(INFO, kNetwork) << "SetBackForwardCacheOptions size:" << size
+                               << " timeToLive:" << timeToLive << "s";
 #endif
   content::NavigationController& controller = web_contents->GetController();
   controller.GetBackForwardCache().SetCacheSize(size);
@@ -4013,7 +4006,7 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
     LOG(ERROR) << "GetWebContents null";
     return;
   }
- 
+
   int childId = 0;
   int routingId = 0;
   content::RenderFrameHost* targetFrame = nullptr;
@@ -4140,7 +4133,8 @@ void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
 void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "ArkWebBrowserHostExtImpl::EnableHttpsUpgrades, web_contents is null";
+    LOG_FEEDBACK(WARNING, kHttpsUpgrades)
+        << "EnableHttpsUpgrades message:webContentsIsNull";
     return;
   }
   OhosHttpsUpgradesHelper::CreateForWebContents(web_contents);
@@ -4148,7 +4142,7 @@ void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
   if (https_helper) {
     https_helper->set_is_arkweb_https_upgrades_enable(enable);
   } else {
-    LOG(ERROR) << "ArkWebBrowserHostExtImpl::EnableHttpsUpgrades, https_helper is null";
+    LOG(ERROR, kHttpsUpgrades) << "EnableHttpsUpgrades message:helperIsNull";
   }
 }
 #endif

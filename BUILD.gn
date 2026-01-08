@@ -438,7 +438,7 @@ test("libcef_static_unittests") {
     "//testing/gtest",
     "//testing/gmock",
     "//base",
-    "//content/test:test_support", 
+    "//content/test:test_support",
   ]
 
   configs += [
@@ -1393,6 +1393,8 @@ source_set("libcef_static") {
     sources += [
       "ohos_cef_ext/libcef/common/net/url_util_ex.h",
       "ohos_cef_ext/libcef/common/net/url_util_ex.cc",
+      "ohos_cef_ext/libcef/common/net/ssl_info_util_ex.h",
+      "ohos_cef_ext/libcef/common/net/ssl_info_util_ex.cc",
       "ohos_cef_ext/libcef/common/net/scheme_registration_ex.cc",
       "ohos_cef_ext/libcef/common/net/scheme_registration_ex.h",
     ]

@@ -1475,7 +1475,6 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
 
 void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
 #if BUILDFLAG(ARKWEB_MEDIA_MUTE_AUDIO)
-  LOG(INFO) << "OnAudioStateChanged: " << audible;
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO) << "OnAudioStateChanged: " << audible;
 #endif

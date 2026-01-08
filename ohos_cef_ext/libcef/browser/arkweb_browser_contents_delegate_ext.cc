@@ -209,8 +209,6 @@ void ArkWebBrowserContentsDelegateExt::ViewportFitChanged(
 void ArkWebBrowserContentsDelegateExt::OnOldPageNoLongerRendered(
     const GURL& url,
     bool success) {
-  LOG(INFO) << "ArkWebBrowserContentsDelegateExt::OldPageNoLongerRendered";
-
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO)
       << "ArkWebBrowserContentsDelegateExt::OldPageNoLongerRendered";

@@ -390,7 +390,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
     GURL referrer);
 
   void AddQueryForRedirectOnUIDone(
-    const std::vector<std::string>& removed_headers,    
+    const std::vector<std::string>& removed_headers,
     const net::HttpRequestHeaders& modified_headers,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
     const std::optional<GURL>& original_url,
@@ -674,8 +674,9 @@ void InterceptedRequest::Restart() {
   struct NetHelperSetting setting;
   factory_->request_handler_->GetSettingOfNetHelper(request_.url, setting);
   if (IsURLBlocked(request_.url, setting)) {
-    LOG(WARNING) << "File url access denied! url="
-                 << url::LogUtils::ConvertUrlWithMask(request_.url.spec());
+    LOG_FEEDBACK(ERROR, kNavigation)
+        << "URLBlocked isServerRedirect:" << is_redirect
+        << " url:" << url::LogUtils::ConvertUrlWithMask(request_.url.spec());
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
     return;
   }
@@ -1598,7 +1599,7 @@ void InterceptedRequest::AddQueryForRedirectOnUIDone(
     Restart(true);
 #else
     Restart();
-#endif  
+#endif
 }
 #endif
 
