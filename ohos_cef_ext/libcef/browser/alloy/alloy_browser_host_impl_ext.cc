@@ -1211,7 +1211,7 @@ void AlloyBrowserHostImplExt::NavigationStateChanged(
 }
 
 content::NavigationController::UserAgentOverrideOption
-AlloyBrowserHostImplExt::ShouldOverrideUserAgentForPrerender2() {
+AlloyBrowserHostImplExt::ShouldOverrideUserAgentForPreloading(const GURL& url) {
   // For WebView, always use the user agent override, which is set every time
   // the user agent in AwSettings is modified.
   return content::NavigationController::UA_OVERRIDE_TRUE;
