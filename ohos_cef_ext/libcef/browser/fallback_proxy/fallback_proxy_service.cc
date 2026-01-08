@@ -35,7 +35,7 @@ constexpr char kFallbackProxyBlockList[] = "fallbackProxyBlockList";
 constexpr int kFallbackProxyFailureLimit = 3;
 }  // namespace
 
-void FallbackProxyService_OnUpdateProxyToken(const std::string& old_token) {
+void FallbackProxyService_OnUpdateProxyToken(std::string old_token) {
   // Triggering Client Callback
   LOG(DEBUG) << "Fallback FallbackProxyService_OnUpdateProxyToken old_token:"
              << old_token;
