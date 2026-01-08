@@ -53,30 +53,8 @@ void OverrideUserDataDirExt(const base::FilePath& user_data_path,
 #endif  // BUILDFLAG(ARKWEB_CRASHPAD)
 }
 
-void OverrideCacheDirExt(const base::FilePath& arkweb_app_data_dir, const base::FilePath& cache_path){
-  if (arkweb_app_data_dir.empty()) {
-    LOG(ERROR) << "arkweb_app_data_dir is empty.";
-    return;
-  }
-  // expect root directory
-  const base::FilePath kExpectedRoot = arkweb_app_data_dir.Append("cache");
-  // default path
-  const base::FilePath kDefaultCachePath = arkweb_app_data_dir.Append("cache/web");
-  // target
-  base::FilePath target_cache_path = cache_path;
-  if (!arkweb_app_data_dir.IsParent(cache_path) &&
-      arkweb_app_data_dir != cache_path) {
-    target_cache_path = arkweb_app_data_dir.Append(cache_path);
-  }
-
-  if (target_cache_path.empty() || !kExpectedRoot.IsParent(target_cache_path)) {
-    target_cache_path = kDefaultCachePath;
-  }
-  LOG(INFO) << "user use cache_path : " << arkweb_app_data_dir.Append(cache_path)
-            << ", user set cache_path : " << target_cache_path;
-
-  // set
-  base::PathService::Override(base::DIR_CACHE, target_cache_path);
+void OverrideCacheDirExt(const base::FilePath& cache_path) {
+  base::PathService::Override(base::DIR_CACHE, cache_path);
 }
 
 }  // namespace resource_util

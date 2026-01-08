@@ -21,56 +21,49 @@
 #include "base/test/test_file_util.h"
 
 namespace resource_util {
-extern void OverrideCacheDirExt(const base::FilePath& arkweb_app_data_dir,
-                                const base::FilePath& cache_path);
+extern void OverrideCacheDirExt(const base::FilePath& cache_path);
 }  // namespace resource_util
 
 class OverrideCacheDirExtTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    arkweb_app_data_dir = base::FilePath("/data/storage/el2/base");
-    base::PathService::Override(base::DIR_CACHE, base::FilePath());
+    base::PathService::Override(base::DIR_CACHE, base::FilePath("/"));
   }
   void TearDown() override {
     if (base::PathExists(base::FilePath("/data/storage/el2"))) {
       base::DeletePathRecursively(base::FilePath("/data/storage/el2"));
     }
   }
-  base::FilePath arkweb_app_data_dir;
 };
 
-TEST_F(OverrideCacheDirExtTest, EmptyCachePath) {
+TEST_F(OverrideCacheDirExtTest, TestCase001) {
   base::FilePath cache_path = base::FilePath();
-  resource_util::OverrideCacheDirExt(arkweb_app_data_dir, cache_path);
+  resource_util::OverrideCacheDirExt(cache_path);
+
+  base::FilePath actual_cache_path;
+  base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
+  EXPECT_EQ(actual_cache_path, base::FilePath("/"));
+}
+
+TEST_F(OverrideCacheDirExtTest, TestCase002) {
+  base::FilePath cache_path = base::FilePath("/data/storage/el2/base/cache/web");
+  resource_util::OverrideCacheDirExt(cache_path);
 
   base::FilePath actual_cache_path;
   base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
   EXPECT_EQ(actual_cache_path, base::FilePath("/data/storage/el2/base/cache/web"));
 }
 
-TEST_F(OverrideCacheDirExtTest, CacheWeb) {
-  base::FilePath cache_path = base::FilePath("cache/web");
-  resource_util::OverrideCacheDirExt(arkweb_app_data_dir, cache_path);
+TEST_F(OverrideCacheDirExtTest, TestCase003) {
+  base::FilePath test_dir = base::FilePath("/data/storage/el2/base");
+  base::FilePath test_file = test_dir.Append("tmp_test");
+  base::CreateDirectory(test_dir);
+  base::WriteFile(test_file, "test");
+
+  base::FilePath cache_path = base::FilePath("/data/storage/el2/base/tmp_test");
+  resource_util::OverrideCacheDirExt(cache_path);
 
   base::FilePath actual_cache_path;
   base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
-  EXPECT_EQ(actual_cache_path, base::FilePath("/data/storage/el2/base/cache/web"));
-}
-
-TEST_F(OverrideCacheDirExtTest, CacheWeb2) {
-  base::FilePath cache_path = base::FilePath("cache/web2");
-  resource_util::OverrideCacheDirExt(arkweb_app_data_dir, cache_path);
-
-  base::FilePath actual_cache_path;
-  base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
-  EXPECT_EQ(actual_cache_path, base::FilePath("/data/storage/el2/base/cache/web2"));
-}
-
-TEST_F(OverrideCacheDirExtTest, Cache2Web) {
-  base::FilePath cache_path = base::FilePath("cache2/web");
-  resource_util::OverrideCacheDirExt(arkweb_app_data_dir, cache_path);
-
-  base::FilePath actual_cache_path;
-  base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
-  EXPECT_EQ(actual_cache_path, base::FilePath("/data/storage/el2/base/cache/web"));
+  EXPECT_EQ(actual_cache_path, base::FilePath("/"));
 }

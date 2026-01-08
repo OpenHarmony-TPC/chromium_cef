@@ -140,11 +140,9 @@ void OverrideUserDataDir(CefSettings* settings,
 #if BUILDFLAG(IS_OHOS)
   const base::FilePath& cache_path =
       command_line->GetSwitchValuePath(switches::kUserCacheDir);
-  const base::FilePath& arkweb_app_data_dir =
-      command_line->GetSwitchValuePath(switches::kArkwebAppDataDir);
 
   OverrideUserDataDirExt(user_data_path, command_line);
-  OverrideCacheDirExt(arkweb_app_data_dir, cache_path);
+  OverrideCacheDirExt(cache_path);
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
