@@ -628,6 +628,22 @@ bool ArkwebFrameHostExtImpl::SetFocusByPosition(float x, float y) {
   LOG(INFO) << "received result from render:" << out_isEditable;
   return out_isEditable;
 }
+
+bool ArkwebFrameHostExtImpl::IsElementExist(std::string xPath) {
+  if (is_temporary() || !render_frame_host_) {
+    LOG(ERROR) << "is_temporary or not render_frame_host_";
+    return false;
+  }
+
+  if (!render_frame_.is_bound()) {
+    LOG(ERROR) << "render_frame_.is_bound";
+    return false;
+  }
+  bool is_element_exist = false;
+  render_frame_->IsElementExist(xPath, &is_element_exist);
+  LOG(INFO) << "received is_element_exist from render:" << is_element_exist;
+  return is_element_exist;
+}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)

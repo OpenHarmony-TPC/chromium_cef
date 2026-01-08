@@ -120,6 +120,7 @@ void SetIsFling(bool is_fling);
   void GetLastHitNodeId(int& node_id);
   void UpdateHitTestData(int32_t type, const std::string& extra_data, int32_t node_id) override;
   void SetOverscrollMode(int mode);
+  bool IsElementExist(std::string xPath);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_MEDIA)

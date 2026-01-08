@@ -439,6 +439,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable, int scrollType) override;
+  bool IsElementExist(CefString& xPath) override;
 #if BUILDFLAG(ARKWEB_SYNC_RENDER)
   void UpdateDrawRect() override;
 #endif

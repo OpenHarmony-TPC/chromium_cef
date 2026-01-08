@@ -183,6 +183,9 @@ interface RenderFrame {
   [EnableIf=is_arkweb]
   SetOverscrollMode(int32 mode);
 
+  [EnableIf=arkweb_input_events, Sync]
+  IsElementExist(string xPath) => (bool isExist);
+
   [EnableIf=arkweb_optimize_parser_budget]
   SetOptimizeParserBudgetEnabled(bool enable);
 
