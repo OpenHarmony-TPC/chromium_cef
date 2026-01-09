@@ -13,6 +13,44 @@
  * limitations under the License.
  */
 
+class CefRewriteUrlCallbackWrapper : public CefRewriteUrlCallback {
+ public:
+  explicit CefRewriteUrlCallbackWrapper(base::OnceCallback<void(std::string)> callback)
+      : callback_(std::move(callback)),
+        callback_task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {}
+
+  CefRewriteUrlCallbackWrapper(const CefRewriteUrlCallbackWrapper&) = delete;
+  CefRewriteUrlCallbackWrapper& operator=(const CefRewriteUrlCallbackWrapper&) =
+      delete;
+
+  void OnComplete(const CefString& url) override {
+    RunCallback(url);
+  }
+
+  ~CefRewriteUrlCallbackWrapper() override {
+    RunCallback(CefString());
+  }
+
+ private:
+  void RunCallback(const CefString& url) {
+    base::AutoLock lock(lock_);
+    if (callback_.is_null()) {
+      return;
+    }
+
+    if (callback_task_runner_) {
+      callback_task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(std::move(callback_), url.ToString()));
+    }
+  }
+
+  base::Lock lock_;
+  base::OnceCallback<void(std::string)> callback_ GUARDED_BY(lock_);
+  scoped_refptr<base::SequencedTaskRunner> callback_task_runner_;
+
+  IMPLEMENT_REFCOUNTING(CefRewriteUrlCallbackWrapper);
+};
+
 public:
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void OnRequestError(int32_t request_id,
@@ -324,17 +362,26 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-std::string OnRewriteUrlForNavigation(
-    const std::string& original_url,
-    const std::string& referrer,
-    int transition_type,
-    bool is_key_request) override {
-  if (wrapper_helper_) {
-    return wrapper_helper_->OnRewriteUrlForNavigation(
-        init_state_->browser_, original_url, referrer, transition_type, is_key_request);
+  void OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer,
+      int transition_type,
+      bool is_key_request,
+      int32_t request_id,
+      base::OnceCallback<void(std::string)> callback) override {
+    CEF_REQUIRE_IOT();
+    RequestState* state = GetState(request_id);
+    if (!state || !state->request_ || !state->handler_) {
+      std::move(callback).Run("");
+      return;
+    }
+    CefRefPtr<CefRewriteUrlCallbackWrapper> rewrite_url_callback =
+        new CefRewriteUrlCallbackWrapper(std::move(callback));
+    state->handler_->AsArkWebResourceRequestHandlerExt()
+        ->OnRewriteUrlForNavigationAsync(CefString(original_url),
+                                         CefString(referrer), transition_type,
+                                         is_key_request, rewrite_url_callback);
   }
-  return "";
-}
 #endif
 
 private:
