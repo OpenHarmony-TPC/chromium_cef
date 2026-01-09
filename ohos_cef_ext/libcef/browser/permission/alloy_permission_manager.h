@@ -55,19 +55,22 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
       const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
       const url::Origin& requesting_origin,
       const url::Origin& embedding_origin) override;
-  content::PermissionStatus GetPermissionStatusForCurrentDocument(
-      const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
-      content::RenderFrameHost* render_frame_host,
-      bool should_include_device_status) override;
+  // Follow-up Processing: Chromium 144在src/content/public/browser/permission_controller_delegate.h删除了此虚函数声明
+  // 141版本存在GetPermissionStatusForCurrentDocument(返回PermissionStatus)，144版本完全移除
+  // 统一使用GetPermissionResultForCurrentDocument(返回PermissionResult)替代
+  //  content::PermissionStatus GetPermissionStatusForCurrentDocument(
+  //      const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
+  //      content::RenderFrameHost* render_frame_host,
+  //      bool should_include_device_status) override;
   content::PermissionResult GetPermissionResultForCurrentDocument(
       const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
       content::RenderFrameHost* render_frame_host,
       bool should_include_device_status) override;
-  content::PermissionStatus GetPermissionStatusForWorker(
+  content::PermissionResult GetPermissionResultForWorker(
       const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
       content::RenderProcessHost* render_process_host,
       const GURL& worker_origin) override;
-  content::PermissionStatus GetPermissionStatusForEmbeddedRequester(
+  content::PermissionResult GetPermissionResultForEmbeddedRequester(
       const blink::mojom::PermissionDescriptorPtr& permission_descriptor,
       content::RenderFrameHost* render_frame_host,
       const url::Origin& requesting_origin) override;
