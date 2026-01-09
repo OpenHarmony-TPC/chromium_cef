@@ -492,21 +492,23 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
   }
   return PermissionStatus::DENIED;
 }
-PermissionStatus AlloyPermissionManager::GetPermissionStatusForWorker(
+content::PermissionResult AlloyPermissionManager::GetPermissionResultForWorker(
     const blink::mojom::PermissionDescriptorPtr& permission,
     content::RenderProcessHost* render_process_host,
     const GURL& worker_origin) {
-  return GetPermissionStatus(std::move(permission), worker_origin, worker_origin);
+  return content::PermissionResult(
+      GetPermissionStatus(permission, worker_origin, worker_origin));
 }
-PermissionStatus
-AlloyPermissionManager::GetPermissionStatusForEmbeddedRequester(
+
+content::PermissionResult
+AlloyPermissionManager::GetPermissionResultForEmbeddedRequester(
     const blink::mojom::PermissionDescriptorPtr& permission,
     content::RenderFrameHost* render_frame_host,
     const url::Origin& requesting_origin) {
-  return GetPermissionStatus(
-      std::move(permission), requesting_origin.GetURL(),
+  return content::PermissionResult(GetPermissionStatus(
+      permission, requesting_origin.GetURL(),
       permissions::PermissionUtil::GetLastCommittedOriginAsURL(
-          render_frame_host->GetMainFrame()));
+          render_frame_host->GetMainFrame())));
 }
 
 content::PermissionResult
@@ -521,17 +523,19 @@ AlloyPermissionManager::GetPermissionResultForOriginWithoutContext(
       status, content::PermissionStatusSource::UNSPECIFIED);
 }
 
-PermissionStatus AlloyPermissionManager::GetPermissionStatusForCurrentDocument(
-    const blink::mojom::PermissionDescriptorPtr& permission,
-    content::RenderFrameHost* render_frame_host,
-    bool should_include_device_status) {
-  return GetPermissionStatus(
-      std::move(permission),
-      permissions::PermissionUtil::GetLastCommittedOriginAsURL(
-          render_frame_host),
-      permissions::PermissionUtil::GetLastCommittedOriginAsURL(
-          render_frame_host->GetMainFrame()));
-}
+// Follow-up Processing: 对应头文件中GetPermissionStatusForCurrentDocument声明被注释
+// Chromium 144删除了此虚函数，统一使用GetPermissionResultForCurrentDocument
+// PermissionStatus AlloyPermissionManager::GetPermissionStatusForCurrentDocument(
+//     const blink::mojom::PermissionDescriptorPtr& permission,
+//     content::RenderFrameHost* render_frame_host,
+//     bool should_include_device_status) {
+//   return GetPermissionStatus(
+//       std::move(permission),
+//       permissions::PermissionUtil::GetLastCommittedOriginAsURL(
+//           render_frame_host),
+//       permissions::PermissionUtil::GetLastCommittedOriginAsURL(
+//           render_frame_host->GetMainFrame()));
+// }
 
 void AlloyPermissionManager::ResetPermission(blink::PermissionType permission,
                                              const GURL& requesting_origin,
