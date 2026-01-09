@@ -23,7 +23,7 @@ class HistoryGetVisitsFunction : public HistoryFunctionWithCallback {
   ResponseAction Run() override;
 
   // Callback for the history function to provide results.
-  void QueryComplete(history::QueryURLResult result);
+  void QueryComplete(history::QueryURLAndVisitsResult result);
 };
 
 class HistorySearchFunction : public HistoryFunctionWithCallback {
