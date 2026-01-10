@@ -2705,3 +2705,19 @@ ui::FilteredGestureProvider& ArkWebRenderWidgetHostViewOSRExt::GetGestureProvide
   return gesture_provider_;
 }
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+bool ArkWebRenderWidgetHostViewOSRExt::IsTouchSequencePotentiallyActiveOnViz() {
+  return false;
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::RequestInputBackForDragAndDrop(
+    blink::mojom::DragDataPtr drag_data,
+    const url::Origin& source_origin,
+    blink::DragOperationsMask drag_operations_mask,
+    SkBitmap bitmap,
+    gfx::Vector2d cursor_offset_in_dip,
+    gfx::Rect drag_obj_rect_in_dip,
+    blink::mojom::DragEventSourceInfoPtr event_info) {
+}
+#endif

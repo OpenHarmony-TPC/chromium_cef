@@ -347,6 +347,19 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #if BUILDFLAG(ARKWEB_AI)
   ui::FilteredGestureProvider& GetGestureProvider();
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+  bool IsTouchSequencePotentiallyActiveOnViz() override;
+  void RequestInputBackForDragAndDrop(
+      blink::mojom::DragDataPtr drag_data,
+      const url::Origin& source_origin,
+      blink::DragOperationsMask drag_operations_mask,
+      SkBitmap bitmap,
+      gfx::Vector2d cursor_offset_in_dip,
+      gfx::Rect drag_obj_rect_in_dip,
+      blink::mojom::DragEventSourceInfoPtr event_info) override;
+#endif
+
  private:
   bool is_popup = false;
 
