@@ -277,7 +277,7 @@ void ArkwebFrameExtImpl::GetImageForContextNode(int command_id) {
   }
   std::vector<uint8_t> image_data;
   gfx::Size original_size;
-  std::string image_extension;
+  std::string mime_type;
 
   if (context_node.IsNull() || !context_node.IsElementNode() ||
       context_node.To<blink::WebElement>().ImageContents().drawsNothing()) {
@@ -299,11 +299,11 @@ void ArkwebFrameExtImpl::GetImageForContextNode(int command_id) {
 
   SkBitmap image = web_element.ImageContents();
   SkBitmap resize_image = Downscale(image, total_mem_, command_id);
-  image_extension = "." + web_element.ImageExtension();
+  mime_type = web_element.ImageMimeType().Utf8();
   params->width = resize_image.width();
   params->height = resize_image.height();
   params->image = resize_image;
-  params->image_extension = image_extension;
+  params->image_extension = mime_type;
   LOG(DEBUG) << "GetImageForContextNode, image width: " << resize_image.width()
              << ", height: " << resize_image.height();
   SendToBrowserFrame(
