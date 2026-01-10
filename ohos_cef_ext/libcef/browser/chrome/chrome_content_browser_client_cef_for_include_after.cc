@@ -148,7 +148,8 @@ void ArkWebInnerConfigureNetworkContextParamsBefore(
     } else {
 #if BUILDFLAG(ARKWEB_MAX_CACHE_SIZE)
       int64_t totalDiskSpace =
-          base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
+          base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH))
+              .value_or(-1);
       if (totalDiskSpace >= LARGE_CAPACITY_DEVICE_THRESHOLD) {
         LOG(DEBUG)
             << "Set http cache max size to 100MB for large capacity device.";
