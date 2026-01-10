@@ -25,6 +25,7 @@
 #include "chrome/browser/extensions/api/downloads/downloads_api.h"
 #include "chrome/common/extensions/api/downloads.h"
 #include "components/download/public/common/download_item.h"
+#include "chrome/browser/extensions/api/downloads/download_extension_errors.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/web_contents.h"
 #include "download_api_ext_router.h"
@@ -44,14 +45,6 @@ using extensions::mojom::APIPermissionID;
 namespace extensions {
 namespace {
 namespace downloads = api::downloads;
-const char kOpenPermission[] = "The \"downloads.open\" permission is required";
-const char kShelfPermission[] =
-    "downloads.setShelfEnabled requires the "
-    "\"downloads.shelf\" permission";
-const char kUiPermission[] =
-    "downloads.setUiOptions requires the "
-    "\"downloads.ui\" permission";
-const char kUserGesture[] = "User gesture required";
 
 bool Fault(bool error, const char* message_in, std::string* message_out) {
   if (!error) {
@@ -113,6 +106,9 @@ extensions::api::downloads::DangerType ConvertDangerType(
           kPromptForLocalPasswordScanning;
     case download::DOWNLOAD_DANGER_TYPE_BLOCKED_SCAN_FAILED:
       return extensions::api::downloads::DangerType::kBlockedScanFailed;
+    // Follow-up Processing: arkweb模仿chromium补充的kForceSaveToGdrive->强制下载到google drive是否正确，arkweb应该改为什么需要人工确认
+    case download::DOWNLOAD_DANGER_TYPE_FORCE_SAVE_TO_GDRIVE:
+      return extensions::api::downloads::DangerType::kForceSaveToGdrive;
     case download::DOWNLOAD_DANGER_TYPE_MAX:
       NOTREACHED();
   }
