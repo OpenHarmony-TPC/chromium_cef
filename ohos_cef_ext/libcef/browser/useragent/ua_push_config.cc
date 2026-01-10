@@ -54,7 +54,7 @@ std::optional<OSPositionScheme> UAPushConfig::LoadConfigFromFile(
     return std::nullopt;
   }
   // Parse JSON content into base::Value
-  std::optional<base::Value> root = base::JSONReader::Read(file_contents);
+  std::optional<base::Value> root = base::JSONReader::Read(file_contents, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!root || !root->is_dict()) {
     return std::nullopt;
   }
