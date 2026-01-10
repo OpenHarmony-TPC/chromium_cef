@@ -20,7 +20,7 @@ void OnRequestError(int32_t request_id,
                     int error_code,
                     bool safebrowsing_hit) override {
   if (init_state_ && wrapper_helper_) {
-    wrapper_helper_->OnRequestError(init_state_->browser_, init_state_->frame_,
+    wrapper_helper_->OnRequestError(init_state_->browser_, init_state_->GetFrame(),
                                     request_id, request, error_code,
                                     safebrowsing_hit);
   }
@@ -56,8 +56,8 @@ void GetOhosResourceHandlerResult(
   if (!resource_handler && state->scheme_factory_) {
     // Does the scheme factory want to handle the request?
     resource_handler = state->scheme_factory_->Create(
-        init_state_->browser_, init_state_->frame_,
-        state->request_->url.scheme(), state->pending_request_.get());
+        init_state_->browser_, init_state_->GetFrame(),
+        state->request_->url.GetScheme(), state->pending_request_.get());
   }
 
 #if BUILDFLAG(ARKWEB_PREFETCH_POST)
@@ -128,7 +128,7 @@ void GetOhosResourceHandlerInUiTask(
   if (state->handler_) {
     // Does the client want to handle the request?
     resource_handler = state->handler_->GetResourceHandler(
-        init_state_->browser_, init_state_->frame_,
+        init_state_->browser_, init_state_->GetFrame(),
         state->pending_request_.get());
   }
 
@@ -137,8 +137,8 @@ void GetOhosResourceHandlerInUiTask(
     // Does the scheme factory want to handle the request?
     if (!url.starts_with("hwweb")) {
       resource_handler = state->scheme_factory_->Create(
-          init_state_->browser_, init_state_->frame_,
-          state->request_->url.scheme(), state->pending_request_.get());
+          init_state_->browser_, init_state_->GetFrame(),
+          state->request_->url.GetScheme(), state->pending_request_.get());
     }
   }
 
@@ -183,14 +183,14 @@ void GetOhosResourceHandlerStillInIO(
     state->pending_request_->AsArkWebRequestExt()->SetDestination(
         state->request_->destination);
     state->handler_->AsArkWebResourceRequestHandlerExt()
-        ->GetResourceHandlerByIO(init_state_->browser_, init_state_->frame_,
+        ->GetResourceHandlerByIO(init_state_->browser_, init_state_->GetFrame(),
                                  state->pending_request_.get(), callback_ptr,
                                  state->scheme_factory_,
-                                 state->request_->url.scheme());
+                                 state->request_->url.GetScheme());
   } else {
     GetOhosResourceHandlerFromETS(state->scheme_factory_,
                                   state->pending_request_.get(),
-                                  state->request_->url.scheme(), callback_ptr);
+                                  state->request_->url.GetScheme(), callback_ptr);
   }
 }
 
@@ -213,7 +213,7 @@ void GetOhosResourceHandlerFromETS(
   if (scheme_factory) {
     // Does the scheme factory want to handle the request?
     resource_handler = scheme_factory->Create(
-        init_state_->browser_, init_state_->frame_, scheme, request);
+        init_state_->browser_, init_state_->GetFrame(), scheme, request);
   }
   callback->ContinueLoad(resource_handler);
 }
