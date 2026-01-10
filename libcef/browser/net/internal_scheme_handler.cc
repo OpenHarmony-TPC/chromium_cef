@@ -30,20 +30,20 @@ base::FilePath FilePathFromASCII(const std::string& str) {
 #endif
 }
 
-std::string GetMimeType(const std::string& filename) {
+std::string GetMimeType(std::string_view filename) {
   // Requests should not block on the disk!  On POSIX this goes to disk.
   // http://code.google.com/p/chromium/issues/detail?id=59849
   base::ScopedAllowBlockingForTesting allow_blocking;
 
   std::string mime_type;
-  const base::FilePath& file_path = FilePathFromASCII(filename);
+  const base::FilePath& file_path = FilePathFromASCII(std::string(filename));
   if (net::GetMimeTypeFromFile(file_path, &mime_type)) {
     return mime_type;
   }
 
   // Check for newer extensions used by internal resources but not yet
   // recognized by the mime type detector.
-  const std::string& extension = CefString(file_path.FinalExtension());
+  const std::string extension = CefString(file_path.FinalExtension());
   if (extension == ".md") {
     return "text/markdown";
   }
@@ -51,7 +51,7 @@ std::string GetMimeType(const std::string& filename) {
     return "application/font-woff2";
   }
 
-  DCHECK(false) << "No known mime type for file: " << filename.c_str();
+  DCHECK(false) << "No known mime type for file: " << filename;
   return "text/plain";
 }
 
@@ -170,7 +170,7 @@ class InternalHandlerFactory : public CefSchemeHandlerFactory {
       }
 
       if (action.mime_type.empty()) {
-        action.mime_type = GetMimeType(url.path());
+        action.mime_type = GetMimeType(std::string(url.path()));
       }
 
       if (!action.bytes && action.resource_id >= 0) {
