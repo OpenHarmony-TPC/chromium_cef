@@ -37,8 +37,11 @@ namespace autofill {
 class AutocompleteHistoryManager;
 class AutofillSuggestionDelegate;
 class PersonalDataManager;
-class StrikeDatabase;
 }  // namespace autofill
+
+namespace strike_database {
+class StrikeDatabase;
+}  // namespace strike_database
 
 namespace content {
 class WebContents;
@@ -101,7 +104,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   signin::IdentityManager* GetIdentityManager() override;
   const signin::IdentityManager* GetIdentityManager() const override;
   autofill::FormDataImporter* GetFormDataImporter() override;
-  autofill::StrikeDatabase* GetStrikeDatabase() override;
+  strike_database::StrikeDatabase* GetStrikeDatabase() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
   autofill::AddressNormalizer* GetAddressNormalizer() override;
   const GURL& GetLastCommittedPrimaryMainFrameURL() const override;
@@ -118,13 +121,12 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   credential_management::ContentCredentialManager* GetContentCredentialManager() override;
   bool IsAutofillEnabled() const override;
   bool IsAutofillProfileEnabled() const override;
-  bool IsAutofillPaymentMethodsEnabled() const override;
   autofill_metrics::FormInteractionsUkmLogger& GetFormInteractionsUkmLogger() override;
   void ShowAutofillSettings(autofill::SuggestionType suggestion_type) override;
   void ConfirmSaveAddressProfile(
       const autofill::AutofillProfile& profile,
       const autofill::AutofillProfile* original_profile,
-      bool is_migration_to_account,
+      autofill::AutofillClient::SaveAddressBubbleType save_address_bubble_type,
       AddressProfileSavePromptCallback callback) override;
   SuggestionUiSessionId ShowAutofillSuggestions(
       const autofill::AutofillClient::PopupOpenArgs& open_args,

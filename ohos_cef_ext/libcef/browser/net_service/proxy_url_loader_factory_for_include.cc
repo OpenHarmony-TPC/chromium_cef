@@ -228,16 +228,16 @@ void ProxyURLLoaderFactory::CreateProxy(
     header_client_receiver = header_client->InitWithNewPipeAndPassReceiver();
   }
 
-  content::ResourceContext* resource_context =
-      browser_context->GetResourceContext();
-  DCHECK(resource_context);
+  // Get the ContextId on the UI thread while BrowserContext is known valid.
+  ContextId context_id =
+      ContextIdManager::GetInstance().GetContextId(browser_context);
 
   CEF_POST_TASK(
       CEF_IOT,
       base::BindOnce(
           &ProxyURLLoaderFactory::CreateOnIOThread, std::move(proxied_receiver),
           std::move(target_factory_remote), std::move(header_client_receiver),
-          base::Unretained(resource_context), std::move(request_handler)));
+          context_id, std::move(request_handler)));
 }
 #endif
 

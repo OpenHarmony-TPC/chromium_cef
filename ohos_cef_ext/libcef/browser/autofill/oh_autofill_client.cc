@@ -160,7 +160,7 @@ autofill::FormDataImporter* OhAutofillClient::GetFormDataImporter() {
   return nullptr;
 }
 
-autofill::StrikeDatabase* OhAutofillClient::GetStrikeDatabase() {
+strike_database::StrikeDatabase* OhAutofillClient::GetStrikeDatabase() {
   return nullptr;
 }
 
@@ -203,7 +203,7 @@ void OhAutofillClient::ShowAutofillSettings(autofill::SuggestionType suggestion_
 void OhAutofillClient::ConfirmSaveAddressProfile(
     const autofill::AutofillProfile& profile,
     const autofill::AutofillProfile* original_profile,
-    bool is_migration_to_account,
+    autofill::AutofillClient::SaveAddressBubbleType save_address_bubble_type,
     AddressProfileSavePromptCallback callback) {
   NOTIMPLEMENTED();
 }
@@ -364,9 +364,6 @@ bool OhAutofillClient::IsAutofillProfileEnabled() const {
   return true;
 }
 
-bool OhAutofillClient::IsAutofillPaymentMethodsEnabled() const {
-  return false;
-}
 
 autofill_metrics::FormInteractionsUkmLogger& OhAutofillClient::GetFormInteractionsUkmLogger() {
   NOTIMPLEMENTED();

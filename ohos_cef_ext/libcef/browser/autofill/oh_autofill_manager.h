@@ -60,12 +60,12 @@ class OhAutofillManager : public AutofillManager,
 
   bool ShouldClearPreviewedForm() override;
 
-  void OnDidFillAutofillFormDataImpl(const FormData& form,
-                                     const base::TimeTicks timestamp) override;
+  void OnDidAutofillFormImpl(const FormData& form) override;
 
   void OnDidEndTextFieldEditingImpl() override {}
   void OnHidePopupImpl() override;
-  void OnSelectFieldOptionsDidChangeImpl(const FormData& form) override {}
+  void OnSelectFieldOptionsDidChangeImpl(const FormData& form,
+                                        const FieldGlobalId& field_id) override {}
 
   void Reset() override;
 

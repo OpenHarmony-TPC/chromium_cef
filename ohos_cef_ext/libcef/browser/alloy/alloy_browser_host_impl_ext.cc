@@ -1936,7 +1936,7 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
       || params.url.SchemeIs(content::kArkWebUIScheme)) &&
       web_contents()->GetBrowserContext() &&
       web_contents()->GetBrowserContext()->IsOffTheRecord() &&
-      IsBlockedWebUIHostInIncognito(params.url.host_piece())) {
+      IsBlockedWebUIHostInIncognito(params.url.host())) {
     // Block navigation to non-allowlisted WebUI pages.
     LOG(WARNING) << "Navigation is blocked in Alloy-style browser.";
     return true;
