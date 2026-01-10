@@ -500,10 +500,8 @@ bool OhAutofillManager::ShouldParseForms() {
   return true;
 }
 
-void OhAutofillManager::OnDidFillAutofillFormDataImpl(
-    const FormData& form,
-    const base::TimeTicks timestamp) {
-  LOG(INFO) << "OnDidFillAutofillFormDataImpl";
+void OhAutofillManager::OnDidAutofillFormImpl(const FormData& form) {
+  LOG(INFO) << "OnDidAutofillFormImpl";
 }
 
 void OhAutofillManager::OnHidePopupImpl() {
