@@ -15,7 +15,7 @@ std::unique_ptr<PasswordStoreBackend> PasswordStoreBackend::Create(
     const base::FilePath& login_db_path,
     PrefService* prefs) {
   return std::make_unique<PasswordStoreBuiltInBackend>(
-      CreateLoginDatabaseForProfileStorage(login_db_path, prefs),
+      CreateLoginDatabase(password_manager::kProfileStore, login_db_path, prefs),
       syncer::WipeModelUponSyncDisabledBehavior::kNever, prefs, nullptr);
 }
 
