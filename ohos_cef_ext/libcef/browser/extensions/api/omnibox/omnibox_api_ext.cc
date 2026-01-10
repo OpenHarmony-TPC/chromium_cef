@@ -15,7 +15,7 @@
 
 #include "chrome/browser/extensions/api/omnibox/omnibox_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
-#include "chrome/browser/extensions/permissions/active_tab_permission_granter.h"
+#include "extensions/browser/permissions/active_tab_permission_granter.h"
 #include "chrome/browser/omnibox/omnibox_input_watcher_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/omnibox/browser/omnibox_input_watcher.h"
