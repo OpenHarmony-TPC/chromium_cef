@@ -37,7 +37,8 @@ bool WillDispatchWindowEvent(
     const Extension* extension,
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
-    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+    mojom::EventFilteringInfoPtr& event_filtering_info_out,
+    bool* dispatch_separate_event_out) {
   event_filtering_info_out = mojom::EventFilteringInfo::New();
   if (listener_filter && listener_filter->contains(kWindowTypesKey)) {
     event_filtering_info_out->window_type = window_type;
