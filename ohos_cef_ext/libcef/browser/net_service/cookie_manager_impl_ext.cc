@@ -357,7 +357,9 @@ net::CookieStore* CefCookieManagerImplExt::GetCookieStore() {
     cookie_config.client_task_runner = cookie_store_task_runner_;
     cookie_config.background_task_runner =
         cookie_store_backend_thread_.task_runner();
-    cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate();
+    cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate(
+        nullptr /* os_crypt_async */,
+        nullptr /* ui_task_runner */);
 
     // Use GetDefaultCookieableSchemes() to get the default schemes
     auto default_schemes = net::CookieMonster::GetDefaultCookieableSchemes();
