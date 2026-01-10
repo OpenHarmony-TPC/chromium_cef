@@ -186,7 +186,8 @@ bool WillDispatchTabUpdatedEventWithTab(
     const Extension* extension,
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
-    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+    mojom::EventFilteringInfoPtr& event_filtering_info_out,
+    bool* dispatch_separate_event_out) {
   if (tab.nwebId <= 0) {
     LOG(INFO) << "WillDispatchTabUpdatedEventWithTab tab nweb id is invalid";
     return false;
@@ -213,7 +214,8 @@ bool WillDispatchTabCreatedEvent(
     const Extension* extension,
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
-    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+    mojom::EventFilteringInfoPtr& event_filtering_info_out,
+    bool* dispatch_separate_event_out) {
   GURL gurl(tab.url.value());
   ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
       ExtensionTabUtil::GetScrubTabBehaviorExt(extension, target_context, gurl, tab.id.value_or(-1));

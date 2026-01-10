@@ -10,7 +10,7 @@
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
-#include "base/hash/md5.h"
+#include "crypto/obsolete/md5.h"
 #include "base/json/json_writer.h"
 #include "base/json/values_util.h"
 #include "base/lazy_instance.h"
@@ -283,7 +283,7 @@ void CefDevToolsFileManager::SaveAsFileSelected(const std::string& url,
   saved_files_[url] = path;
 
   ScopedDictPrefUpdate update(prefs_, prefs::kDevToolsEditedFiles);
-  update->Set(base::MD5String(url), base::FilePathToValue(path));
+  update->Set(devtools::Md5OfUrlAsHexForDevTools(url), base::FilePathToValue(path));
   std::string file_system_path = path.AsUTF8Unsafe();
   std::move(callback).Run(file_system_path);
   file_task_runner_->PostTask(FROM_HERE,

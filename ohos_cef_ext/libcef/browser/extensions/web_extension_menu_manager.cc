@@ -19,7 +19,7 @@
 #include "base/values.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
 #include "chrome/browser/extensions/menu_manager.h"
-#include "chrome/browser/extensions/permissions/active_tab_permission_granter.h"
+#include "extensions/browser/permissions/active_tab_permission_granter.h"
 #include "chrome/browser/extensions/tab_helper.h"
 #include "chrome/common/extensions/api/context_menus.h"
 #include "extensions/browser/event_router.h"

@@ -92,7 +92,7 @@ namespace {
 
 // This constant should be in sync with the constant in
 // chrome/browser/devtools/devtools_ui_bindings.cc.
-constexpr size_t kMaxMessageChunkSize = IPC::Channel::kMaximumMessageSize / 4;
+constexpr size_t kMaxMessageChunkSize = IPC::mojom::kChannelMaximumMessageSize / 4;
 
 constexpr int kMaxLogLineLength = 1024;
 
@@ -961,7 +961,7 @@ base::Value::Dict CefDevToolsFrontend::BuildExtensionInfo(
   const bool is_extension_url =
       (url.SchemeIs(extensions::kExtensionScheme)
        || url.SchemeIs(extensions::kArkwebExtensionScheme)) &&
-      url.host_piece() == extension->id();
+      url.host() == extension->id();
   DCHECK(is_extension_url || url.SchemeIsHTTPOrHTTPS());
 
   // Each devtools extension will need to be able to run in the devtools

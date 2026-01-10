@@ -16,7 +16,7 @@
 #include "chrome/browser/extensions/api/tabs/tabs_event_router.h"
 #include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
-#include "chrome/browser/extensions/permissions/active_tab_permission_granter.h"
+#include "extensions/browser/permissions/active_tab_permission_granter.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/web_contents.h"
 #include "extensions/browser/extension_web_contents_observer.h"
