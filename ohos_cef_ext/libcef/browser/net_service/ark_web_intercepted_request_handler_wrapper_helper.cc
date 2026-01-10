@@ -150,8 +150,8 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::ReportITPResult(
   LOG(DEBUG) << "ReportITPResult";
   CEF_POST_TASK(CEF_UIT,
                 base::BindOnce(&ReportITPResultInUiTask, browser,
-                               CefString(request.url.host()),
-                               CefString(request.request_initiator->host())));
+                               CefString(std::string(request.url.host())),
+                               CefString(std::string(request.request_initiator->host()))));
 }
 
 GURL ArkWebInterceptedRequestHandlerWrapperHelper::

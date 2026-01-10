@@ -101,7 +101,7 @@ UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
     ruleMap_.clear();
     return UrlListSetResult::SET_OK;
   }
-  absl::optional<base::Value> jsonParsed = base::JSONReader::Read(urlTrustList);
+  absl::optional<base::Value> jsonParsed = base::JSONReader::Read(urlTrustList, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!jsonParsed || !jsonParsed->is_dict()) {
     LOG(ERROR) << "parse: json format failed.";
     detailErrMsg = "json format failed";
@@ -148,8 +148,8 @@ UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(const GURL& url) {
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
 
-  auto range = ruleMap_.equal_range(url.host());
-  const std::string& path = url.path();
+  auto range = ruleMap_.equal_range(std::string(url.host()));
+  const std::string path(url.path());
   for (auto itr = range.first; itr != range.second; ++itr) {
     auto& rule = itr->second;
     if (!rule.scheme.empty() && (rule.scheme != url.scheme())) {

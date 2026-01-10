@@ -56,7 +56,8 @@ void CefApplyHttpDns() {
     if (config.has_value()) {
       network_service->ConfigureStubHostResolver(
           true, true, net_service::NetHelpers::DnsOverHttpMode(),
-          net::DnsOverHttpsConfig({{std::move(*config)}}), true);
+          net::DnsOverHttpsConfig({{std::move(*config)}}), true,
+          std::vector<net::IPEndPoint>());
     } else {
       LOG(INFO) << __func__ << "server config is invalid";
     }

@@ -237,7 +237,7 @@ void OhAutofillManager::FillDataWithId(const base::Value::Dict* dict) {
 }
 
 void OhAutofillManager::FillData(const std::string& json_str) {
-  absl::optional<base::Value> root = base::JSONReader::Read(json_str);
+  absl::optional<base::Value> root = base::JSONReader::Read(json_str, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!root.has_value()) {
     return;
   }
