@@ -141,6 +141,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
                  bool is_refill) override;
   bool IsContextSecure() const override;
   autofill::FormInteractionsFlowId GetCurrentFormInteractionsFlowId() override;
+  bool IsWalletStorageEnabled() const override;
 
   std::unique_ptr<autofill::AutofillManager> CreateManager(
       base::PassKey<autofill::ContentAutofillDriver> pass_key,

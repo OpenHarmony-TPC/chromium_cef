@@ -590,6 +590,14 @@ void OhAutofillManager::OnFocusOnNonFormFieldImpl() {
   LOG(INFO) << "OnFocusOnNonFormFieldImpl";
 }
 
+CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
+  return nullptr;
+}
+
+const CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() const {
+  return nullptr;
+}
+
 void OhAutofillManager::FillOrPreviewForm(mojom::ActionPersistence action,
                                           const FormData& form,
                                           FieldTypeGroup field_type_group,

@@ -23,6 +23,7 @@
 #include "components/autofill/core/browser/payments/legal_message_line.h"
 #include "components/autofill/core/browser/suggestions/suggestion.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
+#include "components/autofill/core/common/form_interactions_flow.h"
 #include "chrome/browser/autofill/personal_data_manager_factory.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
@@ -298,6 +299,10 @@ OhAutofillClient::GetCurrentFormInteractionsFlowId() {
   // Currently not in use here. See `ChromeAutofillClient` for a proper
   // implementation.
   return {};
+}
+
+bool OhAutofillClient::IsWalletStorageEnabled() const {
+  return false;
 }
 
 std::unique_ptr<autofill::AutofillManager> OhAutofillClient::CreateManager(
