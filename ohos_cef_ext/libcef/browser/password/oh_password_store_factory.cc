@@ -81,7 +81,7 @@ scoped_refptr<PasswordStore> OhPasswordStoreFactory::BuildServiceInstanceFor(
   password_store_ = new password_manager::PasswordStore(
       password_manager::PasswordStoreBackend::Create(cache_path, profile->GetPrefs()));
 
-  password_store_->Init(profile->GetPrefs(), nullptr);
+  password_store_->Init(nullptr);
 
   DCHECK(password_store_);
   return password_store_;

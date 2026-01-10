@@ -71,7 +71,7 @@ void SbControllerClient::Reload() {
   }
 
   ohos_safe_browsing::MaliciousAllowlist::GetInstance().AddToAllowlist(
-      url_.has_host() ? url_.host() : url_.spec(), incognito_mode_);
+      std::string(url_.has_host() ? url_.host() : url_.spec()), incognito_mode_);
   web_contents_->GetController().Reload(content::ReloadType::NORMAL, true);
 }
 

@@ -28,7 +28,7 @@ class Delegate : public InternalHandlerDelegate {
                  CefRefPtr<CefRequest> request,
                  Action* action) override {
     GURL url = GURL(request->GetURL().ToString());
-    std::string path = url.path();
+    std::string path(url.path());
     if (path.length() > 0) {
       path = path.substr(1);
     }

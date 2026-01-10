@@ -109,7 +109,7 @@ void ArkWebAppManagerExt::SchemeHandlerAddCustomScheme(content::ContentClient::S
         cmdLine->GetSwitchValueASCII(switches::kOhSchemeHandlerCustomScheme);
     LOG(INFO) << "scheme_handler cmdlineScheme:" << cmdlineSchemes;
     std::optional<base::Value> schemeInfos =
-        base::JSONReader::Read(cmdlineSchemes);
+        base::JSONReader::Read(cmdlineSchemes, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
     if (schemeInfos && schemeInfos->is_dict()) {
       for (auto kv : schemeInfos->GetDict()) {
         schemeRegistrar.AddCustomScheme(kv.first, kv.second.GetInt());

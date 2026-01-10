@@ -141,11 +141,11 @@ bool ThirdPartyCookieAccessPolicy::AllowGetCookies(
   }
 
   if (main_frame_url.is_valid() && main_frame_url.has_host() &&
-      IsHostInITPBypassingList(main_frame_url.host())) {
+      IsHostInITPBypassingList(std::string(main_frame_url.host()))) {
     return true;
   }
 
-  return !CheckIsInTBW(request.url.host());
+  return !CheckIsInTBW(std::string(request.url.host()));
 }
 
 void ThirdPartyCookieAccessPolicy::SetTBWFilePath(

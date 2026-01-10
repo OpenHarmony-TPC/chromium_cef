@@ -37,7 +37,8 @@
 #include "chrome/browser/extensions/api/browsing_data/browsing_data_api.h"
 #include "ohos_nweb/src/capi/web_extension_browsing_data_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_browsing_data_cef_delegate.h"
-
+#include "chrome/browser/sync/sync_service_factory.h"
+#include "components/sync/service/sync_service.h"
 // Forward declaration for AccountReconcilor Lock mechanism
 #if BUILDFLAG(ENABLE_DICE_SUPPORT)
 #include "components/signin/core/browser/account_reconcilor.h"
@@ -49,7 +50,8 @@ bool IsSyncRunning(Profile* profile) {
   if (profile->IsOffTheRecord()) {
     return false;
   }
-  return GetSyncStatusMessageType(profile) == SyncStatusMessageType::kSynced;
+  syncer::SyncService* sync_service = SyncServiceFactory::GetForProfile(profile);
+  return sync_service && sync_service->IsSyncFeatureActive();
 }
 
 std::optional<std::vector<std::string>> GetOptionStringVector(const base::Value::Dict& options,

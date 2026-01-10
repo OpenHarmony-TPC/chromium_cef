@@ -32,7 +32,7 @@ absl::optional<base::Value::Dict> ExtractProtocolMessage(
   if (!protocol_message) {
     return absl::nullopt;
   }
-  auto result = base::JSONReader::Read(*protocol_message);
+  auto result = base::JSONReader::Read(*protocol_message, base::JSON_PARSE_CHROMIUM_EXTENSIONS);
   if (!result.has_value()) {
     return absl::nullopt;
   }

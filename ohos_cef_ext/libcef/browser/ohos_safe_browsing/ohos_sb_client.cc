@@ -150,7 +150,7 @@ void SbClient::ShowBlockingPage() {
 
       if (policy != OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS &&
           MaliciousAllowlist::GetInstance().IsInAllowlist(
-              url.has_host() ? url.host() : url.spec(), incognito_mode_)) {
+              std::string(url.has_host() ? url.host() : url.spec()), incognito_mode_)) {
         LOG(WARNING) << "SafeBrowsing in malicious allowlist.";
         break;
       }
