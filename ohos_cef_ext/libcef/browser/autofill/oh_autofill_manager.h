@@ -99,6 +99,9 @@ class OhAutofillManager : public AutofillManager,
 
   void OnFocusOnNonFormFieldImpl() override;
 
+  CreditCardAccessManager* GetCreditCardAccessManager() override;
+  const CreditCardAccessManager* GetCreditCardAccessManager() const override;
+
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   void SetPasswordPopupShow(bool is_show);
 #endif
