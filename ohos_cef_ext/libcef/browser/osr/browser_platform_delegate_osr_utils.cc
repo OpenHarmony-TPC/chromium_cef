@@ -19,6 +19,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "ui/display/screen.h"
 #include "ui/events/base_event_utils.h"
+#include "ui/gfx/image/image_skia.h"
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "cef/ohos_cef_ext/include/arkweb_dialog_handler_ext.h"
