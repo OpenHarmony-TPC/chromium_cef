@@ -7,16 +7,18 @@
 #include "base/memory/singleton.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
-#include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
+// Follow-up Processing
+// #include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
 
 namespace cef {
 
-page_load_metrics::PageLoadMetricsMemoryTracker*
-AlloyPageLoadMetricsMemoryTrackerFactory::GetForBrowserContext(
-    content::BrowserContext* context) {
-  return static_cast<page_load_metrics::PageLoadMetricsMemoryTracker*>(
-      GetInstance()->GetServiceForBrowserContext(context, true));
-}
+// Follow-up Processing
+// page_load_metrics::PageLoadMetricsMemoryTracker*
+// AlloyPageLoadMetricsMemoryTrackerFactory::GetForBrowserContext(
+//     content::BrowserContext* context) {
+//   return static_cast<page_load_metrics::PageLoadMetricsMemoryTracker*>(
+//       GetInstance()->GetServiceForBrowserContext(context, true));
+// }
 
 AlloyPageLoadMetricsMemoryTrackerFactory*
 AlloyPageLoadMetricsMemoryTrackerFactory::GetInstance() {
@@ -32,7 +34,8 @@ AlloyPageLoadMetricsMemoryTrackerFactory::
 std::unique_ptr<KeyedService>
 AlloyPageLoadMetricsMemoryTrackerFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
-  return std::make_unique<page_load_metrics::PageLoadMetricsMemoryTracker>();
+  // PageLoadMetricsMemoryTracker removed in Chromium 144
+  return nullptr;
 }
 
 content::BrowserContext*

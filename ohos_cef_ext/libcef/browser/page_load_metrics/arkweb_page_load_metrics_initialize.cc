@@ -7,7 +7,8 @@
 #include "components/page_load_metrics/browser/features.h"
 #include "components/page_load_metrics/browser/metrics_web_contents_observer.h"
 #include "components/page_load_metrics/browser/page_load_metrics_embedder_base.h"
-#include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
+// Follow-up Processing: PageLoadMetricsMemoryTracker removed in Chromium 144
+// #include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
 #include "components/page_load_metrics/browser/page_load_tracker.h"
 #include "content/public/browser/browser_context.h"
 #include "ohos_cef_ext/libcef/browser/page_load_metrics/arkweb_alloy_page_load_metrics_memory_tracker_factory.h"
@@ -17,6 +18,7 @@ namespace content {
 class BrowserContext;
 }  // namespace content
 
+// Follow-up Processing: PageLoadMetricsMemoryTracker removed in Chromium 144
 namespace page_load_metrics {
 class PageLoadMetricsMemoryTracker;
 }  // namespace page_load_metrics
@@ -39,23 +41,25 @@ class PageLoadMetricsEmbedder
   bool IsNoStatePrefetch(content::WebContents* web_contents) override;
   bool IsExtensionUrl(const GURL& url) override;
   bool IsNonTabWebUI(const GURL& url) override;
-  page_load_metrics::PageLoadMetricsMemoryTracker*
-  GetMemoryTrackerForBrowserContext(
-      content::BrowserContext* browser_context) override;
-  bool IsIncognito(content::WebContents* web_contents) override;
+  // Follow-up Processing: PageLoadMetricsMemoryTracker removed in Chromium 144
+  // page_load_metrics::PageLoadMetricsMemoryTracker*
+  // GetMemoryTrackerForBrowserContext(
+  //     content::BrowserContext* browser_context) override;
+  // bool IsIncognito(content::WebContents* web_contents) override;
 
  protected:
   // page_load_metrics::PageLoadMetricsEmbedderBase:
-  void RegisterObservers(page_load_metrics::PageLoadTracker* tracker,
-                         content::NavigationHandle* navigation_handle) override;
+  // void RegisterObservers(page_load_metrics::PageLoadTracker* tracker,
+  //                        content::NavigationHandle* navigation_handle) override;
 };
 
-void PageLoadMetricsEmbedder::RegisterObservers(
-    page_load_metrics::PageLoadTracker* tracker,
-    content::NavigationHandle* navigation_handle) {
-  RegisterCommonObservers(tracker);
-  tracker->AddObserver(std::make_unique<OhPageLoadMetricsObserver>());
-}
+// Follow-up Processing: PageLoadMetricsMemoryTracker removed in Chromium 144
+// void PageLoadMetricsEmbedder::RegisterObservers(
+//     page_load_metrics::PageLoadTracker* tracker,
+//     content::NavigationHandle* navigation_handle) {
+//   RegisterCommonObservers(tracker);
+//   tracker->AddObserver(std::make_unique<OhPageLoadMetricsObserver>());
+// }
 
 PageLoadMetricsEmbedder::PageLoadMetricsEmbedder(
     content::WebContents* web_contents)
@@ -80,20 +84,21 @@ bool PageLoadMetricsEmbedder::IsNonTabWebUI(const GURL& url) {
   return false;
 }
 
-page_load_metrics::PageLoadMetricsMemoryTracker*
-PageLoadMetricsEmbedder::GetMemoryTrackerForBrowserContext(
-    content::BrowserContext* browser_context) {
-  if (!base::FeatureList::IsEnabled(page_load_metrics::features::kV8PerFrameMemoryMonitoring)) {
-    return nullptr;
-  }
+// Follow-up Processing: PageLoadMetricsMemoryTracker removed in Chromium 144
+// page_load_metrics::PageLoadMetricsMemoryTracker*
+// PageLoadMetricsEmbedder::GetMemoryTrackerForBrowserContext(
+//     content::BrowserContext* browser_context) {
+//   if (!base::FeatureList::IsEnabled(page_load_metrics::features::kV8PerFrameMemoryMonitoring)) {
+//     return nullptr;
+//   }
 
-  return AlloyPageLoadMetricsMemoryTrackerFactory::GetForBrowserContext(
-      browser_context);
-}
+//   return AlloyPageLoadMetricsMemoryTrackerFactory::GetForBrowserContext(
+//       browser_context);
+// }
 
-bool PageLoadMetricsEmbedder::IsIncognito(content::WebContents* web_contents) {
-  return web_contents->GetBrowserContext()->IsOffTheRecord();
-}
+// bool PageLoadMetricsEmbedder::IsIncognito(content::WebContents* web_contents) {
+//   return web_contents->GetBrowserContext()->IsOffTheRecord();
+// }
 }  // namespace
 
 void InitializePageLoadMetricsForWebContents(
