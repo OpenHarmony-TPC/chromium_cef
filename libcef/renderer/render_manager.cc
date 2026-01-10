@@ -251,7 +251,7 @@ void CefRenderManager::WebKitInitialized() {
                    << info.scheme_name.c_str() << " supported code cache.";
         blink::SchemeRegistryUtils::
             RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(
-                WTF::String(info.scheme_name));
+                blink::String(info.scheme_name));
       }
 #endif
     }
