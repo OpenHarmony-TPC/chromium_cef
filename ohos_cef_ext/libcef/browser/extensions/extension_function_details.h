@@ -9,7 +9,7 @@
 
 #include "base/functional/callback_forward.h"
 #include "chrome/common/extensions/api/tabs.h"
-#include "ui/gfx/native_widget_types.h"
+#include "ui/gfx/native_ui_types.h"
 #include "base/memory/raw_ptr.h"
 
 class Profile;
