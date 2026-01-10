@@ -157,7 +157,7 @@ std::string GetHostOfReferrerUrlIfNeed(content::NavigationHandle* navigation,
 
   if (GetDomainAndRegistry(referrer_url) ==
       GetDomainAndRegistry(navigation->GetURL())) {
-    return referrer_url.host();
+    return referrer_url.GetHost();
   }
   return std::string();
 }
@@ -183,9 +183,9 @@ void MaybeOverrideUserAgentOnStartNavigation(
   bool is_reload = false;
 
   std::string final_ua;
-  std::string host = url.host();
+  std::string host = url.GetHost();
 
-  auto match_type = MatchUserAgent(navigation, url.host(), final_ua);
+  auto match_type = MatchUserAgent(navigation, url.GetHost(), final_ua);
   if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
     is_reload =
         PageTransitionCoreTypeIs(navigation->GetPageTransition(),
@@ -227,7 +227,7 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
   }
 
   std::string final_ua;
-  auto match_type = MatchUserAgent(navigation, current_url.host(), final_ua);
+  auto match_type = MatchUserAgent(navigation, current_url.GetHost(), final_ua);
   if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
     for (int i = chain_size - 1; i > 0; i--) {
       if (IsIllegalUrl(redirect_chain[i]) ||
@@ -239,14 +239,14 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
         continue;
       }
       match_type =
-          MatchUserAgent(navigation, redirect_chain[i - 1].host(), final_ua);
+          MatchUserAgent(navigation, redirect_chain[i - 1].GetHost(), final_ua);
       if (match_type < UserAgentOverridePolicy::APP_DEFAULT) {
         break;
       }
     }
   }
   CheckRedirectChainForDuplicates(navigation);
-  LOG(DEBUG) << __func__ << " host " << current_url.host()
+  LOG(DEBUG) << __func__ << " host " << current_url.GetHost()
              << " match_type:" << match_type << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
              << ", main_frame " << navigation->IsInMainFrame()
