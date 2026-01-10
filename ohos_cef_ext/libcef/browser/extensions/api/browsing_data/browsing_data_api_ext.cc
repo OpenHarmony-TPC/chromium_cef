@@ -49,7 +49,7 @@ bool IsSyncRunning(Profile* profile) {
   if (profile->IsOffTheRecord()) {
     return false;
   }
-  return GetSyncStatusMessageType(profile) == SyncStatusMessageType::kSynced;
+  return GetSyncStatusLabels(profile).message_type == SyncStatusMessageType::kSynced;
 }
 
 std::optional<std::vector<std::string>> GetOptionStringVector(const base::Value::Dict& options,
