@@ -385,16 +385,12 @@ class InterceptedRequest : public network::mojom::URLLoader,
   void OnUploadProgressACK();
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  GURL AddQueryForRedirectOnUI(
-    GURL original_url,
-    GURL referrer);
-
   void AddQueryForRedirectOnUIDone(
     const std::vector<std::string>& removed_headers,
     const net::HttpRequestHeaders& modified_headers,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
     const std::optional<GURL>& original_url,
-    GURL rewrited_url);
+    std::string rewrited);
 #endif
 
   const raw_ptr<ProxyURLLoaderFactory> factory_;
@@ -903,7 +899,6 @@ void InterceptedRequest::OnComplete(
 }
 
 // URLLoader methods.
-
 void InterceptedRequest::FollowRedirect(
     const std::vector<std::string>& removed_headers_ext,
     const net::HttpRequestHeaders& modified_headers_ext,
@@ -918,29 +913,20 @@ void InterceptedRequest::FollowRedirect(
   bool is_main_frame = request_.resource_type ==
                        static_cast<int>(blink::mojom::ResourceType::kMainFrame);
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        OhosUrlRewriteController::IsRewriteUrlEnabled() && is_main_frame) {
-    GURL rewrited_url;
-    if (new_url.has_value()) {
-      rewrited_url = new_url.value();
-    } else {
-      rewrited_url = request_.url;
+      OhosUrlRewriteController::IsRewriteUrlEnabled() && is_main_frame) {
+    GURL rewrited_url = new_url.value_or(request_.url);
+    if (!rewrited_url.is_empty() && rewrited_url.is_valid()) {
+      GURL referrer = request_.referrer.is_valid() ? request_.referrer : GURL();
+      factory_->request_handler_->OnRewriteUrlForNavigation(
+          rewrited_url.spec(), referrer.spec(),
+          ui::PageTransition::PAGE_TRANSITION_SERVER_REDIRECT, true, id_,
+          base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUIDone,
+                         weak_factory_.GetWeakPtr(), removed_headers,
+                         modified_headers, modified_cors_exempt_headers,
+                         new_url));
+      return;
     }
-
-    GURL referrer = request_.referrer.is_valid() ? request_.referrer : GURL();
-
-    content::GetUIThreadTaskRunner({})->PostTaskAndReplyWithResult(
-      FROM_HERE,
-      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUI,
-                    base::Unretained(this),
-                    std::move(rewrited_url),
-                    std::move(referrer)),
-      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUIDone,
-                    weak_factory_.GetWeakPtr(),
-                    removed_headers,
-                    modified_headers,
-                    modified_cors_exempt_headers,
-                    new_url));
-  } else {
+  }
 #if BUILDFLAG(IS_ARKWEB)
     InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
                                              modified_cors_exempt_headers,
@@ -961,7 +947,6 @@ void InterceptedRequest::FollowRedirect(
 #else
     Restart();
 #endif
-  }
 #endif
 }
 
@@ -1555,25 +1540,14 @@ void InterceptedRequest::OnUploadProgressACK() {
 }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-GURL InterceptedRequest::AddQueryForRedirectOnUI(
-    GURL original_url,
-    GURL referrer) {
-  if (!original_url.is_empty() && original_url.is_valid()) {
-    std::string new_url =
-      factory_->request_handler_->OnRewriteUrlForNavigation(
-          original_url.spec(), referrer.spec(), ui::PageTransition::PAGE_TRANSITION_SERVER_REDIRECT, true);
-    return GURL(new_url);
-  }
-  return GURL();
-}
-
 void InterceptedRequest::AddQueryForRedirectOnUIDone(
     const std::vector<std::string>& removed_headers,
     const net::HttpRequestHeaders& modified_headers,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
     const std::optional<GURL>& original_url,
-    GURL rewrited_url) {
+    std::string rewrited) {
   std::optional<GURL> optional_url;
+  GURL rewrited_url(rewrited);
   if (rewrited_url.is_empty() || !rewrited_url.is_valid() || rewrited_url == request_.url) {
     optional_url = std::nullopt;
   } else {
