@@ -42,6 +42,13 @@ class CefPermissionQuery : public virtual CefBaseRefCounted {
   /// Get permission status.
   ///
   static void GetPermissionStatusAsync(CefRefPtr<CefAccessQuery>);
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  ///
+  /// Is clipboard site permission enabled.
+  ///
+  static bool IsClipboardSitePermissionEnabled();
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 };
  
  

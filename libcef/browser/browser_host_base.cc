@@ -303,6 +303,14 @@ void CefBrowserHostBase::DestroyWebContents(
     content::WebContents* web_contents) {
   CEF_REQUIRE_UIT();
 
+#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
+  if (!IsValid()) {
+    LOG(ERROR) << "CefBrowserHostBase::DestroyWebContents: WebContents is "
+                  "already destroyed";
+    return;
+  }
+#endif
+
   // GetWebContents() should return nullptr at this point.
   DCHECK(!GetWebContents());
 
@@ -1395,7 +1403,6 @@ bool CefBrowserHostBase::MaybeAllowNavigation(
 
 void CefBrowserHostBase::OnAfterCreated() {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "CefBrowserHostBase::OnAfterCreated, client_:" << client_;
   if (client_) {
     if (auto handler = client_->GetLifeSpanHandler()) {
       handler->OnAfterCreated(this);
@@ -1563,3 +1570,14 @@ bool CefBrowserHostBase::EnsureFileDialogManager() {
   }
   return true;
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+bool CefBrowserHostBase::SetFocusByPosition(float x, float y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    y -= GetShrinkViewportHeight() * GetVirtualPixelRatio();
+    return static_cast<CefFrameHostImpl*>(frame.get())->SetFocusByPosition(x, y);
+  }
+  return false;
+}
+#endif // defined(OHOS_INPUT_EVENTS)

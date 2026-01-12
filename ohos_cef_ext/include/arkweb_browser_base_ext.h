@@ -131,9 +131,23 @@ public:
       CefRefPtr<CefScreenCaptureCallback> listener) = 0;
 #endif  // defined(ARKWEB_EX_SCREEN_CAPTURE)
 
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+  ///
+  /// Get over scroll offset value.
+  ///
+  /*--cef()--*/
+  virtual void GetOverScrollOffsetValue(float* offset_x, float* offset_y) = 0;
+#endif
+
   /// set custom web media player enable.
   ///
   /*--cef()--*/
   virtual void CustomWebMediaPlayer(bool enable) = 0;
+
+  ///
+  /// set media resumes playback when the page is restored from BFCache.
+  ///
+  /*--cef()--*/
+  virtual void SetMediaResumeFromBFCachePage(bool resume) = 0;
 };
 #endif //ARKWEB_INCLUDE_BROWSER_BASE_EXT_H_

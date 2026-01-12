@@ -85,6 +85,11 @@ class CefContextMenuHandlerExt : virtual public CefContextMenuHandler {
   ///
   virtual void ChangeVisibilityOfQuickMenu() {}
 
+  ///
+  /// Return is quick menu show.
+  ///
+  virtual bool IsQuickMenuShow() { return false; }
+
 #if BUILDFLAG(ARKWEB_AI)
   ///
   /// Called to close selection on image overlay.
@@ -97,14 +102,16 @@ class CefContextMenuHandlerExt : virtual public CefContextMenuHandler {
     return this;
   }
 
-  #if BUILDFLAG(ARKWEB_MENU)
-    virtual void SetHandleVisibleCallback(
-        std::function<void(bool)> onHandleVisible) {}
+#if BUILDFLAG(ARKWEB_MENU)
+  virtual void SetHandleVisibleCallback(
+      const base::RepeatingCallback<void(bool)>& on_handle_visible) {}
   
-    virtual void ShowMagnifier() {}
+  virtual void ShowMagnifier() {}
   
-    virtual void HideMagnifier() {}
-  #endif
+  virtual void HideMagnifier() {}
+
+  virtual bool IsShowHandle() { return false; }
+#endif
 
 };
 

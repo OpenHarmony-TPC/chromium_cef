@@ -23,6 +23,7 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "chrome/browser/ui/autofill/autofill_popup_hide_helper.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/autofill/core/common/dense_set.h"
 #include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h"
@@ -85,6 +86,8 @@ class OhAutofillManager : public AutofillManager,
                                              const FormFieldData& field,
                                              const std::string& event);
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
+  void FillDataFromPaster(const std::string& json_str, const FieldGlobalId& field_id);
+  void FillDataFromAutofill(const std::string& json_str, const FieldGlobalId& field_id);
   void FillData(const std::string& json_str);
   std::string GetAttributeOrUniqueId(const FormFieldData& field);
   void FillDataWithId(const base::Value::Dict* dict);
@@ -98,16 +101,7 @@ class OhAutofillManager : public AutofillManager,
   void OnFocusOnNonFormFieldImpl() override;
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  void ForwardDataToPasswordManager(const std::string& page_url,
-                                    const std::string& username,
-                                    const std::string& password,
-                                    bool is_other_account);
-
-  bool IsUsernamePasswordFormField(FormRendererId form_id,
-                                   FieldRendererId field_id);
-  void SetPasswordPopupShow(bool is_show) { is_password_popup_show_ = is_show; }
-
-  absl::optional<std::string> QueryPopupShowAndGetHideStr();
+  void SetPasswordPopupShow(bool is_show);
 #endif
 
  protected:
@@ -163,6 +157,21 @@ class OhAutofillManager : public AutofillManager,
 #endif
   void StartNewLoggingSession();
 
+  void HidePopup();
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  void ForwardDataToPasswordManager(const std::string& page_url,
+                                    const std::string& username,
+                                    const std::string& password,
+                                    bool is_other_account);
+
+  bool IsUsernamePasswordFormField(FormRendererId form_id,
+                                   FieldRendererId field_id);
+  void PopupShow();
+
+  void Hide(SuggestionHidingReason reason);
+#endif
+
 #if BUILDFLAG(ARKWEB_DATALIST)
   void SuggestionSelected(const FieldGlobalId& field_id, std::u16string text);
   void OnAskForValuesToFillImplForDatalist(const FormData& form,
@@ -174,6 +183,7 @@ class OhAutofillManager : public AutofillManager,
   bool is_show_ = false;
   bool is_password_popup_show_ = false;
   std::unique_ptr<FormData> form_;
+  std::optional<AutofillPopupHideHelper> popup_hide_helper_;
   base::ScopedObservation<AutofillManager, AutofillManager::Observer>
       autofill_manager_observation{this};
   base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};

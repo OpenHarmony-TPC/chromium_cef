@@ -15,6 +15,7 @@
 #include "base/trace_event/trace_event.h"
 #endif
 #include "arkweb/build/features/features.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/origin_whitelist_impl.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -49,6 +50,20 @@
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
 #endif
 
 namespace net_service {
@@ -235,6 +250,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
       const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
       mojo::PendingReceiver<network::mojom::URLLoader> loader_receiver,
       mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+#if BUILDFLAG(ARKWEB_COOKIE)
+      bool disable_web_security,
+#endif
       mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory);
 
   InterceptedRequest(const InterceptedRequest&) = delete;
@@ -291,7 +309,11 @@ class InterceptedRequest : public network::mojom::URLLoader,
                    int32_t intra_priority_value) override;
   void PauseReadingBodyFromNet() override;
   void ResumeReadingBodyFromNet() override;
-
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  base::WeakPtr<InterceptedRequest> GetWeakPtr() {
+    return weak_factory_.GetWeakPtr();
+  }
+#endif
   int32_t id() const { return id_; }
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -362,6 +384,19 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   void OnUploadProgressACK();
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  GURL AddQueryForRedirectOnUI(
+    GURL original_url,
+    GURL referrer);
+
+  void AddQueryForRedirectOnUIDone(
+    const std::vector<std::string>& removed_headers,
+    const net::HttpRequestHeaders& modified_headers,
+    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    const std::optional<GURL>& original_url,
+    GURL rewrited_url);
+#endif
+
   const raw_ptr<ProxyURLLoaderFactory> factory_;
   const int32_t id_;
   const uint32_t options_;
@@ -414,6 +449,14 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   bool is_download_{false};
+#endif
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+  bool disable_web_security_{false};
+#endif
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  bool needs_reload_with_fallback_proxy_ = false;
 #endif
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
@@ -478,6 +521,9 @@ InterceptedRequest::InterceptedRequest(
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
     mojo::PendingReceiver<network::mojom::URLLoader> loader_receiver,
     mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+#if BUILDFLAG(ARKWEB_COOKIE)
+      bool disable_web_security,
+#endif
     mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory)
     : factory_(factory),
       id_(id),
@@ -487,6 +533,9 @@ InterceptedRequest::InterceptedRequest(
       proxied_loader_receiver_(this, std::move(loader_receiver)),
       target_client_(std::move(client)),
       target_factory_(std::move(target_factory)),
+#if BUILDFLAG(ARKWEB_COOKIE)
+      disable_web_security_(disable_web_security),
+#endif
       weak_factory_(this) {
   status_ = network::URLLoaderCompletionStatus(net::OK);
 
@@ -496,17 +545,10 @@ InterceptedRequest::InterceptedRequest(
                           &removed_headers);
 
   // If there is a client error, clean up the request.
-#if BUILDFLAG(IS_ARKWEB)
-  target_client_.set_disconnect_handler(base::BindOnce(
-      &InterceptedRequest::OnURLLoaderClientError, weak_factory_.GetWeakPtr()));
-  proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
-      &InterceptedRequest::OnURLLoaderError, weak_factory_.GetWeakPtr()));
-#else
   target_client_.set_disconnect_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderClientError, base::Unretained(this)));
   proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderError, base::Unretained(this)));
-#endif
 }
 
 InterceptedRequest::~InterceptedRequest() {
@@ -573,7 +615,11 @@ void InterceptedRequest::Restart() {
   }
 
   // Maybe update |credentials_mode| for fetch requests.
+#if BUILDFLAG(ARKWEB_COOKIE)
+  if (!disable_web_security_ && request_.credentials_mode ==
+#else
   if (request_.credentials_mode ==
+#endif
       network::mojom::CredentialsMode::kSameOrigin) {
     // Match logic in devtools_url_loader_interceptor.cc
     // InterceptionJob::FollowRedirect.
@@ -603,14 +649,22 @@ void InterceptedRequest::Restart() {
        request_.method != net::HttpRequestHeaders::kGetMethod &&
        request_.method != net::HttpRequestHeaders::kHeadMethod);
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  const bool is_extension_scheme =
+      request_.request_initiator && (request_.request_initiator->scheme() == extensions::kExtensionScheme);
+  if (should_add_origin_header && !is_extension_scheme) {
+#else
   if (should_add_origin_header) {
+#endif
     // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
     url::Origin origin_header_value =
         request_.request_initiator.value_or(url::Origin());
+#if !BUILDFLAG(ARKWEB_NETWORK_LOAD)
     origin_header_value = content::Referrer::SanitizeOriginForRequest(
         request_.url, origin_header_value,
         blink::ReferrerUtils::NetToMojoReferrerPolicy(
             request_.referrer_policy));
+#endif
 
     request_.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kOrigin,
                                         origin_header_value.Serialize());
@@ -618,10 +672,12 @@ void InterceptedRequest::Restart() {
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   struct NetHelperSetting setting;
-  factory_->request_handler_->GetSettingOfNetHelper(setting);
+  factory_->request_handler_->GetSettingOfNetHelper(request_.url, setting);
   if (IsURLBlocked(request_.url, setting)) {
+    LOG_FEEDBACK(ERROR, kNavigation)
+        << "URLBlocked isServerRedirect:" << is_redirect
+        << " url:" << url::LogUtils::ConvertUrlWithMask(request_.url.spec());
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
-    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
     return;
   }
 
@@ -835,6 +891,10 @@ void InterceptedRequest::OnTransferSizeUpdated(int32_t transfer_size_diff) {
 
 void InterceptedRequest::OnComplete(
     const network::URLLoaderCompletionStatus& status) {
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  needs_reload_with_fallback_proxy_ = status.needs_reload_with_fallback_proxy;
+#endif
+
   // Only wait for the original loader to possibly have a custom error if the
   // target loader exists and succeeded. If the target loader failed, then it
   // was a race as to whether that error or the safe browsing error would be
@@ -853,25 +913,55 @@ void InterceptedRequest::FollowRedirect(
   net::HttpRequestHeaders modified_headers = modified_headers_ext;
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  LOG(DEBUG) << "InterceptedRequest::FollowRedirect";
+  bool is_main_frame = request_.resource_type ==
+                       static_cast<int>(blink::mojom::ResourceType::kMainFrame);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
+        OhosUrlRewriteController::IsRewriteUrlEnabled() && is_main_frame) {
+    GURL rewrited_url;
+    if (new_url.has_value()) {
+      rewrited_url = new_url.value();
+    } else {
+      rewrited_url = request_.url;
+    }
+
+    GURL referrer = request_.referrer.is_valid() ? request_.referrer : GURL();
+
+    content::GetUIThreadTaskRunner({})->PostTaskAndReplyWithResult(
+      FROM_HERE,
+      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUI,
+                    base::Unretained(this),
+                    std::move(rewrited_url),
+                    std::move(referrer)),
+      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUIDone,
+                    weak_factory_.GetWeakPtr(),
+                    removed_headers,
+                    modified_headers,
+                    modified_cors_exempt_headers,
+                    new_url));
+  } else {
 #if BUILDFLAG(IS_ARKWEB)
-  InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
+    InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
                                              modified_cors_exempt_headers,
                                              new_url, this);
 #endif
-  // If |OnURLLoaderClientError| was called then we're just waiting for the
-  // connection error handler of |proxied_loader_receiver_|. Don't restart the
-  // job since that'll create another URLLoader.
-  if (!target_client_) {
-    return;
-  }
+    // If |OnURLLoaderClientError| was called then we're just waiting for the
+    // connection error handler of |proxied_loader_receiver_|. Don't restart the
+    // job since that'll create another URLLoader.
+    if (!target_client_) {
+      return;
+    }
 
-  // Normally we would call FollowRedirect on the target loader and it would
-  // begin loading the redirected request. However, the client might want to
-  // intercept that request so restart the job instead.
+    // Normally we would call FollowRedirect on the target loader and it would
+    // begin loading the redirected request. However, the client might want to
+    // intercept that request so restart the job instead.
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  Restart(true);
+    Restart(true);
 #else
-  Restart();
+    Restart();
+#endif
+  }
 #endif
 }
 
@@ -1071,7 +1161,11 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
   }
 
   factory_->request_handler_->OnRequestResponse(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      id_, &request_, headers.get(), redirect_info, current_request_uses_header_client_,
+#else
       id_, &request_, headers.get(), redirect_info,
+#endif
       base::BindOnce(&InterceptedRequest::ContinueResponseOrRedirect,
                      weak_factory_.GetWeakPtr(), std::move(continuation)));
 }
@@ -1196,6 +1290,13 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   request_.site_for_cookies = new_redirect_info.new_site_for_cookies;
   request_.referrer = GURL(new_redirect_info.new_referrer);
   request_.referrer_policy = new_redirect_info.new_referrer_policy;
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    request_.retry_with_fallback_proxy = false;
+    request_.original_error_code = net::OK;
+  }
+#endif
 
   if (request_.trusted_params) {
     request_.trusted_params->isolation_info =
@@ -1312,6 +1413,13 @@ void InterceptedRequest::OnDestroy() {
 #if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   ResReporter::GetInstance().FetchEnd();
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (status_.error_code != net::OK) {
+    LOG(INFO) << "InterceptedRequest id " << id_ << ", OnDestroy for error_code: "
+              << status_.error_code;
+  }
+#endif
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
@@ -1425,6 +1533,17 @@ void InterceptedRequest::SendErrorCallback(int error_code,
     return;
   }
 
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    if (needs_reload_with_fallback_proxy_) {
+      return;
+    } else if (request_.retry_with_fallback_proxy) {
+      error_code = request_.original_error_code;
+    }
+  }
+#endif
+
   sent_error_callback_ = true;
   factory_->request_handler_->OnRequestError(id_, request_, error_code,
                                              safebrowsing_hit);
@@ -1434,6 +1553,55 @@ void InterceptedRequest::OnUploadProgressACK() {
   DCHECK(waiting_for_upload_progress_ack_);
   waiting_for_upload_progress_ack_ = false;
 }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+GURL InterceptedRequest::AddQueryForRedirectOnUI(
+    GURL original_url,
+    GURL referrer) {
+  if (!original_url.is_empty() && original_url.is_valid()) {
+    std::string new_url =
+      factory_->request_handler_->OnRewriteUrlForNavigation(
+          original_url.spec(), referrer.spec(), ui::PageTransition::PAGE_TRANSITION_SERVER_REDIRECT, true);
+    return GURL(new_url);
+  }
+  return GURL();
+}
+
+void InterceptedRequest::AddQueryForRedirectOnUIDone(
+    const std::vector<std::string>& removed_headers,
+    const net::HttpRequestHeaders& modified_headers,
+    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    const std::optional<GURL>& original_url,
+    GURL rewrited_url) {
+  std::optional<GURL> optional_url;
+  if (rewrited_url.is_empty() || !rewrited_url.is_valid() || rewrited_url == request_.url) {
+    optional_url = std::nullopt;
+  } else {
+    optional_url = std::optional<GURL>(rewrited_url);
+  }
+
+#if BUILDFLAG(IS_ARKWEB)
+    InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
+                                             modified_cors_exempt_headers,
+                                             optional_url, this);
+#endif
+    // If |OnURLLoaderClientError| was called then we're just waiting for the
+    // connection error handler of |proxied_loader_receiver_|. Don't restart the
+    // job since that'll create another URLLoader.
+    if (!target_client_) {
+      return;
+    }
+
+    // Normally we would call FollowRedirect on the target loader and it would
+    // begin loading the redirected request. However, the client might want to
+    // intercept that request so restart the job instead.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+    Restart(true);
+#else
+    Restart();
+#endif
+}
+#endif
 
 //==============================
 // InterceptedRequestHandler
@@ -1446,6 +1614,10 @@ void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
     network::ResourceRequest* request,
     bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    base::WeakPtr<InterceptedRequest> intercepted_request,
+    bool current_request_uses_header_client,
+#endif
     OnBeforeRequestResultCallback callback,
     CancelRequestCallback cancel_callback) {
   std::move(callback).Run(false, false);
@@ -1463,6 +1635,9 @@ void InterceptedRequestHandler::OnRequestResponse(
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
     std::optional<net::RedirectInfo> redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    bool current_request_uses_header_client,
+#endif
     OnRequestResponseResultCallback callback) {
   std::move(callback).Run(
       ResponseMode::CONTINUE, nullptr,
@@ -1636,11 +1811,28 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
 #endif
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
-      std::move(receiver), std::move(client), std::move(target_factory_clone));
-  requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  req->Restart(false);
+#if BUILDFLAG(ARKWEB_COOKIE)
+      std::move(receiver), std::move(client), request.disable_web_security,
+      std::move(target_factory_clone));
 #else
+      std::move(receiver), std::move(client), std::move(target_factory_clone));
+#endif
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  bool is_redirect = false;
+  auto it = requests_.find(request_id);
+  if (it != requests_.end()) {
+    LOG(INFO) << "Use same request id for redirect.";
+    is_redirect = true;
+    if (!it->second.second) {
+      it->second.first.release();
+    }
+    requests_.erase(it);
+  }
+  requests_[request_id] =
+      std::make_pair(base::WrapUnique(req), req->GetWeakPtr());
+  req->Restart(is_redirect);
+#else
+  requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
   req->Restart();
 #endif
 }
@@ -1657,7 +1849,11 @@ void ProxyURLLoaderFactory::OnLoaderCreated(
   CEF_REQUIRE_IOT();
   auto request_it = requests_.find(request_id);
   if (request_it != requests_.end()) {
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+    request_it->second.first->OnLoaderCreated(std::move(receiver));
+#else
     request_it->second->OnLoaderCreated(std::move(receiver));
+#endif
   }
 }
 

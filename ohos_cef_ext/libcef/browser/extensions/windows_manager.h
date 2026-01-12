@@ -13,31 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_
-#define CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_
-#pragma once
+// #ifndef CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_
+// #define CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_
+// #pragma once
 
-#include <string>
-#include <mutex>
-#include <memory>
+// #include <string>
+// #include <mutex>
+// #include <memory>
 
-#include "include/cef_extension_window_handler.h"
-#include "base/memory/raw_ptr.h"
+// #include "include/cef_extension_window_handler.h"
+// #include "base/memory/raw_ptr.h"
 
-class CefWindowsManager {
-  public:
-    static CefWindowsManager* GetInstance();
+// class CefWindowsManager {
+//   public:
+//     static CefWindowsManager* GetInstance();
 
-    void SetWindowHandler(CefExtensionWindowHandler* handler);
+//     void SetWindowHandler(CefExtensionWindowHandler* handler);
 
-    std::vector<WebExtensionWindow> GetAllWindows(
-      const WebExtensionWindowQueryOptions& queryOptions);
+//     std::vector<WebExtensionWindow> GetAllWindows(
+//       const WebExtensionWindowQueryOptions& queryOptions);
  
-  private:
-    static std::unique_ptr<CefWindowsManager> instance;
-    static std::mutex mtx;
+//   private:
+//     static base::NoDestructor<CefWindowsManager> instance_;
 
-    raw_ptr<CefExtensionWindowHandler> cef_window_handler_;
-};
+//     raw_ptr<CefExtensionWindowHandler> cef_window_handler_ = nullptr;
 
-#endif  // CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_
+//     DISALLOW_COPY_AND_ASSIGN(CefWindowsManager);
+// };
+
+// #endif  // CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_

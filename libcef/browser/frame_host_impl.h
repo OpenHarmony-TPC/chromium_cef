@@ -141,6 +141,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // this frame is currenly detached. Do not directly compare RFH pointers; use
   // IsSameFrame() instead. Must be called on the UI thread.
   content::RenderFrameHost* GetRenderFrameHost() const;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  content::RenderFrameHost* GetRenderFrameHostFromGlobalId() const;
+  bool IsPrerendering();
+#endif
 
   // Returns true if this frame and |frame_host| represent the same frame.
   // Frames are considered the same if they share the same frame token value,
@@ -197,10 +201,15 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
     return frame_token_;
   }
 
+  content::GlobalRenderFrameHostId GetGlobalRenderFrameHostId();
+
   // PageTransition type for explicit navigations. This must pass the check in
   // ContentBrowserClient::IsExplicitNavigation for debug URLs (HandleDebugURL)
   // to work as expected.
   static const ui::PageTransition kPageTransitionExplicit;
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y);
+#endif // defined(OHOS_INPUT_EVENTS)
 
 #if BUILDFLAG(IS_ARKWEB)
   friend class ArkwebFrameHostExtImpl;
@@ -240,6 +249,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 
   // The following members are only accessed on the UI thread.
   raw_ptr<content::RenderFrameHost> render_frame_host_ = nullptr;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  content::GlobalRenderFrameHostId rfh_global_id_;
+  bool initial_is_prerendering_ = false;
+#endif
 
   std::queue<std::pair<std::string, RenderFrameAction>>
       queued_renderer_actions_;

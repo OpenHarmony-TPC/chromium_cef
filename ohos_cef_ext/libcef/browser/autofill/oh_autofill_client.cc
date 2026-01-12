@@ -27,6 +27,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/prefs/pref_service_factory.h"
 #include "components/user_prefs/user_prefs.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/ssl_status.h"
@@ -41,6 +42,10 @@
 using content::WebContents;
 
 namespace autofill {
+namespace {
+constexpr int32_t MANUAL_REQUEST_TRIGGER_TYPE = 1;
+constexpr int32_t PASTER_REQUEST_TRIGGER_TYPE = 2;
+}
 
 void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
   DCHECK(contents);
@@ -61,7 +66,12 @@ base::WeakPtr<autofill::AutofillClient> OhAutofillClient::GetWeakPtr() {
   return weak_ptr_factory_.GetWeakPtr();
 }
 
-void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
+void OhAutofillClient::SetFocusFieldGlobalId(const FieldGlobalId& field_id) {
+  LOG(DEBUG) << "SetFocusFieldGlobalId field_id:" << field_id;
+  focused_field_id_ = field_id;
+}
+
+void OhAutofillClient::FillData(CefRefPtr<CefValue> data, int32_t trigger_type) {
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   if (!data) {
     LOG(ERROR) << "data is null";
@@ -81,12 +91,22 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
   }
   auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
   if (mgr) {
-    mgr->FillData(json_str);
+    if (trigger_type == PASTER_REQUEST_TRIGGER_TYPE) {
+      mgr->FillDataFromPaster(json_str, focused_field_id_);
+    } else if (trigger_type == MANUAL_REQUEST_TRIGGER_TYPE) {
+      mgr->FillDataFromAutofill(json_str, focused_field_id_);
+    } else {
+      mgr->FillData(json_str);
+    }
   }
 #endif
 }
 
 bool OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
+  if (!EnableAutoFill()) {
+    LOG(INFO) << "[AutoFill] autofill interception successful.";
+    return false;
+  }
   if (callback_) {
     CefRefPtr<CefValue> data = CefValue::Create();
     data->SetStdString(json_str);
@@ -276,32 +296,6 @@ void OhAutofillClient::PinAutofillSuggestions() {
 
 void OhAutofillClient::HideAutofillSuggestions(autofill::SuggestionHidingReason reason) {
   delegate_.reset();
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  if (need_hide_password_popup_ && reason == SuggestionHidingReason::kTabGone) {
-    content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
-    if (!rfh) {
-      LOG(ERROR) << "rfh is nullptr";
-      return;
-    }
-    autofill::ContentAutofillDriver* driver =
-        autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
-    if (!driver) {
-      LOG(ERROR) << "driver is nullptr";
-      return;
-    }
-    auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
-    if (!mgr) {
-      LOG(ERROR) << "autofill_manager is nullptr";
-      return;
-    }
-    auto hidePopupStr = mgr->QueryPopupShowAndGetHideStr();
-    if (hidePopupStr.has_value() && OnAutofillEvent(hidePopupStr.value())) {
-      LOG(INFO) << "visibility changed, the password autofill popup is hidden";
-      mgr->SetPasswordPopupShow(false);
-    }
-    need_hide_password_popup_ = false;
-  }
-#endif
 }
 
 bool OhAutofillClient::IsAutocompleteEnabled() const {
@@ -355,6 +349,11 @@ content::WebContents& OhAutofillClient::GetWebContents() const {
   // cast is the lesser of two evils.
   return const_cast<content::WebContents&>(
       ContentAutofillClient::GetWebContents());
+}
+
+bool OhAutofillClient::EnableAutoFill() const {
+  auto web_preference = GetWebContents().GetOrCreateWebPreferences();
+  return web_preference.is_autofill_enabled;
 }
 
 }  // namespace autofill

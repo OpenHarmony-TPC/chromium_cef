@@ -91,6 +91,8 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
 #endif  // BUILDFLAG(ARKWEB_PRINT)
@@ -111,6 +113,13 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded(bool occluded) override {}
 #endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type,
+                             const std::string& message) override {
+    return true;
+  }
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
  protected:
   CefBrowserPlatformDelegateAlloy();

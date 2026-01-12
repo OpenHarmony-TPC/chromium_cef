@@ -45,6 +45,30 @@ class OhPageLoadMetricsObserver
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnComplete(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnFailedProvisionalLoad(
+      const page_load_metrics::FailedProvisionalLoadInfo&
+          failed_provisional_load_info) override;
+  ObservePolicy OnShown() override;
+  ObservePolicy OnCommit(content::NavigationHandle* navigation_handle) override;
+
+  ObservePolicy OnPreviewStart(content::NavigationHandle* navigation_handle,
+                               const GURL& currently_committed_url) override;
+  void OnDidInternalNavigationAbort(
+      content::NavigationHandle* navigation_handle) override;
+  void ReadyToCommitNextNavigation(
+      content::NavigationHandle* navigation_handle) override;
+  void OnDidFinishSubFrameNavigation(
+      content::NavigationHandle* navigation_handle) override;
+  void OnCommitSameDocumentNavigation(
+      content::NavigationHandle* navigation_handle) override;
+  void OnConnectEnd(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnDomainLookupEnd(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnFirstPaintAfterBackForwardCacheRestoreInPage(
+      const page_load_metrics::mojom::BackForwardCacheTiming& timing,
+      size_t index) override;
+  void OnPrimaryPageRenderProcessGone() override;
 
   // PageLoadMetricsObserver event callbacks
   void OnFirstContentfulPaintInPage(
@@ -60,15 +84,14 @@ class OhPageLoadMetricsObserver
   void OnLoadEventEnd(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnLoadedResource(const page_load_metrics::ExtraRequestCompleteInfo&
-                            extra_request_complelte_info) override;
+                            extra_request_complete_info) override;
   void OnFirstPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   static void OnNavigationStart();
   static void RenderInitBlock(int64_t block_time);
 #endif
 #if BUILDFLAG(ARKWEB_BFCACHE)
-  page_load_metrics::PageLoadMetricsObserver::ObservePolicy
-  OnEnterBackForwardCache(
+  ObservePolicy OnEnterBackForwardCache(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnFirstContentfulPaintAfterBackForwardCacheRestoreInPage(
       const page_load_metrics::mojom::BackForwardCacheTiming& timing,
@@ -94,6 +117,9 @@ class OhPageLoadMetricsObserver
   void ReportBufferedMetrics(
       const page_load_metrics::mojom::PageLoadTiming& timing);
   void ReportPerformanceTiming();
+  void OnLoadedResourceLoggerReport(
+      const page_load_metrics::ExtraRequestCompleteInfo&
+          extra_request_complete_info);
 #endif
 
  private:
@@ -102,7 +128,7 @@ class OhPageLoadMetricsObserver
   raw_ptr<network::NetworkQualityTracker> network_quality_tracker_ = nullptr;
 
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
-  bool did_dispatch_on_main_resourse_ = false;
+  bool did_dispatch_on_main_resource_ = false;
   bool reported_buffered_metrics_ = false;
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;

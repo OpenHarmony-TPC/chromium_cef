@@ -6,13 +6,14 @@
 #define CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_UTILS_H_
 #pragma once
 
+#include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "content/public/browser/web_contents.h"
 
 class AlloyBrowserHostImplUtils
 {
 public:
-    AlloyBrowserHostImpl* alloyBrowserHostImpl;
+    raw_ptr<AlloyBrowserHostImpl> alloyBrowserHostImpl;
     AlloyBrowserHostImplUtils(AlloyBrowserHostImpl* impl) { alloyBrowserHostImpl = impl; }
     ~AlloyBrowserHostImplUtils() = default;
 
@@ -58,6 +59,9 @@ public:
   void handleSingleRenderDelayShutdown(content::WebContents* source);
 #endif
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden();
+#endif
 };
 
 

@@ -119,7 +119,6 @@
       'include/views/cef_window.h',
       'include/views/cef_window_delegate.h',
       'include/cef_extension_context_menus_handler.h',
-      'include/cef_extension_window_handler.h',
       'include/cef_web_extension_tab_api_handler.h',
     ],
     'autogen_capi_includes': [

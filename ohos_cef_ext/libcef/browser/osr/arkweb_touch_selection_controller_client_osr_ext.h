@@ -40,8 +40,9 @@ class ArkWebTouchSelectionControllerClientOSRExt
 
   void MouseSelectMenuShow(bool show);
   void ChangeVisibilityOfQuickMenu();
+  bool IsQuickMenuShow();
   void UpdateClientClippedSelectionBounds(
-      const gfx::Rect& clipped_selection_bounds);
+      const gfx::Rect& clipped_selection_bounds) override;
   bool NeedPopupInsertTouchHandleQuickMenu();
 #endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
@@ -53,7 +54,7 @@ class ArkWebTouchSelectionControllerClientOSRExt
 // ui::TouchSelectionControllerClient:
 void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-  void HideHandleAndQuickMenuIfNecessary(bool hide_handles);
+  void HideHandleAndQuickMenuIfNecessary(bool hide_handles) override;
 #endif
 #if BUILDFLAG(ARKWEB_MENU)
   // CefTouchSelectionControllerClientOSR:
@@ -83,7 +84,17 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void ExecuteCommand(int command_id, int event_flags) override;
 #if BUILDFLAG(ARKWEB_MENU)
   void NotifyShowMagnifier() override;
+  void ConvertClientClippedSelectionBounds(
+    gfx::Rect& clipped_selection_bounds) override;
+  bool IsShowHandle() override;
+  void SetQuickMenuRequested(bool is_visible) override;
 #endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_PDF)
+  void ResetResponsePendingInputEvent() override;
+  void SetIsPdfDocument(bool is_pdf_document) override;
+  void OnScaleChanged(float new_page_scale_factor) override;
+#endif  // BUILDFLAG(ARKWEB_PDF)
  private:
   // // Not owned, non-null for the lifetime of this object.
   // raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
@@ -94,8 +105,6 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_MENU)
   base::TimeTicks select_handle_move_timer_;
   bool mouse_quick_menu_running_ = false;
-  base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
-      weak_ptr_factory_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
   bool isCopy_ = false;
@@ -104,5 +113,10 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_AI)
   bool isSelectionNotEmptyForAI_;
 #endif
+#if BUILDFLAG(ARKWEB_PDF)
+  std::atomic<bool> is_pdf_document_{false};
+#endif  // BUILDFLAG(ARKWEB_PDF)
+  base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
+      weak_ptr_factory_;
 };
 #endif

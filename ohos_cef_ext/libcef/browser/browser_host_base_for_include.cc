@@ -148,6 +148,16 @@ void CefBrowserHostBase::CustomWebMediaPlayer(bool enable) {
 #endif  // ARKWEB_VIDEO_ASSISTANT
 }
 
+void CefBrowserHostBase::SetMediaResumeFromBFCachePage(bool resume) {
+  LOG(INFO) << "CefBrowserHostBase SetMediaResumeFromBFCachePage resume:" << resume;
+#if BUILDFLAG(ARKWEB_BFCACHE)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when set media resume playback";
+    return;
+  }
+  GetWebContents()->SetMediaResumeFromBFCachePage(resume);
+#endif  // BUILDFLAG(ARKWEB_BFCACHE)
+}
 
 #if BUILDFLAG(ARKWEB_PERMISSION)
 
@@ -298,13 +308,18 @@ void CefBrowserHostBase::AbortAskNotificationPermission(
 
 void CefBrowserHostBase::GetPermissionStatusAsync(
     const CefString& origin,
+    int resources,
     cef_permission_status_query_callback_t callback) {
   CefPermissionQuery::GetPermissionStatusAsync(
-      new AlloyAccessQuery(origin, AlloyAccessRequest::Resources::NOTIFICATION,
-                           std::move(callback)));
+      new AlloyAccessQuery(origin, resources, std::move(callback)));
 }
-
 #endif // #if BUILDFLAG(ARKWEB_NOTIFICATION)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool CefBrowserHostBase::IsClipboardSitePermissionEnabled() {
+  return CefPermissionQuery::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 void CefBrowserHostBase::AskMIDISysexPermission(
     const CefString& origin,
@@ -374,6 +389,34 @@ void CefBrowserHostBase::AbortAskVideoCapturePermission(
       origin, AlloyAccessRequest::Resources::VIDEO_CAPTURE);
 }
 #endif  // BUILDFLAG(ARKWEB_PERMISSION)
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+void CefBrowserHostBase::SetBlankScreenDetectionConfig(
+    bool enable,
+    const std::vector<double> &detectionTiming,
+    const std::vector<int32_t> &detectionMethods,
+    int32_t contentfulNodesCountThreshold) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "SetBlankScreenDetectionConfig GetWebContents null";
+    return;
+  }
+  web_contents->SetBlankScreenDetectionConfig(
+      enable, detectionTiming, detectionMethods, contentfulNodesCountThreshold);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+void CefBrowserHostBase::GetOverScrollOffsetValue(float* offset_x,
+                                                  float* offset_y) {
+  if (GetWebContents()) {
+    GetWebContents()->GetOverScrollOffset(offset_x, offset_y);
+  } else if (offset_x && offset_y) {
+    *offset_x = 0.0f;
+    *offset_y = 0.0f;
+  }
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
 bool CefBrowserHostBase::NeedToFireBeforeUnloadOrUnloadEvents() {

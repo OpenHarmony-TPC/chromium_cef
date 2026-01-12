@@ -63,6 +63,10 @@ class InterceptedRequestHandler {
   virtual void OnBeforeRequest(int32_t request_id,
                                network::ResourceRequest* request,
                                bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               base::WeakPtr<InterceptedRequest> intercepted_request,
+                               bool current_request_uses_header_client,
+#endif
                                OnBeforeRequestResultCallback callback,
                                CancelRequestCallback cancel_callback);
 
@@ -118,6 +122,9 @@ class InterceptedRequestHandler {
                                  network::ResourceRequest* request,
                                  net::HttpResponseHeaders* headers,
                                  std::optional<net::RedirectInfo> redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                                 bool current_request_uses_header_client,
+#endif
                                  OnRequestResponseResultCallback callback);
 
   // Called to optionally filter the response body.
@@ -140,7 +147,7 @@ class InterceptedRequestHandler {
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   // To get setting of net helper.
-  virtual void GetSettingOfNetHelper(struct NetHelperSetting& setting) {}
+  virtual void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) {}
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   // Called on received http request error.
@@ -152,6 +159,14 @@ class InterceptedRequestHandler {
 #endif
 #if BUILDFLAG(ARKWEB_USERAGENT)
   virtual std::string GetCustomUserAgent() { return ""; }
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer,
+      int transition_type,
+      bool is_key_request) { return ""; }
 #endif
 };
 
@@ -265,8 +280,14 @@ class ProxyURLLoaderFactory
   DisconnectCallback on_disconnect_;
 
   // Map of request ID to request object.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  std::map<int32_t,
+           std::pair<std::unique_ptr<InterceptedRequest>,
+                     base::WeakPtr<InterceptedRequest>>>
+      requests_;
+#else
   std::map<int32_t, std::unique_ptr<InterceptedRequest>> requests_;
-
+#endif
   base::WeakPtrFactory<ProxyURLLoaderFactory> weak_factory_;
 };
 

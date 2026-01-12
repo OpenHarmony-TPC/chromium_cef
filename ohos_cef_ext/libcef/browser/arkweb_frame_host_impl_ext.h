@@ -117,7 +117,8 @@ void SetIsFling(bool is_fling);
   void ZoomBy(float delta, float width, float height);
   void GetHitData(int& type, CefString& extra_data);
   void GetLastHitData(int& type, CefString& extra_data);
-  void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
+  void GetLastHitNodeId(int& node_id);
+  void UpdateHitTestData(int32_t type, const std::string& extra_data, int32_t node_id) override;
   void SetOverscrollMode(int mode);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
@@ -166,6 +167,12 @@ void SetIsFling(bool is_fling);
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool SetFocusByPosition(float x, float y);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+  virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,
+                                             uint64_t blankless_key,
+                                             uint64_t frame_sink_id,
+                                             int64_t pref_hash) override;
+#endif
 #if BUILDFLAG(IS_ARKWEB)
  private:
   using RenderFrameType = mojo::Remote<cef::mojom::RenderFrame>;
@@ -174,10 +181,12 @@ void SetIsFling(bool is_fling);
   struct CefHitData {
     int type;
     CefString extra_data;
-    CefHitData() : type(0), extra_data("") {}
+    int node_id;
+    CefHitData() : type(0), extra_data(""), node_id(-1) {}
   };
   CefHitData hit_data_;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  base::WeakPtrFactory<ArkwebFrameHostExtImpl> weak_ptr_factory_{this};
 #endif
 };
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_EXT_H_

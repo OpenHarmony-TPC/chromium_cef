@@ -18,6 +18,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/site_isolation_policy.h"
 #include "ipc/ipc_platform_file_attachment_posix.h"
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
 
@@ -28,13 +29,16 @@ const char kOhGinJavascriptBridgeMessageFilterKey[] =
 
 }  // namespace
 
+// The routing id of the RenderFrameHost whose request we are processing.
+// Used on the background thread.
+thread_local int32_t current_routing_id = MSG_ROUTING_NONE;
+
 namespace NWEB {
 OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
     base::PassKey<OhGinJavascriptBridgeMessageFilter> pass_key,
     content::AgentSchedulingGroupHost& agent_scheduling_group)
     : BrowserMessageFilter(OhGinJavascriptBridgeMsgStart),
-      agent_scheduling_group_(agent_scheduling_group),
-      current_routing_id_(MSG_ROUTING_NONE) {
+      agent_scheduling_group_(agent_scheduling_group) {
   async_task_runner_ = base::ThreadPool::CreateSingleThreadTaskRunner(
       {base::TaskPriority::USER_BLOCKING},
       base::SingleThreadTaskRunnerThreadMode::DEDICATED);
@@ -64,9 +68,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
     std::string url;
     std::string method_name;
     if (iter.ReadString(&url) && iter.ReadString(&method_name)) {
-      base::AutoReset<int32_t> routingId(&current_routing_id_,
-                                         message.routing_id());
-      scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+      scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost(message.routing_id());
       if (host) {
         host->OnHasAsyncThreadMethod(object_id, method_name, &isAsyncThread);
       }
@@ -123,7 +125,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
     const IPC::Message& message) {
-  base::AutoReset<int32_t> routing_id(&current_routing_id_,
+  base::AutoReset<int32_t> routing_id(&current_routing_id,
                                       message.routing_id());
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(OhGinJavascriptBridgeMessageFilter, message)
@@ -142,7 +144,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
 
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     const IPC::Message& message) {
-  base::AutoReset<int32_t> routing_id(&current_routing_id_,
+  base::AutoReset<int32_t> routing_id(&current_routing_id,
                                       message.routing_id());
   bool handled = true;
   base::PickleIterator iter(message);
@@ -181,6 +183,8 @@ void OhGinJavascriptBridgeMessageFilter::AddRoutingIdForHost(
     content::RenderFrameHost* render_frame_host) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   base::AutoLock locker(hosts_lock_);
+  LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::AddRoutingIdForHost, routingID:"
+             << render_frame_host->GetRoutingID();
   hosts_[render_frame_host->GetRoutingID()] = host;
 }
 
@@ -191,6 +195,8 @@ void OhGinJavascriptBridgeMessageFilter::RemoveHost(
   auto iter = hosts_.begin();
   while (iter != hosts_.end()) {
     if (iter->second == host) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::RemoveHost, routingID:"
+               << iter->first;
       hosts_.erase(iter++);
     } else {
       ++iter;
@@ -205,14 +211,14 @@ void OhGinJavascriptBridgeMessageFilter::RenderProcessExited(
   {
     scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter =
         base::UserDataAdapter<OhGinJavascriptBridgeMessageFilter>::Get(
-            &agent_scheduling_group_, kOhGinJavascriptBridgeMessageFilterKey);
+            &(*agent_scheduling_group_), kOhGinJavascriptBridgeMessageFilterKey);
     DCHECK_EQ(this, filter.get());
   }
 #endif
 
   rph->RemoveObserver(this);
 
-  agent_scheduling_group_.RemoveUserData(
+  (*agent_scheduling_group_).RemoveUserData(
       kOhGinJavascriptBridgeMessageFilterKey);
 }
 
@@ -245,11 +251,24 @@ OhGinJavascriptBridgeMessageFilter::FromHost(
 scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
 OhGinJavascriptBridgeMessageFilter::FindHost() {
   base::AutoLock locker(hosts_lock_);
-  auto iter = hosts_.find(current_routing_id_);
+  LOG(DEBUG) << "OhGinJavascriptBridgeMessageFilter::FindHost, routingID:"
+             << current_routing_id;
+  auto iter = hosts_.find(current_routing_id);
   if (iter != hosts_.end()) {
     return iter->second;
   }
-  LOG(WARNING) << "JSBridge host not found, routingID:" << current_routing_id_;
+  LOG(WARNING) << "JSBridge host not found, routingID:" << current_routing_id;
+  return nullptr;
+}
+
+scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
+OhGinJavascriptBridgeMessageFilter::FindHost(int32_t routing_id) {
+  base::AutoLock locker(hosts_lock_);
+  auto iter = hosts_.find(routing_id);
+  if (iter != hosts_.end()) {
+    return iter->second;
+  }
+  LOG(WARNING) << "JSBridge host not found, routingID:" << routing_id;
   return nullptr;
 }
 
@@ -276,6 +295,45 @@ void OhGinJavascriptBridgeMessageFilter::OnHasMethod(
   }
 }
 
+void OhGinJavascriptBridgeMessageFilter::SetSiteInstanceGurl(const GURL& site_instance_url) {
+  if (site_instance_gurl_.is_empty()) {
+    site_instance_gurl_ = site_instance_url;
+  }
+}
+
+bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
+  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS() ||
+      site_instance_gurl_.possibly_invalid_spec() == "http://unisolated.invalid/") {
+    return true;
+  }
+
+  if (document_gurl.scheme().empty() ||
+      document_gurl.scheme() != site_instance_gurl_.scheme()) {
+    LOG(INFO) << "IsSameSite scheme not same";
+    return false;
+  }
+
+  if (document_gurl.host().empty() ||
+      document_gurl.host() != site_instance_gurl_.host()) {
+    const size_t suffix_length = site_instance_gurl_.host().length() + 1;
+    const std::string url_host = document_gurl.host();
+
+    if (url_host.length() <= suffix_length) {
+      LOG(INFO) << "IsSameSite host not same";
+      return false;
+    } else {
+      const size_t dot_pos = url_host.length() - suffix_length;
+      const std::string host_suffix = url_host.substr(dot_pos + 1);
+      if (url_host[dot_pos] != '.' ||
+          host_suffix != site_instance_gurl_.host()) {
+        LOG(INFO) << "IsSameSite host not subdomain";
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
     int32_t object_id,
     const std::string& document_url,
@@ -283,9 +341,13 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
-    host->OnInvokeMethod(current_routing_id_, object_id, document_url,
+  if (host && is_same_site) {
+    host->OnInvokeMethod(current_routing_id, object_id, document_url,
                          method_name, arguments, wrapped_result, error_code);
   } else {
     wrapped_result->Append(base::Value());
@@ -298,9 +360,13 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
-    host->OnInvokeMethodAsync(current_routing_id_, object_id, document_url,
+  if (host && is_same_site) {
+    host->OnInvokeMethodAsync(current_routing_id, object_id, document_url,
                               method_name, arguments);
   }
 }
@@ -313,9 +379,13 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
-    host->OnInvokeMethodFlowbuf(current_routing_id_, object_id, document_url,
+  if (host && is_same_site) {
+    host->OnInvokeMethodFlowbuf(current_routing_id, object_id, document_url,
                                 method_name, arguments, *fd, wrapped_result,
                                 error_code);
   } else {
@@ -330,9 +400,13 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
-    host->OnInvokeMethodFlowbufAsync(current_routing_id_, object_id,
+  if (host && is_same_site) {
+    host->OnInvokeMethodFlowbufAsync(current_routing_id, object_id,
                                      document_url, method_name, arguments, *fd);
   }
 }
@@ -340,7 +414,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host) {
-    host->OnObjectWrapperDeleted(current_routing_id_, object_id);
+    host->OnObjectWrapperDeleted(current_routing_id, object_id);
   }
 }
 }  // namespace NWEB

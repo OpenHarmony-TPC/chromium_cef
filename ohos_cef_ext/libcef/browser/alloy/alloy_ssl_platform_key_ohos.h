@@ -32,7 +32,7 @@
 #include "third_party/boringssl/src/include/openssl/ssl.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 
-constexpr int32_t HASH_LENGTH = 256;
+constexpr int32_t HASH_LENGTH = 1000;
 
 class SSLPlatformKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
  public:
@@ -62,12 +62,16 @@ class SSLPlatformKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
         SSL_SIGN_RSA_PSS_SHA256,
         SSL_SIGN_RSA_PSS_SHA384,
         SSL_SIGN_RSA_PSS_SHA512,
+        SSL_SIGN_ECDSA_SECP256R1_SHA256,
+        SSL_SIGN_ECDSA_SECP384R1_SHA384,
+        SSL_SIGN_ECDSA_SECP521R1_SHA512,
     };
   }
 
   net::Error Sign(uint16_t algorithm,
                   base::span<const uint8_t> input,
                   std::vector<uint8_t>* signature) override {
+    LOG(DEBUG) << "Sign algorithm: " << algorithm;
     char* uri = new char[uri_.length() + 1];
     if (uri == nullptr) {
       LOG(ERROR) << "OHOS cert manager sign failed, new uri memory failed";
@@ -80,7 +84,7 @@ class SSLPlatformKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
     uri[i] = '\0';
 
     std::unique_ptr<OHOS::NWeb::CertManagerAdapter> RootCertDataAdapter =
-        OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
+        OHOS::NWeb::OhosAdapterHelper::GetInstance().GetCertManagerAdapter();
     if (RootCertDataAdapter == nullptr) {
       LOG(ERROR)
           << "OHOS cert manager sign failed, root cert data adapter is null";
@@ -90,9 +94,11 @@ class SSLPlatformKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
 
     signature->resize(HASH_LENGTH, 0);
 
+    uint32_t size = signature->size();
     auto ret =
-        RootCertDataAdapter->Sign((uint8_t*)uri, input.data(), input.size(),
-                                  signature->data(), signature->size());
+        RootCertDataAdapter->SignV2((uint8_t*)uri, input.data(), input.size(),
+                                  signature->data(), &size, algorithm);
+    signature->resize(size);
     if (ret != 0) {
       LOG(ERROR) << "OHOS cert manager sign failed, ret = " << ret;
       delete[] uri;

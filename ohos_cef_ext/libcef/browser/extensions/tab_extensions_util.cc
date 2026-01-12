@@ -29,7 +29,37 @@ base::Value::Dict GetMutedInfoValue(const NWebExtensionTabMutedInfo& mutedInfo) 
   return dict;
 }
 
-base::Value::Dict GetTabValue(const NWebExtensionTab& tab) {
+void ScrubTabValue(NWebExtensionTab& tab, const ExtensionTabUtil::ScrubTabBehavior& scrub_tab_behavior) {
+  switch (scrub_tab_behavior.committed_info) {
+    case ExtensionTabUtil::kScrubTabFully:
+      tab.url = std::nullopt;
+      tab.title = std::nullopt;
+      tab.favIconUrl = std::nullopt;
+      break;
+    case ExtensionTabUtil::kScrubTabUrlToOrigin:
+      if (tab.url) {
+        tab.url = GURL(*tab.url).DeprecatedGetOriginAsURL().spec();
+      }
+      break;
+    case ExtensionTabUtil::kDontScrubTab:
+      break;
+  }
+  if (tab.pendingUrl) {
+    switch (scrub_tab_behavior.pending_info) {
+      case ExtensionTabUtil::kScrubTabFully:
+        tab.pendingUrl = std::nullopt;
+        break;
+      case ExtensionTabUtil::kScrubTabUrlToOrigin:
+        tab.pendingUrl = GURL(*tab.pendingUrl).DeprecatedGetOriginAsURL().spec();
+        break;
+      case ExtensionTabUtil::kDontScrubTab:
+        break;
+    }
+  }
+}
+ 
+base::Value::Dict GetTabValue(NWebExtensionTab& tab, const ExtensionTabUtil::ScrubTabBehavior& scrub_tab_behavior) {
+  ScrubTabValue(tab, scrub_tab_behavior);
   base::Value::Dict dict;
   if (tab.id) {
     dict.Set("id", *tab.id);
@@ -80,11 +110,59 @@ base::Value::Dict GetTabValue(const NWebExtensionTab& tab) {
   return dict;
 }
 
-base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs) {
+std::string GetZoomSettingsModeStr(NWebExtensionTabZoomSettingsMode mode) {
+  switch (mode) {
+    case NWebExtensionTabZoomSettingsMode::AUTOMATIC:
+      return "automatic";
+    case NWebExtensionTabZoomSettingsMode::MANUAL:
+      return "manual";
+    case NWebExtensionTabZoomSettingsMode::DISABLE:
+      return "disabled";
+  }
+  return {};
+}
+
+std::string GetZoomSettingsScopeStr(NWebExtensionTabZoomSettingsScope scope) {
+  switch (scope) {
+    case NWebExtensionTabZoomSettingsScope::PER_ORIGIN:
+      return "per-origin";
+    case NWebExtensionTabZoomSettingsScope::PER_TAB:
+      return "per-tab";
+  }
+  return {};
+}
+
+base::Value::Dict GetTabZoomSettingsValue(const NWebExtensionTabZoomSettings& zoomSettings) {
+  base::Value::Dict dict;
+  if (zoomSettings.defaultZoomFactor) {
+    dict.Set("defaultZoomFactor", *zoomSettings.defaultZoomFactor);
+  }
+  if (zoomSettings.mode) {
+    dict.Set("mode", GetZoomSettingsModeStr(*zoomSettings.mode));
+  }
+  if (zoomSettings.scope) {
+    dict.Set("scope", GetZoomSettingsScopeStr(*zoomSettings.scope));
+  }
+  return dict;
+}
+
+base::Value::Dict GetTabZoomChangeValue(const NWebExtensionTabZoomChangeInfo& tabZoomChangeInfo) {
+  base::Value::Dict dict;
+  dict.Set("newZoomFactor", tabZoomChangeInfo.newZoomFactor);
+  dict.Set("oldZoomFactor", tabZoomChangeInfo.oldZoomFactor);
+  dict.Set("tabId", tabZoomChangeInfo.tabId);
+  dict.Set("zoomSettings", GetTabZoomSettingsValue(tabZoomChangeInfo.zoomSettings));
+  return dict;
+}
+
+base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs,
+                                  const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors) {
   base::Value::List tab_list;
+  size_t i = 0;
   for (NWebExtensionTab tab : tabs) {
-    LOG(DEBUG) << "GetTabValueList tab id: " << *tab.id;
-    tab_list.Append(GetTabValue(tab));
+    if (i == scrub_tab_behaviors.size()) break;
+    LOG(DEBUG) << "GetTabValueList tab id: " << tab.id.value_or(-1);
+    tab_list.Append(GetTabValue(tab, scrub_tab_behaviors[i++]));
   }
   return tab_list;
 }

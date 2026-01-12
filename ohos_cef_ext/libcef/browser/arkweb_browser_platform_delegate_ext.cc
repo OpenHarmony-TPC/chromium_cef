@@ -131,10 +131,6 @@ float ArkWebCefBrowserPlatformDelegateExt::GetPageScaleFactor() {
 std::string ArkWebCefBrowserPlatformDelegateExt::GetDataDetectorSelectText() {
   return std::string();
 }
-
-void ArkWebCefBrowserPlatformDelegateExt::OnDataDetectorSelectText() {
-  NOTIMPLEMENTED();
-}
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -160,6 +156,12 @@ bool ArkWebCefBrowserPlatformDelegateExt::WebPageSnapshot(
 void ArkWebCefBrowserPlatformDelegateExt::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
+  NOTIMPLEMENTED();
+}
+
+void ArkWebCefBrowserPlatformDelegateExt::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName,
+    void** adapter) {
   NOTIMPLEMENTED();
 }
 #endif  // BUILDFLAG(ARKWEB_PRINT)
@@ -253,3 +255,11 @@ CefRefPtr<CefDragData> ArkWebCefBrowserPlatformDelegateExt::GetDropData() {
   return nullptr;
 }
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool ArkWebCefBrowserPlatformDelegateExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  return true;
+}
+#endif // ARKWEB_PERFORMANCE_PERSISTENT_TASK

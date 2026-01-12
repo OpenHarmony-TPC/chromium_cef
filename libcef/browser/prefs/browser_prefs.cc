@@ -16,10 +16,19 @@
 #include "cef/ohos_cef_ext/libcef/browser/prefs/browser_prefs_for_include.cc"
 #endif
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/overrides/ohos_nweb/src/cef_delegate/cloud_control_config/nweb_cloud_control_config_type.h"
+#include "cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/global_reader_mode_data_manager.h"
+#endif
+
 namespace browser_prefs {
 
 namespace {
-
+#if BUILDFLAG(ENABLE_CEF)
 // Match the logic in chrome/browser/net/profile_network_context_service.cc.
 std::string ComputeAcceptLanguageFromPref(const std::string& language_pref) {
   std::string accept_languages_str =
@@ -43,11 +52,19 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 
   return std::string();
 }
-
+#endif  // BUILDFLAG(ENABLE_CEF)
 }  // namespace
 
+#if BUILDFLAG(ENABLE_CEF)
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
+#if BUILDFLAG(IS_ARKWEB_EXT)
+  OHOS::NWeb::RegisterCloudConfigVersionPrefs(registry);
+  global_config::RegisterGlobalConfigPrefs(registry);
+#endif
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  nweb_ex::GlobalReaderModeDataManager::RegisterProfilePrefs(registry);
+#endif
 }
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
@@ -92,11 +109,21 @@ void SetInitialProfilePrefs(Profile* profile) {
   }
 #if BUILDFLAG(ARKWEB_EXT_UA)
   UpdateCloudUAConfigAfterBrowserContextInitForInclude(profile);
-#endif      
+#endif
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  if (profile && !profile->IsOffTheRecord()) {
+    ohos_user_agent::UAPushConfig::GetInstance()->Init(profile->GetPrefs());
+  }
+#endif
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
+  UpdateBrowserEngineGlobalConfigAfterBrowserContextInitForInclude(profile);
+#endif
 
 #if BUILDFLAG(ARKWEB_PREFS)
   RegisterProfilePrefsForInclude(profile);
 #endif  // ARKWEB_PREFS
 }
+#endif  // BUILDFLAG(ENABLE_CEF)
 
 }  // namespace browser_prefs

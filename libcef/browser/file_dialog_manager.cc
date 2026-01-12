@@ -164,6 +164,9 @@ FileChooserParams SelectFileToFileChooserParams(
             FILE_PATH_LITERAL(".") + file_types->extensions[i][0]));
       }
     }
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+    ArkwebFileDialogManagerUtils::HandleFileParams(*file_types, params);
+#endif
   }
 
   return params;
@@ -518,6 +521,16 @@ CefFileDialogManager::MaybeRunDelegate(
 
       std::vector<CefString> accept_extensions;
       std::vector<CefString> accept_descriptions;
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+      CefString start_in = u"";
+      CefString accepts = u"";
+      if (params.start_in.size() > 0) {
+        start_in = params.start_in[0];
+      }
+      if (params.accepts.size() > 0) {
+        accepts = params.accepts[0];
+      }
+#endif
       if (extensions.empty()) {
         // We don't know the expansion of mime type values at this time,
         // so only include the single file extensions.
@@ -534,6 +547,9 @@ CefFileDialogManager::MaybeRunDelegate(
         const auto& extension_list = extensions[extensions.size() - 1];
         for (auto& ext : extension_list) {
             accept_extensions.push_back(FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
+        }
+        for (auto& description : descriptions) {
+            accept_descriptions.push_back(description);
         }
 #else
         for (size_t i = 0; i < params.accept_types.size(); ++i) {
@@ -560,6 +576,9 @@ CefFileDialogManager::MaybeRunDelegate(
           params.title, params.default_file_name.value(), accept_filters,
           accept_extensions, accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+          accepts,
+          start_in,
+          params.is_exclude_accept_all_options,
           params.use_media_capture, 
           arkweb_browser_info_manager_utils_->ConvertMimeTypesToFilters(params),
 #endif
@@ -597,6 +616,9 @@ void CefFileDialogManager::SelectFileDoneByDelegateCallback(
   } else {
     listener->MultiFilesSelected(ui::FilePathListToSelectedFileInfoList(paths));
   }
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  arkweb_browser_info_manager_utils_->HandleSetFileChooserInActive();
+#endif //BUILDFLAG(ARKWEB_FILE_UPLOAD)
   // |listener| is likely deleted at this point.
 }
 

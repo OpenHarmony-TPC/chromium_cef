@@ -24,6 +24,14 @@
 #include "cef/ohos_cef_ext/libcef/browser/alloy/browser_platform_delegate_alloy_for_include.cc"
 #endif
 
+#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
+#include "chrome/browser/login_detection/login_detection_tab_helper.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "components/dom_distiller/content/browser/distillability_driver.h"
+#endif
+
 namespace {
 
 const char kAttachedHelpersUserDataKey[] = "CefAttachedHelpers";
@@ -68,6 +76,9 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
   auto web_contents = content::WebContents::Create(wc_create_params);
   CHECK(web_contents);
 
+#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
+  login_detection::LoginDetectionTabHelper::MaybeCreateForWebContents(web_contents.get());
+#endif
   own_web_contents = true;
   return web_contents.release();
 }
@@ -142,6 +153,10 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   }
 
   autofill::OhAutofillClient::CreateForWebContents(web_contents_);
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  dom_distiller::DistillabilityDriver::CreateForWebContents(web_contents_);
 #endif
 }
 

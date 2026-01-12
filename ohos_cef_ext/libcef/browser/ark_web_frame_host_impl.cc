@@ -20,6 +20,9 @@
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "base/strings/escape.h"
 #include "cef/ohos_cef_ext/libcef/common/net/url_util_ex.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "content/browser/renderer_host/frame_tree.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
 #endif
  
 namespace {
@@ -123,3 +126,35 @@ void CefFrameHostImpl::SetOptimizeParserBudgetEnabled(bool enable) {
                         enable));
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+content::RenderFrameHost* CefFrameHostImpl::GetRenderFrameHostFromGlobalId()
+    const {
+  CEF_REQUIRE_UIT();
+  if (rfh_global_id_) {
+    return content::RenderFrameHost::FromID(rfh_global_id_);
+  }
+  return nullptr;
+}
+
+bool CefFrameHostImpl::IsPrerendering() {
+  content::RenderFrameHostImpl* rfh = static_cast<content::RenderFrameHostImpl*>(
+    GetRenderFrameHostFromGlobalId());
+  if (!rfh) {
+    return initial_is_prerendering_;
+  }
+  if (!rfh->frame_tree()) {
+    return initial_is_prerendering_;
+  }
+
+  return rfh->frame_tree()->is_prerendering();
+}
+#endif
+
+content::GlobalRenderFrameHostId CefFrameHostImpl::GetGlobalRenderFrameHostId() {
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  return rfh_global_id_;
+#else
+  return content::GlobalRenderFrameHostId();
+#endif
+}

@@ -280,11 +280,8 @@ class CefRenderWidgetHostViewOSR
   void SetFocus(bool focus);
   void UpdateFrameRate();
 
-#if BUILDFLAG(ARKWEB_DSS)
-  virtual gfx::Size SizeInPixels();
-#else
   gfx::Size SizeInPixels();
-#endif
+
   void OnPaint(const gfx::Rect& damage_rect,
                const gfx::Size& pixel_size,
                const void* pixels);
@@ -525,7 +522,6 @@ class CefRenderWidgetHostViewOSR
   int32_t is_fit_content_ = 0;
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  bool is_editable_node_ = false;
   bool isKeyboardResized_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)

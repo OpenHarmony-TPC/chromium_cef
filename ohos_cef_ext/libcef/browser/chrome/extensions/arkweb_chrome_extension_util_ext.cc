@@ -27,14 +27,19 @@ namespace cef {
 int GetTabIdForWebContents(const content::WebContents* web_contents) {
   if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
       switches::kEnableNwebEx) && base::ohos::IsPcDevice()) {
-    auto browser = AlloyBrowserHostImpl::GetBrowserForContents(web_contents);
-    if (!browser) {
-      return -1;
-    }
-    if (browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId() >= 0) {
-      return browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
-    } else {
-      LOG(INFO) << "GetTabIdForWebContents error tabId=" << browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
+    auto host_base = CefBrowserHostBase::GetBrowserForContents(web_contents);
+    if (host_base && host_base->IsAlloyStyle()) {
+      auto browser = AlloyBrowserHostImpl::GetBrowserForContents(web_contents);
+      if (!browser) {
+        return -1;
+      }
+
+      int tab_id = browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
+      if (tab_id >= 0) {
+        return tab_id;
+      }
+
+      LOG(INFO) << "GetTabIdForWebContents error tabId=" << tab_id;
       return -1;
     }
   }

@@ -114,27 +114,4 @@ void UpdateAdblockEasyListRules(base::FilePath path) {
       FROM_HERE, base::BindOnce(&UpdateEasyListRulesInIOThread));
 }
 
-void JNI_AdBlockList_TryRemoveAdblockSentinelFile(long adBlockEasyListVersion) {
-  base::FilePath app_data_dir;
-  base::PathService::Get(base::DIR_CACHE, &app_data_dir);
-  base::FilePath sentinel_file_path =
-      app_data_dir
-          .Append(
-              FILE_PATH_LITERAL(::subresource_filter::kTopLevelDirectoryName))
-          .Append(FILE_PATH_LITERAL(
-              ::subresource_filter::kIndexedRulesetBaseDirectoryName))
-          .AppendASCII(base::NumberToString(
-              ::subresource_filter::RulesetIndexer::kIndexedFormatVersion))
-          .AppendASCII(base::NumberToString(adBlockEasyListVersion))
-          .Append(::subresource_filter::kSentinelFileName);
-
-  if (base::PathExists(sentinel_file_path)) {
-    if (base::DeleteFile(sentinel_file_path)) {
-      LOG(INFO) << "delete sentinel file success";
-    } else {
-      LOG(INFO) << "delete sentinel file fail";
-    }
-  }
-}
-
 }  // namespace adblock

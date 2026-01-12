@@ -232,8 +232,14 @@ void AlloyBrowserHostImplUtils::commitPendingZoomLevelPreferences() {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 int AlloyBrowserHostImplUtils::handleZoomEventWithInput(bool zoom_in) {
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebEx)) {
+  if (alloyBrowserHostImpl && !alloyBrowserHostImpl->settings_.zoom_control_access) {
+    return -1;
+  }
+
+  bool usePreset = base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNwebEx);
+  LOG(INFO) << "HandleZoomEventWithInput zoom_in: " << zoom_in << ", shouldUsePresets:" << usePreset;
+  if (usePreset) {
     content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN
                                          : content::PageZoom::PAGE_ZOOM_OUT;
     zoom::PageZoom::Zoom(alloyBrowserHostImpl->web_contents(), zoomType);
@@ -328,6 +334,7 @@ int AlloyBrowserHostImplUtils::handleRendererUnresponsive(content::WebContents* 
     alloyBrowserHostImpl->AsAlloyBrowserHostImplExt()->OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
     return -1;
   }
+  host->ReportRenderUnresponsive(static_cast<int32_t>(host->GetProcess().Pid()));
   host->InvokeRenderCrashDump();
   host->dumpCurrentJavaScriptStackInMainThread(
       base::BindOnce(&AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback, alloyBrowserHostImpl->AsAlloyBrowserHostImplExt(),
@@ -352,5 +359,25 @@ void AlloyBrowserHostImplUtils::handleSingleRenderDelayShutdown(content::WebCont
   }
   // Try to fast shutdown the associated process.
   source->GetPrimaryMainFrame()->GetProcess()->FastShutdownIfPossible(1, false);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void AlloyBrowserHostImplUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
+  if (alloyBrowserHostImpl == nullptr) {
+    LOG(INFO) << "alloyBrowserHostImpl is nullptr";
+    return;
+  }
+  if (!alloyBrowserHostImpl->IsWindowless()) {
+    return;
+  }
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden,
+                                          alloyBrowserHostImpl->AsAlloyBrowserHostImpl()));
+    return;
+  }
+  if (alloyBrowserHostImpl->platform_delegate_) {
+    alloyBrowserHostImpl->platform_delegate_->EvictFrameBackBuffersWhenNWebWasHidden();
+  }
 }
 #endif

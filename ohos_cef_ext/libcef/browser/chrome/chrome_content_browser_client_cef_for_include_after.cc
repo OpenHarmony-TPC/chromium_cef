@@ -46,6 +46,12 @@
 #include "chrome/common/chrome_constants.h"
 #endif  // BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "arkweb/ohos_nweb/src/nweb_impl.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h"
+#include "extensions/browser/view_type_utils.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -105,8 +111,16 @@ std::optional<bool> ArkWebInnerCanCreateWindow(content::RenderFrameHost* opener,
                                                bool user_gesture) {
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
+  if (!web_contents) {
+    LOG(ERROR) << "web_contents is null!";
+    return false;
+  }
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
+  if (!browser_host) {
+    LOG(ERROR) << "browser_host is null!";
+    return false;
+  }
   if (!browser_host->settings().supports_multiple_windows) {
     if (browser_host->settings().javascript_can_open_windows_automatically ||
         user_gesture) {
@@ -124,6 +138,25 @@ std::optional<bool> ArkWebInnerCanCreateWindow(content::RenderFrameHost* opener,
   return std::nullopt;
 }
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+void BindFallbackProxy(
+    network::mojom::NetworkContextParams* network_context_params) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx)) {
+    if (fallback_proxy::FallbackProxyService::GetInstance()) {
+      network_context_params->custom_proxy_connection_observer_remote =
+          fallback_proxy::FallbackProxyService::GetInstance()
+              ->NewProxyConnectionObserverRemote();
+      mojo::Remote<network::mojom::CustomProxyConfigClient> config_client;
+      network_context_params->custom_proxy_config_client_receiver =
+          config_client.BindNewPipeAndPassReceiver();
+      fallback_proxy::FallbackProxyService::GetInstance()
+          ->AddCustomProxyConfigClient(std::move(config_client));
+    }
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 
 void ArkWebInnerConfigureNetworkContextParamsBefore(
     content::BrowserContext* context,
@@ -174,6 +207,13 @@ void ArkWebInnerConfigureNetworkContextParamsBefore(
         ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
   }
 #endif  // BUILDFLAG(ARKWEB_COOKIE)
+
+#if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx)) {
+    BindFallbackProxy(network_context_params);
+  }
+#endif  // BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 }
 
 void ArkWebInnerConfigureNetworkContextParamsAfter(
@@ -186,7 +226,12 @@ void ArkWebInnerConfigureNetworkContextParamsAfter(
   if (context->IsOffTheRecord() || context->GetPath().empty()) {
     network_context_params->http_cache_enabled = false;
   } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
-    network_context_params->file_paths->data_directory = cache_path;
+    base::FilePath data_path;
+    if (base::PathService::Get(chrome::DIR_USER_DATA, &data_path)) {
+      network_context_params->file_paths->data_directory = data_path;
+    } else {
+      network_context_params->file_paths->data_directory = cache_path;
+    }
     network_context_params->file_paths->cookie_database_name =
         base::FilePath(chrome::kCookieFilename);
 
@@ -218,6 +263,7 @@ void ArkWebInnerCreateThrottlesForNavigation(
 }
 
 void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
+    content::RenderFrameHost* render_frame_host,
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
 #if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
   auto* registry =
@@ -226,9 +272,22 @@ void ArkWebInnerRegisterBrowserInterfaceBindersForFrame(
     registry->GetBinders().ExposeInterfacesToRenderFrame(map);
   }
 #endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
+      render_frame_host, map);
+#endif
 }
 
 }  // namespace
+
+
+#if !BUILDFLAG(ARKWEB_NWEB_EX)
+// static
+void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForNWebEx(
+    content::RenderFrameHost* render_frame_host,
+    mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_MULTI_WINDOW)
 bool ChromeContentBrowserClientCef::CanCreateWindow(
@@ -236,10 +295,31 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
     const GURL& target_url,
     WindowOpenDisposition disposition,
     bool user_gesture,
+    const gfx::Rect& window_features,
     content::mojom::FrameHost::GetCreateNewWindowCallback callback) {
   CEF_REQUIRE_UIT();
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (extensions::GetViewType(web_contents) ==
+      extensions::mojom::ViewType::kOffscreenDocument) {
+      auto extensionId = static_cast<extensions::OffscreenContentsDelegate*>(
+          web_contents->GetDelegate())->GetExtensionId();
+      auto originUrl = web_contents->GetController().GetOriginalUrl();
+      auto origin = url::Origin::Create(GURL(originUrl));
+      bool isAlert = false;
+      if (disposition == static_cast<WindowOpenDisposition>(CEF_WOD_NEW_WINDOW) ||
+          disposition == static_cast<WindowOpenDisposition>(CEF_WOD_NEW_POPUP)) {
+        isAlert = true;
+      }
+      LOG(INFO) << "Offscreen CanCreateWindow extensionId:" << extensionId
+                << " isAlert:" << isAlert << " isUserTrigger:" << user_gesture;
+      OHOS::NWeb::NWebImpl::OnOffscreenDocumentWindowNewEvent(
+          extensionId, originUrl, isAlert, user_gesture, target_url.spec());
+      std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
+      return false;
+  }
+#endif
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
   if (!browser_host) {
@@ -262,7 +342,8 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
   auto arkweb_browser_info_manager_utils =
       CefBrowserInfoManager::GetInstance()->GetUtils();
   bool result = arkweb_browser_info_manager_utils->CanCreateWindow(
-      opener, target_url, disposition, user_gesture, callbackImpl);
+      opener, target_url, disposition, user_gesture, window_features,
+      callbackImpl);
   return result;
 }
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
@@ -280,6 +361,8 @@ bool ChromeContentBrowserClientCef::ShouldDisableSiteIsolation(
   if (g_siteIsolationMode) {
     return site_isolation::SiteIsolationPolicy::
         ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
+  } else if (site_isolation_mode == content::SiteIsolationMode::kPartialSiteIsolation) {
+    return false;
   }
   return true;
 }

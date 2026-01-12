@@ -80,6 +80,24 @@ class CefDevToolsMessageHandlerDelegate : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool ActiveDevToolsWindow() { return false; }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  ///
+  /// Called when devtools request to modify the size of the inspect page.
+  ///
+  /*--cef()--*/
+  virtual bool SetInspectedPageBounds(int left,
+                                      int top,
+                                      int width,
+                                      int height) {
+    return false;
+  }
+  ///
+  /// Called when devtools request to modify the dock side mode.
+  ///
+  /*--cef()--*/
+  virtual bool SetDockMode(int mode) { return false; }
+#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_DEVTOOLS_MESSAGE_HANDLER_DELEGATE_H_

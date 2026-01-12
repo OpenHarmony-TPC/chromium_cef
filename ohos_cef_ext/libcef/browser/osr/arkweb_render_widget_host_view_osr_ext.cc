@@ -92,6 +92,11 @@
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_AI)
+#include "cef/include/cef_parser.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
 const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
@@ -101,6 +106,7 @@ constexpr int32_t PINCH_START_TYPE = 1;
 constexpr int32_t PINCH_UPDATE_TYPE = 3;
 constexpr int32_t PINCH_END_TYPE = 2;
 const int32_t DEFAULT_PINCH_FINGER = 2;
+const int32_t TAP_TWICE = 2;
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -108,10 +114,13 @@ const size_t kMaxDataDetectorTextLength = 1000;
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#include <window_manager/oh_window.h>
+
+#include "arkweb/ohos_adapter_ndk/window_manager_adapter/window_manager_adapter_impl.h"
+#include "cef/include/internal/cef_types.h"
 #include "ui/base/ime/text_input_flags.h"
 #include "ui/events/blink/did_overscroll_params.h"
 #include "ui/events/types/event_type.h"
-#include "cef/include/internal/cef_types.h"
 #endif //BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_AI)
 #include "cef/libcef/browser/image_impl.h"
@@ -127,6 +136,7 @@ const size_t kMaxDataDetectorTextLength = 1000;
 
 #if BUILDFLAG(IS_ARKWEB)
 const int SCALE_FACTOR_CONVERT_RATIO = 100;
+const int SOC_PERF_WEB_SLIDE_SCROLL = 10097;
 #endif
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
@@ -135,21 +145,25 @@ static float DEFAULT_SCROLL_OFFSET_Y = -1.0f;
 #endif
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
+const int32_t NOT_NATIVE_ID = 100;
+#endif
+
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
 class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  public:
   using CallbackType = blink::InputHandlerProxyUtils::GestureEventCallback;
 
-  CefGestureEventCallbackImpl(CallbackType callback)
-      : callback_(std::move(callback)) {}
+  CefGestureEventCallbackImpl(CallbackType callback, int32_t fingerId)
+      : callback_(std::move(callback)), fingerId_(fingerId) {}
   ~CefGestureEventCallbackImpl() override {
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
-        CancelNow(std::move(callback_));
+        CancelNow(std::move(callback_), fingerId_);
       } else {
         CEF_POST_TASK(CEF_UIT,
                       base::BindOnce(&CefGestureEventCallbackImpl::CancelNow,
-                                     std::move(callback_)));
+                                     std::move(callback_), fingerId_));
       }
     }
   }
@@ -157,7 +171,7 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
   void ContinueTask(bool user_input, bool stopPropagation) override {
     if (CEF_CURRENTLY_ON_UIT()) {
       if (!callback_.is_null()) {
-        std::move(callback_).Run(user_input, stopPropagation);
+        std::move(callback_).Run(user_input, stopPropagation, fingerId_);
       }
     } else {
       CEF_POST_TASK(CEF_UIT,
@@ -169,12 +183,13 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
   [[nodiscard]] CallbackType Disconnect() { return std::move(callback_); }
 
  private:
-  static void CancelNow(CallbackType callback) {
+  static void CancelNow(CallbackType callback, int32_t fingerId) {
     CEF_REQUIRE_UIT();
-    std::move(callback).Run(false, true);
+    std::move(callback).Run(false, true, fingerId);
   }
 
   CallbackType callback_;
+  int32_t fingerId_ = 0;
 
   IMPLEMENT_REFCOUNTING(CefGestureEventCallbackImpl);
 };
@@ -334,7 +349,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
   // may be routed and not make it to FilterInputEvent().
   if (selection_controller_ &&
       web_event.SourceDevice() == blink::WebGestureDevice::kTouchscreen) {
-    is_tap_down_in_cursor_update_ = false;
     switch (web_event.GetType()) {
       case blink::WebInputEvent::Type::kGestureLongPress:
         selection_controller_->HandleLongPressEvent(
@@ -344,13 +358,13 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
         selection_controller_->OnScrollBeginEvent();
         break;
       case blink::WebInputEvent::Type::kGestureTapDown:
-        is_tap_down_in_cursor_update_ = true;
         break;
       case blink::WebInputEvent::Type::kGestureShowPress:
-        is_tap_down_in_cursor_update_ = true;
         break;
       case blink::WebInputEvent::Type::kGestureTap:
-        is_tap_down_in_cursor_update_ = true;
+        if (web_event.TapCount() == TAP_TWICE && is_editable_node_) {
+          is_tap_down_twice_ = true;
+        }
         break;
       default:
         break;
@@ -366,18 +380,136 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
     render_widget_host_->GetRenderInputRouter()->ForwardGestureEventWithLatencyInfo(web_event,
                                                             latency_info);
   }
+
+#if BUILDFLAG(ARKWEB_AI)
+  if (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap ||
+      web_event.GetType() == blink::WebInputEvent::Type::kGesturePinchEnd ||
+      web_event.GetType() == blink::WebInputEvent::Type::kGestureLongPress) {
+    ReportAIGestureEvent(web_event);
+  }
+#endif //BUILDFLAG(ARKWEB_AI)
+
 #endif //BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 }
 
+#if BUILDFLAG(ARKWEB_AI)
+void ArkWebRenderWidgetHostViewOSRExt::ReportAIGestureEvent(
+    const blink::WebGestureEvent& event) {
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "ReportAIGestureEvent browser or client invalid.";
+    return;
+  }
+
+  if (browser_impl_->settings().arkweb_agent_enabled != STATE_ENABLED) {
+    LOG(DEBUG) << "ReportAIGestureEvent is disabled.";
+    return;
+  }
+
+  auto frame = browser_impl_->GetMainFrame();
+  if (!frame || !frame->IsValid()) {
+    LOG(ERROR) << "ReportAIGestureEvent frame invalid.";
+    return;
+  }
+
+  int node_id;
+  static_cast<ArkwebFrameHostExtImpl*>(frame.get())
+      ->GetLastHitNodeId(node_id);
+
+  std::string json_result = GetReportAIGestureEventJson(event, node_id);
+  browser_impl_->client()->AsArkWebClient()->OnAgentEventReport(json_result);
+  LOG(DEBUG) << "ReportAIGestureEvent report json.";
+}
+
+std::string ArkWebRenderWidgetHostViewOSRExt::GetReportAIGestureEventJson(
+    const blink::WebGestureEvent& event, int node_id) {
+  CefRefPtr<CefDictionaryValue> reportDict = CefDictionaryValue::Create();
+  CefRefPtr<CefListValue> pointList = CefListValue::Create();
+  CefRefPtr<CefListValue> offsetList = CefListValue::Create();
+  gfx::PointF eventPoint;
+
+  switch(event.GetType()) {
+    case blink::WebInputEvent::Type::kGestureTap:
+      reportDict->SetString("EventType", "Tap");
+      reportDict->SetInt("id", node_id);
+      reportDict->SetInt("count", event.TapCount());
+
+      eventPoint = AIGestureEventPoint(event);
+      pointList->SetDouble(0, eventPoint.x());
+      pointList->SetDouble(1, eventPoint.y());
+      reportDict->SetList("point", pointList);
+      break;
+    case blink::WebInputEvent::Type::kGesturePinchEnd:
+      reportDict->SetString("EventType", "PinchEnd");
+      reportDict->SetInt("id", node_id);
+      reportDict->SetDouble("scale", GetPageScaleFactor());
+      break;
+    case blink::WebInputEvent::Type::kGestureLongPress:
+      reportDict->SetString("EventType", "LongPress");
+      reportDict->SetInt("id", node_id);
+
+      eventPoint = AIGestureEventPoint(event);
+      pointList->SetDouble(0, eventPoint.x());
+      pointList->SetDouble(1, eventPoint.y());
+      reportDict->SetList("point", pointList);
+      break;
+    case blink::WebInputEvent::Type::kGestureScrollBegin:
+      reportDict->SetString("EventType", "ScrollStart");
+      reportDict->SetInt("id", node_id);
+
+      offsetList->SetDouble(0, last_scroll_offset_.x());
+      offsetList->SetDouble(1, last_scroll_offset_.y());
+      reportDict->SetList("offset", offsetList);
+      break;
+    case blink::WebInputEvent::Type::kGestureScrollEnd:
+      reportDict->SetString("EventType", "ScrollEnd");
+      reportDict->SetInt("id", node_id);
+
+      offsetList->SetDouble(0, last_scroll_offset_.x());
+      offsetList->SetDouble(1, last_scroll_offset_.y());
+      reportDict->SetList("offset", offsetList);
+      break;
+    default:
+      break;
+  }
+
+  CefRefPtr<CefValue> reportValue = CefValue::Create();
+  reportValue->SetDictionary(reportDict);
+  std::string json_result = CefWriteJSON(reportValue, JSON_WRITER_DEFAULT);
+
+  return json_result;
+}
+
+gfx::PointF ArkWebRenderWidgetHostViewOSRExt::AIGestureEventPoint(
+    const blink::WebGestureEvent& event) {
+  gfx::PointF eventPoint(event.PositionInScreen().x(),
+                         event.PositionInScreen().y());
+
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+  if (!browser_impl_) {
+    LOG(ERROR) << "AIGestureEventPoint browser invalid.";
+    return eventPoint;
+  }
+
+  auto view_port_height = browser_impl_->GetShrinkViewportHeight();
+  view_port_height +=
+      view_port_height > 0 ? browser_impl_->GetTopControlsOffset() : 0;
+
+  eventPoint.set_y(event.PositionInScreen().y() + view_port_height);
+#endif //BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+
+  return eventPoint;
+}
+#endif //BUILDFLAG(ARKWEB_AI)
+
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers(bool invisible) {
-  TRACE_EVENT1("base", "ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers",
-               "invisible", invisible);
+void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
+  TRACE_EVENT0("base", "ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers");
+
   if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
       browser_impl_->GetAcceleratedWidget(is_popup_));
-    if(compositor) {
-        compositor->Utils()->EvictFrameBackBuffers(invisible);
+    if (compositor) {
+      compositor->Utils()->EvictFrameBackBuffers();
     }
   }
 }
@@ -401,9 +533,13 @@ void ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly() {
   if(pointer_state_.GetPointerCount() == 0) {
     return;
   }
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
     .CreateSocPerfClientAdapter()
-    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+    ->ApplySocPerfConfigByIdEx(socPerfId, true);
   LOG(DEBUG) << "hwtlog:ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly";
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly,
@@ -417,7 +553,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SendTouchEventList(const std::vector<CefT
   for (const auto& event : event_list) {
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
     if (event.type == CEF_TET_PRESSED) {
-      is_editable_node_ = false;
       auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
           browser_impl_->GetAcceleratedWidget(is_popup_));
       if (compositor) {
@@ -542,14 +677,28 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
   }
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
-        static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
-            static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputMode::CEF_TEXT_INPUT_MODE_MAX) ==
+            static_cast<int>(ui::TextInputMode::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputType::CEF_TEXT_INPUT_TYPE_MAX) ==
+            static_cast<int>(ui::TextInputType::TEXT_INPUT_TYPE_MAX),
+        "Enum values in cef_text_input_type_t must match ui::TextInputType");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputAction::CEF_TEXT_INPUT_ACTION_MAX) ==
+            static_cast<int>(ui::TextInputAction::kMaxValue),
+        "Enum values in cef_text_input_action_t must match ui::TextInputAction");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_TEXT_INPUT_FLAG_VERTICAL) ==
+            static_cast<int>(ui::TextInputFlags::TEXT_INPUT_FLAG_VERTICAL),
+        "Enum values in cef_text_input_flags_t must match ui::TextInputFlags");
     mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
     type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
                : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
+    // flags is used as bitfield 
+    // state->flags may contains multiple ArkWebRenderHandlerExt::TextInputFlag
     flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
     show_keyboard = state->show_ime_if_needed;
   }
@@ -621,6 +770,16 @@ void ArkWebRenderWidgetHostViewOSRExt::UpdateSecurityLayer(bool isNeedSecurityLa
     }
   }
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    if (handler.get()) {
+      handler->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
+    }
+  }
+}
 #endif //BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_ZOOM)
@@ -673,7 +832,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SetShouldFrameSubmissionBeforeDraw(
 
 void ArkWebRenderWidgetHostViewOSRExt::SendCurrentLanguage(
     const std::string& ans) {
-  LOG(DEBUG) << "SendCurrentLanguage language is " << ans.c_str();
   language_ = ans;
 }
 #endif
@@ -860,13 +1018,6 @@ bool ArkWebRenderWidgetHostViewOSRExt::SetDataDetectorSelectText(const std::u16s
 std::string ArkWebRenderWidgetHostViewOSRExt::GetDataDetectorSelectText() {
   return base::UTF16ToUTF8(data_detector_select_text_);
 }
-
-void ArkWebRenderWidgetHostViewOSRExt::OnDataDetectorSelectText() {
-  LOG(DEBUG) << "ArkWebRenderWidgetHostViewOSRExt::OnDataDetectorSelectText";
-  if (render_widget_host_) {
-    render_widget_host_->AsRenderWidgetHostImplExt()->OnDataDetectorSelectText();
-  }
-}
 #endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_LTPO)
@@ -905,6 +1056,20 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTouchSelectionChanged(
   if (handler) {
     handler->OnTouchSelectionChanged(insert_handle, start_selection_handle,
                                      end_selection_handle, need_report);
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::OnClippedSelectionBoundsChanged(
+    const gfx::Rect& rect, bool need_report) {
+  if (!browser_impl_ && !browser_impl_->client()) {
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->client()->GetRenderHandler();
+  if (handler) {
+    CefRect cef_rect(rect.x(), rect.y(), rect.width(), rect.height());
+    handler->AsArkWebRenderHandler()->OnClippedSelectionBoundsChanged(
+        cef_rect, need_report);
   }
 }
 
@@ -982,6 +1147,19 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTextSelectionChanged(
         CefRange(selection.range().start(), selection.range().end()));
   } else {
     LOG(INFO) << "OnTextSelectionChanged selected_text is null";
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::OnSelectAreaChanged(
+    CefRect& select_area,
+    bool need_report) {
+  if (!browser_impl_ || !browser_impl_->GetClient()) {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+    browser_impl_->GetClient()->GetRenderHandler();
+  if (handler) {
+    handler->OnSelectAreaChanged(select_area);
   }
 }
 #endif
@@ -1141,7 +1319,8 @@ void ArkWebRenderWidgetHostViewOSRExt::
 #endif
 
   if (metadata.selection.start != selection_start_ ||
-      metadata.selection.end != selection_end_) {
+      metadata.selection.end != selection_end_ ||
+      metadata.selection.start.type() == gfx::SelectionBound::CENTER) {
     selection_start_ = metadata.selection.start;
     selection_end_ = metadata.selection.end;
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
@@ -1177,12 +1356,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   handler->AsArkWebRenderHandler()->OnSelectionChanged(browser_impl_.get(),
                                                        text, cef_range);
-  if (selection_controller_client_ &&
-      selection_controller_client_->IsInsertHandleShow() &&
-      range.start() == range.end() && !is_tap_down_in_cursor_update_) {
-    handler->AsArkWebRenderHandler()->StartVibraFeedback("longPress.light");
-  }
-  is_tap_down_in_cursor_update_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   CefString selected_text;
@@ -1194,9 +1367,10 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
     }
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
     is_select_text_ = n - pos > 0;
-    if (n > 0) {
+    if (n > 0 && is_event_from_touch_ && !is_tap_down_twice_) {
       handler->AsArkWebRenderHandler()->StartVibraFeedback("longPress.light");
     }
+    is_tap_down_twice_ = false;
   } else {
     is_select_text_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -1209,32 +1383,55 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 blink::mojom::PointerLockResult ArkWebRenderWidgetHostViewOSRExt::LockPointer(
     bool request_unadjusted_movement) {
-  if (is_pointer_locked_) {
+  if (IsPointerLocked()) {
     return blink::mojom::PointerLockResult::kAlreadyLocked;
   }
-  is_pointer_locked_ = true;
-  is_request_unadjusted_movement_ = request_unadjusted_movement;
-  CefRefPtr<CefDisplayHandler> handler =
-      browser_impl_->client()->GetDisplayHandler();
-  LOG(INFO) << "SetMouseLock unadjust mouse movement is "
-            << (request_unadjusted_movement ? "on" : "off");
-  if (handler) {
-    CefCursorInfo cursor_info;
-    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK,
-                            cursor_info);
+
+  if (!HasFocus()) {
+    LOG(ERROR) << "SetPointerLock failed because WrongDocument";
+    return blink::mojom::PointerLockResult::kWrongDocument;
   }
-  return blink::mojom::PointerLockResult::kSuccess;
+
+  CefRefPtr<ArkWebDisplayHandlerExt> handler =
+      browser_impl_->client()->GetDisplayHandler();
+
+  if (!handler) {
+    return blink::mojom::PointerLockResult::kPermissionDenied;
+  }
+
+  int32_t res = OHOS::NWeb::WindowManagerAdapterImpl::LockPointer(handler->GetWindowId());
+  switch (res) {
+    case WindowManager_ErrorCode::OK: {
+      LOG(INFO) << "SetPointerLock unadjust mouse movement is "
+                << (request_unadjusted_movement ? "on" : "off");
+      is_pointer_locked_ = true;
+      CefCursorInfo cursor_info;
+      handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK,
+                              cursor_info);
+      is_request_unadjusted_movement_ = request_unadjusted_movement;
+      return blink::mojom::PointerLockResult::kSuccess;
+    }
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_NO_PERMISSION:
+      return blink::mojom::PointerLockResult::kPermissionDenied;
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_DEVICE_NOT_SUPPORTED:
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_STATE_ABNORMAL:
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_SYSTEM_ABNORMAL:
+    default:
+      return blink::mojom::PointerLockResult::kUnknownError;
+  }
 }
 
 blink::mojom::PointerLockResult
 ArkWebRenderWidgetHostViewOSRExt::ChangePointerLock(
     bool request_unadjusted_movement) {
+  LOG(INFO) << "ChangePointerLock unadjust mouse movement to "
+            << (request_unadjusted_movement ? "on" : "off")
+            << ", Lock state is " << is_pointer_locked_;
   if (is_pointer_locked_) {
-    return LockPointer(request_unadjusted_movement);
+    is_request_unadjusted_movement_ = request_unadjusted_movement;
+    return blink::mojom::PointerLockResult::kSuccess;
   }
-
-  UnlockPointer();
-  return blink::mojom::PointerLockResult::kSuccess;
+  return blink::mojom::PointerLockResult::kWrongDocument;
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UnlockPointer() {
@@ -1243,16 +1440,20 @@ void ArkWebRenderWidgetHostViewOSRExt::UnlockPointer() {
   }
   is_pointer_locked_ = false;
   is_request_unadjusted_movement_ = false;
-  CefRefPtr<CefDisplayHandler> handler =
+  CefRefPtr<ArkWebDisplayHandlerExt> handler =
       browser_impl_->client()->GetDisplayHandler();
-  LOG(INFO) << "SetMouseLock off";
-  if (handler) {
-    CefCursorInfo cursor_info;
-    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK,
-                            cursor_info);
+
+  if (!handler) {
+    LOG(ERROR)<<"UnLockPointer failed, no displayHandler";
+    return;
   }
+
+  OHOS::NWeb::WindowManagerAdapterImpl::UnlockPointer(handler->GetWindowId());
+  CefCursorInfo cursor_info;
+  handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK,
+                          cursor_info);
+
   if (render_widget_host_) {
-    render_widget_host_->SendPointerLockLost();
     render_widget_host_->LostPointerLock();
   }
 }
@@ -1435,7 +1636,14 @@ void ArkWebRenderWidgetHostViewOSRExt::GestureEventAck(
 blink::mojom::InputEventResultState
 ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
-  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
+  blink::mojom::EventType inputType = input_event.GetType();    
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent type: " << inputType;
+
+  if (input_event.IsTouchEventType(inputType)) {
+    is_event_from_touch_ = true;
+  } else if (inputType == blink::WebInputEvent::Type::kMouseDown) {
+    is_event_from_touch_ = false;
+  }
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (FilterInputEventForPullToRefresh(input_event)) {
@@ -1472,6 +1680,10 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
       handler->AsArkWebRenderHandler()->OnScrollStart(
           browser_impl_.get(), gesture_event.data.scroll_begin.delta_x_hint,
           gesture_event.data.scroll_begin.delta_y_hint);
+
+#if BUILDFLAG(ARKWEB_AI)
+      ReportAIGestureEvent(gesture_event);
+#endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
 #if BUILDFLAG(ARKWEB_AI)
@@ -1483,6 +1695,10 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
                                                       false);
 #if BUILDFLAG(ARKWEB_AI)
       NotifyOverlayStateChanged();
+#endif
+
+#if BUILDFLAG(ARKWEB_AI)
+      ReportAIGestureEvent(gesture_event);
 #endif
     } else if (input_event.GetType() ==
                    blink::WebInputEvent::Type::kGestureScrollUpdate &&
@@ -1632,27 +1848,6 @@ void ArkWebRenderWidgetHostViewOSRExt::DynamicFrameLossEvent(
     handler->AsArkWebRenderHandler()->SendDynamicFrameLossEvent(
         browser_impl_.get(), sceneId, isStart);
   }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_DSS)
-gfx::Size ArkWebRenderWidgetHostViewOSRExt::SizeInPixels() {
-  if (IsPopupWidget()) {
-    return gfx::ScaleToCeiledSize(popup_position_.size(),
-                                  GetDeviceScaleFactor());
-  }
-
-  CefSize size{};
-  if (browser_impl_ && browser_impl_->GetClient() &&
-      browser_impl_->GetClient()->GetRenderHandler()) {
-    auto handler =
-        browser_impl_->GetClient()->GetRenderHandler()->AsArkWebRenderHandler();
-    CHECK(handler);
-    handler->GetDevicePixelSize(browser_impl_.get(), size);
-  } else {
-    LOG(WARNING) << "cannot get device pixel size, return zero";
-  }
-  return gfx::Size(size.width, size.height);
 }
 #endif
 
@@ -1834,11 +2029,16 @@ void ArkWebRenderWidgetHostViewOSRExt::DidNativeEmbedEvent(
             touchEvent->type),
         touchEvent->offsetX,
         touchEvent->offsetY};
+    auto type = static_cast<ArkWebRenderHandlerExt::CefEmbedTouchType>(
+        touchEvent->type);
     auto new_callback =
         base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult,
                        weak_ptr_factory_.GetWeakPtr());
+    if (touchEvent->id == NOT_NATIVE_ID) {
+      new_callback.Reset();
+    }
     CefRefPtr<CefGestureEventCallbackImpl> callbackPtr(
-        new CefGestureEventCallbackImpl(std::move(new_callback)));
+        new CefGestureEventCallbackImpl(std::move(new_callback), touchEvent->id));
     handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event,
                                        callbackPtr.get());
   }
@@ -1885,17 +2085,29 @@ void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedLifecycleChange(
 
 void ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult(
     bool result,
-    bool stopPropagation) {
-  if (!render_widget_host_) {
+    bool stopPropagation,
+    int32_t fingerId) {
+  if (!render_widget_host_ || !render_widget_host_->input_router()) {
     return;
   }
   render_widget_host_->input_router()->SetGestureEventResult(result,
-                                                             stopPropagation);
+                                                             stopPropagation,
+                                                             fingerId);
+  if (!browser_impl_ || browser_impl_->client()) {
+    return;
+  }
   CefRefPtr<ArkWebRenderHandlerExt> handler =
       browser_impl_->client()->GetRenderHandler();
   if (handler) {
     handler->SetGestureEventResult(result);
   }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::SetEnableCustomVideoPlayer(bool flag) {
+  if (!render_widget_host_ || !render_widget_host_->input_router()) {
+    return;
+  }
+  render_widget_host_->input_router()->SetEnableCustomVideoPlayer(flag);
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::SetMouseEventResult(bool result, bool stopPropagation) {
@@ -1941,6 +2153,16 @@ void ArkWebRenderWidgetHostViewOSRExt::SetNativeInnerWeb(bool isInnerWeb) {
   if (auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
             browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->Utils()->SetNativeInnerWeb(isInnerWeb);
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnNativeEmbedObjectParamChange(browser_impl_.get(), native_param_data);
   }
 }
 #endif
@@ -2104,6 +2326,15 @@ void ArkWebRenderWidgetHostViewOSRExt::SetFocusOnGestureEvent(
 void ArkWebRenderWidgetHostViewOSRExt::OnDidNavigateMainFrameToNewPage() {
   ResetGestureDetection(false);
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::OpenEyeDropper() {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OpenEyeDropper(browser_impl_->GetBrowser());
+  }
+}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -2127,6 +2358,12 @@ void ArkWebRenderWidgetHostViewOSRExt::OnScaleChanged(
         std::round(old_page_scale_factor * SCALE_FACTOR_CONVERT_RATIO),
         std::round(new_page_scale_factor * SCALE_FACTOR_CONVERT_RATIO));
   }
+#if BUILDFLAG(ARKWEB_PDF)
+  if (selection_controller_client_) {
+    selection_controller_client_->AsArkWebTouchSelectionControllerClientOSRExt()
+        ->OnScaleChanged(new_page_scale_factor);
+  }
+#endif  // BUILDFLAG(ARKWEB_PDF)
 }
 #endif
 #if BUILDFLAG(ARKWEB_MENU)
@@ -2140,6 +2377,13 @@ void ArkWebRenderWidgetHostViewOSRExt::ChangeVisibilityOfQuickMenu() {
   if (selection_controller_client_) {
     selection_controller_client_->ChangeVisibilityOfQuickMenu();
   }
+}
+
+bool ArkWebRenderWidgetHostViewOSRExt::IsQuickMenuShow() {
+  if (selection_controller_client_) {
+    return selection_controller_client_->IsQuickMenuShow();
+  }
+  return false;
 }
 #endif
 
@@ -2254,8 +2498,10 @@ bool ArkWebRenderWidgetHostViewOSRExt::HasFocus() {
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UpdateBackgroundColor() {
-#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
-  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR) || BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx) || 
+      SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
 #ifdef DISABLE_GPU
     if (compositor_) {
       compositor_->SetBackgroundColor(background_color_);
@@ -2268,7 +2514,7 @@ void ArkWebRenderWidgetHostViewOSRExt::UpdateBackgroundColor() {
     }
 #endif
   }
-#endif // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+#endif // BUILDFLAG(ARKWEB_BACKGROUND_COLOR) || BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UpdateCursor(const ui::Cursor& cursor) {
@@ -2544,5 +2790,42 @@ void ArkWebRenderWidgetHostViewOSRExt::SetPipActive(bool active) {
       compositor->Utils()->SetPipActive(active);
     }
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
+    const std::string& url,
+    int32_t blankScreenReason,
+    int32_t detectedContentfulNodesCount) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get()) {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnDetectedBlankScreen(url, blankScreenReason,
+                                 detectedContentfulNodesCount);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_FIRST_SCREEN_PAINT)
+void ArkWebRenderWidgetHostViewOSRExt::OnFirstScreenPaint(const std::string &url,
+                                                          int64_t navigationStartTime, int64_t firstScreenPaintTime) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get())
+  {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnFirstScreenPaint(url, navigationStartTime,
+                              firstScreenPaintTime);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_AI)
+ui::FilteredGestureProvider& ArkWebRenderWidgetHostViewOSRExt::GetGestureProvider() {
+  return gesture_provider_;
 }
 #endif

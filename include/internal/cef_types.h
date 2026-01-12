@@ -725,10 +725,12 @@ typedef struct _cef_browser_settings_t {
   bool geolocation_enabled;
   bool supports_double_tap_zoom;
   bool supports_multi_touch_zoom;
+  bool zoom_control_access;
   cef_state_t initialize_at_minimum_page_scale;
   std::optional<bool> viewport_meta_enabled;
   bool user_gesture_required;
   bool pinch_smooth_mode;
+  cef_state_t image_analyzer_enabled;
   cef_state_t hide_vertical_scrollbars;
   cef_state_t hide_horizontal_scrollbars;
   bool contextmenu_customization_enabled;
@@ -742,6 +744,11 @@ typedef struct _cef_browser_settings_t {
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(ARKWEB_AI)
+  cef_state_t arkweb_agent_enabled;
+  cef_state_t agent_need_highlight;
+#endif
+
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   bool error_page_enabled;
 #endif
@@ -752,6 +759,10 @@ typedef struct _cef_browser_settings_t {
   double border_radius_bottom_left;
   double border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  bool is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 
 #if BUILDFLAG(ARKWEB_MENU)
   bool touch_handle_exist;
@@ -776,6 +787,10 @@ typedef struct _cef_browser_settings_t {
 
 #if BUILDFLAG(ARKWEB_FOCUS)
   int32_t gesture_focus_mode;
+#endif
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  cef_state_t cast_enabled;
 #endif
 
   ///
@@ -822,6 +837,9 @@ typedef struct _cef_browser_settings_t {
 #if BUILDFLAG(ARKWEB_MEDIA_NETWORK_TRAFFIC_PROMPT)
   bool enable_media_network_traffic_prompt;
 #endif  // ARKWEB_MEDIA_NETWORK_TRAFFIC_PROMPT
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  std::optional<bool> clipboard_site_permission_enabled;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 } cef_browser_settings_t;
 
 ///
@@ -2215,6 +2233,26 @@ typedef struct _cef_touch_event_t {
   ///
   uint32_t modifiers;
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// Stylus X-axis tilt angle.
+  /// Angle of the stylus relative to the screen plane along the X-axis.
+  /// Range: [-90.0, 90.0] degrees.
+  /// 0 indicates the stylus is perpendicular to the screen, positive values indicate right tilt,
+  /// negative values indicate left tilt. Set to 0.0 if not supported.
+  ///
+  float tiltX;
+
+  ///
+  /// Stylus Y-axis tilt angle.
+  /// Angle of the stylus relative to the screen plane along the Y-axis.
+  /// Range: [-90.0, 90.0] degrees.
+  /// 0 indicates the stylus is perpendicular to the screen, positive values indicate forward tilt,
+  /// negative values indicate backward tilt. Set to 0.0 if not supported.
+  ///
+  float tiltY;
+#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
   ///
   /// The device type that caused the event.
   ///
@@ -2393,6 +2431,9 @@ typedef enum {
 #if BUILDFLAG(IS_OHOS)
   QM_EDITFLAG_CAN_SELECT_ALL = 1 << 4,
 #endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_MENU)
+  QM_EDITFLAG_CAN_AUTOFILL = 1 << 6,
+#endif  // BUILDFLAG(ARKWEB_MENU)
 } cef_quick_menu_edit_state_flags_t;
 
 ///
@@ -3804,12 +3845,17 @@ typedef struct _cef_touch_handle_state_t {
   ///
   /// Edge height state. Only set if |flags| contains CEF_THS_FLAG_EDGE_HEIGHT.
   ///
-  float edge_height;
+  int edge_height;
 
   ///
   /// view port state. Only set if |flags| contains CEF_THS_FLAG_VIEW_PORT.
   ///
   cef_point_t view_port;
+
+  ///
+  /// Whether it is being dragged or not.
+  ///
+  bool is_dragging;
 #endif  // BUILDFLAG(IS_OHOS)
 } cef_touch_handle_state_t;
 

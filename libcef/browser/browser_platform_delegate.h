@@ -320,6 +320,11 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual bool IsHidden() const;
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  // Evict frame back buffers when nweb was hidden
+  virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+#endif
+
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering.
   virtual void NotifyScreenInfoChanged();
@@ -408,6 +413,15 @@ class CefBrowserPlatformDelegate {
                             int event);
   virtual void OnPipEvent(int event);
 #endif
+#if BUILDFLAG(ARKWEB_PDF)
+  virtual void OnPdfScrollAtBottom(const std::string& url) {}
+  virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+ virtual void OnMediaCastEnter() {}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

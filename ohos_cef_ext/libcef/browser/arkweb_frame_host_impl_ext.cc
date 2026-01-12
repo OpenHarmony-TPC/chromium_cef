@@ -32,6 +32,7 @@
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
+#include "skia/ext/image_operations.h"
 #include "services/service_manager/public/cpp/interface_provider.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -43,28 +44,32 @@
 #endif
 #include "content/public/browser/browsing_data_remover.h"
 
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+#include "components/viz/common/surfaces/frame_sink_id.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
+#include "content/browser/renderer_host/render_view_host_impl.h"
+#include "ui/compositor/compositor.h"
+#endif
+
 namespace {
 
-#ifdef OHOS_CLIPBOARD
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
  
 bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
   // only image copy need down scale
   if (command_id != MENU_ID_IMAGE_COPY) {
     return false;
   }
- 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
+
   LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
              << ", height: " << original_image_size.height();
   return true;
 }
  
 SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
  
@@ -73,16 +78,16 @@ SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
     return image;
   }
  
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
+  }
+
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
-  }
- 
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
  
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,
@@ -100,8 +105,12 @@ std::string GetRefererValue(std::string headers) {
     return refererValue;
   }
   size_t endPos = headers.find("\r\n", startPos);
+  if (endPos == std::string::npos) {
+    endPos = headers.size();
+  }
   refererValue =
-      headers.substr(startPos + targetKeyword.length(), endPos - startPos);
+      headers.substr(startPos + targetKeyword.length(), endPos - startPos
+                      - targetKeyword.length());
   return refererValue;
 }
 #endif
@@ -180,7 +189,7 @@ void ArkwebFrameHostExtImpl::GetImages(
     CefRefPtr<CefGetImagesCallback> callback) {
 #if BUILDFLAG(ARKWEB_MEDIA)
   GetImagesWithResponse(base::BindOnce(
-      &ArkwebFrameHostExtImpl::GetImagesCallback, base::Unretained(this),
+      &ArkwebFrameHostExtImpl::GetImagesCallback, weak_ptr_factory_.GetWeakPtr(),
       CefRefPtr<CefFrameHostImpl>(this), callback));
 #endif  // BUILDFLAG(ARKWEB_MEDIA)
 }
@@ -317,7 +326,7 @@ void ArkwebFrameHostExtImpl::OnGetImageFromCache(
     if (sk_image) {
       SkBitmap bitmap;
       if (sk_image->asLegacyBitmap(&bitmap)) {
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
         SkBitmap resize_image = DownScale(bitmap, command_id);
         if (resize_image.colorType() == kBGRA_8888_SkColorType ||
             resize_image.colorType() == kRGBA_8888_SkColorType) {
@@ -504,14 +513,19 @@ void ArkwebFrameHostExtImpl::SetOverscrollMode(int mode) {
                         mode));
 }
 
-void ArkwebFrameHostExtImpl::UpdateHitTestData(int32_t type, const std::string& extra_data) {
+void ArkwebFrameHostExtImpl::UpdateHitTestData(int32_t type, const std::string& extra_data, int32_t node_id) {
   hit_data_.type = type;
   hit_data_.extra_data = extra_data;
+  hit_data_.node_id = node_id;
 }
 
 void ArkwebFrameHostExtImpl::GetLastHitData(int& type, CefString& extra_data) {
   type = hit_data_.type;
   extra_data = hit_data_.extra_data;
+}
+
+void ArkwebFrameHostExtImpl::GetLastHitNodeId(int& node_id) {
+  node_id = hit_data_.node_id;
 }
 
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -562,7 +576,7 @@ void ArkwebFrameHostExtImpl::ShouldOverrideUrlLoading(
     if (auto handler = client->GetRequestHandler()) {
       override = handler->AsCefRequestHandlerExt()->ShouldOverrideUrlLoading(
           browser_host.get(), url, request_method, user_gesture, is_redirect,
-          is_outermost_main_frame);
+          is_outermost_main_frame, "");
     }
   }
   std::move(callback).Run(override);
@@ -651,5 +665,40 @@ void ArkwebFrameHostExtImpl::OverrideErrorPage(
     }
   }
   std::move(callback).Run(html);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+void ArkwebFrameHostExtImpl::SendBlanklessKeyToRenderFrame(
+    uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id, int64_t pref_hash) {
+  content::RenderFrameHost* rfh = GetRenderFrameHost();
+  if (rfh == nullptr) {
+    return;
+  }
+  content::RenderViewHostImpl* rvh = static_cast<content::RenderFrameHostImpl*>(rfh)->render_view_host();
+  if (rvh == nullptr) {
+    return;
+  }
+  content::RenderWidgetHostImpl* rwh = rvh->GetWidget();
+  if (rwh == nullptr) {
+    return;
+  }
+  content::RenderWidgetHostViewBase* rwhvb = rwh->GetView();
+  if (rwhvb == nullptr) {
+    return;
+  }
+  ui::Compositor* compositor = rwhvb->GetCompositor();
+  if (compositor == nullptr) {
+    return;
+  }
+
+  uint64_t id = compositor->frame_sink_id().hash();
+  SendToRenderFrame(
+    __FUNCTION__,
+    base::BindOnce(
+      [](uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+         int64_t pref_hash, const RenderFrameType& render_frame) {
+        render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
+      }, nweb_id, blankless_key, id, pref_hash));
 }
 #endif

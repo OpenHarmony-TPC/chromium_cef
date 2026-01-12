@@ -1,6 +1,7 @@
 #ifndef COOKIE_MANAGER_IMPL_EXT_H_
 #define COOKIE_MANAGER_IMPL_EXT_H_
 #pragma once
+#include "base/containers/circular_deque.h"
 #include "base/feature_list.h"
 #include "base/files/file_path.h"
 #include "base/threading/thread.h"
@@ -13,6 +14,21 @@
 #include "net/cookies/cookie_store.h"
 #include "services/network/cookie_manager.h"
 #include "services/network/public/mojom/cookie_manager.mojom.h"
+#include "arkweb/build/features/features.h"
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include <mutex>
+#include "services/network/public/cpp/cors/origin_access_list.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+#include "base/memory/weak_ptr.h"
+#include "base/time/time.h"
+#endif
 
 BASE_FEATURE(kArkwebLoadCookiesOnAsyncThread,
              "ArkwebLoadCookiesOnAsyncThread",
@@ -36,7 +52,8 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
 
   void SetNetWorkCookieManagerRemoteComplete(
       mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
-      base::OnceClosure complete);
+      base::OnceClosure complete,
+      const net::CookieList& cookies);
   void SetNetWorkCookieManagerRemoteAsync(
       mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
       base::OnceClosure complete);
@@ -87,9 +104,42 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
       net::CookiePartitionKeyCollection cookie_partition_key_collection,
       net::CookieStore::GetCookieListCallback callback);
 
+void SaveCookiesOnAsyncThread(
+    const GURL& url,
+    const net::CookieOptions& options,
+    int total_count,
+    net::CookieList cookies,
+    base::OnceCallback<void(int, net::CookieList)> done_callback);
+
   bool SupportAsyncThreadCookieLoad();
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool GetExceptionCookieSetting(const network::ResourceRequest& request);
+bool CanSaveOrLoadCookies(const network::ResourceRequest& request);
+void UpdateHostContentSettingsMap();
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void SetOriginAccessListForOrigin(
+      const url::Origin& source_origin,
+      std::vector<network::mojom::CorsOriginPatternPtr> allow_patterns,
+      std::vector<network::mojom::CorsOriginPatternPtr> block_patterns);
+  bool ShouldForceIgnoreSiteForCookies(const network::ResourceRequest& request);
+#endif
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+  void OnFlushStoreComplete(
+      mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote,
+      base::OnceClosure complete);
+#endif
+
  private:
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  static int StartCookieTaskSync();
+  void FinishCookieTaskSync();
+  void StartSetQos();
+  void FinishSetQos();
+#endif
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(
       base::OnceCallback<void(base::OnceCallback<void(bool)>)> task,
@@ -97,7 +147,7 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
   void RunCookieTaskSync(
       base::OnceCallback<void(base::OnceCallback<void(uint32_t)>)> task,
       const CefRefPtr<CefDeleteCookiesCallback>& callback);
-  void RunCookieTasks(base::OnceClosure task);
+  void RunPendingCookieTasks();
   void RunCookieTaskAsync(base::OnceClosure task);
   network::mojom::CookieManager* GetNetworkCookieManager();
   void Initialize(CefBrowserContext::Getter browser_context_getter,
@@ -164,9 +214,25 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
   bool setting_network_cookie_manager_;
   std::unique_ptr<net::CookieStore> cookie_store_;
   base::FilePath cookie_store_path_;
-  std::queue<base::OnceClosure> tasks_;
+  base::Lock task_queue_lock_;
+  base::circular_deque<base::OnceClosure> tasks_ GUARDED_BY(task_queue_lock_);
   base::Thread cookie_store_task_thread_;
   base::Thread cookie_store_backend_thread_;
   mutable bool remote_network_cookie_manager_inited_{false};
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  bool cmd_value_ = false;
+  int set_qos_times_ = 0;
+  static int network_set_times_;
+#endif
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+  raw_ptr<HostContentSettingsMap> host_content_settings_map_ = nullptr;
+#endif
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  network::cors::OriginAccessList origin_access_list_;
+  std::mutex origin_access_list_mutex_;
+#endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  base::WeakPtrFactory<CefCookieManagerImplExt> weak_ptr_factory_{this};
+#endif
 };
 #endif  // COOKIE_MANAGER_IMPL_EXT_H_

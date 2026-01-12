@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "cef/ohos_cef_ext/libcef/browser/net_service/cookie_manager_impl_ext.h"
+#include "content/public/browser/browser_context.h"
+#endif
+
 namespace renderer_prefs {
 
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
@@ -74,6 +79,11 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   SET_STATE(cef.allow_mixed_content_upgrades, web.allow_mixed_content_upgrades);
   SET_STATE(cef.initialize_at_minimum_page_scale,
             web.initialize_at_minimum_page_scale);
+#if BUILDFLAG(ARKWEB_AI)
+  SET_STATE(cef.image_analyzer_enabled, web.image_analyzer_enabled);
+  SET_STATE(cef.arkweb_agent_enabled, web.arkweb_agent_enabled);
+  SET_STATE(cef.agent_need_highlight, web.agent_need_highlight);
+#endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
   SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
@@ -82,6 +92,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_SCROLLBAR)
   web.scrollbar_color = cef.scrollbar_color;
 #endif  // ARKWEB_SCROLLBAR
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  SET_STATE(cef.cast_enabled, web.cast_enabled);
+#endif
   if (cef.viewport_meta_enabled.has_value()) {
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   }
@@ -118,7 +131,8 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   web.contextmenu_customization_enabled = cef.contextmenu_customization_enabled;
 #endif
 #if BUILDFLAG(ARKWEB_MEDIA)
-  if (!base::ohos::IsPcDevice() && cef.viewport_meta_enabled.has_value()) {
+  if (!(base::ohos::IsPcDevice() || base::ohos::IsPcMode()) &&
+      cef.viewport_meta_enabled.has_value()) {
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   }
   web.autoplay_policy =
@@ -129,6 +143,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
   SetCopyOptionToWeb(cef, web);
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
+#if BUILDFLAG(ARKWEB_FOCUS)
+  web.gesture_focus_mode = cef.gesture_focus_mode;
+#endif
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
   web.custom_video_player_enable = cef.custom_video_player_enable;
   web.custom_video_player_overlay = cef.custom_video_player_overlay;
@@ -136,6 +153,42 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   web.error_page_enabled = cef.error_page_enabled;
 #endif
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  if (cef.clipboard_site_permission_enabled.has_value()) {
+    web.clipboard_site_permission_enabled = cef.clipboard_site_permission_enabled.value();
+  }
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  web.is_autofill_enabled = cef.is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+void SetJsDefaultContent(content::WebContents* web_contents,
+                         blink::web_pref::WebPreferences& web) {
+  const base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (web_contents && command_line && command_line->HasSwitch(switches::kEnableNwebExExceptionList)) {
+    bool javascript_enabled = web.javascript_enabled;
+
+    // Update content setting default value
+    ContentSetting setting = javascript_enabled ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK;
+    content::BrowserContext* browser_context = web_contents->GetBrowserContext();
+    HostContentSettingsMap* host_content_settings_map =
+      HostContentSettingsMapFactory::GetForProfile(browser_context);
+    if (host_content_settings_map) {
+      host_content_settings_map->SetDefaultContentSetting(ContentSettingsType::JAVASCRIPT, setting);
+      LOG(INFO) << "JAVASCRIPT SetDefaultContentSetting, setting = " << int(setting);
+    }
+
+    // Update cookie manager host content settings map
+    bool is_off_the_record = browser_context ? browser_context->IsOffTheRecord() : false;
+    CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(is_off_the_record);
+    if (cookie_manager) {
+      cookie_manager->UpdateHostContentSettingsMap();
+    }
+  }
+}
+#endif
 
 }  // namespace renderer_prefs

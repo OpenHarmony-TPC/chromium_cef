@@ -36,7 +36,6 @@
 namespace autofill {
 class AutocompleteHistoryManager;
 class AutofillSuggestionDelegate;
-class OhAutofillManager;
 class PersonalDataManager;
 class StrikeDatabase;
 }  // namespace autofill
@@ -90,7 +89,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback) {
     callback_ = callback;
   }
-  void FillData(CefRefPtr<CefValue> data);
+  void SetFocusFieldGlobalId(const FieldGlobalId& field_id);
+  void FillData(CefRefPtr<CefValue> data, int32_t trigger_type = 0);
   bool OnAutofillEvent(const std::string& json_str);
   bool IsOffTheRecord() const override;
   scoped_refptr<network::SharedURLLoaderFactory> GetURLLoaderFactory() override;
@@ -144,12 +144,6 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
       base::PassKey<autofill::ContentAutofillDriver> pass_key,
       autofill::ContentAutofillDriver& driver) override;
 
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  void SetPasswordPopupStatus(bool status) {
-    need_hide_password_popup_ = status;
-  }
-#endif
-
 #if BUILDFLAG(ARKWEB_DATALIST)
   using SelectedCallback = base::OnceCallback<void(std::u16string text)>;
   void ShowAutofillPopup(
@@ -158,6 +152,10 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   void HideAutofillPopup();
   void SuggestionSelected(int position);
 #endif
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+ bool EnableAutoFill() const;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 
  protected:
   // Protected for testing.
@@ -176,10 +174,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
 #if BUILDFLAG(ARKWEB_DATALIST)
   SelectedCallback selected_callback_;
 #endif
-
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  bool need_hide_password_popup_ = false;
-#endif
+  FieldGlobalId focused_field_id_;
 
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;

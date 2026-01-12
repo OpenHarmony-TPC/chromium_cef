@@ -18,6 +18,9 @@ namespace browser_prefs {
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
 extern const char kMigratePasswordsReady[];
 extern const char kMigratePasswordsToPasswordVault[];
+extern const char kMigrationCount[];
+extern const char kMigrationDataBackupCompletion[];
+extern const char kMigrationQueryAssetfailure[];
 #endif
 
 // Register preferences specific to CEF.

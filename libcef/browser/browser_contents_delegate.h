@@ -61,7 +61,12 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   virtual void OnRefreshAccessedHistoryEx(CefRefPtr<CefFrame> frame,
                                           const GURL& url,
-                                          bool isReload) {}
+                                          bool isReload,
+                                          bool isMainFrame) {}
+
+  void DidStartLoading() override {
+    need_report_title_when_stop_loading_ = true;
+  }
 #endif
   using State = CefBrowserContentsState;
 
@@ -108,6 +113,9 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+                              blink::mojom::ConsoleMessageSource log_source,
+#endif
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
@@ -230,6 +238,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   bool focus_on_editable_field_ = false;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   std::string last_did_finish_load_url_;
+  bool need_report_title_when_stop_loading_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_FAVICON)
   // Store web site icon.

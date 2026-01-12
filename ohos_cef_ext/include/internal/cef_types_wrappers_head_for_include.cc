@@ -38,6 +38,7 @@ static inline void setForInclude(const struct_type* src,
   target->viewport_meta_enabled = src->viewport_meta_enabled;
   target->user_gesture_required = src->user_gesture_required;
   target->pinch_smooth_mode = src->pinch_smooth_mode;
+  target->image_analyzer_enabled = src->image_analyzer_enabled;
   target->hide_vertical_scrollbars = src->hide_vertical_scrollbars;
   target->hide_horizontal_scrollbars = src->hide_horizontal_scrollbars;
   target->contextmenu_customization_enabled =
@@ -49,6 +50,15 @@ static inline void setForInclude(const struct_type* src,
   target->force_zero_layout_height = src->force_zero_layout_height;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
+
+#if BUILDFLAG(ARKWEB_AI)
+  target->arkweb_agent_enabled = src->arkweb_agent_enabled;
+  target->agent_need_highlight = src->agent_need_highlight;
+#endif
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  target->cast_enabled = src->cast_enabled;
+#endif  // BUILDFLAG(ARKWEB_MEDIA_CAST)
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   target->native_embed_mode_enabled = src->native_embed_mode_enabled;
@@ -98,4 +108,12 @@ static inline void setForInclude(const struct_type* src,
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   target->error_page_enabled = src->error_page_enabled;
 #endif
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  target->clipboard_site_permission_enabled = src->clipboard_site_permission_enabled;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  target->is_autofill_enabled = src->is_autofill_enabled;
+#endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 }

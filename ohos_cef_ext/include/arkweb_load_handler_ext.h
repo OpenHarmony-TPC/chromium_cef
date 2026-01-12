@@ -38,6 +38,7 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   /// OnLoadErrorWithRequest
   ///
   virtual void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
+                                      CefRefPtr<CefFrame> frame,
                                       bool is_main_frame,
                                       bool has_user_gesture,
                                       int error_code,
@@ -57,7 +58,8 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   virtual void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
                                         CefRefPtr<CefFrame> frame,
                                         const CefString& url,
-                                        bool isReload) {}
+                                        bool isReload,
+                                        bool isMainFrame) {}
 
   ///
   /// Notify the body that is loading the Http response to make it visible,
@@ -82,7 +84,7 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   ///
   /// Called when received website security risk check result.
   ///
-  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
+  virtual void OnSafeBrowsingCheckResult(int threat_type) {}                                      
 
   ///
   /// Called when the first meaningful paint rendering of web page.
@@ -133,6 +135,33 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   virtual void OnLoadFinished(CefRefPtr<CefFrame> frame,
                               const CefString& url) {}
 #endif
+
+#if BUILDFLAG(ARKWEB_PDF)
+  ///
+  /// Handles the pdf scroll at bottom event.
+  ///
+  /*--cef()--*/
+  virtual void OnPdfScrollAtBottom(const std::string& url) {}
+
+  ///
+  /// Handles the pdf load state event.
+  ///
+  /*--cef()--*/
+  virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer,
+      int transition_type,
+      bool is_key_request) { return ""; }
+#endif
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+ virtual void OnMediaCastEnter() {}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

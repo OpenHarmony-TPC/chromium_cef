@@ -462,6 +462,12 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
   }
 }
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden() {
+  implUtils->EvictFrameBackBuffersWhenNWebWasHidden();
+}
+#endif
+
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_for_include.cc"
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
@@ -704,6 +710,12 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
                  << " is blocked in Alloy-style browser.";
     return false;
   }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (AsAlloyBrowserHostImplExt()->IsURLBlockedInIncognito(is_guest_view, params)) {
+    return false;
+  }
+#endif
 
   return true;
 }
@@ -1125,10 +1137,17 @@ void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
 bool AlloyBrowserHostImpl::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
     const std::u16string& message,
     int32_t line_no,
     const std::u16string& source_id) {
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+  return contents_delegate_.DidAddMessageToConsole(source, level, log_source, message,
+#else
   return contents_delegate_.DidAddMessageToConsole(source, level, message,
+#endif
                                                    line_no, source_id);
 }
 
@@ -1417,11 +1436,13 @@ bool AlloyBrowserHostImpl::IsBackForwardCacheSupported(
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
-#else
-  return content::PreloadingEligibility::kEligible;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNwebEx)) {
+    return content::PreloadingEligibility::kEligible;
+  }
 #endif
+  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
 }
 
 void AlloyBrowserHostImpl::DraggableRegionsChanged(
@@ -1454,7 +1475,9 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
 
 void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
 #if BUILDFLAG(ARKWEB_MEDIA_MUTE_AUDIO)
-  LOG(INFO) << "OnAudioStateChanged: " << audible;
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  LOG_FEEDBACK(INFO) << "OnAudioStateChanged: " << audible;
+#endif
 
   if (client_.get() && client_->AsArkWebClient()->GetMediaHandler().get()) {
     client_->AsArkWebClient()->GetMediaHandler()->OnAudioStateChanged(this,

@@ -16,7 +16,7 @@
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #include "ui/base/page_transition_types.h"
 
-#define POST_CACHE_KEY "ArkWebPostCacheKey"
+constexpr char POST_CACHE_KEY[] = "ArkWebPostCacheKey";
 
 namespace net_service {
 
@@ -48,6 +48,7 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
   ~ArkWebInterceptedRequestHandlerWrapperHelper() = default;
   bool ProceedAllowCookieLoad(CefRefPtr<CefBrowserHostBase> browser,
                               network::ResourceRequest* request,
+                              const GURL& main_frame_url,
                               bool* allow);
   void OnRequestError(CefRefPtr<CefBrowserHostBase> browser,
                       CefRefPtr<CefFrame> frame,
@@ -60,8 +61,18 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
                    bool is_main_frame,
                    bool has_user_gesture,
                    CefRefPtr<CefResponse> error_response);
-  void GetSettingOfNetHelper(CefRefPtr<CefBrowserHostBase> browser,
+  void GetSettingOfNetHelper(const GURL& url,
+                             CefRefPtr<CefBrowserHostBase> browser,
                              struct NetHelperSetting& setting);
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string OnRewriteUrlForNavigation(
+    CefRefPtr<CefBrowserHostBase> browser,
+    const std::string& original_url,
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request);
+#endif
 
  private:
   bool IsIntelligentTrackingPreventionEnabled(

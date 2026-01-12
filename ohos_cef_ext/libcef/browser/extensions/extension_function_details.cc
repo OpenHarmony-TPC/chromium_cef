@@ -25,8 +25,6 @@ using content::WebContents;
 
 namespace extensions {
 
-namespace keys = extensions::tabs_constants;
-
 CefExtensionFunctionDetails::CefExtensionFunctionDetails(
     ExtensionFunction* function)
     : function_(function) {}
@@ -61,15 +59,6 @@ bool CefExtensionFunctionDetails::CanAccessBrowser(
     // A sender can always access itself.
     return true;
   }
-
-  // if (browser && browser->client()) {
-  //   CefRefPtr<CefExtensionHandler> handler = GetCefExtension()->GetHandler();
-  //   if (handler) {
-  //     return handler->CanAccessBrowser(
-  //         GetCefExtension(), browser.get(),
-  //         function_->include_incognito_information(), target);
-  //   }
-  // }
 
   // Default to allowing access.
   return true;

@@ -20,6 +20,10 @@
 #include "ui/gfx/geometry/rect_f.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_javascript_item.h"
+#endif
+
 class CefBrowserPlatformDelegate;
 // Provides platform-specific implementations of browser functionality. All
 // methods are called on the browser process UI thread unless otherwise
@@ -81,7 +85,10 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void SetNativeEmbedMode(bool flag) {}
   virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
                                              bool visibility) {}
-  virtual void SetNativeInnerWeb(bool isInnerWeb) {};
+  virtual void SetNativeInnerWeb(bool isInnerWeb) {}
+  virtual void SetEnableCustomVideoPlayer(bool flag) {}
+  virtual void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {}
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -90,7 +97,6 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void OnFoldStatusChanged(uint32_t foldStatus);
   virtual float GetPageScaleFactor();
   virtual std::string GetDataDetectorSelectText();
-  virtual void OnDataDetectorSelectText();
 #endif
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
   virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
@@ -121,11 +127,14 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   virtual void SetScrollable(bool enable) {}
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {}
 #endif
 #if BUILDFLAG(ARKWEB_PRINT)
   virtual void SetToken(void* token) {}
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                              void** webPrintDocumentAdapter);
+  virtual void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                               void** adapter);
   virtual void SetPrintBackground(bool enable) {}
   virtual bool GetPrintBackground() { return false; }
 #endif  // BUILDFLAG(ARKWEB_PRINT)
@@ -192,5 +201,17 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   virtual CefRefPtr<CefDragData> GetDropData();
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  virtual bool OnStartBackgroundTask(int32_t type, const std::string& message);
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  virtual void UpdateBackgroundColor(SkColor color) {}
+#endif  // ARKWEB_BACKGROUND_COLOR
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+  virtual void OnDocumentEndReady(const FrameInfos& frameInfo) {}
+#endif
 };
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_EXT_H_

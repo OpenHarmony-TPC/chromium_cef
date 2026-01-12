@@ -1,5 +1,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_download_manager_delegate_ext.h"
 
+#include "base/command_line.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
@@ -10,6 +11,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 #include "chrome/common/chrome_constants.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/web_contents.h"
@@ -25,11 +27,10 @@ using content::DownloadManager;
 using content::WebContents;
 using download::DownloadItem;
 
-namespace {}
-
+namespace {
 // Helper function to retrieve the CefDownloadHandler.
-CefRefPtr<CefDownloadHandler> GetDownloadHandler(
-    CefRefPtr<CefBrowserHostBase> browser) {
+CefRefPtr<CefDownloadHandler>
+GetDownloadHandler(CefRefPtr<CefBrowserHostBase> browser) {
   CefRefPtr<CefClient> client = browser->GetClient();
   if (client.get()) {
     return client->GetDownloadHandler();
@@ -38,12 +39,13 @@ CefRefPtr<CefDownloadHandler> GetDownloadHandler(
 }
 
 void RunDownloadTargetCallback(download::DownloadTargetCallback callback,
-                               const base::FilePath& path) {
+                               const base::FilePath &path) {
   download::DownloadTargetInfo target_info;
   target_info.target_path = path;
   target_info.intermediate_path = path;
   std::move(callback).Run(std::move(target_info));
 }
+} // namespace
 
 // CefDownloadItemCallback implementation.
 class ArkWebDownloadItemCallbackImpl : public CefDownloadItemCallback {
@@ -83,7 +85,12 @@ class ArkWebDownloadItemCallbackImpl : public CefDownloadItemCallback {
 
     if (manager_) {
       DownloadItem* item = manager_->GetDownload(download_id_);
-      if (item && item->GetState() == DownloadItem::IN_PROGRESS) {
+      bool nweb_ex_download_enabled =
+          base::CommandLine::ForCurrentProcess()->HasSwitch(
+              switches::kEnableNwebExDownload);
+      if (item && (item->GetState() == DownloadItem::IN_PROGRESS ||
+                   (item->GetState() == DownloadItem::INTERRUPTED &&
+                    nweb_ex_download_enabled))) {
         item->Cancel(true);
       }
     }
@@ -430,8 +437,7 @@ bool ArkWebCefDownloadManagerDelegateExt::DetermineDownloadTarget(
         browser.get(), download_item.get(), suggested_name.value(),
         callbackObj);
   } else {
-    LOG(ERROR) << "find download_handler_per_context failed, cancel download "
-               << this;
+    LOG(ERROR) << "find download_handler_per_context failed, cancel download.";
     item->Cancel(false /*user_cancel*/);
   }
   // Call original download handler.

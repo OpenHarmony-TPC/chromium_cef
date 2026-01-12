@@ -109,11 +109,9 @@ void ArkWebBrowserExtImpl::ClearForwardList() {}
 #endif  // BUILDFLAG(ARKWEB_EXT_NAVIGATION)
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-void ArkWebBrowserExtImpl::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
-}
-int32_t ArkWebBrowserExtImpl::ExtensionGetTabId() const {
-  return tab_id_;
+void ArkWebBrowserExtImpl::ExtensionSetTabId(int32_t tab_id) {}
+int32_t ArkWebBrowserExtImpl::ExtensionGetTabId() {
+  return -1;
 }
 #endif
 
@@ -126,6 +124,10 @@ void ArkWebBrowserExtImpl::DidCommitCompositorFrame() {
     return;
   }
   needs_contents_size_update_ = false;
+
+  if (!GetWebView() || !GetWebView()->MainFrame()) {
+    return;
+  }
 
   blink::WebFrame* main_frame = GetWebView()->MainFrame();
   blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();

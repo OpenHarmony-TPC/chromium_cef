@@ -106,7 +106,7 @@ class CefWebStorageImpl : public CefWebStorage {
   void GetPasswordInternal(const CefString& url,
                            const CefString& username,
                            CefRefPtr<CefGetPasswordCallback> callback);
-  void MigratePasswordsInfoInternal();
+  void MigratePasswordsInfoInternal(bool migrateBackupFlag);
   void GetPasswordCallbackImpl(CefRefPtr<CefGetPasswordCallback> callback,
                                const std::u16string& password);
   void GetSavedPasswordsCallbackImpl(
@@ -151,6 +151,9 @@ class CefWebStorageImpl : public CefWebStorage {
         CefRefPtr<CefGetSavedPasswordsCallback> callback);
     void RequestAndMigrateAutofillableLogins();
 
+    void GetPasswordStoreResultsFrom(
+        std::vector<std::unique_ptr<password_manager::PasswordForm>> results);
+
    protected:
     raw_ptr<CefWebStorageImpl> web_storage_impl_;
 
@@ -175,7 +178,7 @@ class CefWebStorageImpl : public CefWebStorage {
 class MigrationCallback : public OHOS::NWeb::MigrationListenerAdapter {
 public:
   MigrationCallback() {}
-  void OnMigrationReply(int32_t errorCode, int32_t succussCount, const std::vector<int32_t>& errorIndex,
+  void OnMigrationReply(int32_t errorCode, int32_t successCount, const std::vector<int32_t>& errorIndex,
                         const std::vector<int32_t>& codeList) override;
   void SetMigrationFinish(bool isFinish) { migration_finished_ = isFinish; }
   bool GetMigrationFinish() { return migration_finished_; }

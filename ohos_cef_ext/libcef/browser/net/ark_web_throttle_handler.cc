@@ -21,6 +21,13 @@
 #include "extensions/common/constants.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "content/browser/renderer_host/frame_tree.h"
+#include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/browser/renderer_host/navigation_request.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace throttle {
  
 namespace {
@@ -56,8 +63,27 @@ bool ArkWebIsExtensionNavigation(content::NavigationHandle* navigation_handle) {
     return true;
   }
   return false;
-#endif  // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+CefRefPtr<CefFrame> GetFrameFromGlobalIdFirst(CefRefPtr<CefBrowserHostBase> browser,
+  content::GlobalRenderFrameHostId global_id,
+  content::GlobalRenderFrameHostId parent_global_id, bool is_main_frame) {
+  if (!browser || !browser->browser_info()) {
+    return nullptr;
+  }
+  CefRefPtr<CefFrame> frame = browser->GetFrameForGlobalId(global_id);
+  if (!frame) {
+    if (is_main_frame) {
+      frame = browser->GetMainFrame();
+    } else {
+      frame = browser->browser_info()->CreateTempSubFrame(parent_global_id);
+    }
+  }
+  return frame;
+}
+#endif
 }  // namespace
 
 }  // namespace throttle

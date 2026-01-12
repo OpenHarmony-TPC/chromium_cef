@@ -145,6 +145,7 @@ bool NavigationStateSerializer::RestoreNavigationEntry(
   }
 
   GURL deserialized_url;
+  deserialized_url = GURL(url);
   entry->SetURL(deserialized_url);
   entry->SetVirtualURL(GURL(virtual_url));
   entry->SetTitle(title);

@@ -43,16 +43,34 @@ class ArkwebBrowserInfoManagerUtils {
                        const GURL& target_url,
                        WindowOpenDisposition disposition,
                        bool user_gesture,
+                       const gfx::Rect& window_features,
                        CefRefPtr<CefCallback> callback);
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  bool IsExtensionsOptionsUiFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
+  bool IsExtensionsOffscreenFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
+  bool IsExtensionsBackgroundFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
  private:
   const raw_ptr<CefBrowserInfoManager> cef_browser_info_manager_;
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  static bool IsDistillerPageWebContents(content::WebContents* web_contents);
+#endif
+
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  static bool IsPrerendering(
+  static bool IsPrerendering(content::WebContents* web_contents);
+#endif
+
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
+  static bool ShouldCancel(
       const content::GlobalRenderFrameHostToken& global_token);
-  static void CancelForPrerendering(
+  static void CancelForSomeCases(
       const content::GlobalRenderFrameHostToken& global_token,
       int timeout_id);
 #endif

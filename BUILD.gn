@@ -436,6 +436,9 @@ test("libcef_static_unittests") {
     ":libcef_static_unittested",
     "//base/test:run_all_unittests",
     "//testing/gtest",
+    "//testing/gmock",
+    "//base",
+    "//content/test:test_support",
   ]
 
   configs += [
@@ -443,7 +446,15 @@ test("libcef_static_unittests") {
     "//build/config:precompiled_headers",
   ]
   if (arkweb_unittests) {
-    sources += ["ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",]
+    sources += [
+      "ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
+      "ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager_unittest.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_unittest.cc",
+      "ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy_unittest.cc",
+      "ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl_unittest.cc",
+      "ohos_cef_ext/libcef/browser/net_database/cef_data_base_impl_unittest.cc",
+      "ohos_cef_ext/libcef/common/resource_util_for_include_unittest.cc",
+    ]
     deps += [
       ":libcef_static",
       "libcef/common/mojom",
@@ -903,10 +914,6 @@ source_set("libcef_static") {
   if (defined(arkweb_devtools) && arkweb_devtools) {
     sources += [
       "include/cef_devtools_message_handler_delegate.h",
-      "libcef/browser/devtools/arkweb/devtools_message_handler.cc",
-      "libcef/browser/devtools/arkweb/devtools_message_handler.h",
-      "libcef/browser/devtools/arkweb/devtools_frontend.cc",
-      "libcef/browser/devtools/arkweb/devtools_frontend.h",
       "libcef/browser/devtools/arkweb/devtools_file_manager.cc",
       "libcef/browser/devtools/arkweb/devtools_file_manager.h",
       "include/base/cef_basictypes.h",
@@ -917,7 +924,17 @@ source_set("libcef_static") {
       "libcef/browser/net/scheme_handler.cc",
       "libcef/browser/net/scheme_handler.h",
     ]
+
+    sources += [
+      "ohos_cef_ext/libcef/browser/devtools/devtools_window_runner_ext.cc",
+    ]
   }
+
+  #if defined(ARKWEB_LOGGER_REPORT)
+  sources += [
+    "include/cef_logger_callback_api_handler.h",
+  ]
+  #endif
 
   configs += [
     "libcef/features:config",
@@ -1116,6 +1133,20 @@ source_set("libcef_static") {
     ]
   }  #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
+  if (defined(is_arkweb) && is_arkweb) {
+    deps += [
+      "//base:base_static",
+    ]
+  }
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+  if (defined(arkweb_cookie)) {
+    sources += [
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.cc",
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
+  ]}
+#endif // BUILDFLAG(ARKWEB_COOKIE)
+
   #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   if (defined(arkweb_ext_exception_list) && arkweb_ext_exception_list) {
     sources += [
@@ -1144,41 +1175,79 @@ source_set("libcef_static") {
   }
 
   if (defined(arkweb_notification) && arkweb_notification) {
-    sources += [ 
+    sources += [
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.cc",
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.h",
     ]
-  } 
+  }
 
   if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
     sources += [
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.h",
-      "ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.cc",
-      "ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.h",
+      "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/network_permissions_updater_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.cc",
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.h",
-      "ohos_cef_ext/libcef/browser/extensions/windows_manager.h",
-      "ohos_cef_ext/libcef/browser/extensions/windows_manager.cc",
       "ohos_cef_ext/libcef/browser/extensions/extension_function_details.cc",
       "ohos_cef_ext/libcef/browser/extensions/extension_function_details.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/sessions/sessions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_event_router_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_event_router_ext.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_event_router_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_windows_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/windows/windows_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/cookies/cookies_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/extension_action/extension_action_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/content_settings/content_settings_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.h",
-      "ohos_cef_ext/libcef/browser/extensions/api/downloads/extension_downloads_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/downloads_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/download_api_ext_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/download_api_ext_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/omnibox/omnibox_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_event_router_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_event_router_ext.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/search/search_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/topSites/top_sites_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/history_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/browsing_data/browsing_data_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.h",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.cc",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",
+    ]
+  }
+
+  if (defined(arkweb_reader_mode) && arkweb_reader_mode) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_manager.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_service_factory.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_self_deleting_request_delegate.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_distiller_utils.cc",
     ]
   }
 
@@ -1235,6 +1304,10 @@ source_set("libcef_static") {
   }
 
   deps += [ "//arkweb/build/features" ]
+
+  if (is_ohos && !is_component_build) {
+    deps += [ "//ui/events/keycodes:x11" ]
+  }
 
   if (enable_arkweb) {
     public_deps += [ "//arkweb/build/features" ]
@@ -1320,12 +1393,15 @@ source_set("libcef_static") {
     sources += [
       "ohos_cef_ext/libcef/common/net/url_util_ex.h",
       "ohos_cef_ext/libcef/common/net/url_util_ex.cc",
+      "ohos_cef_ext/libcef/common/net/ssl_info_util_ex.h",
+      "ohos_cef_ext/libcef/common/net/ssl_info_util_ex.cc",
       "ohos_cef_ext/libcef/common/net/scheme_registration_ex.cc",
       "ohos_cef_ext/libcef/common/net/scheme_registration_ex.h",
     ]
   }
 
   if (defined(arkweb_pull_to_refresh) && arkweb_pull_to_refresh) {
+    sources += arkweb_content_overscroll_controller_ohos_sources
     deps += ["//arkweb/chromium_ext/ui/ohos"]
   }
 

@@ -35,12 +35,17 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+#include "base/base_switches.h"
 #include "cef/ohos_cef_ext/libcef/browser/predictors/loading_predictor.h"
 #include "cef/ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.h"
 #include "cef/ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
 #endif
 
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_request_context_impl_ext.h"
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_main_extra_parts_cef_for_include.cc"
+#endif
 
 ChromeBrowserMainExtraPartsCef::ChromeBrowserMainExtraPartsCef() = default;
 
@@ -77,29 +82,33 @@ void ChromeBrowserMainExtraPartsCef::PostProfileInit(Profile* profile,
 #endif
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  std::set<std::string> urls =
-      predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
-  if (CefBrowserContext::GetAll().size()) {
-    auto browser_context = CefBrowserContext::GetAll()[0];
-    ohos_predictors::LoadingPredictor* predictor =
-        ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
-            browser_context->AsBrowserContext());
-    if (!predictor) {
-      LOG(ERROR) << "loading predictor is null.";
-      return;
-    }
-    for (auto& url : urls) {
-      predictor->PrepareForPageLoad(GURL(url),
-                                    ohos_predictors::HintOrigin::OMNIBOX, true);
-    }
+  if (base::CommandLine::ForCurrentProcess() &&
+      !base::CommandLine::ForCurrentProcess()->HasSwitch(
+        switches::kDisableAutoPreconnect)) {
+    std::set<std::string> urls =
+        predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
+    if (CefBrowserContext::GetAll().size() > 0) {
+      auto browser_context = CefBrowserContext::GetAll()[0];
+      ohos_predictors::LoadingPredictor* predictor =
+          ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
+              browser_context->AsBrowserContext());
+      if (!predictor) {
+        LOG(ERROR) << "loading predictor is null.";
+        return;
+      }
+      for (auto& url : urls) {
+        predictor->PrepareForPageLoad(GURL(url),
+                                      ohos_predictors::HintOrigin::OMNIBOX, true);
+      }
 
-    std::vector<predictor::PreconnectUrlInfo> preconnect_url_infos =
-        std::move(predictor::PredictorDatabase::preconnect_url_info_list);
-    for (auto& preconnect_url_info : preconnect_url_infos) {
-      predictor->PrepareForPageLoad(GURL(preconnect_url_info.url),
-                                    ohos_predictors::HintOrigin::OMNIBOX,
-                                    preconnect_url_info.is_preconnectable,
-                                    preconnect_url_info.num_sockets);
+      std::vector<predictor::PreconnectUrlInfo> preconnect_url_infos =
+          std::move(predictor::PredictorDatabase::preconnect_url_info_list);
+      for (auto& preconnect_url_info : preconnect_url_infos) {
+        predictor->PrepareForPageLoad(GURL(preconnect_url_info.url),
+                                      ohos_predictors::HintOrigin::OMNIBOX,
+                                      preconnect_url_info.is_preconnectable,
+                                      preconnect_url_info.num_sockets);
+      }
     }
   }
 #endif  // ARKWEB_NO_STATE_PREFETCH

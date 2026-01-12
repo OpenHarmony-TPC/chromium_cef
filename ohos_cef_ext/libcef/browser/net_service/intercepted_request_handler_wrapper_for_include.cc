@@ -45,7 +45,7 @@ void GetOhosResourceHandlerResult(
     TRACE_EVENT1("net", "Response Cache InterceptRequest", "url",
                  state->request_->url.spec().c_str());
     LOG(DEBUG) << "Use intercept request with response cache. url: "
-               << state->request_->url;
+               << url::LogUtils::ConvertUrlWithMask(state->request_->url.spec());
     auto resource_response = std::make_unique<oh_code_cache::ResourceResponse>(
         std::move(response_cache));
     std::move(callback).Run(std::move(resource_response));
@@ -287,10 +287,10 @@ void OnHttpError(int32_t request_id,
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
+void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) override {
   if (wrapper_helper_) {
     wrapper_helper_->GetSettingOfNetHelper(
-        init_state_ ? init_state_->browser_ : nullptr, setting);
+        url, init_state_ ? init_state_->browser_ : nullptr, setting);
   }
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
@@ -298,6 +298,9 @@ void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RedirectSavedCookieDone(int32_t request_id,
                                network::ResourceRequest* request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               bool current_request_uses_header_client,
+#endif
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
     auto exec_callback = base::BindOnce(
@@ -312,9 +315,27 @@ void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
     // Clear the cookie  first. we will get cookie for this redirect.
     request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
 
-    MaybeLoadCookies(request_id, state, new_url, std::move(exec_callback));
+    MaybeLoadCookies(request_id, state, new_url,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                     current_request_uses_header_client,
+#endif
+                     std::move(exec_callback));
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string OnRewriteUrlForNavigation(
+    const std::string& original_url,
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) override {
+  if (wrapper_helper_) {
+    return wrapper_helper_->OnRewriteUrlForNavigation(
+        init_state_->browser_, original_url, referrer, transition_type, is_key_request);
+  }
+  return "";
+}
+#endif
 
 private:
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)

@@ -51,6 +51,8 @@ class InterceptedRequestUtils {
                          raw_ptr<InterceptedRequest> obj) {
     obj->factory_->request_handler_->OnBeforeRequest(
         obj->id_, &obj->request_, obj->request_was_redirected_,
+        obj->weak_factory_.GetWeakPtr(),
+        obj->current_request_uses_header_client_,
         base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                        obj->weak_factory_.GetWeakPtr(), original_url),
         base::BindOnce(&InterceptedRequest::CancelRequest,
@@ -72,7 +74,7 @@ class InterceptedRequestUtils {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
     const uint32_t response_code_400 = 400;
     if (obj->current_response_->headers &&
-        obj->current_response_->headers->response_code() >= response_code_400) {
+        static_cast<uint32_t>(obj->current_response_->headers->response_code()) >= response_code_400) {
       // The WebViewClient onReceivedHttpError callback will be invoked for any
       // resource (such as main page, iframe, image, etc.) with status code >= 4
       auto error_reponse =

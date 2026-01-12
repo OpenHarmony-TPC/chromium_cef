@@ -98,6 +98,11 @@ static double POSITION_RATIO = 138.9;
 #if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
 #include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
 #endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+#include "content/renderer/render_frame_impl.h"
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
 const std::string kAddressPrefix = "geo:0,0?q=";
 const std::string kEmailPrefix = "mailto:";
@@ -195,7 +200,8 @@ void ArkwebFrameExtImpl::SetJsOnlineProperty(bool network_up) {
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
+//Clipboard supports maximum data size
+const size_t kMaxContextImageNodeSizeIfDownScale = 1024 * 1024 * 127;
 // 2GB
 const int kNeedImageDownScaleSysMemKB = 2097152;
 
@@ -218,15 +224,11 @@ bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem, int32_t
     return false;
   }
 
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
   return true;
 }
 
 SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
-  if (image.isNull()) {
+  if (image.isNull() || image.empty()) {
     return SkBitmap();
   }
 
@@ -235,16 +237,16 @@ SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
     return image;
   }
 
-  gfx::SizeF scaled_size = gfx::SizeF(image_size);
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
+  SkImageInfo imageInfo = image.info();
+  size_t image_byte = imageInfo.computeByteSize(imageInfo.minRowBytes());
+  if (image_byte < kMaxContextImageNodeSizeIfDownScale) {
+    return image;
   }
 
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+  double scale = sqrt(static_cast<double>(kMaxContextImageNodeSizeIfDownScale) / image_byte);
+  scaled_size.Scale(scale);
+  LOG(INFO) << "Copyimage downscale " << scale;
 
   return skia::ImageOperations::Resize(image,
                                        skia::ImageOperations::RESIZE_GOOD,
@@ -649,14 +651,18 @@ void ArkwebFrameExtImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
+  auto webNode = result.GetNode();
+  if (webNode) {
+    cef_hit_data_.node_id = webNode.GetDomNodeId();
+  }
   is_update_ = true;
   SendToBrowserFrame(__FUNCTION__,
                      base::BindOnce(
-                         [](const int32_t type, const std::string extra_data,
+                         [](const int32_t type, const std::string extra_data, const int32_t node_id,
                             const BrowserFrameType& render_frame) {
-                           render_frame->UpdateHitTestData(type, extra_data);
+                           render_frame->UpdateHitTestData(type, extra_data, node_id);
                          },
-                         cef_hit_data_.type, cef_hit_data_.extra_data));
+                         cef_hit_data_.type, cef_hit_data_.extra_data, cef_hit_data_.node_id));
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 }
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -701,13 +707,15 @@ void ArkwebFrameExtImpl::OnFocusedNodeChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
+  cef_hit_data_.node_id = element.GetDomNodeId();
+
   SendToBrowserFrame(__FUNCTION__,
                      base::BindOnce(
-                         [](const int32_t type, const std::string extra_data,
+                         [](const int32_t type, const std::string extra_data, const int32_t node_id,
                             const BrowserFrameType& render_frame) {
-                           render_frame->UpdateHitTestData(type, extra_data);
+                           render_frame->UpdateHitTestData(type, extra_data, node_id);
                          },
-                         cef_hit_data_.type, cef_hit_data_.extra_data));
+                         cef_hit_data_.type, cef_hit_data_.extra_data, cef_hit_data_.node_id));
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 }
 #endif  // BUILDFLAG(IS_ARKWEB)
@@ -805,5 +813,20 @@ void ArkwebFrameExtImpl::ScrollPageUpDown(bool is_up,
 void ArkwebFrameExtImpl::SetIsFling(bool is_fling) {
   LOG(DEBUG) << "SetIsFling in render side:" << is_fling;
   soc_perf::SocPerUtil::is_slide = is_fling;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+void ArkwebFrameExtImpl::SendBlanklessKeyToRenderFrame(
+    uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id, int64_t pref_hash) {
+  ExecuteOnLocalFrame(
+    __FUNCTION__,
+    base::BindOnce(
+      [](uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+         int64_t pref_hash, blink::WebLocalFrame* frame) {
+        if (auto render_frame = content::RenderFrameImpl::FromWebFrame(frame)) {
+          render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
+        }
+      }, nweb_id, blankless_key, frame_sink_id, pref_hash));
 }
 #endif

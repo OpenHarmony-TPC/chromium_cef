@@ -13,6 +13,8 @@
 #include "include/cef_ssl_info.h"
 #include "include/cef_unresponsive_process_callback.h"
 #include "include/cef_x509_certificate.h"
+#include "ohos_cef_ext/include/arkweb_cef_ssl_callback.h"
+#include "ohos_cef_ext/include/arkweb_cef_verify_pin_callback.h"
 
 class CefSelectClientCertificateCallbackExt
     : public virtual CefSelectClientCertificateCallback {
@@ -31,6 +33,8 @@ class CefSelectClientCertificateCallbackExt
   /// Ignore the select cert request.
   ///
   virtual void Ignore() = 0;
+
+  virtual void Select(const CefString& identity, int32_t type) {}
 
   CefRefPtr<CefSelectClientCertificateCallbackExt>
   AsCefSelectClientCertificateCallbackExt() override {
@@ -103,7 +107,8 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                         const CefString& method,
                                         bool user_gesture,
                                         bool is_redirect,
-                                        bool is_outermost_main_frame) {
+                                        bool is_outermost_main_frame,
+                                        const CefString& extra_request_headers) {
     return false;
   }
 
@@ -124,7 +129,7 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                      bool is_main_frame_request,
                                      bool is_fatal_error,
                                      CefRefPtr<CefSSLInfo> ssl_info,
-                                     CefRefPtr<CefCallback> callback) {
+                                     CefRefPtr<ArkWebCefSslCallback> callback) {
     return false;
   }
 
@@ -170,6 +175,30 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                         int error_code,
                                         const CefString& error_text) {
     return "";
+  }
+
+  ///
+  /// Called on the UI thread to handle requests for URLs with an invalid
+  /// SSL certificate. Return true and call CefCallback methods either in this
+  /// method or at a later time to continue or cancel the request. Return false
+  /// to cancel the request immediately. If
+  /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
+  /// will be accepted without calling this method.
+  ///
+  /*--cef()--*/
+  virtual bool OnCertificateErrorExt(CefRefPtr<CefBrowser> browser,
+                                     cef_errorcode_t cert_error,
+                                     const CefString& request_url,
+                                     CefRefPtr<CefSSLInfo> ssl_info,
+                                     CefRefPtr<ArkWebCefSslCallback> callback) {
+    return false;
+  }
+  
+  /*--cef()--*/
+  virtual bool OnVerifyPin(
+      const std::string& identity,
+      CefRefPtr<CefVerifyPinCallback> callback) {
+    return false;
   }
 
   CefRefPtr<CefRequestHandlerExt> AsCefRequestHandlerExt() override {

@@ -8,10 +8,12 @@
 
 #include "base/types/pass_key.h"
 #include "base/values.h"
+#include "base/memory/raw_ref.h"
 #include "content/public/browser/browser_message_filter.h"
 #include "content/public/browser/render_process_host_observer.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_errors.h"
+#include "url/gurl.h"
 
 namespace IPC {
 class Message;
@@ -53,6 +55,8 @@ class OhGinJavascriptBridgeMessageFilter
       content::AgentSchedulingGroupHost& agent_scheduling_group,
       bool create_if_not_exists);
 
+  void SetSiteInstanceGurl(const GURL& site_instance_url);
+
  private:
   friend class BrowserThread;
   friend class base::DeleteHelper<OhGinJavascriptBridgeMessageFilter>;
@@ -69,6 +73,7 @@ class OhGinJavascriptBridgeMessageFilter
 
   // Called on the background thread.
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost();
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost(int32_t routing_id);
 
   void OnGetMethods(int32_t object_id,
                     std::set<std::string>* returned_method_names);
@@ -99,19 +104,19 @@ class OhGinJavascriptBridgeMessageFilter
                                   const base::Value::List& arguments);
   void OnObjectWrapperDeleted(int object_id);
 
+  bool IsSameSite(const GURL& document_gurl);
+
   // Accessed both from UI and background threads.
   HostMap hosts_ GUARDED_BY(hosts_lock_);
   base::Lock hosts_lock_;
 
   // The `AgentSchedulingGroupHost` that this object is associated with. This
   // filter is installed on the host's channel.
-  content::AgentSchedulingGroupHost& agent_scheduling_group_;
-
-  // The routing id of the RenderFrameHost whose request we are processing.
-  // Used on the background thread.
-  int32_t current_routing_id_;
+  raw_ref<content::AgentSchedulingGroupHost> agent_scheduling_group_;
 
   scoped_refptr<base::SingleThreadTaskRunner> async_task_runner_;
+
+  GURL site_instance_gurl_;
 };
 }  // namespace NWEB
 #endif

@@ -9,6 +9,9 @@
 #include <utility>
 
 #include "arkweb/build/features/features.h"
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
@@ -57,6 +60,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
 #include "extensions/common/constants.h"
+#include "extensions/browser/extension_prefs.h"
 #include "libcef/browser/alloy/render_process_state_handler.h"
 #include "net/base/net_errors.h"
 #include "third_party/blink/public/common/frame/frame_owner_element_type.h"
@@ -93,6 +97,7 @@
 #include "ui/content_accelerators/accelerator_util.h"
 #include "ui/events/types/event_type.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#include "content/public/browser/eye_dropper_listener.h"
 #endif
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 #include "base/ohos/ltpo/include/sliding_observer.h"
@@ -129,6 +134,10 @@ using content::KeyboardEventProcessingResult;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/extension_action_dispatcher.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
+#include "extensions/browser/view_type_utils.h"
+#include "extensions/browser/extension_web_contents_observer.h"
+#include "libcef/browser/extensions/window_extensions_util.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
@@ -147,13 +156,14 @@ using content::KeyboardEventProcessingResult;
 #endif  // ARKWEB_NWEB_EX
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+#include "ohos_nweb_ex/core/extension/nweb_extension_tabs_dispatcher.h"
+#include "ohos_nweb_ex/core/extension/nweb_extension_manager_dispatcher.h"
+#endif  // ARKWEB_NWEB_EX
+
 #if BUILDFLAG(ARKWEB_MEDIA_POLICY)
 #include "content/browser/media/session/media_session_impl.h"
 #endif // defined(OHOS_MEDIA_POLICY)
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "include/cef_web_extension_api_handler.h"
-#endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 #include "include/cef_media_player_controller.h"
@@ -163,7 +173,7 @@ using content::KeyboardEventProcessingResult;
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_utils.h"
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ARKWEB_SLIDE_LTPO)
 int32_t AlloyBrowserHostImplExt::ltpo_strategy_ = -1;
 #endif
 
@@ -306,6 +316,39 @@ std::string BuildMediaInfo(
 }
 #endif // ARKWEB_NWEB_EX
 #endif // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+content::BrowserContext* GetIncognitoContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    return nullptr;
+  }
+ 
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  if (!browser_client->HasOffTheRecordContext(browser_context)) {
+    return nullptr;
+  }
+ 
+  return browser_client->GetOffTheRecordContext(browser_context);
+}
+#endif // ARKWEB_NWEB_EX
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+const char* kBlockedWebUIHostsInIncognito[] = {
+  chrome::kChromeUIExtensionsHost,
+};
+ 
+bool IsBlockedWebUIHostInIncognito(const std::string_view& host) {
+  for (auto& blocked_host : kBlockedWebUIHostsInIncognito) {
+    if (base::EqualsCaseInsensitiveASCII(blocked_host, host)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif // ARKWEB_ARKWEB_EXTENSIONS
+
 }
 
 
@@ -331,21 +374,6 @@ AlloyBrowserHostImplExt::AlloyBrowserHostImplExt(
                             std::move(platform_delegate)) {
   platform_delegate_->BrowserCreated(this);
 }
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-void AlloyBrowserHostImplExt::ShowDevToolsWith(
-    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    const CefPoint& inspect_element_at) {
-  LOG(INFO) << "ShowDevToolsWith";
-  CEF_REQUIRE_UIT();
-  if (!EnsureDevToolsProtocolManager()) {
-    return;
-  }
-  devtools_protocol_manager_->ShowDevToolsWith(
-      frontend_browser, delegate, inspect_element_at);
-}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
 void AlloyBrowserHostImplExt::WasOccluded(bool occluded) {
@@ -394,13 +422,10 @@ void AlloyBrowserHostImplExt::SetEnableLowerFrameRate(bool enabled) {
 #if BUILDFLAG(IS_ARKWEB)
 void AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager(
     void** manager) {
-  LOG(INFO) << "dsf AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager start";
   if (!platform_delegate_)
     return;
-  LOG(INFO) << "dsf AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager middle";
   *manager = static_cast<void*>(
         platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->GetRootBrowserAccessibilityManager());
-  LOG(INFO) << "wulonghui AlloyBrowserHostImplExt::GetRootBrowserAccessibilityManager end";
 }
 void AlloyBrowserHostImplExt::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
   LOG(DEBUG) << "SetWakeLockHandler enter, callback =" << static_cast<bool>(callback);
@@ -439,6 +464,30 @@ void AlloyBrowserHostImplExt::ReloadFocusedFrame()
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_PDF)
+void AlloyBrowserHostImplExt::OnPdfScrollAtBottom(const std::string& url)
+{
+  if (platform_delegate_) {
+    platform_delegate_->OnPdfScrollAtBottom(url);
+  }
+}
+
+void AlloyBrowserHostImplExt::OnPdfLoadEvent(int32_t result, const std::string& url)
+{
+  if (platform_delegate_) {
+    platform_delegate_->OnPdfLoadEvent(result, url);
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+void AlloyBrowserHostImplExt::OnMediaCastEnter() {
+  LOG(INFO) << "AlloyBrowserHostImplExt::OnMediaCastEnter";
+  if (platform_delegate_) {
+    platform_delegate_->OnMediaCastEnter();
+  }
+}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
 void AlloyBrowserHostImplExt::OnNativeEmbedStatusUpdate(
@@ -487,6 +536,37 @@ void AlloyBrowserHostImplExt::OnLayerRectVisibilityChange(const std::string& emb
 
   platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedVisibilityChange(embed_id, visibility);
 }
+
+void AlloyBrowserHostImplExt::OnNativeEmbedObjectParamChange(
+    const content::NativeEmbedParamDataInfo& native_param_info) {
+  if (!platform_delegate_) {
+    return;
+  }
+
+  ArkWebRenderHandlerExt::CefNativeParamData native_param_data;
+  native_param_data.embedId = std::to_string(native_param_info.embed_id);
+  native_param_data.objectAttributeId = native_param_info.object_attribute_id;
+  for (const auto& param_item : native_param_info.param_items) {
+    ArkWebRenderHandlerExt::CefNativeParamItem native_param_item;
+    switch (param_item.status) {
+      case content::NativeEmbedParamStatus::kAdd:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_ADD;
+        break;
+      case content::NativeEmbedParamStatus::kUpdate:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_UPDATE;
+        break;
+      case content::NativeEmbedParamStatus::kDelete:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_DELETE;
+        break;
+    }
+    native_param_item.id = param_item.id;
+    native_param_item.name = param_item.name;
+    native_param_item.value = param_item.value;
+    native_param_data.paramItems.push_back(native_param_item);
+  }
+
+  platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedObjectParamChange(native_param_data);
+}
 #endif
 
 
@@ -511,6 +591,12 @@ void AlloyBrowserHostImplExt::SetNativeEmbedMode(bool flag) {
 void AlloyBrowserHostImplExt::SetNativeInnerWeb(bool isInnerWeb) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetNativeInnerWeb(isInnerWeb);
+  }
+}
+
+void AlloyBrowserHostImplExt::SetEnableCustomVideoPlayer(bool flag) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetEnableCustomVideoPlayer(flag);
   }
 }
 #endif
@@ -639,6 +725,14 @@ void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapter(const CefString& job
   }
 }
 
+void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName, void** adapter) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->
+      CreateWebPrintDocumentAdapterV2(jobName, adapter);
+  }
+}
+
 void AlloyBrowserHostImplExt::SetPrintBackground(bool enable) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetPrintBackground(enable);
@@ -744,7 +838,6 @@ void AlloyBrowserHostImplExt::OnReportStatisticLog(const std::string& content) {
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 
-
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void AlloyBrowserHostImplExt::ShowRepostFormWarningDialog(
     content::WebContents* source) {
@@ -775,112 +868,173 @@ bool AlloyBrowserHostImplExt::TrigAdBlockEnabledForSiteFromUi(
 }
 #endif
 
-
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url)  {
-  content::WebContents* web_contents = GetWebContents();
+void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionSetTabId failed, called on invalid thread";
+    return;
+  }
+
+  if (tab_id != tab_id_) {
+    LOG(INFO) << "ExtensionSetTabId nweb_id_=" << nweb_id_
+              << "; tab_id_=" << tab_id_ << "; tab_id=" << tab_id;
+    tab_id_ = tab_id;
+  }
+}
+
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
+    return -1;
+  }
+
+  if (tab_id_ != -1) {
+    return tab_id_;
+  }
+
+  int nweb_id = GetNWebId();
+  if (nweb_id <= 0) {
+    LOG(ERROR) << "ExtensionGetTabId error nweb_id=" << nweb_id;
+    return -1;
+  }
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  int32_t tab_id = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id);
+  LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
+            << "; tab_id=" << tab_id;
+  tab_id_ = tab_id;
+#endif
+  return tab_id_;
+}
+
+bool AlloyBrowserHostImplExt::WebExtensionCheck(
+    const std::string functionName,
+    content::BrowserContext*& browser_context,
+    content::WebContents*& web_contents) {
+  web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "TabUpdated get contents failed.";
-    return;
+    LOG(ERROR) << functionName << " get contents failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << functionName << " get contents failed.";
+#endif
+    return false;
   }
 
-  auto browser_context = web_contents->GetBrowserContext();
+  browser_context = web_contents->GetBrowserContext();
   if (!browser_context) {
-    LOG(ERROR) << "TabUpdated get browser context failed.";
+    LOG(ERROR) << functionName << " get context failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << functionName << " get context failed.";
+#endif
+    return false;
+  }
+
+  // we need to get the original context to make sure we take the right context.
+  browser_context = GetOriginalContext(browser_context);
+
+  return true;
+}
+
+void AlloyBrowserHostImplExt::WebExtensionRegisterZoomObserver() {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("WebExtensionRegisterZoomObserver", browser_context, web_contents)) {
     return;
   }
 
-  std::vector<std::string> changed_properties;
-  std::for_each(changed_property_names.begin(), changed_property_names.end(),
-      [&changed_properties] (const CefString& name) {
-    changed_properties.emplace_back(name.ToString());
-  });
+  extensions::TabsWindowsAPI::Get(browser_context)->RegisterTabZoomObserver(web_contents);
+}
 
-  extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
-      tab_id, web_contents, changed_properties, url.ToString());
+void AlloyBrowserHostImplExt::WebExtensionUnregisterZoomObserver() {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("WebExtensionUnregisterZoomObserver", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)->UnregisterTabZoomObserver(web_contents);
 }
 
 void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
     int tab_id,
-    const std::vector<CefString>& changed_property_names,
-    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "TabUpdated get contents failed.";
+    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+    std::unique_ptr<NWebExtensionTab> tab) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
     return;
   }
- 
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context) {
-    LOG(ERROR) << "TabUpdated get browser context failed.";
-    return;
-  }
- 
-  std::vector<std::string> changed_properties;
-  std::for_each(changed_property_names.begin(), changed_property_names.end(),
-      [&changed_properties] (const CefString& name) {
-    changed_properties.emplace_back(name.ToString());
-  });
- 
+
   extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
-      tab_id, web_contents, changed_properties, std::move(changeInfo));
+      tab_id, web_contents, std::move(changeInfo), std::move(tab));
 }
 
-
-void AlloyBrowserHostImplExt::WebExtensionUpdateTabUrl(
-    int32_t tab_id,
-    const GURL& url) {
-  contents_delegate_.WebExtensionUpdateTabUrl(tab_id, url);
-}
-
-void AlloyBrowserHostImplExt::WebExtensionUpdateTab(
-    int32_t tab_id,
-    const NWebExtensionTabUpdateProperties* update_properties) {
-  contents_delegate_.WebExtensionUpdateTab(tab_id, update_properties);
-}
-
-void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
-}
-
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() const {
-  return tab_id_;
-}
-
-
- 
-void AlloyBrowserHostImplExt::WebExtensionTabActivated(int tab_id, int window_id) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "TabActivated get contents failed.";
+void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
+    int tab_id,
+    bool isWindowClosing,
+    int windowId) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabRemoved", browser_context, web_contents)) {
     return;
   }
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context) {
-    LOG(ERROR) << "TabActivated get browser context failed.";
-    return;
-  }
+
   extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabActived(tab_id, window_id, web_contents);
+      ->TabRemoved(tab_id, isWindowClosing, windowId, web_contents);
 }
- 
-void AlloyBrowserHostImplExt::WebExtensionActionClicked(
-    std::string extensionId,
-    const NWebExtensionTab* tab) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents)
-    LOG(ERROR) << "WebExtensionActionClicked get web_contents failed.";
- 
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context)
-    LOG(ERROR) << "WebExtensionActionClicked get browser_context failed.";
-    
-  extensions::ExtensionActionDispatcher::Get(browser_context)
-      ->DispatchExtensionActionClickedWithCustomArgs(web_contents, extensionId,
-                                                     tab);
+
+void AlloyBrowserHostImplExt::WebExtensionTabAttached(
+    int tab_id,
+    int new_position,
+    int new_window_id) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabAttached", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabAttached(tab_id, web_contents, new_position, new_window_id);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabDetached(
+    int tab_id,
+    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabDetached", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabDetached(web_contents, tab_id, detachInfo->oldPosition,
+      detachInfo->oldWindowId);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabMoved(
+    int tab_id,
+    const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabMoved", browser_context, web_contents)) {
+    return;
+  }
+
+  std::unique_ptr<NWebExtensionTabMoveInfo> params = std::make_unique<NWebExtensionTabMoveInfo>(*moveInfo);
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabMoved(web_contents, tab_id, std::move(params));
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabReplaced", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabReplaced(web_contents, addedTabId, removedTabId);
 }
 
 content::DropData* AlloyBrowserHostImplExt::GetDropData() {
@@ -898,6 +1052,136 @@ content::DropData* AlloyBrowserHostImplExt::GetDropData() {
     return nullptr;
   }
   return data_impl->drop_data();
+}
+
+content::BrowserContext* GetGlobalBrowserContext() {
+  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
+  if (!request_context) {
+    LOG(ERROR) << "request context is null";
+    return nullptr;
+  }
+ 
+  CefRequestContextImpl* request_context_impl =
+    static_cast<CefRequestContextImpl*>(request_context.get());
+  CefBrowserContext* cef_browser_context = request_context_impl->GetBrowserContext();
+  if (!cef_browser_context) {
+    LOG(ERROR) << "cef browser context is null";
+    return nullptr;
+  }
+  content::BrowserContext* browser_context = cef_browser_context->AsBrowserContext();
+  return browser_context;
+}
+
+void AlloyBrowserHostImplExt::WebExtensionActionClicked(
+    std::string extensionId,
+    const NWebExtensionTab* tab) {
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionClicked context is null";
+    return;
+  }
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (tab && tab->incognito) {
+    content::BrowserContext* incognito_context = GetIncognitoContext(context);
+    if (incognito_context) {
+      context = incognito_context;
+    } else {
+      LOG(ERROR) << "get incognito context failed";
+      return;
+    }
+  }
+#endif // ARKWEB_NWEB_EX
+
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->DispatchExtensionActionClickedWithCustomArgs(context, extensionId,
+                                                     tab);
+}
+
+void AlloyBrowserHostImplExt::UpdatePinnedExtensionIds(
+    content::BrowserContext* browser_context,
+    std::string extensionId,
+    bool isPinned) {
+  auto storedPinnedIds =
+      extensions::ExtensionPrefs::Get(browser_context)->GetPinnedExtensions();
+
+  if (isPinned) {
+    if (!base::Contains(storedPinnedIds, extensionId)) {
+      storedPinnedIds.push_back(extensionId);
+    }
+  } else {
+    auto iter = base::ranges::find(storedPinnedIds, extensionId);
+    if (iter != storedPinnedIds.end()) {
+      storedPinnedIds.erase(iter);
+    }
+  }
+ 
+  extensions::ExtensionPrefs::Get(browser_context)->SetPinnedExtensions(storedPinnedIds);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
+    std::string extensionId, bool isPinned) {
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionPinnedStateChanged context is null";
+    return;
+  }
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  UpdatePinnedExtensionIds(context, extensionId, isPinned);
+#endif
+
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->OnActionPinnedStateChanged(extensionId, isPinned);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionActionShowPopup(
+    int tabId, std::string extensionId) {
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionShowPopup context is null";
+    return;
+  }
+ 
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->WebExtensionActionShowPopup(context, tabId, extensionId);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionSetViewType(int32_t type) {
+  content::WebContents* web_contents = GetWebContents();
+  extensions::SetViewType(web_contents, static_cast<extensions::mojom::ViewType>(type));
+
+  int windowsId = extensions::GetCurrentWindowId(web_contents, extension_misc::kCurrentWindowId);
+  if (auto* ewco = extensions::ExtensionWebContentsObserver::GetForWebContents(web_contents)) {
+      web_contents->ForEachRenderFrameHost([ewco, windowsId](content::RenderFrameHost* frame_host) {
+      if (auto local_frame = ewco->GetLocalFrame(frame_host)) {
+          local_frame->UpdateBrowserWindowId(windowsId);
+      }
+    });
+  }
+}
+
+content::BrowserContext* AlloyBrowserHostImplExt::GetOriginalContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context->IsOffTheRecord()) {
+    return browser_context;
+  }
+
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  content::BrowserContext* original_browser_context =
+      browser_client->GetOriginalContext(browser_context);
+  if (!original_browser_context) {
+    LOG(ERROR) << "get original_browser_context failed.";
+    return browser_context;
+  }
+
+  if (!extensions::TabsWindowsAPI::Get(original_browser_context)) {
+    LOG(ERROR) << "get TabsWindowsAPI form original_browser_context failed.";
+    return browser_context;
+  }
+
+  return original_browser_context;
 }
 
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
@@ -923,6 +1207,30 @@ void AlloyBrowserHostImplExt::NavigationStateChanged(
     content::WebContents* source,
     content::InvalidateTypes changed_flags) {
   contents_delegate_.NavigationStateChanged(source, changed_flags);
+}
+
+content::NavigationController::UserAgentOverrideOption
+AlloyBrowserHostImplExt::ShouldOverrideUserAgentForPrerender2() {
+  // For WebView, always use the user agent override, which is set every time
+  // the user agent in AwSettings is modified.
+  return content::NavigationController::UA_OVERRIDE_TRUE;
+}
+
+bool AlloyBrowserHostImplExt::ShouldAllowPartialParamMismatchOfPrerender2(
+    content::NavigationHandle& navigation_handle) {
+  // We relax initiator checks on WebView first, but continue to discuss.
+  //
+  // TODO(https://crbug.com/340416082): Relax initiator check for all platforms.
+
+  // `ui::PAGE_TRANSITION_FROM_API` bit distinguishes that the activation
+  // navigation is triggered by `WebView.loadUrl()`.
+  bool ret =
+      navigation_handle.GetPageTransition() & ui::PAGE_TRANSITION_FROM_API;
+  if (ret) {
+    CHECK(!navigation_handle.GetInitiatorFrameToken().has_value());
+    CHECK(!navigation_handle.GetInitiatorOrigin().has_value());
+  }
+  return ret;
 }
 #endif
 
@@ -1013,11 +1321,6 @@ std::unique_ptr<content::CustomMediaPlayer>
 AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
     std::unique_ptr<content::CustomMediaPlayerListener> listener,
     const content::MediaInfo& media_info) {
-  if (!client_) {
-    LOG(ERROR) << "CreateCustomMediaPlayer failed, client_ is null";
-    return nullptr;
-  }
-
   CefOwnPtr<CefCustomMediaPlayerDelegate> delegate;
   static_assert(sizeof(CefCustomMediaInfo) == sizeof(content::MediaInfo));
   CefCustomMediaInfo cef_media_info;
@@ -1048,6 +1351,10 @@ AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
   cef_media_info.https_headers = media_info.https_headers;
   cef_media_info.attributes = media_info.attributes;
 
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, CreateCustomMediaPlayer failed";
+    return nullptr;
+  }
   delegate = client_->AsArkWebClient()->OnCreateCustomMediaPlayer(
       CefOwnPtr<CefMediaPlayerListenerImpl>(
           new CefMediaPlayerListenerImpl(std::move(listener))),
@@ -1295,7 +1602,9 @@ void AlloyBrowserHostImplExt::OnWindowHide() {
 #if BUILDFLAG(ARKWEB_REPORT_RENDER_STATE)
   RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(implUtils->GetRenderProcessId(), nweb_id_, true);
 #endif
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
   SetVisible(nweb_id_, false);
+#endif
 }
 
 
@@ -1348,7 +1657,11 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
     InactiveUnloadOldProcess(process_id);
+#endif
+
     ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                               nweb_id_);
     if (!is_hidden_) {
@@ -1363,7 +1676,7 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
 }
 #endif
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 void AlloyBrowserHostImplExt::SetVisible(int32_t nweb_id, bool visible)
 {
   auto strategy = -1;
@@ -1399,20 +1712,33 @@ void AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback(
     int pid,
     content::RendererIsUnresponsiveReason reason,
     const std::string& stack) {
-  if (auto handler = client_->GetRequestHandler()) {
-    int anr_reason = static_cast<int>(
-        reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
-            ? content::RendererIsUnresponsiveReason::
-                  kNavigationRequestCommitTimeout
-            : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
-    handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
-        this, stack, pid, anr_reason);
+  if (client_) {
+    if (auto handler = client_->GetRequestHandler()) {
+      int anr_reason = static_cast<int>(
+          reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
+              ? content::RendererIsUnresponsiveReason::
+                    kNavigationRequestCommitTimeout
+              : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
+      handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
+          this, stack, pid, anr_reason);
+    }
   }
 }
 #endif
 
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+content::WebContents* AlloyBrowserHostImplExt::GetWebContentsForExtension() {
+  return web_contents();
+}
+
+void AlloyBrowserHostImplExt::AcceleratorPressedUI(
+    const ui::Accelerator& accelerator,
+    content::BrowserContext* browser_context) {
+  CefExtensionKeybindingRegistryViews cef_key_view(browser_context, this);
+  cef_key_view.AcceleratorPressed(accelerator);
+}
+
 bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
@@ -1446,8 +1772,14 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     }
  
     if (run_accelerator_flag) {
-      CefExtensionKeybindingRegistryViews cef_key_view(browser_context);
-      cef_key_view.AcceleratorPressed(accelerator);
+      if (!CEF_CURRENTLY_ON_UIT()) {
+        CEF_POST_TASK(
+            CEF_UIT,
+            base::BindOnce(&AlloyBrowserHostImplExt::AcceleratorPressedUI, this,
+                           accelerator, browser_context));
+      } else {
+        AcceleratorPressedUI(accelerator, browser_context);
+      }
     }
   }
   
@@ -1462,6 +1794,43 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     return true;
   }
   return false;
+}
+
+std::unique_ptr<content::EyeDropper> AlloyBrowserHostImplExt::OpenEyeDropper(
+    content::RenderFrameHost *frame,
+    content::EyeDropperListener *listener) {
+  if (listener_) {
+    LOG(ERROR) << "AlloyBrowserHostImplExt::OpenEyeDropper, dumplicate";
+    return nullptr;
+  }
+  listener_ = listener;
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    ArkWebRenderWidgetHostViewOSRExt* view =
+        static_cast<ArkWebRenderWidgetHostViewOSRExt*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->OpenEyeDropper();
+    }
+  }
+  return std::make_unique<content::EyeDropper>();
+}
+
+void AlloyBrowserHostImplExt::OnEyeDropperResult(bool success, uint32_t color) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImplExt::OnEyeDropperResult, this, success, color));
+    return;
+  }
+  if (!listener_) {
+    return;
+  }
+  if (success) {
+    listener_->ColorSelected(color);
+  } else {
+    listener_->ColorSelectionCanceled();
+  }
+  listener_ = nullptr;
 }
 #endif
 
@@ -1483,7 +1852,7 @@ void AlloyBrowserHostImplExt::NotifyScreenInfoChangedV2()
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->NotifyScreenInfoChangedV2();
   }
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
 #endif
 }
@@ -1496,7 +1865,7 @@ void AlloyBrowserHostImplExt::SetAudioResumeInterval(int resumeInterval) {
   if (!mediaSession) {
     LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
 
-#ifdef OHOS_LOGGER_REPORT
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
 #endif
 
@@ -1518,7 +1887,29 @@ void AlloyBrowserHostImplExt::SetAudioExclusive(bool audioExclusive) {
   }
   mediaSession->audioExclusive_ = audioExclusive;
 }
+
+void AlloyBrowserHostImplExt::SetAudioSessionType(int audioSessionType) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
+  if (!mediaSession) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioSessionType get mediaSession failed.";
+    return;
+  }
+  mediaSession->audioSessionType_ = audioSessionType;
+}
 #endif // BUILDFLAG(ARKWEB_MEDIA_POLICY)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool AlloyBrowserHostImplExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  if (platform_delegate_ &&
+      platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()) {
+    return platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnStartBackgroundTask(type, message);
+  }
+  return true;
+}
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 std::unique_ptr<content::MediaPlayerListener>
@@ -1558,3 +1949,64 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
   return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+void AlloyBrowserHostImplExt::OnIsPageDistillable(int page_type,
+                                            const std::string& distillable_page_url, const std::string& title) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnIsPageDistillable failed";
+    return nullptr;
+  }
+  client_->AsArkWebClient()->OnIsPageDistillable(page_type, distillable_page_url, title);
+}
+
+bool AlloyBrowserHostImplExt::IsForDistillerPage() {
+  return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
+    bool is_guest_view,
+    const content::OpenURLParams& params) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
+    return false;
+  }
+
+  if (!is_guest_view &&
+      (params.url.SchemeIs(content::kChromeUIScheme)
+      || params.url.SchemeIs(content::kArkWebUIScheme)) &&
+      web_contents()->GetBrowserContext() &&
+      web_contents()->GetBrowserContext()->IsOffTheRecord() &&
+      IsBlockedWebUIHostInIncognito(params.url.host_piece())) {
+    // Block navigation to non-allowlisted WebUI pages.
+    LOG(WARNING) << "Navigation is blocked in Alloy-style browser.";
+    return true;
+  }
+
+  return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(
+    const std::string& original_url,
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnRewriteUrlForNavigation failed";
+    return "";
+  }
+  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(
+      original_url, referrer, transition_type, is_key_request);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnDocumentEndReady(frameInfo);
+  }
+}
+#endif

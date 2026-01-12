@@ -56,8 +56,7 @@ void StreamReaderURLLoaderUtils::HandleResponseDataID(
           base::Time::FromMillisecondsSinceUnixEpoch(std::stod(identity));
       LOG(INFO) << "ResponseDataID have set";
     } else {
-      LOG(WARNING) << "ResponseDataID[" << (identity)
-                   << "] not a reasonable value!";
+      LOG(WARNING) << "ResponseDataID not a reasonable value!";
     }
   }
 }
@@ -87,8 +86,6 @@ void StreamReaderURLLoaderUtils::CheckStatusCode(
   if (status_code >= NET_STATUS_CODE_400) {
     if (!mime_type.empty()) {
       headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
-      LOG(ERROR) << "salmon-debug: "
-                    "StreamReaderURLLoaderUtils::CheckStatusCode触发成功";
     }
   }
 }

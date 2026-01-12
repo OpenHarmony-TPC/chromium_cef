@@ -22,6 +22,11 @@
 #include "cef/include/cef_download_handler.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include <mutex>
+#include <optional>
+#endif
+
 class GURL;
 
 namespace net_service {
@@ -29,14 +34,20 @@ namespace net_service {
 #define NETHELPERS_EXPORT __attribute__((visibility("default")))
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+enum class FileAccessType {
+  kFileAccessEmpty,
+  kFileAccessPass,
+  kFileAccessBlock,
+};
+
 struct NetHelperSetting {
-  bool file_access;
-  bool block_network;
-  int cache_mode;
+  bool file_access = false;
+  bool block_network = false;
+  int cache_mode = 0;
 #if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-  bool disallow_sandbox_file_access_from_file_url;
+  bool disallow_sandbox_file_access_from_file_url = false;
 #endif
-  std::vector<std::string> file_access_dirs_list;
+  FileAccessType file_access_status = FileAccessType::kFileAccessEmpty;
 };
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
@@ -45,6 +56,10 @@ struct CustomDnsEntry {
   std::vector<std::string> address;
   int32_t ttl;
 };
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+constexpr static int32_t kDefaultSocketIdleTimeout = 300;
 #endif
 
 class NETHELPERS_EXPORT NetHelpers {
@@ -104,6 +119,21 @@ class NETHELPERS_EXPORT NetHelpers {
 #endif
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   static CefRefPtr<CefDownloadHandler> global_download_handler;
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  static std::optional<bool> enable_private_network_check;
+  static std::mutex enable_private_network_check_mutex;
+  static bool ShouldAllowInsecurePrivateNetworkRequests();
+  static void SetPrivateNetworkAccess(bool enable);
+  static bool GetPrivateNetworkAccess();
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+  static int32_t socket_idle_timeout;
+  static int32_t GetDefaultSocketIdleTimeout();
+  static void SetSocketIdleTimeout(int32_t timeout);
+  static int32_t GetSocketIdleTimeout();
 #endif
 };
 

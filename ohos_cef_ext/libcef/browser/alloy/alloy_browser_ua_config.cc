@@ -16,6 +16,7 @@
 #include "libcef/browser/alloy/alloy_browser_ua_config.h"
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "base/logging.h"
 #include "base/values.h"
 #include "components/embedder_support/user_agent_utils.h"
@@ -83,7 +84,8 @@ UserAgentOverridePolicy AlloyBrowserUAConfig::MatchUserAgent(
   // 1. Matching the host list has the highest priority.
   user_agent = GetUAInHostList(host);
   if (!user_agent.empty()) {
-    LOG(DEBUG) << __func__ << " in host list, host:" << host
+    LOG(DEBUG) << __func__ << " in host list, host:"
+               << url::LogUtils::ConvertUrlWithMask(host)
                << ", user_agent:" << user_agent;
     return UserAgentOverridePolicy::APP_HOST;
   }
@@ -91,13 +93,15 @@ UserAgentOverridePolicy AlloyBrowserUAConfig::MatchUserAgent(
   // 2. The default UA priority set by App custom.
   user_agent = app_custom_user_agent_;
   if (!user_agent.empty()) {
-    LOG(DEBUG) << __func__ << " browser's default ua, host:" << host
+    LOG(DEBUG) << __func__ << " browser's default ua, host:"
+               << url::LogUtils::ConvertUrlWithMask(host)
                << ", user_agent:" << user_agent;
     return UserAgentOverridePolicy::APP_DEFAULT;
   }
 
   user_agent = embedder_support::GetUserAgent();
-  LOG(DEBUG) << __func__ << " arkweb's default ua, host:" << host
+  LOG(DEBUG) << __func__ << " arkweb's default ua, host:"
+             << url::LogUtils::ConvertUrlWithMask(host)
              << ", user_agent:" << user_agent;
   return UserAgentOverridePolicy::ARKWEB_DEFAULT;
 }

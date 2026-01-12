@@ -95,6 +95,16 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositorCreation(
 }
 
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+// fix compositor->delegete() UAF
+void ArkWebRenderWidgetHostViewOSRUtils::DetachView() {
+  LOG(WARNING) << "DetachView";
+  for (const auto& pair : ArkWebRenderWidgetHostViewOSRUtils::compositor_map_) {
+    if (pair.second && pair.second->delegate() == view_) {
+      pair.second->SetDelegate(nullptr);
+    }
+  }
+}
+
 void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   DCHECK(view_);
 #ifdef DISABLE_GPU
@@ -103,11 +113,13 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   }
 #else
   if (!view_->browser_impl_) {
+    DetachView();
     return;
   }
   auto it1 = accelerate_widget_map_.find(
       view_->browser_impl_->GetAcceleratedWidget(view_->is_popup_));
   if (it1 == accelerate_widget_map_.end()) {
+    DetachView();
     return;
   }
 #endif
@@ -131,6 +143,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   if (--accelerate_widget_map_[view_->browser_impl_->GetAcceleratedWidget(
           view_->is_popup_)] == 0) {
     if (!view_->browser_impl_) {
+      DetachView();
       return;
     }
     LOG(INFO) << "ReleaseCompositor, widget = "
@@ -140,6 +153,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
     if (com != compositor_map_.end()) {
       if (com->second != nullptr) {
         delete com->second;
+        com->second = nullptr;
       }
       compositor_map_.erase(com);
     }
@@ -172,8 +186,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::SetupCompositor(
   if (render_widget_host_impl) {
     render_widget_host_impl->SetCompositorForFlingScheduler(compositor);
   }
-  LOG(INFO) << "CefRenderWidgetHostViewOSR::ShowWithVisibility compositor"
-            << compositor;
+  LOG(INFO) << "CefRenderWidgetHostViewOSR::ShowWithVisibility compositor";
 }
 
 void ArkWebRenderWidgetHostViewOSRUtils::HandleInvalidLocalSurfaceId() {
@@ -259,7 +272,6 @@ void ArkWebRenderWidgetHostViewOSRUtils::SendTouchEventEx(
     const CefTouchEvent& event) {
 #if BUILDFLAG(IS_ARKWEB) && BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   if (event.type == CEF_TET_PRESSED) {
-    view_->is_editable_node_ = false;
     auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
         view_->browser_impl_->GetAcceleratedWidget(view_->is_popup_));
     if (compositor) {
@@ -507,7 +519,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::StopBoosting() {
 #endif
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
 #if BUILDFLAG(IS_OHOS)
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
   }
 #endif
@@ -536,7 +548,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
   if (view_->isBoosting_) {
     int socPerfId = SOC_PERF_WEB_GESTURE_ID;
   #if BUILDFLAG(IS_OHOS)
-    if (base::ohos::IsPcDevice()) {
+    if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
       socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
     }
   #endif
@@ -640,6 +652,24 @@ ui::Compositor* ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
 }
 
 #if BUILDFLAG(ARKWEB_DSS)
+gfx::Size ArkWebRenderWidgetHostViewOSRUtils::SizeInPixels() {
+  if (view_->IsPopupWidget()) {
+    return gfx::ScaleToCeiledSize(view_->popup_position_.size(),
+                                  view_->GetDeviceScaleFactor());
+  }
+
+  CefSize size{};
+  if (view_->browser_impl_ && view_->browser_impl_->GetClient()) {
+    auto handler = view_->browser_impl_->GetClient()->GetRenderHandler();
+    if (handler) {
+      handler->GetDevicePixelSize(view_->browser_impl_.get(), size);
+      return gfx::Size(size.width, size.height);
+    }
+  }
+  LOG(WARNING) << "cannot get device pixel size, return zero";
+  return gfx::Size(size.width, size.height);
+}
+
 bool ArkWebRenderWidgetHostViewOSRUtils::SetCurrentSizeInPixel() {
   gfx::Size size_in_pixel = view_->SizeInPixels();
   if (size_in_pixel == current_size_in_pixel_) {

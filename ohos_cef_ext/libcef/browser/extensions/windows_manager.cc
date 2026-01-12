@@ -13,31 +13,26 @@
  * limitations under the License.
  */
  
-#include "windows_manager.h"
+// #include "windows_manager.h"
  
-#include "base/logging.h"
+// #include "base/logging.h"
   
-std::unique_ptr<CefWindowsManager> CefWindowsManager::instance = nullptr;
-std::mutex CefWindowsManager::mtx;
- 
-// static
-CefWindowsManager* CefWindowsManager::GetInstance() {
-  std::lock_guard<std::mutex> lock(mtx);
-  if (!instance) {
-    instance = std::make_unique<CefWindowsManager>();
-  }
-  return instance.get();
-}
+// base::NoDestructor<CefWindowsManager> CefWindowsManager::instance_;
 
-void CefWindowsManager::SetWindowHandler(CefExtensionWindowHandler* handler) {
-  cef_window_handler_ = handler;
-}
+// // static
+// CefWindowsManager* CefWindowsManager::GetInstance() {
+//   return instance_.get();
+// }
 
-std::vector<WebExtensionWindow> CefWindowsManager::GetAllWindows(
-      const WebExtensionWindowQueryOptions& queryOptions) {
-  if (!cef_window_handler_) {
-    LOG(ERROR) << "cef window handler is null";
-    return {};
-  }
-  return cef_window_handler_->OnGetAllWindows(queryOptions);
-}
+// void CefWindowsManager::SetWindowHandler(CefExtensionWindowHandler* handler) {
+//   cef_window_handler_ = handler;
+// }
+
+// std::vector<WebExtensionWindow> CefWindowsManager::GetAllWindows(
+//       const WebExtensionWindowQueryOptions& queryOptions) {
+//   if (!cef_window_handler_) {
+//     LOG(ERROR) << "cef window handler is null";
+//     return {};
+//   }
+//   return cef_window_handler_->OnGetAllWindows(queryOptions);
+// }

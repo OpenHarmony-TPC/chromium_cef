@@ -13,6 +13,7 @@
 
 #include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
+#include "base/memory/raw_ptr.h"
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
 #include "cef/include/cef_frame.h"
@@ -61,7 +62,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
     virtual void OnResponse(const std::string& response) = 0;
   };
 
-  AlloyBrowserHostImplUtils* implUtils;
+  raw_ptr<AlloyBrowserHostImplUtils> implUtils;
 
   ~AlloyBrowserHostImpl() override;
 
@@ -108,6 +109,10 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden() override;
+#endif
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void SetEnableHalfFrameRate(bool enabled) override;
@@ -224,6 +229,9 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+                              blink::mojom::ConsoleMessageSource log_source,
+#endif
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;

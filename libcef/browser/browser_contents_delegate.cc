@@ -91,6 +91,10 @@ class CefWidgetHostInterceptor
 constexpr char kTabsUpdateStatusKey[] = "status";
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+const std::string FAILING_URL = "arkweb-error://webdata/";
+#endif
+
 }  // namespace
 
 CefBrowserContentsDelegate::CefBrowserContentsDelegate(
@@ -221,9 +225,16 @@ void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
 bool CefBrowserContentsDelegate::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
     const std::u16string& message,
     int32_t line_no,
     const std::u16string& source_id) {
+  blink::mojom::ConsoleMessageSource message_source = blink::mojom::ConsoleMessageSource::kOther;
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    message_source = log_source;
+#endif
   if (auto c = client()) {
     if (auto handler = c->GetDisplayHandler()) {
       // Use LOGSEVERITY_DEBUG for unrecognized |level| values.
@@ -243,7 +254,7 @@ bool CefBrowserContentsDelegate::DidAddMessageToConsole(
           break;
       }
 
-      return handler->OnConsoleMessage(browser(), cef_level, message, source_id,
+      return handler->OnConsoleMessage(browser(), cef_level, static_cast<int>(message_source), message, source_id,
                                        line_no);
     }
   }
@@ -544,19 +555,43 @@ void CefBrowserContentsDelegate::DidStopLoading() {
     frame->MaybeSendDidStopLoading();
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     std::string url = web_contents()->GetLastCommittedURL().spec();
-    if (last_did_finish_load_url_ == url) {
+    if (frame->IsMain() && (last_did_finish_load_url_ == url)) {
       AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, url);
       last_did_finish_load_url_ = std::string();
     }
 #endif
   }
-
-  OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (need_report_title_when_stop_loading_) {
+    OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
+    need_report_title_when_stop_loading_ = false;
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   const net::Error error_code = navigation_handle->GetNetErrorCode();
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string navUrl = navigation_handle->GetURL().spec();
+  if (navigation_handle->IsInPrimaryMainFrame() && (navUrl != FAILING_URL) &&
+      error_code != net::OK && !navigation_handle->IsDownload()) {
+    const auto global_id = frame_util::GetGlobalId(navigation_handle);
+    CefRefPtr<CefFrameHostImpl> frame =
+        browser_info_->GetFrameForGlobalId(global_id);
+    if (frame) {
+      frame->RefreshAttributes();
+      if (error_code == net::ERR_ABORTED) {
+        AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, frame->GetURL());
+      } else if (error_code == net::ERR_HTTP_RESPONSE_CODE_FAILURE) {
+        OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
+        AsArkWebBrowserContentsDelegateExt()->OnLoadStarted(frame, frame->GetURL());
+        AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, frame->GetURL());
+      }
+    }
+  }
+#endif
 
   // Skip calls where the navigation has not yet committed and there is no
   // error code. For example, when creating a browser without loading a URL.
@@ -607,7 +642,12 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
 
     // Don't call OnLoadStart for same page navigations (fragments,
     // history state).
-    if (!navigation_handle->IsSameDocument()) {
+    if (!navigation_handle->IsSameDocument()
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+&&
+        !ArkWebBrowserContentsDelegateExt::IsPrerendering(frame)
+#endif
+      ) {
       OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
       if (navigation_handle->IsServedFromBackForwardCache()) {
 #if BUILDFLAG(ARKWEB_BFCACHE)
@@ -645,7 +685,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
       OnAddressChange(url);
     }
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    if (!navigation_handle->IsSameDocument()) {
+    if (!navigation_handle->IsSameDocument() && !navigation_handle->IsErrorPage()) {
       AsArkWebBrowserContentsDelegateExt()->OnLoadStarted(frame.get(), frame->GetURL());
 
       if (navigation_handle->IsServedFromBackForwardCache() &&
@@ -667,7 +707,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     LOG(INFO) << "load type = "
               << PageTransitionStripQualifier(
                      navigation_handle->GetPageTransition());
-    OnRefreshAccessedHistoryEx(frame.get(), url, isReload);
+    OnRefreshAccessedHistoryEx(frame.get(), url, isReload, is_main_frame);
 #endif
   } else {
     // The navigation failed with an error. This may happen before commit
@@ -691,7 +731,7 @@ void CefBrowserContentsDelegate::DidFailLoad(
   OnLoadEnd(frame, validated_url, error_code);
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   // Keep same behavior with webview onPageStareted and onPageFinished.
-  if (render_frame_host && render_frame_host->IsInPrimaryMainFrame()) {
+  if (render_frame_host && render_frame_host->IsInPrimaryMainFrame() && (validated_url.spec() != FAILING_URL)) {
     if (error_code == net::ERR_ABORTED) {
       AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, frame->GetURL());
     } else if (error_code == net::ERR_HTTP_RESPONSE_CODE_FAILURE) {
@@ -721,8 +761,8 @@ void CefBrowserContentsDelegate::DidFinishLoad(
 
   OnLoadEnd(frame, validated_url, http_status_code);
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if (render_frame_host->IsInPrimaryMainFrame()) {
-    last_did_finish_load_url_ = frame->GetURL().ToString();
+  if (render_frame_host->IsInPrimaryMainFrame() && (validated_url.spec() != FAILING_URL)) {
+    last_did_finish_load_url_ = validated_url.spec();
   }
 #endif
 }
@@ -735,6 +775,12 @@ void CefBrowserContentsDelegate::TitleWasSet(content::NavigationEntry* entry) {
   } else if (web_contents()) {
     OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
   }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (entry || web_contents()) {
+    need_report_title_when_stop_loading_ = false;
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::DidUpdateFaviconURL(
@@ -755,7 +801,7 @@ void CefBrowserContentsDelegate::DidUpdateFaviconURL(
   }
 #if BUILDFLAG(ARKWEB_FAVICON)
   if (icon_helper_) {
-    icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates);
+    icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates, browser());
   }
 #endif
 }

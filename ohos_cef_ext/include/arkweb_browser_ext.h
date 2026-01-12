@@ -20,6 +20,8 @@
 #include <vector>
 
 #include "ohos_nweb/src/capi/nweb_extension_javascript_item.h"
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_load_url_params.h"
+#include "arkweb/ohos_nweb/src/capi/nweb_prefetch_options.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_devtools_message_observer.h"
@@ -34,9 +36,21 @@
 #include "include/cef_task.h"
 #include "include/internal/cef_string_map.h"
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_distill_item.h"
+#endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+#include "arkweb/ohos_nweb/include/nweb_vault_plain_text_callback.h"
+#endif
 
 class CefClient;
 
@@ -51,7 +65,16 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   /// number of cookies that were deleted.
   ///
   virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
+
+  virtual void SetErrorDescription(const std::string& description) {}
 };
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+class CefDistillCallback : public virtual CefBaseRefCounted {
+  public:
+  virtual void OnDistillCallback(const std::string& guid, const std::string& distill_info) = 0;
+};
+#endif // ARKWEB_READER_MODE
 
 /* ---------- ohos webview add begin --------- */
 ///
@@ -203,9 +226,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
   ///
-  virtual void PrefetchPage(CefString& url,
-                            CefString& additionalHttpHeaders) = 0;
-
+  virtual void PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) = 0;
   /* ---------- ohos_nweb_ex add begin --------- */
   ///
   /// Reload the current page with original url.
@@ -345,7 +366,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   /// Get tabId.
   ///
-  virtual int ExtensionGetTabId() const = 0;
+  virtual int ExtensionGetTabId() = 0;
 
   ///
   /// Set back forward cache options.
@@ -364,6 +385,16 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /*--cef()--*/
   virtual void SetAdBlockEnabledForSite(bool is_adblock_enabled,
                                         int main_frame_tree_node_id) = 0;
+
+  ///
+  /// Stop web fling.
+  ///
+  virtual void StopFling() {};
+
+  ///
+  /// Set Focus webId
+  ///
+  virtual void SetFocusWebId(int32_t nweb_id) {}
 };
 
 ///
@@ -491,6 +522,22 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) = 0;
 
   ///
+  /// UpdateTextFieldStatus
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) = 0;
+
+  ///
+  /// Set HasComposition
+  ///
+  virtual void SetHasComposition(bool has_composition) = 0;
+
+  ///
+  /// Set HasComposition
+  ///
+  virtual bool GetHasComposition() = 0;
+
+  ///
   /// UpdateLocale
   ///
   virtual void UpdateLocale(const CefString& locale) = 0;
@@ -504,6 +551,19 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Set network status
   ///
   virtual void PutNetworkAvailable(bool available) = 0;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender the page includes loading subresources and excute javascript.
+  ///
+  virtual int PrerenderPage(const CefString& url,
+                    const CefString& additional_headers) = 0;
+
+  ///
+  /// Cancel All Prerendered Pages.
+  ///
+  virtual void CancelAllPrerendering() = 0;
+#endif
 
   ///
   /// Remove web cache
@@ -536,7 +596,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// PutUserAgent
   ///
-  virtual void PutUserAgent(const CefString& ua) = 0;
+  virtual void PutUserAgent(const CefString& ua, bool from_app) = 0;
 
   ///
   /// DefaultUserAgent
@@ -690,7 +750,18 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void LoadWithData(const CefString& data,
                             const CefString& mimeType,
                             const CefString& encoding) = 0;
-
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  ///
+  /// Load the url with loadURLParams into this WebView
+  ///
+  virtual void LoadUrlWithParams(const std::string& url,
+                                 const LoadUrlType load_type,
+                                 const std::string& refer,
+                                 const std::string& headers,
+                                 const std::string& post_data,
+                                 const bool allow_https_upgrade,
+                                 int32_t transition_type) = 0;
+#endif
   ///
   /// add visited url.
   ///
@@ -716,6 +787,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///  Set whether the browser's audio is exclusive.
   ///
   virtual void SetAudioExclusive(bool audioExclusive) = 0;
+
+  ///
+  ///  Set the audio session type of the browser.
+  ///
+  virtual void SetAudioSessionType(int audioSessionType) = 0;
 
   ///
   /// Close fullScreen video.
@@ -839,6 +915,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnDocumentStart(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
@@ -852,6 +929,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnDocumentEnd(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
@@ -877,6 +955,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
       void** webPrintDocumentAdapter) = 0;
 
   ///
+  /// Create the Web print document adapter v2 of the UI framework
+  ///
+  virtual void CreateWebPrintDocumentAdapterV2(
+      const CefString& jobName,
+      void** adapter) = 0;
+
+  ///
   /// Set the over-scroll mode of web
   ///
   virtual void SetOverscrollMode(int mode) = 0;
@@ -892,6 +977,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get last selected text by parameters carried when showing context menu.
   ///
   virtual std::string GetSelectedTextFromContextParam() = 0;
+
+  ///
+  /// Get last stat after tabs switch.
+  ///
+  virtual bool JudgeTextInputState() = 0;
 
 #if BUILDFLAG(ARKWEB_DISCARD)
   ///
@@ -914,6 +1004,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get the shrink viewport height.
   ///
   virtual int GetShrinkViewportHeight() = 0;
+
+  ///
+  /// Called when picking color.
+  ///
+  virtual void OnEyeDropperResult(bool success, uint32_t color) = 0;
 
 #if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
@@ -947,6 +1042,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// set Scrollable
   ///
   virtual void SetScrollable(bool enable, int scrollType) = 0;
+
+  ///
+  /// Set whether the soft keyboard is displayed.
+  ///
+  virtual void SetImeShow(bool visible) = 0;
 #endif
 
   ///
@@ -1121,27 +1221,65 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Set grant file access dirs.
   ///
   virtual void SetGrantFileAccessDirs(
-      const std::vector<CefString>& dir_list) = 0;
+      const std::vector<CefString>& dir_list,
+      const std::vector<CefString>& excluded_dir_list) = 0;
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   ///
-  /// Receiving the tab updated notification.
+  /// register the TabsEventRouter ZoomObserver.
   ///
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) = 0;
+  /*--cef()--*/
+  virtual void WebExtensionRegisterZoomObserver() {}
+ 
+  ///
+  /// unregister the TabsEventRouter ZoomObserver
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionUnregisterZoomObserver() {}
 
   virtual void WebExtensionTabUpdated(
       int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) = 0;
- 
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) = 0;
- 
-  virtual void WebExtensionActionClicked(
-      std::string extensionId,
-      const NWebExtensionTab* tab) = 0;
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+      std::unique_ptr<NWebExtensionTab> tab) {}
+
+  ///
+  /// Receiving the tab removed notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabRemoved(int tab_id,
+    bool isWindowClosing, int windowId) {}
+
+  ///
+  /// Receiving the tab attached notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabAttached(int tab_id,
+    int new_position, int new_window_id) {}
+
+  ///
+  /// Receiving the tab detached notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabDetached(int tab_id,
+    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {}
+
+  ///
+  /// Receiving the tab moved notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {}
+
+  ///
+  /// Receiving the tab replaced notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) {}
+
+  ///
+  /// Receiving the view updated type.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionSetViewType(int32_t type) {}
 #endif
 
   ///
@@ -1177,6 +1315,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /*--cef()--*/
   virtual void SetNativeInnerWeb(bool isInnerWeb) = 0;
+
+  ///
+  /// Set Enable Custom Video Player
+  ///
+  /*--cef()--*/
+  virtual void SetEnableCustomVideoPlayer(bool flag) = 0;
 #endif
   ///
   /// request autofill from IMF event.
@@ -1194,6 +1338,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void JavaScriptOnHeadReady(
       const CefString& script,
       const std::vector<CefString>& script_rules,
+      const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
       bool is_transfer_finished) = 0;
 
   ///
@@ -1259,12 +1404,103 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void OnDataDetectorSelectText() = 0;
 #endif
 
+#if BUILDFLAG(IS_ARKWEB)
+  /// 
+  /// set applink enable
+  ///
+  virtual void EnableAppLinking(bool enable) = 0;
+ 
+  /// 
+  /// get app link status
+  ///
+  virtual bool IsAppLinkingEnabled() const = 0;
+#endif
+
   ///
   /// Execute a string of JavaScript code in frames.
   ///
   virtual void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                                      bool recursive, IsolatedWorld world,
                                      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+
+#if BUILDFLAG(ARKWEB_BGTASK)
+  ///
+  /// Notify browser is foreground.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserForeground() = 0;
+
+  ///
+  /// Notify browser is background.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserBackground() = 0;
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  virtual void Distill(const std::string& guid, const DistillOptions& distill_options,
+    CefRefPtr<CefDistillCallback> callback) = 0;
+  virtual void AbortDistill() = 0;
+#endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  ///
+  /// get the focused frame info
+  ///
+  virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  ///
+  /// enable or disable https upgrades function
+  ///
+  virtual void EnableHttpsUpgrades(bool enable) = 0;
+#endif
+
+  ///
+  /// Handle extend action from input method.
+  ///
+  virtual void HandleInputMethodExtendAction(int32_t action) {}
+
+#if BUILDFLAG(ARKWEB_AUTOFILL)
+  ///
+  /// Fill autofill data.
+  ///
+  virtual void FillAutofillDataFromTriggerType(
+      CefRefPtr<CefValue> message, int32_t trigger_type) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  ///
+  /// SetVaultPlainTextCallback.
+  ///
+  virtual void SetVaultPlainTextCallback(
+      std::shared_ptr<OHOS::NWeb::NWebVaultPlainTextCallback> callback) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  ///
+  /// Resume current microphone.
+  ///
+  virtual void ResumeMicrophone() {}
+
+  ///
+  /// Pause current microphone.
+  ///
+  virtual void PauseMicrophone() {}
+
+  ///
+  /// Stop current microphone.
+  ///
+  virtual void StopMicrophone() {}
+#endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  ///
+  /// Evict frame back buffers when nweb was hidden
+  ///
+  virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

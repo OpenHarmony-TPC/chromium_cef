@@ -62,6 +62,14 @@ bool NetHelpers::accept_cookies = true;
 bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
 int NetHelpers::connection_timeout = 30;
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+int32_t NetHelpers::socket_idle_timeout = kDefaultSocketIdleTimeout;
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::optional<bool> NetHelpers::enable_private_network_check = std::nullopt;
+std::mutex NetHelpers::enable_private_network_check_mutex;
+#endif
 
 #if BUILDFLAG(ARKWEB_CUSTOM_DNS)
 std::map<std::string, struct CustomDnsEntry> NetHelpers::custom_dns = {};
@@ -225,38 +233,6 @@ bool IsAppStorageSandboxUrl(const GURL& url) {
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-bool IsInFileAccessList(const GURL& url,
-                        const std::vector<std::string>& pass_dir) {
-  if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
-    return false;
-  }
-
-  auto url_path = base::MakeAbsoluteFilePathNoResolveSymbolicLinks(
-      base::FilePath(url.path())).value_or(base::FilePath());
-  if (url_path.empty()) {
-    return false;
-  }
-  for (auto& path : pass_dir) {
-    auto pass_path =
-        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
-            .value_or(base::FilePath());
-    if (pass_path.empty()) {
-      return false;
-    }
-    if (!pass_path.IsParent(url_path)) {
-      if (pass_path == url_path) {
-        LOG(INFO) << "IsInFileAccessList equal";
-        return true;
-      }
-    } else {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
 bool IsURLBlocked(const GURL& url
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 ,
@@ -270,12 +246,12 @@ bool IsURLBlocked(const GURL& url
   }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if (url.SchemeIsFile() && !setting.file_access_dirs_list.empty()) {
-    bool result = IsInFileAccessList(url, setting.file_access_dirs_list);
-    if (!result) {
+  if (url.SchemeIsFile() && (setting.file_access_status != FileAccessType::kFileAccessEmpty)) {
+    if (setting.file_access_status == FileAccessType::kFileAccessBlock) {
       LOG(WARNING) << "Blocked by file access list";
+      return true;
     }
-    return !result;
+    return false;
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
@@ -378,6 +354,53 @@ void NetHelpers::ClearHostIP(const std::string host_name) {
 
 void NetHelpers::ClearHostIP() {
   NetHelpers::custom_dns.clear();
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+bool NetHelpers::ShouldAllowInsecurePrivateNetworkRequests() {
+  bool allow = false;
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
+  if (enable_private_network_check.has_value()) {
+    allow = !enable_private_network_check.value();
+  }
+  return allow;
+}
+
+void NetHelpers::SetPrivateNetworkAccess(bool enable) {
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
+  enable_private_network_check = enable;
+}
+
+bool NetHelpers::GetPrivateNetworkAccess() {
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
+  return enable_private_network_check.value_or(true);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+int32_t NetHelpers::GetDefaultSocketIdleTimeout() {
+  return kDefaultSocketIdleTimeout;
+}
+
+void NetHelpers::SetSocketIdleTimeout(int32_t timeout) {
+  socket_idle_timeout = timeout;
+}
+
+int32_t NetHelpers::GetSocketIdleTimeout() {
+  int32_t timeout = kDefaultSocketIdleTimeout;
+  if (socket_idle_timeout != kDefaultSocketIdleTimeout) {
+      timeout = socket_idle_timeout;
+  } else {
+      const base::CommandLine *command_line = base::CommandLine::ForCurrentProcess();
+      if (command_line && command_line->HasSwitch(::switches::kSocketIdleTimeout)) {
+          int time;
+          if (base::StringToInt(command_line->GetSwitchValueASCII(::switches::kSocketIdleTimeout), &time)) {
+              timeout = static_cast<int32_t>(time);
+          }
+      }
+  }
+  return timeout;
 }
 #endif
 

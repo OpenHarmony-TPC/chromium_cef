@@ -19,12 +19,14 @@
 #include <memory>
 #include <vector>
 
+#include "base/memory/raw_ptr.h"
 #include "components/printing/browser/print_manager.h"
 #include "components/printing/common/print.mojom-forward.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "include/cef_base.h"
 #include "printing/print_settings.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
+#include "ohos_nweb/include/nweb_print_manager_adapter.h"
 
 namespace base {
 class TaskRunner;
@@ -35,8 +37,20 @@ namespace printing {
 struct PrintAttrs {
   std::string jobId;
   OHOS::NWeb::PrintAttributesAdapter attrs;
-  uint32_t fd;
+  int32_t fd;
   std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback;
+};
+
+class PrintWriteResultCallbackAdapterV2 :
+    public OHOS::NWeb::PrintWriteResultCallbackAdapter {
+public:
+    explicit PrintWriteResultCallbackAdapterV2(
+        std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> cb)
+        : cb_(cb) {}
+
+    void WriteResultCallback(std::string jobId, uint32_t code) override;
+private:
+    std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> cb_;
 };
 
 class OhosPrintManager : public printing::PrintManager,
@@ -74,6 +88,8 @@ class OhosPrintManager : public printing::PrintManager,
   void SetPrintStatus(bool is_print_now, uint32_t state);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter);
   void SetPrintBackground(bool enable);
   bool GetPrintBackground();
   void CheckForCancel(int32_t preview_ui_id,
@@ -107,6 +123,7 @@ class OhosPrintManager : public printing::PrintManager,
   void CheckCancel(CheckCancelCallback callback) override;
   void PrintPdfRequested() override;
 
+  static void RunCallback(const std::string& jobId, int32_t result);
   static void OnDidPrintDocumentWritingDone(
       const PdfWritingDoneCallback& callback,
       DidPrintDocumentCallback did_print_document_cb,
@@ -118,6 +135,12 @@ class OhosPrintManager : public printing::PrintManager,
   void OnScriptedPrint();
   std::string GetHtmlTitle();
   std::string RemoveProtocol(const std::string& url);
+  // functions for Custom Options
+  void SetHeaderFooter(std::unique_ptr<printing::PrintSettings> &settings,
+      base::WeakPtr<content::WebContents> &web_contents, uint32_t data);
+  void SetBackground(std::unique_ptr<printing::PrintSettings> &settings,
+      uint32_t app, uint32_t user);
+  OHOS::NWeb::PrintAttributesAdapter CreateCustomOptions();
 
   scoped_refptr<base::TaskRunner> task_runner_;
   std::unique_ptr<printing::PrintSettings> settings_;
@@ -128,10 +151,10 @@ class OhosPrintManager : public printing::PrintManager,
   int dpi_ = 300;  // DPI (Dots Per Inch)
   std::queue<std::chrono::high_resolution_clock::time_point>
       cancelPrintTimeQueue_;
-  void* token_ = nullptr;
+  raw_ptr<void> token_ = nullptr;
   bool cancel_ = false;
   bool is_pdf_print_ = false;
-  bool should_print_background_ = true;
+  uint32_t should_print_background_ = UINT32_MAX;
   bool is_print_now_ = false;
   bool is_print_disable_ = false;
   content::GlobalRenderFrameHostId rfh_id_;
@@ -140,7 +163,9 @@ class OhosPrintManager : public printing::PrintManager,
   static std::string print_job_id_;
   static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
-
+  // last user choise for custom options
+  static bool display_header_footer_;
+  static bool print_backgrounds_;
   base::WeakPtr<content::WebContents> weak_ptr_web_contents_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };

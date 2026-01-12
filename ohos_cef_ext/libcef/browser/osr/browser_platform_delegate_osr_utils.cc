@@ -82,15 +82,6 @@ void CefBrowserPlatformDelegateOsrUtils::RedistributeKeyEventIfUrlEmpty(const Ce
     }
 }
 
-void CefBrowserPlatformDelegateOsrUtils::AdjustMouseClickCoordinates(
-    CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent){
-    if (view->AsArkWebRenderWidgetHostViewOSRExt()
-            ->IsRequestUnadjustedMovement()) {
-        mouseEvent.x = mouseEvent.raw_x;
-        mouseEvent.y = mouseEvent.raw_y;
-    }
-}
-
 void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingOnMouseClick(
     CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event){
     blink::WebGestureEvent fling_cancel =
@@ -101,26 +92,41 @@ void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingOnMouseClick(
         fling_cancel);
 }
 
-void CefBrowserPlatformDelegateOsrUtils::AdjustMouseMoveCoordinates(
-    CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent){
-    if (view->AsArkWebRenderWidgetHostViewOSRExt()
-            ->IsRequestUnadjustedMovement()) {
-        mouseEvent.x = mouseEvent.raw_x;
-        mouseEvent.y = mouseEvent.raw_y;
+void CefBrowserPlatformDelegateOsrUtils::AdjustMouseEventCoordinates(
+    CefRenderWidgetHostViewOSR* view,
+    const CefMouseEvent& mouseEvent,
+    blink::WebMouseEvent& event) {
+    if (view->IsPointerLocked()) {
+      event.SetPositionInScreen(
+          {mouseEvent.x + mouseEvent.raw_x, mouseEvent.y + mouseEvent.raw_y});
+      event.movement_x = mouseEvent.raw_x;
+      event.movement_y = mouseEvent.raw_y;
+      event.is_raw_movement_event = true;
     }
 }
 
 void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingMouseWheel(
-    CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event){
-    if (view->render_widget_host() &&
-        !view->render_widget_host()->IsAutoscrollInProgress()) {
-        blink::WebGestureEvent fling_cancel =
-            cefBrowserPlatformDelegateOsr->native_delegate_->TranslateTouchpadFlingEvent(event);
-        fling_cancel.data.fling_start.target_viewport = false;
-        fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-        view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-            fling_cancel);
+    CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event) {
+    content::WebContentsImpl* web_contents =
+        static_cast<content::WebContentsImpl*>(cefBrowserPlatformDelegateOsr->web_contents_);
+    if (!web_contents) {
+        return;
     }
+    auto* frame = web_contents->GetFocusedFrame();
+    if (!frame || !frame->GetRenderWidgetHost()) {
+        LOG(ERROR) << "get focused rwh failed";
+        return;
+    }
+    if (frame->GetRenderWidgetHost()->IsAutoscrollInProgress()) {
+        LOG(DEBUG) << "When the current frame is auto scroll, kGestureFlingCancel event not send";
+        return;
+    }
+    blink::WebGestureEvent fling_cancel =
+        cefBrowserPlatformDelegateOsr->native_delegate_->TranslateTouchpadFlingEvent(event);
+    fling_cancel.data.fling_start.target_viewport = false;
+    fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+    view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
+        fling_cancel);
 }
 
 void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
@@ -136,7 +142,11 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     } else if (event.type == CEF_TET_CANCELLED) {
         cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_ = 0;
     }
-    event_adjust.y -= cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_;
+    if (event.from_overlay) {
+        event_adjust.y -= view->GetShrinkViewportHeight();
+    } else {
+        event_adjust.y -= cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_;
+    }
     if (event.type == CEF_TET_RELEASED) {
         cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->shrink_viewport_height_ = 0;
     }
@@ -146,6 +156,8 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
         view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeEmbedMode(
             cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->native_embed_mode_);
+        view->AsArkWebRenderWidgetHostViewOSRExt()->SetEnableCustomVideoPlayer(
+            cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->custom_video_player_enable_);
     }
     #endif
 
@@ -158,12 +170,21 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     #endif
 }
 
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
 void CefBrowserPlatformDelegateOsrUtils::UpdateNativeEmbedMode(CefRenderWidgetHostViewOSR* view) {
     if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
         view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeEmbedMode(
             cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->native_embed_mode_);
     }
 }
+
+void CefBrowserPlatformDelegateOsrUtils::SetEnableCustomVideoPlayer(CefRenderWidgetHostViewOSR* view) {
+    if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
+        view->AsArkWebRenderWidgetHostViewOSRExt()->SetEnableCustomVideoPlayer(
+            cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->custom_video_player_enable_);
+    }
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
 void CefBrowserPlatformDelegateOsrUtils::UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view) {
@@ -213,3 +234,18 @@ void CefBrowserPlatformDelegateOsrUtils::RestoreTextHandlesAfterDrag(){
         ->SetTextHandlesTemporarilyHiddenByDrag(false, false);
   }
 }
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void CefBrowserPlatformDelegateOsrUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
+  LOG(DEBUG) << "CefBrowserPlatformDelegateOsrUtils::EvictFrameBackBuffersWhenNWebWasHidden";
+  if (cefBrowserPlatformDelegateOsr == nullptr) {
+    return;
+  }
+  // The WebContentsImpl will notify the OSR view.
+  content::WebContentsImpl* web_contents = 
+    static_cast<content::WebContentsImpl*>(cefBrowserPlatformDelegateOsr->web_contents_);
+  if (web_contents) {
+    web_contents->EvictFrameBackBuffersWhenNWebWasHidden();
+  }
+}
+#endif

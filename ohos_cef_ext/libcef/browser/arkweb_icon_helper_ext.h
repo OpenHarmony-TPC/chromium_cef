@@ -8,7 +8,9 @@
 #pragma once
 
 #include <vector>
-
+#include <queue>
+ 
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
@@ -23,6 +25,12 @@
 #include "content/public/browser/navigation_handle.h"
 #endif  // BUILDFLAG(ARKWEB_WPT)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "base/scoped_observation.h"
+#include "components/favicon/core/favicon_driver.h"
+#include "components/favicon/core/favicon_driver_observer.h"
+#endif
+
 namespace gfx {
 class Size;
 }  // namespace gfx
@@ -36,7 +44,11 @@ class CefBrowser;
 class ArkWebDisplayHandlerExt;
 class GURL;
 
-class IconHelper : public virtual CefBaseRefCounted {
+class IconHelper :
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    public favicon::FaviconDriverObserver,
+#endif
+    public virtual CefBaseRefCounted {
  public:
   IconHelper() = default;
   ~IconHelper() { web_contents_ = nullptr; }
@@ -45,30 +57,39 @@ class IconHelper : public virtual CefBaseRefCounted {
   IconHelper& operator=(const IconHelper&) = delete;
 
   void SetDisplayHandler(const CefRefPtr<ArkWebDisplayHandlerExt>& handler);
-  void SetBrowser(const CefRefPtr<CefBrowser>& browser);
   void SetWebContents(content::WebContents* new_contents);
   void OnUpdateFaviconURL(
       content::RenderFrameHost* render_frame_host,
-      const std::vector<blink::mojom::FaviconURLPtr>& candidates);
-  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate);
+      const std::vector<blink::mojom::FaviconURLPtr>& candidates,
+      CefRefPtr<CefBrowser> browser);
+  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id,
+                      CefRefPtr<CefBrowser> browser);
   void DownloadFaviconCallback(
+      int request_id,
+      CefRefPtr<CefBrowser> browser,
       int id,
       int http_status_code,
       const GURL& image_url,
       const std::vector<SkBitmap>& bitmaps,
       const std::vector<gfx::Size>& original_bitmap_sizes);
+  void DownloadFaviconHandler(
+      const GURL& image_url,
+      const SkBitmap& bitmap,
+      CefRefPtr<CefBrowser> browser);
   void OnReceivedIcon(const void* data,
                       size_t width,
                       size_t height,
                       cef_color_type_t color_type,
-                      cef_alpha_type_t alpha_type);
+                      cef_alpha_type_t alpha_type,
+                      CefRefPtr<CefBrowser> browser);
 
   void OnReceivedIconUrl(const CefString& image_url,
                          const void* data,
                          size_t width,
                          size_t height,
                          cef_color_type_t color_type,
-                         cef_alpha_type_t alpha_type);
+                         cef_alpha_type_t alpha_type,
+                         CefRefPtr<CefBrowser> browser);
 
 #if BUILDFLAG(ARKWEB_WPT)
   void ClearFailedFaviconUrlSets(content::NavigationHandle* navigation_handle);
@@ -78,6 +99,30 @@ class IconHelper : public virtual CefBaseRefCounted {
   void SetMainFrameDocumentOnLoadCompleted(bool complete);
   void SetLastPageUrl(const GURL& url);
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  struct CallbackData {
+    float score;
+    GURL image_url;
+    SkBitmap bitmap;
+ 
+    CallbackData() {}
+ 
+    CallbackData(float score_num, const GURL& url,
+                 const SkBitmap& bmp)
+        : score(score_num), image_url(url),
+          bitmap(bmp) {}
+  };
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  // favicon::FaviconDriverObserver implementation.
+  void OnFaviconUpdated(favicon::FaviconDriver* favicon_driver,
+                        NotificationIconType notification_icon_type,
+                        const GURL& icon_url,
+                        bool icon_url_changed,
+                        const gfx::Image& image) override;
+#endif
 
  private:
 #if BUILDFLAG(ARKWEB_WPT)
@@ -93,12 +138,23 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;
   CefRefPtr<ArkWebDisplayHandlerExt> handler_ = nullptr;
-  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if BUILDFLAG(ARKWEB_WPT)
   std::unordered_set<size_t> failed_favicon_urls_set_;
 #endif  // BUILDFLAG(ARKWEB_WPT)
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  std::map<int, std::unordered_set<std::string>> pending_downloads_map_;
+  std::map<int, std::vector<CallbackData>> best_results_map_;
+  std::mutex mutex_;
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  base::ScopedObservation<favicon::FaviconDriver,
+                          favicon::FaviconDriverObserver>
+      favicon_driver_observation_{this};
+#endif
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(IconHelper);
 };

@@ -15,6 +15,7 @@
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "base/functional/callback_helpers.h"
 #include "base/values.h"
+#include "base/memory/raw_ptr.h"
 #include "chrome/browser/devtools/devtools_file_watcher.h"
 #include "components/prefs/pref_change_registrar.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -163,19 +164,27 @@ class CefDevToolsFileManager {
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   // Guaranteed to outlive this object.
-  AlloyBrowserHostImpl* browser_impl_;
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  Delegate* delegate_;
+  raw_ptr<AlloyBrowserHostImpl> browser_impl_;
+#else
+  AlloyBrowserHostImpl* browser_impl_;
+#endif
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  raw_ptr<Delegate> delegate_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  raw_ptr<PrefService> prefs_;
+#else
   PrefService* prefs_;
+#endif
 
   using PathsMap = std::map<std::string, base::FilePath>;
   PathsMap saved_files_;
   scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  CefDevToolsMessageHandler* devtools_message_handler_ = nullptr;
-  content::WebContents* web_contents_;
+  raw_ptr<CefDevToolsMessageHandler> devtools_message_handler_ = nullptr;
+  raw_ptr<content::WebContents> web_contents_;
   PrefChangeRegistrar pref_change_registrar_;
   using PathToType = std::map<std::string, std::string>;
   PathToType file_system_paths_;

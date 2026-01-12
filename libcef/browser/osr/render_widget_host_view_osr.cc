@@ -651,6 +651,11 @@ void CefRenderWidgetHostViewOSR::AllocateLocalSurfaceId() {
 
 const viz::LocalSurfaceId&
 CefRenderWidgetHostViewOSR::GetCurrentLocalSurfaceId() const {
+#if BUILDFLAG(IS_ARKWEB)
+  if (!parent_local_surface_id_allocator_) {
+    return viz::ParentLocalSurfaceIdAllocator::InvalidLocalSurfaceId();
+  }
+#endif
   return parent_local_surface_id_allocator_->GetCurrentLocalSurfaceId();
 }
 
@@ -717,9 +722,6 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
     content::RenderWidgetHostView* parent_host_view,
     const gfx::Rect& bounds,
     const gfx::Rect& anchor_rect) {
-#if BUILDFLAG(IS_ARKWEB)
-  if (base::ohos::IsPcDevice()) {
-#endif
   DCHECK_EQ(parent_host_view_, parent_host_view);
   DCHECK(browser_impl_);
 
@@ -758,9 +760,6 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
   SetRootLayerSize(true /* force */);
 #endif
   Show();
-#if BUILDFLAG(IS_ARKWEB)
-  }
-#endif
 }
 
 void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {}
@@ -809,7 +808,9 @@ void CefRenderWidgetHostViewOSR::Destroy() {
       Hide();
     }
   }
-
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  NotifyObserversAboutShutdown();
+#endif
   delete this;
 }
 
@@ -1766,7 +1767,11 @@ void CefRenderWidgetHostViewOSR::UpdateFrameRate() {
 }
 
 gfx::Size CefRenderWidgetHostViewOSR::SizeInPixels() {
+#if BUILDFLAG(ARKWEB_DSS)
+  return arkweb_rwhv_osr_utils_->SizeInPixels();
+#else
   return gfx::ScaleToCeiledSize(GetViewBounds().size(), GetDeviceScaleFactor());
+#endif
 }
 
 #if BUILDFLAG(IS_MAC)
@@ -2028,6 +2033,14 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
 }
 
 void CefRenderWidgetHostViewOSR::CancelWidget() {
+#if BUILDFLAG(IS_ARKWEB)
+  if (popup_host_view_) {
+    popup_host_view_->CancelWidget();
+  }
+  if (child_host_view_) {
+    child_host_view_->CancelWidget();
+  }
+#endif
   if (render_widget_host_) {
     render_widget_host_->LostCapture();
   }

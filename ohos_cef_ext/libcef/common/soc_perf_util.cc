@@ -42,7 +42,7 @@ void SocPerUtil::EnableFlingBoost() {
   TRACE_EVENT0("power", "SocPerUtil::EnableFlingBoost");
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
 #if BUILDFLAG(IS_ARKWEB)
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
   }
 #endif
@@ -67,7 +67,7 @@ void SocPerUtil::EnableFlingBoost() {
 void SocPerUtil::DisableFlingBoost() {
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
 #if BUILDFLAG(IS_ARKWEB)
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
   }
 #endif

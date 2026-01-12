@@ -168,6 +168,18 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ReloadFocusedFrame() override;
 #endif
   void CustomWebMediaPlayer(bool enable) override;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  int PrerenderPage(const CefString& url,
+                    const CefString& additional_headers) override;
+  void CancelAllPrerendering() override;
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+    bool SetFocusByPosition(float x, float y) override {
+        return false;
+    };
+#endif // defined(OHOS_INPUT_EVENTS)
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

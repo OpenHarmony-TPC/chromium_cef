@@ -374,9 +374,6 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   DCHECK(frame_util::IsValidGlobalToken(global_token));
   DCHECK(callback);
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info " << frame_util::GetFrameDebugString(global_token);
-#endif
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
   base::AutoLock lock_scope(browser_info_lock_);
@@ -405,10 +402,10 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   pending->callback_runner = callback_runner;
   pending_new_browser_info_map_.insert(
       std::make_pair(global_token, std::move(pending)));
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
   LOG(INFO) << "on get new browser info wait timeout";
   CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForPrerendering,
+                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForSomeCases,
                                global_token, timeout_id));
 #endif
 
@@ -440,6 +437,23 @@ void CefBrowserInfoManager::CheckExcludedNewBrowserInfoOnUIThread(
   if (!g_info_manager) {
     return;
   }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  // Exclude GetNewBrowserInfo for extensions options ui or offscreen document,
+  // because if continue waiting it will finally fail as well, and can cause a
+  // long block (kNewBrowserInfoResponseTimeoutMs) on renderer process in
+  // loading.
+  if (g_info_manager->GetUtils()->IsExtensionsOptionsUiFrame(global_token) ||
+      g_info_manager->GetUtils()->IsExtensionsOffscreenFrame(global_token) ||
+      g_info_manager->GetUtils()->IsExtensionsBackgroundFrame(global_token)) {
+    LOG(INFO) << "exclude getting browser info for extensions options ui or "
+                 "offscreen document";
+    g_info_manager->ContinueNewBrowserInfo(global_token,
+                                           /*browser_info=*/nullptr,
+                                           /*is_excluded=*/true);
+    return;
+  }
+#endif
 
   // May return nullptr for PDF renderer process.
   auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);

@@ -23,7 +23,6 @@
 #include "include/cef_media_handler.h"
 #include "include/cef_permission_request.h"
 #include "include/cef_web_client_extension_handler.h"
-#include "include/cef_web_extension_api_handler.h"
 
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
@@ -35,6 +34,9 @@
 #include "include/cef_media_player_listener.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "components/dom_distiller/content/common/mojom/distillability_service.mojom.h"
+#endif  // ARKWEB_READER_MODE
 ///
 /// Extended from CefClient
 ///
@@ -151,16 +153,6 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   }
 #endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  ///
-  /// Return the handler for web extension api. If no handler is provided the
-  /// default implementation will be used.
-  ///
-  virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
-    return nullptr;
-  }
-#endif
-
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   ///
   /// Notify the action of pull to refresh.
@@ -182,6 +174,42 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnActivateContent() {}
 #endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  ///
+  /// Notify start background task.
+  ///
+  /*--cef()--*/
+  virtual bool OnStartBackgroundTask(int32_t type, const std::string& message) {
+    return true;
+  }
+#endif
+
+#if BUILDFLAG(ARKWEB_AI)
+  ///
+  /// Notify agent event report.
+  ///
+  /*--cef()--*/
+  virtual void OnAgentEventReport(const std::string& json) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  ///
+  /// Notify the page is distillable.
+  ///
+  /*--cef()--*/
+  virtual void OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Notify rewrite url for navigation.
+  ///
+  /*--cef()--*/
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url, const std::string& referrer, int transition_type, bool is_key_request) { return ""; }
+#endif
+
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_CLIENT_EXT_H_

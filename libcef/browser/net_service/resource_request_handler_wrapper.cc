@@ -50,6 +50,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h"
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_PREFETCH_POST)
@@ -63,6 +64,11 @@
 #include "services/network/sec_header_helpers.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#include "base/command_line.h"
+#include "libcef/browser/net_service/cookie_manager_impl_ext.h"
+#endif
 namespace net_service {
 
 namespace {
@@ -151,11 +157,19 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     PendingRequest(int32_t request_id,
                    network::ResourceRequest* request,
                    bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                   base::WeakPtr<InterceptedRequest> intercepted_request,
+                   bool current_request_uses_header_client,
+#endif
                    OnBeforeRequestResultCallback callback,
                    CancelRequestCallback cancel_callback)
         : id_(request_id),
           request_(request),
           request_was_redirected_(request_was_redirected),
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+          intercepted_request_(intercepted_request),
+          current_request_uses_header_client_(current_request_uses_header_client),
+#endif
           callback_(std::move(callback)),
           cancel_callback_(std::move(cancel_callback)) {}
 
@@ -167,6 +181,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     void Run(InterceptedRequestHandlerWrapper* self) {
       self->OnBeforeRequest(id_, request_, request_was_redirected_,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                            intercepted_request_,
+                            current_request_uses_header_client_,
+#endif
                             std::move(callback_), std::move(cancel_callback_));
       request_ = nullptr;
     }
@@ -174,6 +192,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     const int32_t id_;
     raw_ptr<network::ResourceRequest, DisableDanglingPtrDetection> request_;
     const bool request_was_redirected_;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    base::WeakPtr<InterceptedRequest> intercepted_request_;
+    bool current_request_uses_header_client_ = false;
+#endif
     OnBeforeRequestResultCallback callback_;
     CancelRequestCallback cancel_callback_;
   };
@@ -412,12 +434,19 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     raw_ptr<InterceptedRequestHandlerWrapper> wrapper_;
   };
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  InterceptedRequestHandlerWrapper(const net::IsolationInfo& isolation_info)
+#else
   InterceptedRequestHandlerWrapper()
+#endif
       : init_helper_(base::MakeRefCounted<InitHelper>(this)),
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
         wrapper_helper_(
             std::make_unique<ArkWebInterceptedRequestHandlerWrapperHelper>()),
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        isolation_info_(isolation_info),
+#endif
         weak_ptr_factory_(this) {
   }
 
@@ -541,6 +570,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   void OnBeforeRequest(int32_t request_id,
                        network::ResourceRequest* request,
                        bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                       base::WeakPtr<InterceptedRequest> intercepted_request,
+                       bool current_request_uses_header_client,
+#endif
                        OnBeforeRequestResultCallback callback,
                        CancelRequestCallback cancel_callback) override {
     CEF_REQUIRE_IOT();
@@ -551,10 +584,25 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       return;
     }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    // OnBeforeRequest will be called asynchronously for TryCreateURLLoaderNetworkObserver below,
+    // its dependent InterceptedRequest object might have been destoryed.
+    if (!intercepted_request) {
+      LOG(ERROR) << "InterceptedRequest has destructed already.";
+      std::move(cancel_callback).Run(net::ERR_ABORTED);
+      return;
+    }
+#endif
+
     if (!init_state_) {
       // Queue requests until we're initialized.
       pending_requests_.push_back(std::make_unique<PendingRequest>(
-          request_id, request, request_was_redirected, std::move(callback),
+          request_id, request, request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+          intercepted_request,
+          current_request_uses_header_client,
+#endif
+          std::move(callback),
           std::move(cancel_callback)));
       return;
     }
@@ -570,6 +618,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                              TryCreateURLLoaderNetworkObserver,
                          std::make_unique<PendingRequest>(
                              request_id, request, request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                             intercepted_request,
+                             current_request_uses_header_client,
+#endif
                              std::move(callback), std::move(cancel_callback)),
                          init_state_->frame_,
                          init_state_->browser_context_getter_,
@@ -649,7 +701,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    MaybeLoadCookies(request_id, state, {}, std::move(exec_callback));
+    MaybeLoadCookies(request_id, state, {}, current_request_uses_header_client,
+                     std::move(exec_callback));
 #else
     MaybeLoadCookies(request_id, state, std::move(exec_callback));
 #endif
@@ -659,6 +712,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                         RequestState* state,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                         const std::optional<GURL>& new_url,
+                        bool current_request_uses_header_client,
 #endif
                         base::OnceClosure callback) {
     CEF_REQUIRE_IOT();
@@ -686,11 +740,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                   &InterceptedRequestHandlerWrapper::AllowCookieAlways);
     auto done_cookie_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::ContinueWithLoadedCookies,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        weak_ptr_factory_.GetWeakPtr(), request_id,
+        current_request_uses_header_client, std::move(callback));
+#else
         weak_ptr_factory_.GetWeakPtr(), request_id, std::move(callback));
+#endif
     cookie_helper::LoadCookies(
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         new_url, init_state_->is_off_the_record_,
+        GetIsolationInfo(*(state->request_)),
 #endif
         allow_cookie_callback, std::move(done_cookie_callback));
   }
@@ -714,6 +774,21 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     DCHECK(state->cookie_filter_);
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
+      CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+        CefCookieManagerImplExt::GetInstance(init_state_->is_off_the_record_);
+      if (cookie_manager) {
+        bool is_exception = cookie_manager->GetExceptionCookieSetting(*(state->request_));
+        LOG(DEBUG) << "Get Exception Cookie Setting: " << is_exception;
+        if (is_exception) {
+          *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+          return;
+        }
+      }
+    }
+#endif // ARKWEB_EXT_EXCEPTION_LIST
+
     CefCookie cef_cookie;
     if (net_service::MakeCefCookie(cookie, cef_cookie)) {
       *allow = state->cookie_filter_->CanSendCookie(
@@ -722,14 +797,24 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
 #if BUILDFLAG(ARKWEB_ITP)
+    GURL main_frame_url = GURL();
+    if (state->request_) {
+      const net::IsolationInfo& isolation_info = GetIsolationInfo(*(state->request_));
+      if (isolation_info.top_frame_origin()) {
+        main_frame_url = isolation_info.top_frame_origin()->GetURL();
+      }
+    }
     if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(
-                               init_state_->browser_, state->request_, allow)) {
+                               init_state_->browser_, state->request_, main_frame_url, allow)) {
       return;
     }
 #endif
   }
 
   void ContinueWithLoadedCookies(int32_t request_id,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                                 bool current_request_uses_header_client,
+#endif
                                  base::OnceClosure callback,
                                  int total_count,
                                  net::CookieList allowed_cookies) {
@@ -746,6 +831,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // Also add/save cookies ourselves for default-handled network requests
       // so that we can filter them. This will be a no-op for custom-handled
       // requests.
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      if (current_request_uses_header_client)
+#endif
       state->request_->load_flags |= kLoadNoCookiesFlags;
     }
 
@@ -937,6 +1025,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                          network::ResourceRequest* request,
                          net::HttpResponseHeaders* headers,
                          std::optional<net::RedirectInfo> redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                         bool current_request_uses_header_client,
+#endif
                          OnRequestResponseResultCallback callback) override {
     CEF_REQUIRE_IOT();
 
@@ -966,6 +1057,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (redirect_info.has_value()) {
       HandleRedirect(request_id, state, headers, *redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                     current_request_uses_header_client,
+#endif
                      std::move(callback));
     } else {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -980,6 +1074,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                       RequestState* state,
                       net::HttpResponseHeaders* headers,
                       const net::RedirectInfo& redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                      bool current_request_uses_header_client,
+#endif
                       OnRequestResponseResultCallback callback) {
     GURL new_url = redirect_info.new_url;
     CefString newUrl = redirect_info.new_url.spec();
@@ -1010,6 +1107,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     auto exec_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::RedirectSavedCookieDone,
         weak_ptr_factory_.GetWeakPtr(), request_id, state->request_,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        current_request_uses_header_client,
+#endif
         std::move(callback), new_url);
 #else
     auto exec_callback = base::BindOnce(
@@ -1099,7 +1199,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         &InterceptedRequestHandlerWrapper::ContinueWithSavedCookies,
         weak_ptr_factory_.GetWeakPtr(), request_id, std::move(callback));
     cookie_helper::SaveCookies(
-        init_state_->browser_context_getter_, *(state->request_), headers,
+        init_state_->browser_context_getter_, *(state->request_),
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        init_state_->is_off_the_record_,
+        GetIsolationInfo(*(state->request_)),
+#endif
+        headers,
         allow_cookie_callback, std::move(done_cookie_callback));
   }
 
@@ -1410,6 +1515,16 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     return !scheme::IsInternalHandledScheme(request->url.scheme());
   }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  const net::IsolationInfo& GetIsolationInfo(const network::ResourceRequest& request) {
+    if (request.trusted_params.has_value() &&
+        !request.trusted_params->isolation_info.IsEmpty()) {
+      return request.trusted_params->isolation_info;
+    }
+    return isolation_info_;
+  }
+#endif
+
   scoped_refptr<InitHelper> init_helper_;
   std::unique_ptr<InitState> init_state_;
 
@@ -1425,6 +1540,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 #include "cef/ohos_cef_ext/libcef/browser/net_service/intercepted_request_handler_wrapper_for_include.cc"
 #endif  // BUILDFLAG(IS_ARKWEB)
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  const net::IsolationInfo isolation_info_;
+#endif
+
   base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
 };
 
@@ -1436,6 +1555,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     int render_process_id,
     bool is_navigation,
     bool is_download,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info,
+#endif
     const url::Origin& request_initiator) {
   CEF_REQUIRE_UIT();
   CHECK(browser_context);
@@ -1481,7 +1603,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 #endif
       is_navigation, is_download, request_initiator, base::RepeatingClosure());
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(isolation_info);
+#else
   auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
+#endif
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;
@@ -1491,6 +1617,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     content::WebContents::Getter web_contents_getter,
     content::FrameTreeNodeId frame_tree_node_id,
     const network::ResourceRequest& request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info,
+#endif
     const base::RepeatingClosure& unhandled_request_callback) {
   CEF_REQUIRE_UIT();
 
@@ -1566,15 +1695,19 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
       std::make_unique<InterceptedRequestHandlerWrapper::InitState>();
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   init_state->Initialize(browser_context,
-                         browserPtr->AsArkWebBrowserHostExtImpl(), framePtr,
-                         realFramePtr, global_id,
+                         browserPtr != nullptr ? browserPtr->AsArkWebBrowserHostExtImpl() : nullptr,
+                         framePtr, realFramePtr, global_id,
 #else
   init_state->Initialize(browser_context, browserPtr, framePtr, global_id,
 #endif
                          is_navigation, is_download, request_initiator,
                          unhandled_request_callback);
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(isolation_info);
+#else
   auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
+#endif
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;

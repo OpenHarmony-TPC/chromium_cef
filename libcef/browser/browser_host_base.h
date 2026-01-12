@@ -35,9 +35,6 @@
 #if BUILDFLAG(ARKWEB_PERMISSION)
 #include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
 #endif
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-#include "include/cef_devtools_message_handler_delegate.h"
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace extensions {
 class Extension;
@@ -201,6 +198,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   static CefRefPtr<CefBrowserHostBase> GetLikelyFocusedBrowser();
 #ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
   static void GetPermissionStatusAsync(const CefString& origin,
+                                       int resources,
                                        cef_permission_status_query_callback_t callback);
   void AskNotificationPermission(const CefString& origin,
                                  cef_permission_callback_t callback) override;
@@ -212,6 +210,10 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
     return nullptr;
   }
 #endif
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  static bool IsClipboardSitePermissionEnabled();
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
   CefBrowserHostBase(
       const CefBrowserSettings& settings,
@@ -317,12 +319,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void NotifyMoveOrResizeStarted() override;
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override {}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   bool IsFullscreen() override;
   void ExitFullscreen(bool will_cause_resize) override;
   bool IsRenderProcessUnresponsive() override;
@@ -417,6 +413,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void EnableVideoAssistant(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
   void CustomWebMediaPlayer(bool enable) override;
+  void SetMediaResumeFromBFCachePage(bool resume) override;
 
   // Thread-safe accessors.
   const CefBrowserSettings& settings() const { return settings_; }
@@ -502,6 +499,10 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   std::string GetCustomUserAgent();
 #endif
 
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+  void GetOverScrollOffsetValue(float* offset_x, float* offset_y) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_PERMISSION)
   CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate();
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions();
@@ -553,6 +554,13 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
 #if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
   bool IsIframe() override { return false; }
   void ReloadFocusedFrame() override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  void SetBlankScreenDetectionConfig(bool enable,
+                                     const std::vector<double> &detectionTiming,
+                                     const std::vector<int32_t> &detectionMethods,
+                                     int32_t contentfulNodesCountThreshold) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
@@ -642,6 +650,9 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   std::string custom_user_agent_;
 #endif
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y) override;
+#endif // defined(OHOS_INPUT_EVENTS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_

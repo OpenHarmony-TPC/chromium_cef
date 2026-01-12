@@ -74,6 +74,9 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   typedef cef_embed_mouse_event_t CefEmbedMouseEvent;
   typedef cef_embed_mouse_type_t CefEmbedMouseType;
   typedef cef_embed_mouse_button_t CefEmbedMouseButton;
+  typedef cef_native_param_status_t CefNativeParamStatus;
+  typedef cef_native_param_item_t CefNativeParamItem;
+  typedef cef_native_param_data_t CefNativeParamData;
 
   CefRefPtr<ArkWebRenderHandlerExt> AsArkWebRenderHandler() override {
     return this;
@@ -88,6 +91,24 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
       const CefTouchHandleState& start_selection_handle,
       const CefTouchHandleState& end_selection_handle,
       bool need_report) override {}
+
+#if BUILDFLAG(ARKWEB_MENU) || BUILDFLAG(ARKWEB_PDF)
+  ///
+  /// Called when touch selection is updated, but select_area data id not
+  /// controlled by kernel.The select_area is the shadow area between
+  /// touch handles.Initially added for PDF.
+  ///
+  virtual void OnSelectAreaChanged(CefRect& select_area) {}
+
+  ///
+  /// Called when touch selection is updated.The Position of arkUI-quickmenu
+  /// which was calculated by left and right handel previously, is calculated 
+  /// by clipped-selection-bounds. Add this interface because arkUI couldn't
+  /// get the data update. 
+  ///
+  virtual void OnClippedSelectionBoundsChanged(const CefRect &rect,
+                                               bool need_report) {}
+#endif
 
   ///
   /// Called when the RootLayer has changed.
@@ -195,6 +216,13 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   ///
   virtual void OnNativeEmbedVisibilityChange(const CefString& embed_id,
                                              bool visibility) {}
+  
+  ///
+  /// Called when params change.
+  ///
+  virtual void OnNativeEmbedObjectParamChange(CefRefPtr<CefBrowser> browser,
+                                              const CefNativeParamData& paramData) {}
+  
 
   ///
   /// Called when select all is clicked.
@@ -227,6 +255,12 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   ///
   virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
                                      const CefRect& cef_image_rect) {}
+
+  ///
+  /// Open Eye Dropper.
+  ///
+  /*--cef()--*/
+  virtual void OpenEyeDropper(CefRefPtr<CefBrowser> browser) {}
 
   ///
   /// Get data detector enable.
@@ -292,6 +326,12 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /*--cef()--*/
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
 
+  ///
+  /// Update focus and keyboard status in textFieldManager
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {}
+
 #if BUILDFLAG(ARKWEB_DSS)
   ///
   /// Get Device pixel size.
@@ -335,6 +375,26 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /*--cef()--*/
   virtual void GetScreenOffset(CefRefPtr<CefBrowser> browser, double& x, double& y) {}
 #endif  // BUILDFLAG(ARKWEB_SCREEN_OFFSET)
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  ///
+  /// Called when a blank screen is detected.
+  ///
+  /*--cef()--*/
+  virtual void OnDetectedBlankScreen(const std::string &url,
+                                     int32_t blankScreenReason,
+                                     int32_t detectedContentfulNodesCount) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_FIRST_SCREEN_PAINT)
+  ///
+  /// Called when the first screen is painted.
+  ///
+  /*--cef()--*/
+  virtual void OnFirstScreenPaint(const std::string& url,
+                                  int64_t navigationStartTime,
+                                  int64_t firstScreenPaintTime) {}
+#endif
 
   ///
   /// Called when scroll.

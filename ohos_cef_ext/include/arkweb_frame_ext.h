@@ -112,5 +112,12 @@ class ArkwebFrameExt : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void UpdateDrawRect() = 0;
 #endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+  virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,
+                                             uint64_t blankless_key,
+                                             uint64_t frame_sink_id,
+                                             int64_t pref_hash) = 0;
+#endif
 };
 #endif  // CEF_INCLUDE_CEF_FRAME_H_

@@ -63,7 +63,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   void ExtensionSetTabId(int32_t tab_id) override;
-  int32_t ExtensionGetTabId() const override;
+  int32_t ExtensionGetTabId() override;
 #endif
 
 #if BUILDFLAG(IS_OHOS)
@@ -99,7 +99,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   // #endif
   int GetNWebId() override { return -1; }
   //#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override {
+  void PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) override {
   }
   //#endif  // ARKWEB_NO_STATE_PREFETCH
   // #if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
@@ -158,10 +158,6 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   int viewport_width_ = 0;
   int viewport_height_ = 0;
 #endif
-
-//#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  int tab_id_;
-//#endif
 };
 
 #endif  // ARKWEB_RENDERER_BROWSER_IMPL_H_

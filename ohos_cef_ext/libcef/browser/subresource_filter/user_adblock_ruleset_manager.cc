@@ -25,6 +25,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/uuid.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/subresource_filter/core/browser/subresource_filter_features.h"
 #include "components/subresource_filter/core/browser/user_ruleset_version.h"
 #include "components/subresource_filter/core/browser/user_subresource_filter_constants.h"
@@ -54,7 +55,9 @@ const char kLogTag[] = "[AdBLock]";
 namespace {
 base::FilePath GetOhosAppDataDir() {
   base::FilePath app_data_dir;
-  base::PathService::Get(base::DIR_CACHE, &app_data_dir);
+  if (!base::PathService::Get(chrome::DIR_USER_DATA, &app_data_dir)) {
+    base::PathService::Get(base::DIR_CACHE, &app_data_dir);
+  }
 
   return app_data_dir;
 }
@@ -114,20 +117,35 @@ bool GetUserEasylistsWithCommaSplit(
   return true;
 }
 
-bool UserUnindexedRulesetToIndexedRuleset(const base::FilePath& unindexed_file,
-                                          long long version) {
+void UserUnindexedRulesetToIndexedRulesetInternal(const base::FilePath unindexed_file,
+                                                  long long version) {
   UserUnindexedRulesetInfo ruleset_info;
   ruleset_info.content_version = std::to_string(version);
   ruleset_info.ruleset_path = GetUserUnindexedRulesetFile();
+
   if (!g_browser_process) {
-    return false;
+    return;
   }
 
   UserRulesetService* ruleset_service =
       g_browser_process->AsBrowserProcessImplExt()->subresource_filter_user_ruleset_service();
   if (ruleset_service) {
     ruleset_service->IndexAndStoreAndPublishRulesetIfNeeded(ruleset_info);
+  } else {
+    LOG(WARNING) << kLogTag << "ruleset_service is null";
+    return;
   }
+}
+
+bool UserUnindexedRulesetToIndexedRuleset(const base::FilePath& unindexed_file,
+                                          long long version) {
+  if (!g_browser_process) {
+    return false;
+  }
+
+  content::GetUIThreadTaskRunner({base::TaskPriority::HIGHEST})
+      ->PostTask(FROM_HERE, base::BindOnce(&UserUnindexedRulesetToIndexedRulesetInternal,
+        unindexed_file, version));
 
   LOG(INFO) << kLogTag << "User Unindexed ruleset will be indexed";
   return true;
@@ -252,45 +270,16 @@ void OnUpdateUserRulesetFinished(bool success) {
   LOG(INFO) << kLogTag << "OnUpdateUserRulesetFinished:"
             << (success == true ? "success" : "fail");
 }
-
-void SetUserAdBlockEasylistVersion(int64_t version) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-}
 }  // namespace
 
 UserAdblockRulesetManager::UserAdblockRulesetManager() {}
 UserAdblockRulesetManager::~UserAdblockRulesetManager() {}
-
-base::FilePath UserAdblockRulesetManager::GetOhosAdblockEasylistFilePath() {
-  return GetOhosAppDataDir()
-      .Append(FILE_PATH_LITERAL(kUserTopLevelDirectoryName))
-      .Append(FILE_PATH_LITERAL(kUserEasylistFileName));
-}
 
 // implement RulesetServiceclient interface
 void UserAdblockRulesetManager::OnDeleteUserRulesetFile() {
   if (!base::FeatureList::IsEnabled(kSafeBrowsingSubresourceFilter)) {
     return;
   }
-
-  base::FilePath user_easylist_file = GetOhosAdblockEasylistFilePath();
-
-  // Rewrite easylist version to default in SharedPreference.
-  // Rewrite sharedpreference only can be called in UI thread.
-  content::GetUIThreadTaskRunner({base::TaskPriority::HIGHEST})
-      ->PostTask(FROM_HERE, base::BindOnce(&SetUserAdBlockEasylistVersion, 0L));
-
-  LOG(INFO) << kLogTag << "On delete ruleset file and try to regenerate from"
-            << user_easylist_file.value();
-
-  if (!base::PathExists(user_easylist_file)) {
-    LOG(INFO) << kLogTag
-              << "Easylist file does not exist:" << user_easylist_file.value();
-    return;
-  }
-
-  std::vector<base::FilePath> easylists;
-  easylists.push_back(user_easylist_file);
 
   ::subresource_filter::UserIndexedRulesetVersion most_recently_indexed_version(
       subresource_filter::kSafeBrowsingUserRulesetConfig.filter_tag);
@@ -304,8 +293,13 @@ void UserAdblockRulesetManager::OnDeleteUserRulesetFile() {
     base::StringToInt64(most_recently_indexed_version.content_version,
                         &content_version);
   }
+
+  if (last_user_easylist_.empty()) {
+    return;
+  }
+
   sequenced_task_runner_->PostTaskAndReplyWithResult(
-      FROM_HERE, base::BindOnce(&UserUpdateRuleset, easylists, content_version),
+      FROM_HERE, base::BindOnce(&UserUpdateRuleset, last_user_easylist_, content_version),
       base::BindOnce(&OnUpdateUserRulesetFinished));
 }
 
@@ -318,6 +312,7 @@ void UserAdblockRulesetManager::UserEasyListFileUpdated(
   if (!base::FeatureList::IsEnabled(kSafeBrowsingSubresourceFilter)) {
     return;
   }
+  last_user_easylist_ = easylists;
   sequenced_task_runner_->PostTaskAndReplyWithResult(
       FROM_HERE, base::BindOnce(&UserUpdateRuleset, easylists, version),
       base::BindOnce(&OnUpdateUserRulesetFinished));

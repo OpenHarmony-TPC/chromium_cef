@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_EXT_H_
 #pragma once
 
+#include "base/memory/raw_ptr.h"
 #include "build/build_config.h"
 #include "cef/include/cef_base.h"
 #include "cef/libcef/browser/browser_contents_delegate.h"
@@ -33,17 +34,21 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   void OnRefreshAccessedHistoryEx(CefRefPtr<CefFrame> frame,
                                   const GURL& url,
-                                  bool isReload) override {
-    OnRefreshAccessedHistory(frame, url, isReload);
+                                  bool isReload,
+                                  bool isMainFrame) override {
+    OnRefreshAccessedHistory(frame, url, isReload, isMainFrame);
   }
   void OnRefreshAccessedHistory(CefRefPtr<CefFrame> frame,
                                 const GURL& url,
-                                bool isReload);
+                                bool isReload,
+                                bool isMainFrame);
 
   void NavigationStateChanged(content::WebContents* source,
                               content::InvalidateTypes changed_flags) override;
   void OnLoadStarted(CefRefPtr<CefFrame> frame, const CefString& url);
   void OnLoadFinished(CefRefPtr<CefFrame> frame, const CefString& url);
+
+  static bool IsPrerendering(const CefRefPtr<CefFrameHostImpl> frame);
 #endif
 
 #if BUILDFLAG(ARKWEB_WPT)
@@ -76,13 +81,6 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
 #endif  // ARKWEB_NETWORK_BASE
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void WebExtensionUpdateTab(
-      int32_t tab_id,
-      const NWebExtensionTabUpdateProperties* update_properties) override;
-
-#endif
-
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void RequestPointerLock(content::WebContents* web_contents,
                           bool user_gesture,
@@ -113,7 +111,7 @@ private:
   // Timestamp when the user last successfully escaped from a lock request.
   base::TimeTicks last_user_escape_time_;
 
-  content::WebContents* tab_with_exclusive_access_ = nullptr;
+  raw_ptr<content::WebContents> tab_with_exclusive_access_ = nullptr;
 #endif
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   bool did_synthesize_page_load_ = false;

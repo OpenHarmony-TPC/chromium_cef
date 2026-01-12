@@ -24,6 +24,10 @@
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "ohos_nweb/src/capi/arkweb_error_code.h"
+#endif
+
 namespace blink {
 class WebFrame;
 class WebNode;
@@ -99,6 +103,12 @@ class CefBrowserImpl : public virtual CefBrowser,
   bool NeedToFireBeforeUnloadOrUnloadEvents() override { return false; }
   void DispatchBeforeUnload() override {}
 #endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  int PrerenderPage(const CefString& url,
+                    const CefString& additional_headers) override{ return ARKWEB_INIT_ERROR; };
+  void CancelAllPrerendering() override{};
+#endif
 
  private:
   // ID of the browser that this RenderView is associated with. During loading

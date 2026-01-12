@@ -151,20 +151,12 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     int clickCount) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
-    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
     return;
   }
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
-#endif
-  CefMouseEvent mouseEvent = event;
-  cef_browser_platform_delegate_osr_utils_->AdjustMouseClickCoordinates(view, mouseEvent);
+
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
-      mouseEvent, type, mouseUp, clickCount);
+      event, type, mouseUp, clickCount);
   view->SendMouseEvent(web_event);
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingOnMouseClick(view, event);
-#endif
 }
 
 void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
@@ -172,17 +164,11 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     bool mouseLeave) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
-    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
     return;
   }
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
-#endif
 
-  CefMouseEvent mouseEvent = event;
-  cef_browser_platform_delegate_osr_utils_->AdjustMouseMoveCoordinates(view, mouseEvent);
   blink::WebMouseEvent web_event =
-      native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
+      native_delegate_->TranslateWebMoveEvent(event, mouseLeave);
   view->SendMouseEvent(web_event);
 }
 
@@ -197,7 +183,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
   }
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view , event);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 #endif
 
   blink::WebMouseWheelEvent web_event =
@@ -300,6 +286,12 @@ bool CefBrowserPlatformDelegateOsr::IsHidden() const {
   }
   return true;
 }
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void CefBrowserPlatformDelegateOsr::EvictFrameBackBuffersWhenNWebWasHidden() {
+  cef_browser_platform_delegate_osr_utils_->EvictFrameBackBuffersWhenNWebWasHidden();
+}
+#endif
 
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
@@ -461,6 +453,12 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
       web_contents->GetInputEventRouter()->GetRenderWidgetHostViewInputAtPoint(
           web_contents->GetRenderViewHost()->GetWidget()->GetView(),
           gfx::PointF(client_pt), &transformed_pt);
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  if (!view) {
+    LOG(WARNING) << "DragDrop dragover, get view failed!!";
+    return;
+  }
+#endif
   auto* target_rwh = content::RenderWidgetHostImpl::From(
       static_cast<content::RenderWidgetHostViewBase*>(view)
           ->GetRenderWidgetHost());

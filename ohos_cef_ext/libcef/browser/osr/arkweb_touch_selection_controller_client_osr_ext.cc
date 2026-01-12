@@ -54,7 +54,7 @@ constexpr int kSelectHandleMoveDelayMixInMs = 400;
 #if BUILDFLAG(ARKWEB_MENU)
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
     QM_EDITFLAG_CAN_ELLIPSIS, QM_EDITFLAG_CAN_CUT, QM_EDITFLAG_CAN_COPY,
-    QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL};
+    QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL, QM_EDITFLAG_CAN_AUTOFILL};
 
 void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
                              CefTouchHandleState& state) {
@@ -103,6 +103,8 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
       orientation = CEF_HORIZONTAL_ALIGNMENT_UNDEFINED;
   }
   state.orientation = orientation;
+
+  state.is_dragging = handle->IsActive();
 }
 #endif  // BUILDFLAG(ARKWEB_MENU)
 }  // namespace
@@ -157,6 +159,7 @@ bool ArkWebTouchSelectionControllerClientOSRExt::HandleContextMenu(
     return false;
   }
 #endif
+  LOG(INFO) << "HandleContextMenu IsQuickMenuAvailable:"<<IsQuickMenuAvailable();
   if ((params.source_type == ui::mojom::MenuSourceType::kLongPress ||
        params.source_type == ui::mojom::MenuSourceType::kLongTap) &&
       params.is_editable && params.selection_text.empty() &&
@@ -259,6 +262,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyTouchSelectionChanged(
     ConvertTouchHandleState(
         controller->AsTouchSelectionControllerExt()->GetEndSelectionHandle(),
         end_selection_handle);
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()
+        ->OnClippedSelectionBoundsChanged(clipped_selection_bounds_,
+                                          need_report);
     rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnTouchSelectionChanged(
         insert_handle, start_selection_handle, end_selection_handle,
         need_report);
@@ -289,7 +295,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event)
             << ", handles_hidden_by_selection_ui = "
-            << handles_hidden_by_selection_ui_;
+            << handles_hidden_by_selection_ui_
+            << ", quick_menu_requested_ = "
+            << quick_menu_requested_;
 #else
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
 #endif
@@ -311,36 +319,44 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       quick_menu_requested_ = true;
       NotifyTouchSelectionChanged(false);
       UpdateQuickMenu();
-      rwhv_->ResetGestureDetection(false);
+      {
+        auto rwhvOSRExt = rwhv_->AsArkWebRenderWidgetHostViewOSRExt();
+        if (rwhvOSRExt &&
+            rwhvOSRExt->GetGestureProvider().GetCurrentDownEvent()) {
+          rwhv_->ResetGestureDetection(false);
+        }
+      }
       break;
     case ui::INSERTION_HANDLE_SHOWN:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      AsArkWebTouchSelectionControllerClientOSRExt()->ClearSpecialSelectedTagTemporarily();
       isSelectAll_ = false;
+      isCopy_ = false;
 #endif // ARKWEB_MENU_HANDLE
       if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
             rwhv_->browser_impl()->AsAlloyBrowserHostImplExt()->GetTouchInsertHandleMenuShow();
       }
+      LOG(INFO) << "OnSelectionEvent INSERTION_HANDLE_SHOWN quick_menu_requested_ " << quick_menu_requested_;
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
-        if (controller &&
+        if (controller && !controller->AsTouchSelectionControllerExt()->IsTapEvent() &&
             controller->AsTouchSelectionControllerExt()->IsLongPressEvent()) {
           if (auto client = browser->client()) {
             if (auto render = client->GetRenderHandler()) {
-              render->StartVibraFeedback("longPress.light");
               controller->AsTouchSelectionControllerExt()
                   ->ResetLongPressEvent();
             }
           }
+          ShowQuickMenu();
         }
-        ShowQuickMenu();
       }
-      rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isCopy_ = false;
@@ -348,15 +364,12 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       quick_menu_requested_ = false;
       NotifyTouchSelectionChanged(true);
       UpdateQuickMenu();
-      AsArkWebTouchSelectionControllerClientOSRExt()->ClearSpecialSelectedTagTemporarily();
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
-      if (isCopy_) {
-        NotifyTouchSelectionChanged(true);
-      }
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
       if (controller && controller->AsTouchSelectionControllerExt()
@@ -368,14 +381,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       if (isCopy_) {
-        LOG(INFO) << "Current Need Show QuickMenu After Drag Handle.";
-        handle_drag_in_progress_ = false;
-        quick_menu_running_ = true;
-        UpdateQuickMenu();
         isCopy_ = false;
-        browser->web_contents()->SetShowingContextMenu(true);
+        ShowQuickMenu();
       }
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
 #if BUILDFLAG(ARKWEB_MENU)
@@ -405,6 +415,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       if (quick_menu_requested_) {
         quick_menu_requested_ = false;
       }
+      [[fallthrough]];
     case ui::SELECTION_HANDLES_MOVED:
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
       if (handles_hidden_by_selection_ui_) {
@@ -645,6 +656,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ChangeVisibilityOfQuickMenu() {
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
   if (isCopy_) {
     isCopy_ = false;
+    ShowQuickMenu();
     return;
   }
 #endif // ARKWEB_MENU_HANDLEs
@@ -657,6 +669,21 @@ void ArkWebTouchSelectionControllerClientOSRExt::ChangeVisibilityOfQuickMenu() {
     return;
   }
   handler->ChangeVisibilityOfQuickMenu();
+}
+
+bool ArkWebTouchSelectionControllerClientOSRExt::IsQuickMenuShow() {
+  if (!rwhv_) {
+    return false;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return false;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return false;
+  }
+  return handler->IsQuickMenuShow();
 }
 #endif
 
@@ -683,14 +710,31 @@ void ArkWebTouchSelectionControllerClientOSRExt::
     auto browser = rwhv_->browser_impl();
     if (browser && browser->client()) {
       auto handler = browser->client()->GetContextMenuHandler();
-      if (handler) {
+      if (isCopy_ && !hide_handles && handler) {
+        isCopy_ = false;
+        ShowQuickMenu();
+        LOG(INFO) << "HideHandleAndQuickMenuIfNecessary ShowQuickMenu.";
+      } else if (handler) {
         handler->HideHandleAndQuickMenuIfNecessary(hide_handles);
       }
     }
   }
 }
-#endif
 
+bool ArkWebTouchSelectionControllerClientOSRExt::IsShowHandle() {
+  if (!rwhv_) {
+    return false;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (browser && browser->client()) {
+    auto handler = browser->client()->GetContextMenuHandler();
+    if (handler) {
+      return handler->IsShowHandle();
+    }
+  }
+  return false;
+}
+#endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
 void ArkWebTouchSelectionControllerClientOSRExt::SelectionTextNotEmpty(
     bool has_selection) {
@@ -798,6 +842,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     bottom_right.SetToMin(client_bounds.bottom_right());
 #if !BUILDFLAG(ARKWEB_CLIPBOARD)
     if (origin.x() > bottom_right.x() || origin.y() > bottom_right.y()) {
+      LOG(INFO) << "ShowQuickMenu return origin.x() > bottom_right.x() " << origin.x() > bottom_right.x();
+                << "origin.y() > bottom_right.y() " << origin.y() > bottom_right.y();
       return;
     }
 #endif  // !BUILDFLAG(ARKWEB_CLIPBOARD)
@@ -829,14 +875,13 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     if (controller) {
       isLongPressSelectionActive = controller->AsTouchSelectionControllerExt()
                                        ->IsLongPressDragSelectionActive();
-      LOG(INFO) << "The selection long press active is "
-                << isLongPressSelectionActive << ", clipped_selection_bounds:"
-                << clipped_selection_bounds_.ToString();
+      LOG(INFO) << "The selection long press active is " << isLongPressSelectionActive;
     }
 #if BUILDFLAG(ARKWEB_MENU)
-    handler->SetHandleVisibleCallback([this](bool isVisible = true) {
-      this->quick_menu_requested_ = isVisible;
-    });
+    auto handle_visible_callback = base::BindRepeating(
+        &ArkWebTouchSelectionControllerClientOSRExt::SetQuickMenuRequested,
+        weak_ptr_factory_.GetWeakPtr());
+    handler->SetHandleVisibleCallback(handle_visible_callback);
 #endif
     if (!handler->AsCefContextMenuHandlerExt()->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
@@ -859,6 +904,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
         }
       }
       CloseQuickMenu();
+      LOG(INFO) << "Show Handle Quick Menu Failed";
 #endif  // BUILDFLAG(ARKWEB_VIBRATE)
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     } else {
@@ -950,6 +996,10 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
       }
       return false;
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_MENU)
+    case QM_EDITFLAG_CAN_AUTOFILL:
+      return true;
+#endif  // BUILDFLAG(ARKWEB_MENU)
     default:
       return false;
   }
@@ -1007,7 +1057,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
     case QM_EDITFLAG_CAN_COPY:
       host_delegate->Copy();
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      browser->web_contents()->SetShowingContextMenu(false);
       isCopy_ = true;
 #endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_NAVIGATION)
@@ -1038,6 +1087,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
       browser->web_contents()->CollapseSelection();
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_PDF)
+      if (is_pdf_document_.load()) {
+        active_client_->ClearTextSelection();
+      }
+#endif  // BUILDFLAG(ARKWEB_PDF)
       break;
   }
 }
@@ -1055,4 +1109,44 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyShowMagnifier() {
     }
   }
 }
+
+void ArkWebTouchSelectionControllerClientOSRExt::
+    ConvertClientClippedSelectionBounds(gfx::Rect& clipped_selection_bounds) {
+  if(rwhv_ && rwhv_->AsArkWebRenderWidgetHostViewOSRExt()) {
+    CefRect converted_rect(
+        clipped_selection_bounds.x(), clipped_selection_bounds.y(),
+        clipped_selection_bounds.width(), clipped_selection_bounds.height());
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnSelectAreaChanged(
+        converted_rect, true);
+    clipped_selection_bounds = {converted_rect.x, converted_rect.y,
+                                converted_rect.width, converted_rect.height};
+  }
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::SetQuickMenuRequested(bool is_visible)
+{
+  quick_menu_requested_ = is_visible;
+}
 #endif
+
+#if BUILDFLAG(ARKWEB_PDF)
+void ArkWebTouchSelectionControllerClientOSRExt::ResetResponsePendingInputEvent()
+{
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
+  if (controller) {
+    controller->AsTouchSelectionControllerExt()->ResetResponsePendingInputEvent();
+  }
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::SetIsPdfDocument(bool is_pdf_document)
+{
+  is_pdf_document_.store(is_pdf_document);
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::OnScaleChanged(float new_page_scale_factor) {
+  if (!is_pdf_document_) {
+    return;
+  }
+  active_client_->OnScaleChanged(new_page_scale_factor);
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)

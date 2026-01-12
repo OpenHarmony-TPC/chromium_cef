@@ -415,6 +415,34 @@ typedef struct _cef_native_embed_data_t {
 } cef_native_embed_data_t;
 
 ///
+// Param status.
+///
+typedef enum {
+  PARAM_ADD = 0,
+  PARAM_UPDATE = 1,
+  PARAM_DELETE = 2,
+} cef_native_param_status_t;
+
+///
+// Structure native param item.
+///
+typedef struct _cef_native_param_item_t {
+  cef_native_param_status_t status;
+  std::string id;
+  std::string name;
+  std::string value;
+} cef_native_param_item_t;
+
+///
+// Structure native param data.
+///
+typedef struct _cef_native_param_data_t {
+  std::string embedId;
+  std::string objectAttributeId;
+  std::vector<cef_native_param_item_t> paramItems;
+} cef_native_param_data_t;
+
+///
 // Touch type.
 ///
 typedef enum {

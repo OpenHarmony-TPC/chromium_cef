@@ -15,6 +15,11 @@
 
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "content/browser/renderer_host/frame_tree.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
 content::GlobalRenderFrameHostId
 CefBrowserInfo::GetLastDeleteSpeculativeRFHId() {
@@ -25,4 +30,20 @@ content::GlobalRenderFrameHostToken
 CefBrowserInfo::GetLastDeleteSpeculativeRFHToken() {
   return last_delete_speculative_rfh_token_;
 }
+
+bool CefBrowserInfo::IsPrerendering(content::RenderFrameHost* host) {
+  // Prerendering is only supported when NwebEx is enabled.
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+      ::switches::kEnableNwebEx)) {
+    return false;
+  }
+
+  if (!host) {
+    return false;
+  }
+
+  return static_cast<content::RenderFrameHostImpl*>(host)
+          ->frame_tree()->is_prerendering();
+}
+
 #endif

@@ -7,6 +7,7 @@
 
 #include "arkweb/build/features/features.h"
 #include "base/task/current_thread.h"
+#include "base/hash/hash.h"
 #include "cef/libcef/browser/image_impl.h"
 #include "cef/libcef/browser/osr/osr_accessibility_util.h"
 #include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
@@ -38,6 +39,7 @@
 
 namespace {
 const base::TimeDelta kPictureInPictureDelta = base::Seconds(15);
+const base::TimeDelta kPictureInPicturePauseDelta = base::Milliseconds(10);
 }
 #endif
 
@@ -163,10 +165,12 @@ void CefBrowserPlatformDelegateOsrExt::OnShowAutofillPopup(
     }
 #endif
 
-    LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
-              << ", y: " << element_bounds.y()
-              << ", element_bounds width: " << element_bounds.width()
-              << ", element_bounds height:" << element_bounds.height();
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(INFO) << "element is screen bounds x:" << element_bounds.x()
+                       << ", y: " << element_bounds.y()
+                       << ", element_bounds width: " << element_bounds.width()
+                       << ", element_bounds height:" << element_bounds.height();
+#endif
 
     handler->AsArkDialogHandler()->OnShowAutofillPopup(
         browser_->GetBrowser(),
@@ -196,12 +200,7 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchpadFlingEvent(
     return;
   }
 
-  blink::WebGestureEvent fling_cancel =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_cancel.data.fling_start.target_viewport = false;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-      fling_cancel);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 
   blink::WebGestureEvent fling_start =
       native_delegate_->TranslateTouchpadFlingEvent(event);
@@ -250,7 +249,11 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchEventList(
     } else if (event_adjust.type == CEF_TET_CANCELLED) {
       shrink_viewport_height_ = 0;
     }
-    event_adjust.y -= shrink_viewport_height_;
+    if (event_adjust.from_overlay) {
+      event_adjust.y -= view->GetShrinkViewportHeight();
+    } else {
+      event_adjust.y -= shrink_viewport_height_;
+    }
     if (event_adjust.type == CEF_TET_RELEASED) {
       shrink_viewport_height_ = 0;
     }
@@ -290,6 +293,13 @@ void CefBrowserPlatformDelegateOsrExt::UpdateSecurityLayer(bool isNeedSecurityLa
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {
     view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateSecurityLayer(isNeedSecurityLayer);
+  }
+}
+
+void CefBrowserPlatformDelegateOsrExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
   }
 }
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -455,6 +465,20 @@ void CefBrowserPlatformDelegateOsrExt::SetNativeInnerWeb(bool isInnerWeb) {
     view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeInnerWeb(isInnerWeb);
   }
 }
+
+void CefBrowserPlatformDelegateOsrExt::SetEnableCustomVideoPlayer(bool flag){
+  custom_video_player_enable_ = flag;
+}
+
+void CefBrowserPlatformDelegateOsrExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data)
+{
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedObjectParamChange(
+        native_param_data);
+  }
+}
 #endif
 #if BUILDFLAG(ARKWEB_AI)
 void CefBrowserPlatformDelegateOsrExt::OnTextSelected(bool flag)
@@ -493,13 +517,6 @@ std::string CefBrowserPlatformDelegateOsrExt::GetDataDetectorSelectText()
     return view->AsArkWebRenderWidgetHostViewOSRExt()->GetDataDetectorSelectText();
   }
   return std::string();
-}
-
-void CefBrowserPlatformDelegateOsrExt::OnDataDetectorSelectText()
-{
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnDataDetectorSelectText();
-  }
 }
 #endif
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -716,9 +733,10 @@ void CefBrowserPlatformDelegateOsrExt::SetPipNativeWindow(
     int child_id,
     int frame_routing_id,
     cef_native_window_t window) {
-  LOG(INFO) << __func__ << " " << window << " delegate_id:"
-            << delegate_id << " child:" << child_id << " frame_routing_id:"
-			<< frame_routing_id;
+  LOG(INFO) << __func__
+            << " [hash: "<< std::hex << base::FastHash(base::byte_span_from_ref(window)) << "]"
+            << " delegate_id:" << delegate_id << " child:" << child_id
+            << " frame_routing_id:" << frame_routing_id;
   if (window == nullptr) {
     LOG(ERROR) << "Pip window is nullptr";
     return;
@@ -757,8 +775,9 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
     int event) {
   content::WebContentsImpl* web_contents_impl =
       static_cast<content::WebContentsImpl*>(web_contents_);
-
-  if (!web_contents_impl) {
+  LOG(INFO) << "Pip " << __func__ << " " << delegate_id << " " << child_id
+            << " " << frame_routing_id << " event:" << event;
+  if (!web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
     return;
   }
   bool status = false;
@@ -766,45 +785,114 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
                                                 child_id,
                                                 frame_routing_id,
                                                 status);
-  if (status) {
-    LOG(INFO) << "Pip event:" << status; 
-    auto observer = web_contents_impl->media_web_contents_observer();
-    if (observer) {
-      switch(event) {
-      case content::PIP_STATE_PAUSE:
-        observer->GetMediaPlayerRemote(it)->PipDown(false);
-        observer->GetMediaPlayerRemote(it)->RequestPause(false);
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        break;
-      case content::PIP_STATE_PLAY:
-        observer->GetMediaPlayerRemote(it)->PipDown(false);
-        observer->GetMediaPlayerRemote(it)->RequestPlay();
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        break;
-      case content::PIP_STATE_FAST_FORWARD:
-        observer->GetMediaPlayerRemote(it)->SetPlaybackRate(1.5);
-        observer->GetMediaPlayerRemote(it)->RequestSeekForward(kPictureInPictureDelta);
-        break;
-      case content::PIP_STATE_FAST_BACKWARD:
-        observer->GetMediaPlayerRemote(it)->SetPlaybackRate(1.5);
-        observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
-        break;
-      case content::PIP_STATE_EXIT:
-        observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
-        observer->GetMediaPlayerRemote(it)->RequestPause(false);
-        break;
-      case content::PIP_STATE_RESTORE:
-        observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
-        observer->GetMediaPlayerRemote(it)->RequestPlay();
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        break;
-      case content::PIP_STATE_RESIZE:
-        observer->GetMediaPlayerRemote(it)->NotifyPipResize();
-        break;
-      default:
-        LOG(INFO) << "Pip other event:" << event;
-      }
+  auto observer = web_contents_impl->media_web_contents_observer();
+  if (!status || !observer || !observer->GetMediaPlayerRemote(it)) {
+    LOG(ERROR) << "Pip cann't find mediaplayer status or observer is null.";
+    return;
+  }
+  switch(event) {
+    case content::PIP_STATE_PAUSE:
+      observer->GetMediaPlayerRemote(it)->PipDown(false);
+      observer->GetMediaPlayerRemote(it)->RequestPause(false);
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
+    case content::PIP_STATE_PLAY:
+      observer->GetMediaPlayerRemote(it)->PipDown(false);
+      observer->GetMediaPlayerRemote(it)->RequestPlay();
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
+    case content::PIP_STATE_FAST_FORWARD:
+      observer->GetMediaPlayerRemote(it)->RequestSeekForward(kPictureInPictureDelta);
+      break;
+    case content::PIP_STATE_FAST_BACKWARD:
+      observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
+      break;
+    case content::PIP_STATE_EXIT: {
+      PipExit(delegate_id, child_id, frame_routing_id, observer, web_contents_impl, it);
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
     }
+    case content::PIP_STATE_PAGE_CLOSE: {
+      observer->GetMediaPlayerRemote(it)->RequestMute(true);
+      observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
+      observer->GetMediaPlayerRemote(it)->RequestPause(false);
+      web_contents_impl->AsWebContentsImplExt()->SetUpdateSurface(false);
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(content::PIP_STATE_EXIT);
+      break;
+    }
+    case content::PIP_STATE_RESTORE:
+      observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
+      observer->GetMediaPlayerRemote(it)->PipRequestPlay();
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      web_contents_impl->AsWebContentsImplExt()->SetUpdateSurface(false);
+      break;
+    case content::PIP_STATE_RESIZE:
+      observer->GetMediaPlayerRemote(it)->NotifyPipResize();
+      break;
+    default:
+      LOG(INFO) << "Pip other event:" << event;
+  }
+}
+
+void CefBrowserPlatformDelegateOsrExt::PipExit(
+    int delegate_id,
+    int child_id,
+    int frame_routing_id,
+    content::MediaWebContentsObserver* observer,
+    content::WebContentsImpl* web_contents_impl,
+    content::MediaPlayerId& id) {
+  delegate_id_ = delegate_id;
+  child_id_ = child_id;
+  frame_routing_id_ = frame_routing_id;
+  if (!observer || !observer->GetMediaPlayerRemote(id) ||
+      !web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
+    LOG(ERROR) << "observer is null";
+    return;
+  }
+  observer->GetMediaPlayerRemote(id)->RequestExitPictureInPicture();
+  if (!web_contents_impl->IsFullscreen() &&
+      !web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface()) {
+    observer->GetMediaPlayerRemote(id)->RequestPause(false);
+  }
+  else if ((web_contents_impl->IsFullscreen() ||
+       web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface())) {
+    observer->GetMediaPlayerRemote(id)->PipRequestPlay();
+  }
+  else if (!web_contents_impl->IsFullscreen() &&
+       web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface()) {
+    base::TimeDelta duration = kPictureInPicturePauseDelta;
+    if (!pause_timer_) {
+       pause_timer_ = std::make_unique<base::OneShotTimer>();
+    }
+    pause_timer_->Start(FROM_HERE, duration, this,
+                        &CefBrowserPlatformDelegateOsrExt::Pause);
+  } else {
+    LOG(ERROR) << "PipExit error";
+  }
+  web_contents_impl->AsWebContentsImplExt()->SetUpdateSurface(false);
+}
+
+void CefBrowserPlatformDelegateOsrExt::Pause() {
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+  if (!web_contents_impl) {
+    LOG(ERROR) << "Pip " << __func__ << " " << delegate_id_
+               << " " << child_id_ << " " << frame_routing_id_;
+    return;
+  }
+  bool status = false;
+  auto it = web_contents_impl->AsWebContentsImplExt()->GetMediaPlayerId(
+      delegate_id_, child_id_, frame_routing_id_, status);
+  if (status && !web_contents_impl->IsFullscreen()) {
+    auto observer = web_contents_impl->media_web_contents_observer();
+    if (!observer || !observer->GetMediaPlayerRemote(it)) {
+      LOG(ERROR) << "Pip get media_web_contents_observer is null";
+      return;
+    }
+    observer->GetMediaPlayerRemote(it)->RequestPause(false);
+  } else {
+    LOG(ERROR) << "Pip cann't find mediaplayer: " << delegate_id_
+               << " " << child_id_ << " " << frame_routing_id_;
   }
 }
 #endif
@@ -814,3 +902,127 @@ CefRefPtr<CefDragData> CefBrowserPlatformDelegateOsrExt::GetDropData() {
   return last_drag_data_;
 }
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PDF)
+void CefBrowserPlatformDelegateOsrExt::OnPdfScrollAtBottom(const std::string& url) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnPdfScrollAtBottom(url);
+  }
+}
+
+void CefBrowserPlatformDelegateOsrExt::OnPdfLoadEvent(int32_t result, const std::string& url) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnPdfLoadEvent(result, url);
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+void CefBrowserPlatformDelegateOsrExt::OnMediaCastEnter() {
+  LOG(INFO) << "CefBrowserPlatformDelegateOsrExt::OnMediaCastEnter";
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnMediaCastEnter();
+  }
+}
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool CefBrowserPlatformDelegateOsrExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  if (!browser_ || !browser_->GetClient().get() ||
+      !browser_->GetClient()->AsArkWebClient().get()) {
+    LOG(ERROR) << "has nullptr, default return true";
+    return true;
+  }
+  return browser_->GetClient()->AsArkWebClient()->OnStartBackgroundTask(
+      type, message);
+}
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+SkColor CefBrowserPlatformDelegateOsrExt::GetBackgroundColor() const {
+  if (background_color_) {
+    return background_color_.value();
+  }
+  return CefBrowserPlatformDelegateOsr::GetBackgroundColor();
+}
+
+void CefBrowserPlatformDelegateOsrExt::UpdateBackgroundColor(SkColor color) {
+  background_color_ = color;
+}
+#endif  // ARKWEB_BACKGROUND_COLOR
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void CefBrowserPlatformDelegateOsrExt::SendMouseClickEvent(
+    const CefMouseEvent& event,
+    CefBrowserHost::MouseButtonType type,
+    bool mouseUp,
+    int clickCount) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
+    return;
+  }
+
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+  cef_browser_platform_delegate_osr_utils_->SetEnableCustomVideoPlayer(view);
+#endif
+
+  CefMouseEvent mouseEvent = event;
+  blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
+      mouseEvent, type, mouseUp, clickCount);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseEventCoordinates(view, mouseEvent, web_event);
+#endif
+
+  view->SendMouseEvent(web_event);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingOnMouseClick(view, event);
+#endif
+}
+
+void CefBrowserPlatformDelegateOsrExt::SendMouseMoveEvent(
+    const CefMouseEvent& event,
+    bool mouseLeave) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
+    return;
+  }
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+#endif
+
+  CefMouseEvent mouseEvent = event;
+  blink::WebMouseEvent web_event =
+      native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseEventCoordinates(view, mouseEvent, web_event);
+#endif
+  view->SendMouseEvent(web_event);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+void CefBrowserPlatformDelegateOsrExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+
+  if (handler.get()) {
+    handler->AsArkDialogHandler()->OnDocumentEndReady(
+        CefString(frameInfo.id), CefString(frameInfo.parentId));
+  }
+}
+#endif

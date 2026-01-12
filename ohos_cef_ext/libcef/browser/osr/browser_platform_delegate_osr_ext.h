@@ -9,6 +9,9 @@
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
 #include "content/browser/web_contents/web_contents_impl.h"
 #endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
+#if BUILDFLAG(ARKWEB_PIP)
+#include "base/timer/timer.h"
+#endif  // BUILDFLAG(ARKWEB_PIP)
 
 class CefBrowserPlatformDelegateOsrExt : public CefBrowserPlatformDelegateOsr
 {
@@ -58,6 +61,12 @@ public:
                             float centerY) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) override;
+  void SendMouseClickEvent(const CefMouseEvent& event,
+                           CefBrowserHost::MouseButtonType type,
+                           bool mouseUp,
+                           int clickCount) override;
+  void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
   void SetBypassVsyncCondition(int32_t condition) override;
@@ -86,6 +95,9 @@ public:
   void OnNativeEmbedVisibilityChange(const std::string& embed_id,
                                      bool visibility) override;
   void SetNativeInnerWeb(bool isInnerWeb) override;
+  void SetEnableCustomVideoPlayer(bool flag) override;
+  void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -94,7 +106,6 @@ public:
   void OnFoldStatusChanged(uint32_t foldStatus) override;
   float GetPageScaleFactor() override;
   std::string GetDataDetectorSelectText() override;
-  void OnDataDetectorSelectText() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -160,11 +171,39 @@ public:
                     int child_id,
                     int frame_routing_id,
                     int event) override;
+  void Pause();
+  void PipExit(int delegate_id,
+               int child_id,int frame_routing_id,
+               content::MediaWebContentsObserver* observer,
+               content::WebContentsImpl* web_contents_impl,
+               content::MediaPlayerId& id);
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   CefRefPtr<CefDragData> GetDropData() override;
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_PDF)
+  void OnPdfScrollAtBottom(const std::string& url) override;
+  void OnPdfLoadEvent(int32_t result, const std::string& url) override;
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  void OnMediaCastEnter() override;
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  SkColor GetBackgroundColor() const override;
+  void UpdateBackgroundColor(SkColor color) override;
+#endif  // ARKWEB_BACKGROUND_COLOR
+
+#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
+  void OnDocumentEndReady(const FrameInfos& frameInfo) override;
+#endif
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(
@@ -190,7 +229,18 @@ protected:
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   bool native_embed_mode_ = false;
   bool isInnerWeb_ = false;
+  bool custom_video_player_enable_ = false;
 #endif
+#if BUILDFLAG(ARKWEB_PIP)
+  int delegate_id_ = 0;
+  int child_id_ = 0;
+  int frame_routing_id_ = 0;
+  std::unique_ptr<base::OneShotTimer> pause_timer_;
+  SEQUENCE_CHECKER(sequence_checker_);
+#endif  // BUILDFLAG(ARKWEB_PIP)
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  std::optional<SkColor> background_color_;
+#endif  // ARKWEB_BACKGROUND_COLOR
 };
  
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_EXT_H_

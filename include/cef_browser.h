@@ -52,6 +52,7 @@
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 class CefDevToolsMessageHandlerDelegate;
+struct CefOpenDevToolsExtOpt;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 class CefBrowserHost;
@@ -223,6 +224,21 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void DispatchBeforeUnload() = 0;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender Page.
+  ///
+  /*--cef()--*/
+  virtual int PrerenderPage(const CefString& url,
+                            const CefString& additional_headers) = 0;
+ 
+  ///
+  /// Cancel All Prerendering.
+  ///
+  /*--cef()--*/
+  virtual void CancelAllPrerendering() = 0;
+#endif
 };
 
 ///
@@ -619,6 +635,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at) = 0;
+
+  ///
+  /// Opend DevTools with frontend_browser.
+  ///
+  virtual void ShowDevToolsWithByPb(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at,
+      const CefOpenDevToolsExtOpt& ext_opt) = 0;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///
@@ -1111,6 +1136,40 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
                             int child_id,
                             int frame_routing_id,
                             int event) = 0;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender Page.
+  ///
+  /*--cef()--*/
+  virtual int PrerenderPage(const CefString& url,
+                            const CefString& additional_headers) = 0;
+  ///
+  /// Cancel All Prerendering.
+  ///
+  /*--cef()--*/
+  virtual void CancelAllPrerendering() = 0;
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  ///
+  /// Set blank screen detection config.
+  ///
+  /*--cef()--*/
+  virtual void SetBlankScreenDetectionConfig(
+      bool enable,
+      const std::vector<double> &detectionTiming,
+      const std::vector<int32_t> &detectionMethods,
+      int32_t contentfulNodesCountThreshold) = 0;
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+  ///
+  /// Set focus by position.
+  ///
+  /*--cef()--*/
+  virtual bool SetFocusByPosition(float x, float y) = 0;
+#endif // defined(OHOS_INPUT_EVENTS)
+#endif
 };
 
 #include "ohos_cef_ext/include/arkweb_browser_ext.h"

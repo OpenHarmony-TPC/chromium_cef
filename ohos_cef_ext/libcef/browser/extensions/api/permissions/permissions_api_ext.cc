@@ -16,6 +16,7 @@
 #include <codecvt>
 #include <locale>
 
+#include "base/check_is_test.h"
 #include "base/logging.h"
 #include "chrome/browser/extensions/api/permissions/permissions_api.h"
 #include "chrome/browser/extensions/chrome_extension_function_details.h"
@@ -33,16 +34,35 @@
 
 namespace extensions {
 
+namespace {
 const char kBlockedByEnterprisePolicy[] =
     "Permissions are blocked by enterprise policy.";
 
 const char kNotInManifestPermissionsError[] =
     "Only permissions specified in the manifest may be requested.";
 
+const char kUserGestureRequiredError[] =
+    "This function must be called during a user gesture";
+
+bool ignore_user_gesture_for_tests = false;
+}  // namespace
+
 using permissions_api_helpers::UnpackPermissionSetResult;
+
+// static
+void PermissionsRequestFunction::SetIgnoreUserGestureForTests(
+    bool ignore) {
+  CHECK_IS_TEST();
+  ignore_user_gesture_for_tests = ignore;
+}
 
 ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   LOG(INFO) << "begin to request permissions";
+
+  if (!user_gesture() && !ignore_user_gesture_for_tests &&
+      extension_->location() != mojom::ManifestLocation::kComponent) {
+    return RespondNow(Error(kUserGestureRequiredError));
+  }
 
   gfx::NativeWindow native_window =
       ChromeExtensionFunctionDetails(this).GetNativeWindowForUI();
@@ -61,6 +81,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
           &error);
 
   if (!unpack_result) {
+    LOG(INFO) << "failed to unpack permission";
     return RespondNow(Error(std::move(error)));
   }
 
@@ -68,10 +89,12 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   // in the manifest.
   if (!unpack_result->unlisted_apis.empty() ||
       !unpack_result->unlisted_hosts.is_empty()) {
+    LOG(INFO) << "permission is not in the manifest";
     return RespondNow(Error(kNotInManifestPermissionsError));
   }
 
   if (!unpack_result->restricted_file_scheme_patterns.is_empty()) {
+    LOG(INFO) << "file scheme patterns is not support";
     return RespondNow(Error(
         "Extension must have file access enabled to request '*'.",
         unpack_result->restricted_file_scheme_patterns.begin()->GetAsString()));
@@ -117,6 +140,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
 
   // If all permissions are already active, nothing left to do.
   if (total_new_permissions->IsEmpty()) {
+    LOG(INFO) << "no new permission needs to be applied";
     constexpr bool granted = true;
     return RespondNow(WithArguments(granted));
   }
@@ -125,6 +149,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   // enterprise policy.
   if (!ExtensionManagementFactory::GetForBrowserContext(browser_context())
            ->IsPermissionSetAllowed(extension(), *total_new_permissions)) {
+    LOG(INFO) << "permissions are blocked by enterprise policy";
     return RespondNow(Error(kBlockedByEnterprisePolicy));
   }
 
@@ -163,6 +188,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
       extension_->location() == mojom::ManifestLocation::kComponent) {
     OnInstallPromptDone(ExtensionInstallPrompt::DoneCallbackPayload(
         ExtensionInstallPrompt::Result::ACCEPTED));
+    LOG(INFO) << "has no warnings and granted permissions";
     return did_respond() ? AlreadyResponded() : RespondLater();
   }
 
@@ -247,6 +273,10 @@ void PermissionsRequestFunction::OnGetPromptData(
   if (0 < data->permissionCount) {
     data->permissions = (NWebExtensionPermission*)calloc(
         data->permissionCount, sizeof(NWebExtensionPermission));
+    if (!data->permissions) {
+      return;
+    }
+
     for (uint32_t i = 0; i < data->permissionCount; i++) {
       std::string permission =
           std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>()

@@ -46,6 +46,7 @@ void OhosInterceptCallbackWrapper::ContinueLoad(
 bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
     CefRefPtr<CefBrowserHostBase> browser,
     network::ResourceRequest* request,
+    const GURL& main_frame_url,
     bool* allow) {
 #if BUILDFLAG(ARKWEB_ITP)
   if (*allow == true) {
@@ -53,8 +54,8 @@ bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
     if (itp_cookies_enabled && request) {
       bool third_party_cookie_access_policy =
           ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
-              ->AllowGetCookies(*request,
-                                GetWebContentsLastCommittedURL(browser));
+              ->AllowGetCookies(*request, main_frame_url);
+      LOG(DEBUG) << "ITP Allow Get Cookies: " << third_party_cookie_access_policy;
       if (!third_party_cookie_access_policy) {
         ReportITPResult(browser, *request);
         *allow = false;
@@ -98,7 +99,7 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::OnHttpError(
     bool has_user_gesture,
     CefRefPtr<CefResponse> error_response) {
   CEF_REQUIRE_UIT();
-  if (!browser) {
+  if (!browser || !browser->GetHost()) {
     return;
   }
   CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
@@ -116,30 +117,14 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::OnHttpError(
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 void ArkWebInterceptedRequestHandlerWrapperHelper::GetSettingOfNetHelper(
+    const GURL& url,
     CefRefPtr<CefBrowserHostBase> browser,
     struct NetHelperSetting& setting) {
   CEF_REQUIRE_UIT();
   if (!browser) {
-    // set the default value
-    setting.file_access = false;
-    setting.block_network = false;
-    setting.cache_mode = 0;
-#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-    setting.disallow_sandbox_file_access_from_file_url = false;
-#endif
-    setting.file_access_dirs_list = std::vector<std::string>();
     return;
   }
-  setting.file_access = browser->AsArkWebBrowserHostExtImpl()->GetFileAccess();
-  setting.block_network =
-      browser->AsArkWebBrowserHostExtImpl()->GetBlockNetwork();
-  setting.cache_mode = browser->AsArkWebBrowserHostExtImpl()->GetCacheMode();
-#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-  setting.disallow_sandbox_file_access_from_file_url =
-      browser->AsArkWebBrowserHostExtImpl()->GetDisallowSandboxFileAccessFromFileUrl();
-#endif
-  setting.file_access_dirs_list =
-      browser->AsArkWebBrowserHostExtImpl()->GetGrantFileAccessDirs();
+  browser->AsArkWebBrowserHostExtImpl()->GetSettingOfNetHelper(url, setting);
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
@@ -178,6 +163,30 @@ GURL ArkWebInterceptedRequestHandlerWrapperHelper::
   return browser->AsArkWebBrowserHostExtImpl()->GetLastCommittedURL();
 }
 #endif  // BUILDFLAG(ARKWEB_ITP)
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigation(
+    CefRefPtr<CefBrowserHostBase> browser,
+    const std::string& original_url,
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) {
+  if (!browser || !browser->GetHost()) {
+    return "";
+  }
+
+  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
+  if (!client) {
+    return "";
+  }
+
+  CefRefPtr<ArkWebLoadHandlerExt> load_handler = client->GetLoadHandler();
+  if (!load_handler) {
+    return "";
+  }
+  return load_handler->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_ITP)
 void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
@@ -229,7 +238,8 @@ void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                                 transition_type);
       load_handler->OnLoadStarted(frame, request->GetURL());
     }
-    load_handler->OnLoadErrorWithRequest(request, request->IsMainFrame(),
+    load_handler->OnLoadErrorWithRequest(request, frame,
+                                         request->IsMainFrame(),
                                          has_user_gesture, error_code,
                                          net::ErrorToShortString(error_code));
     // To use OuterMostMainFrame.
