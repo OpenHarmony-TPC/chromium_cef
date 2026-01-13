@@ -491,7 +491,7 @@ void CefFrameHostImpl::SendJavaScript(const std::u16string& jsCode,
 }
 
 void CefFrameHostImpl::MaybeSendDidStopLoading() {
-if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(IS_ARKWEB)
   auto* rfh = content::RenderFrameHost::FromID(rfh_global_id_);
 #else
   auto rfh = GetRenderFrameHost();
