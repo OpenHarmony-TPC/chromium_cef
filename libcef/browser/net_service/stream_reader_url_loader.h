@@ -200,7 +200,9 @@ class StreamReaderURLLoader : public network::mojom::URLLoader {
   bool need_client_callback_ = false;
   bool got_client_callback_ = false;
 
-  raw_ptr<StreamReaderURLLoaderUtils> loader_utils_;
+#if BUILDFLAG(IS_ARKWEB)
+  std::unique_ptr<StreamReaderURLLoaderUtils> loader_utils_;
+#endif
   base::WeakPtrFactory<StreamReaderURLLoader> weak_factory_;
 };
 
