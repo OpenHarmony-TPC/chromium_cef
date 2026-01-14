@@ -17,6 +17,22 @@
 
 namespace extensions {
 
+class SessionsGetDevicesFunction : public ExtensionFunction {
+ protected:
+  ~SessionsGetDevicesFunction() override {}
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("sessions.getDevices", SESSIONS_GETDEVICES)
+ 
+ private:
+  static void OnGetDevices(
+      const base::WeakPtr<SessionsGetDevicesFunction>& function,
+      std::vector<NWebExtensionSessionsDevice>& devices,
+      const std::optional<std::string>& error);
+  bool is_calling_ = false;
+  base::WeakPtrFactory<SessionsGetDevicesFunction> weak_ptr_factory_{
+      this};
+};
+
 class SessionsGetRecentlyClosedFunction : public ExtensionFunction {
  protected:
   ~SessionsGetRecentlyClosedFunction() override {}

@@ -26,6 +26,7 @@ namespace extensions {
 
 namespace {
 
+namespace GetDevices = api::sessions::GetDevices;
 namespace GetRecentlyClosed = api::sessions::GetRecentlyClosed;
 namespace Restore = api::sessions::Restore;
 
@@ -76,7 +77,97 @@ base::Value::List NWebSessionsToValue(
   return to_value_result;
 }
 
+base::Value::Dict NWebSessionsDeviceToValue(NWebExtensionSessionsDevice& device,
+                                            const ExtensionFunction* function) {
+  base::Value::Dict to_value_result;
+ 
+  to_value_result.Set("deviceName", device.device_name);
+ 
+  base::Value::List sessions_list;
+  for (auto& session : device.sessions) {
+    sessions_list.Append(NWebSessionToValue(session, function));
+  }
+  to_value_result.Set("sessions", std::move(sessions_list));
+ 
+  return to_value_result;
+}
+ 
+base::Value::List NWebSessionsDevicesToValue(
+    std::vector<NWebExtensionSessionsDevice>& devices,
+    const ExtensionFunction* function) {
+  base::Value::List to_value_result;
+ 
+  to_value_result.reserve(devices.size());
+  for (auto& device : devices) {
+    to_value_result.Append(NWebSessionsDeviceToValue(device, function));
+  }
+ 
+  return to_value_result;
+}
+
 }  // namespace
+
+ExtensionFunction::ResponseAction SessionsGetDevicesFunction::Run() {
+  std::optional<GetDevices::Params> params = GetDevices::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  if (params->filter && params->filter->max_results) {
+    EXTENSION_FUNCTION_VALIDATE(*params->filter->max_results >= 0 &&
+        *params->filter->max_results <= api::sessions::MAX_SESSION_RESULTS);
+  }
+ 
+  NWebExtensionSessionsGetDevicesParams get_params;
+  if (params->filter) {
+    get_params.filter.emplace();
+    if (params->filter->max_results) {
+      get_params.filter->max_results = *params->filter->max_results;
+    }
+  }
+  get_params.context = OHOS::NWeb::GetExtensionFunctionContext(
+      extension_id(), browser_context(), include_incognito_information());
+ 
+  is_calling_ = true;
+  OHOS::NWeb::NWebExtensionSessionsHandlerDelegate::GetDevices(
+      get_params, base::BindRepeating(&OnGetDevices,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  is_calling_ = false;
+ 
+  if (did_respond()) {
+    return AlreadyResponded();
+  } else {
+    AddRef();
+    return RespondLater();
+  }
+}
+ 
+// static
+void SessionsGetDevicesFunction::OnGetDevices(
+    const base::WeakPtr<SessionsGetDevicesFunction>& function,
+    std::vector<NWebExtensionSessionsDevice>& devices,
+    const std::optional<std::string>& error) {
+  DCHECK(function);
+  if (!function) {
+    LOG(ERROR) << "empty GetDevicesFunction called back";
+    return;
+  }
+ 
+  if (error && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
+  } else {
+    if (devices.empty()) {
+      LOG(ERROR) << "GetDevices called back with neither devices nor "
+                    "error msg";
+      function->Respond(function->WithArguments(base::Value::List()));
+    } else {
+      function->Respond(function->WithArguments(
+          NWebSessionsDevicesToValue(devices, function.get())));
+    }
+  }
+ 
+  if (!function->is_calling_) {
+    LOG(INFO) << "GetDevicesFunction release";
+    function->Release();
+  }
+}
 
 ExtensionFunction::ResponseAction SessionsGetRecentlyClosedFunction::Run() {
   std::optional<GetRecentlyClosed::Params> params =
