@@ -3680,26 +3680,25 @@ CefString ArkWebBrowserHostExtImpl::GetCustomUserAgent() {
 }
 #endif  // BUILDFLAG(ARKWEB_USERAGENT)
 
-  // Follow-up Processing
-// #if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
-// void ArkWebBrowserHostExtImpl::FindEx(const CefString& searchText,
-//                                       bool forward,
-//                                       bool matchCase,
-//                                       bool findNext,
-//                                       bool newSession) {
-//   if (!CEF_CURRENTLY_ON_UIT()) {
-//     CEF_POST_TASK(CEF_UIT, base::BindOnce(&ArkWebBrowserHostExtImpl::FindEx,
-//                                           this, searchText, forward, matchCase,
-//                                           findNext, newSession));
-//     return;
-//   }
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
+void ArkWebBrowserHostExtImpl::FindEx(const CefString& searchText,
+                                      bool forward,
+                                      bool matchCase,
+                                      bool findNext,
+                                      bool newSession) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&ArkWebBrowserHostExtImpl::FindEx,
+                                          this, searchText, forward, matchCase,
+                                          findNext, newSession));
+    return;
+  }
 
-//   if (platform_delegate_) {
-//     platform_delegate_->Find(searchText, forward, matchCase, findNext,
-//                              newSession);
-//   }
-// }
-// #endif
+  if (platform_delegate_) {
+    // Call the base class Find method with newSession parameter
+    Find(searchText, forward, matchCase, findNext, newSession);
+  }
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 CefRefPtr<CefDownloadItem> ArkWebBrowserHostExtImpl::GetDownloadItem(

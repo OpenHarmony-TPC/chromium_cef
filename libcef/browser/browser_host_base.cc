@@ -663,11 +663,21 @@ void CefBrowserHostBase::PrintToPDF(const CefString& path,
 void CefBrowserHostBase::Find(const CefString& searchText,
                               bool forward,
                               bool matchCase,
-                              bool findNext) {
+                              bool findNext
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
+                              ,
+                              bool newSession
+#endif
+) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefBrowserHostBase::Find, this, searchText,
-                                 forward, matchCase, findNext));
+                                 forward, matchCase, findNext
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
+                                 ,
+                                 newSession
+#endif
+                                 ));
     return;
   }
 

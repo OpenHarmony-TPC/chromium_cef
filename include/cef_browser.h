@@ -602,7 +602,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   virtual void Find(const CefString& searchText,
                     bool forward,
                     bool matchCase,
-                    bool findNext) = 0;
+                    bool findNext
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
+                    ,
+                    bool newSession = false
+#endif
+) = 0;
 
   ///
   /// Cancel all searches that are currently going on.

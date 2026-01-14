@@ -295,7 +295,12 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext) override;
+            bool findNext
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
+            ,
+            bool newSession = false
+#endif
+) override;
   void StopFinding(bool clearSelection) override;
   void ShowDevTools(const CefWindowInfo& windowInfo,
                     CefRefPtr<CefClient> client,
