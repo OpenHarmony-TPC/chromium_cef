@@ -248,4 +248,17 @@ void CefBrowserPlatformDelegateOsrUtils::EvictFrameBackBuffersWhenNWebWasHidden(
     web_contents->EvictFrameBackBuffersWhenNWebWasHidden();
   }
 }
+
+void CefBrowserPlatformDelegateOsrUtils::SetIsOfflineWebComponent() {
+  LOG(DEBUG) << "CefBrowserPlatformDelegateOsrUtils::SetIsOfflineWebComponent";
+  if (cefBrowserPlatformDelegateOsr == nullptr) {
+    return;
+  }
+  // The WebContentsImpl will notify the OSR view.
+  content::WebContentsImpl* web_contents =
+    static_cast<content::WebContentsImpl*>(cefBrowserPlatformDelegateOsr->web_contents_);
+  if (web_contents) {
+    web_contents->SetIsOfflineWebComponent();
+  }
+}
 #endif

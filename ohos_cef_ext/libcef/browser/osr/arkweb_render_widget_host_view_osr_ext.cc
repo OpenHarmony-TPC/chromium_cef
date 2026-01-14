@@ -515,6 +515,20 @@ void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive(bool is_inactive) {
+  TRACE_EVENT0("base", "ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive");
+
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
+    ui::Compositor* compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
+      browser_impl_->GetAcceleratedWidget(is_popup_));
+    if (compositor) {
+      compositor->Utils()->SetIsOfflineWebComponentInactive(is_inactive);
+    }
+  }
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
 void ArkWebRenderWidgetHostViewOSRExt::OnTouchMove() {
   if(pointer_state_.GetPointerCount() == 0 || isBoosting_ == true) {

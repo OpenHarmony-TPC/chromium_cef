@@ -112,6 +112,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
 
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
   void EvictFrameBackBuffersWhenNWebWasHidden() override;
+  void SetIsOfflineWebComponent() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)

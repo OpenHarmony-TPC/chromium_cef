@@ -291,6 +291,10 @@ bool CefBrowserPlatformDelegateOsr::IsHidden() const {
 void CefBrowserPlatformDelegateOsr::EvictFrameBackBuffersWhenNWebWasHidden() {
   cef_browser_platform_delegate_osr_utils_->EvictFrameBackBuffersWhenNWebWasHidden();
 }
+
+void CefBrowserPlatformDelegateOsr::SetIsOfflineWebComponent() {
+  cef_browser_platform_delegate_osr_utils_->SetIsOfflineWebComponent();
+}
 #endif
 
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {

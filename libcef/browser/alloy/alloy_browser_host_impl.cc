@@ -466,6 +466,10 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
 void AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden() {
   implUtils->EvictFrameBackBuffersWhenNWebWasHidden();
 }
+
+void AlloyBrowserHostImpl::SetIsOfflineWebComponent() {
+  implUtils->SetIsOfflineWebComponent();
+}
 #endif
 
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_for_include.cc"

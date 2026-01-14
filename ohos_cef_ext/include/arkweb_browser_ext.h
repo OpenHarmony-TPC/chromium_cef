@@ -1500,6 +1500,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Evict frame back buffers when nweb was hidden
   ///
   virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+
+  ///
+  /// Set is offline web Component.
+  ///
+  virtual void SetIsOfflineWebComponent() {}
 #endif
 };
 
