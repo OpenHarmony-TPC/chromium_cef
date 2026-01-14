@@ -1316,7 +1316,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   if (!OHOS::NWeb::NWebExtensionTabCefDelegate::HasExtensionListener()) {
     if (params->update_properties.url.has_value()) {
       std::string updated_url = *params->update_properties.url;
-      if (!UpdateURL(updated_url, tab_id, &error_)) {
+      if (!UpdateURL(web_contents_, updated_url, tab_id, &error_)) {
         return RespondNow(Error(error));
       }
     }
