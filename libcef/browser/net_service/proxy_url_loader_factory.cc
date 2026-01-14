@@ -445,6 +445,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   bool is_download_{false};
+  bool is_triggered_by_download_ {false};
 #endif
 
 #if BUILDFLAG(ARKWEB_COOKIE)
@@ -545,6 +546,9 @@ InterceptedRequest::InterceptedRequest(
       &InterceptedRequest::OnURLLoaderClientError, base::Unretained(this)));
   proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderError, base::Unretained(this)));
+#if BUILDFLAG (ARKWEB_EX_DOWNLOAD)
+  is_triggered_by_download_ = request.is_triggered_by_download;
+#endif
 }
 
 InterceptedRequest::~InterceptedRequest() {

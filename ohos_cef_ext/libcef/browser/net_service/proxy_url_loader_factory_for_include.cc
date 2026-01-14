@@ -160,14 +160,17 @@ void InterceptedRequest::OnTransferDataWithSharedMemory(
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 void InterceptedRequest::CancelRequest(int error_code) {
+  LOG(INFO) << __func__ <<": is_download_: " << is_download_
+            << ", is_triggered_by_download_: " << is_triggered_by_download_;
+  if (is_download_ || is_triggered_by_download_)
+    return;
+
   // Donn't cancel network requests. Network requests should be canceled by the
   // holder instead of following the tab, such as serviceworker download, etc.
   // Although the tab is destroyed, the request still needs to be maintained.
-  if (!is_download_) {
-    network::URLLoaderCompletionStatus status(error_code);
-    status.abort_due_to_cef_browser_destroyed = true;
-    SendErrorStatusAndCompleteImmediately(status);
-  }
+  network::URLLoaderCompletionStatus status(error_code);
+  status.abort_due_to_cef_browser_destroyed = true;
+  SendErrorStatusAndCompleteImmediately(status);
 }
 #endif  //  ARKWEB_EX_DOWNLOAD
 
