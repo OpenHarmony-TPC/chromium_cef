@@ -291,8 +291,26 @@ void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
 
   auto frame_info = it->second;
 
+#if BUILDFLAG(IS_ARKWEB)
+  if (browser_.get()) {
+    auto request_context = browser_->request_context();
+    if (request_context) {
+      request_context->OnRenderFrameDeleted(global_id,
+                                            frame_info->is_main_frame_);
+    } else {
+      LOG(ERROR) << "CefBrowserInfo::RemoveFrame: request_context is NULL"
+                 << "GlobalId: " << global_id
+                 << ", MainFrame: " << frame_info->is_main_frame_;
+    }
+  } else {
+    LOG(ERROR) << "CefBrowserInfo::RemoveFrame: request_context is NULL"
+               << "GlobalId: " << global_id;
+  }
+#else
   browser_->request_context()->OnRenderFrameDeleted(global_id,
                                                     frame_info->is_main_frame_);
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
   if (frame_info->is_speculative_) {
     last_delete_speculative_rfh_id_ = global_id;
