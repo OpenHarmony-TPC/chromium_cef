@@ -60,7 +60,7 @@ CPU架构：x86_64
    
    # 拉取chromium-cef对应的ohos chromium代码
    $ cd [path_to_chromium]   # 切换目录到chromium根目录
-   $ repo init -u  https://gitcode.com/openharmony-tpc/manifest.git -b pc_chromium_132 -m pc_chromium_132_20251106.xml --no-repo-verify
+   $ repo init -u  https://gitcode.com/openharmony-tpc/manifest.git -b pc_chromium_132 -m pc_chromium_132_20251204.xml --no-repo-verify
    $ repo sync -c  # 可以执行多次，以确保代码全部拉取成功
    $ repo forall -c 'git lfs pull'  # 可执行多次，以确保大文件全部拉取成功
    
