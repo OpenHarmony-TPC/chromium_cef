@@ -21,6 +21,9 @@
 
 namespace extensions {
 
+typedef OHOS::NWeb::NWebExtensionReadingListCefDelegate
+    NWebExtensionReadingListCefDelegate;
+
 //////////////////////////////////////////////////////////////////////////////
 /////////////////////// ReadingListAddEntryFunction //////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -37,14 +40,22 @@ ExtensionFunction::ResponseAction ReadingListAddEntryFunction::Run() {
     return RespondNow(Error(reading_list_api_constants::kInvalidURLError));
   }
 
+  has_call_function_ = false;
   OHOS::NWeb::NWebAddEntryOptions options = {
       .hasBeenRead = params->entry.has_been_read,
       .url = params->entry.url,
       .title = params->entry.title};
-  if (OHOS::NWeb::NWebExtensionReadingListCefDelegate::GetInstance().AddEntry(
-          options,
-          base::BindRepeating(&ReadingListAddEntryFunction::OnEntryAdded,
-                              weak_ptr_factory_.GetWeakPtr()))) {
+  bool result = NWebExtensionReadingListCefDelegate::GetInstance().AddEntry(
+      options, base::BindRepeating(&ReadingListAddEntryFunction::OnEntryAdded,
+                                   weak_ptr_factory_.GetWeakPtr()));
+
+  has_call_function_ = true;
+  if (did_respond()) {
+    LOG(INFO) << "add entry has been respond";
+    return AlreadyResponded();
+  }
+
+  if (result) {
     AddRef();
     return RespondLater();
   }
@@ -59,7 +70,9 @@ void ReadingListAddEntryFunction::DoEntryAdded(const std::string& error) {
     Respond(Error(error));
   }
 
-  Release();
+  if (has_call_function_) {
+    Release();
+  }
 }
 
 // static
@@ -89,11 +102,19 @@ ExtensionFunction::ResponseAction ReadingListRemoveEntryFunction::Run() {
     return RespondNow(Error(reading_list_api_constants::kInvalidURLError));
   }
 
-  if (OHOS::NWeb::NWebExtensionReadingListCefDelegate::GetInstance()
-          .RemoveEntry(params->info.url,
-                       base::BindRepeating(
-                           &ReadingListRemoveEntryFunction::OnEntryRemoved,
-                           weak_ptr_factory_.GetWeakPtr()))) {
+  has_call_function_ = false;
+  bool result = NWebExtensionReadingListCefDelegate::GetInstance().RemoveEntry(
+      params->info.url,
+      base::BindRepeating(&ReadingListRemoveEntryFunction::OnEntryRemoved,
+                          weak_ptr_factory_.GetWeakPtr()));
+
+  has_call_function_ = true;
+  if (did_respond()) {
+    LOG(INFO) << "remove entry has been respond";
+    return AlreadyResponded();
+  }
+
+  if (result) {
     AddRef();
     return RespondLater();
   }
@@ -108,7 +129,9 @@ void ReadingListRemoveEntryFunction::DoEntryRemoved(const std::string& error) {
     Respond(Error(error));
   }
 
-  Release();
+  if (has_call_function_) {
+    Release();
+  }
 }
 
 // static
@@ -143,15 +166,23 @@ ExtensionFunction::ResponseAction ReadingListUpdateEntryFunction::Run() {
     return RespondNow(Error(reading_list_api_constants::kInvalidURLError));
   }
 
+  has_call_function_ = false;
   OHOS::NWeb::NWebUpdateEntryOptions options = {
       .url = params->info.url,
       .hasBeenRead = params->info.has_been_read,
       .title = params->info.title};
-  if (OHOS::NWeb::NWebExtensionReadingListCefDelegate::GetInstance()
-          .UpdateEntry(options,
-                       base::BindRepeating(
-                           &ReadingListUpdateEntryFunction::OnEntryUpdated,
-                           weak_ptr_factory_.GetWeakPtr()))) {
+  bool result = NWebExtensionReadingListCefDelegate::GetInstance().UpdateEntry(
+      options,
+      base::BindRepeating(&ReadingListUpdateEntryFunction::OnEntryUpdated,
+                          weak_ptr_factory_.GetWeakPtr()));
+
+  has_call_function_ = true;
+  if (did_respond()) {
+    LOG(INFO) << "update entry has been respond";
+    return AlreadyResponded();
+  }
+
+  if (result) {
     AddRef();
     return RespondLater();
   }
@@ -166,7 +197,9 @@ void ReadingListUpdateEntryFunction::DoEntryUpdated(const std::string& error) {
     Respond(Error(error));
   }
 
-  Release();
+  if (has_call_function_) {
+    Release();
+  }
 }
 
 // static
@@ -198,14 +231,22 @@ ExtensionFunction::ResponseAction ReadingListQueryFunction::Run() {
     }
   }
 
+  has_call_function_ = false;
   OHOS::NWeb::NWebQueryEntryOptions options = {
       .hasBeenRead = params->info.has_been_read,
       .url = params->info.url,
       .title = params->info.title};
-  if (OHOS::NWeb::NWebExtensionReadingListCefDelegate::GetInstance().QueryEntry(
-          options,
-          base::BindRepeating(&ReadingListQueryFunction::OnEntryQueried,
-                              weak_ptr_factory_.GetWeakPtr()))) {
+  bool result = NWebExtensionReadingListCefDelegate::GetInstance().QueryEntry(
+      options, base::BindRepeating(&ReadingListQueryFunction::OnEntryQueried,
+                                   weak_ptr_factory_.GetWeakPtr()));
+
+  has_call_function_ = true;
+  if (did_respond()) {
+    LOG(INFO) << "query entry has been respond";
+    return AlreadyResponded();
+  }
+
+  if (result) {
     AddRef();
     return RespondLater();
   }
@@ -218,19 +259,20 @@ void ReadingListQueryFunction::DoEntryQueried(
     const std::vector<OHOS::NWeb::NWebReadingListEntry>& entries) {
   if (!error.empty()) {
     Respond(Error(error));
+  } else {
+    std::vector<api::reading_list::ReadingListEntry> matching_entries;
+    for (const auto& entry : entries) {
+      matching_entries.emplace_back(ParseEntry(entry));
+    }
+
+    auto response = ArgumentList(
+        api::reading_list::Query::Results::Create(std::move(matching_entries)));
+    Respond(std::move(response));
+  }
+
+  if (has_call_function_) {
     Release();
-    return;
   }
-
-  std::vector<api::reading_list::ReadingListEntry> matching_entries;
-  for (const auto& entry : entries) {
-    matching_entries.emplace_back(ParseEntry(entry));
-  }
-
-  auto response = ArgumentList(
-      api::reading_list::Query::Results::Create(std::move(matching_entries)));
-  Respond(std::move(response));
-  Release();
 }
 
 // static

@@ -34,6 +34,7 @@ class ReadingListAddEntryFunction : public ExtensionFunction {
       const base::WeakPtr<ReadingListAddEntryFunction>& function,
       const std::string& error);
 
+  bool has_call_function_ = false;
   base::WeakPtrFactory<ReadingListAddEntryFunction> weak_ptr_factory_{this};
 };
 
@@ -59,6 +60,7 @@ class ReadingListRemoveEntryFunction : public ExtensionFunction {
       const base::WeakPtr<ReadingListRemoveEntryFunction>& function,
       const std::string& error);
 
+  bool has_call_function_ = false;
   base::WeakPtrFactory<ReadingListRemoveEntryFunction> weak_ptr_factory_{this};
 };
 
@@ -84,6 +86,7 @@ class ReadingListUpdateEntryFunction : public ExtensionFunction {
       const base::WeakPtr<ReadingListUpdateEntryFunction>& function,
       const std::string& error);
 
+  bool has_call_function_ = false;
   base::WeakPtrFactory<ReadingListUpdateEntryFunction> weak_ptr_factory_{this};
 };
 
@@ -110,5 +113,6 @@ class ReadingListQueryFunction : public ExtensionFunction {
       const std::string& error,
       const std::vector<OHOS::NWeb::NWebReadingListEntry>& entries);
 
+  bool has_call_function_ = false;
   base::WeakPtrFactory<ReadingListQueryFunction> weak_ptr_factory_{this};
 };
