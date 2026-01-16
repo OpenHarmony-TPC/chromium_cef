@@ -135,7 +135,7 @@ void UpdateHostContentSettingsMap();
 
  private:
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
-  static int StartCookieTaskSync();
+  int StartCookieTaskSync();
   void FinishCookieTaskSync();
   void StartSetQos();
   void FinishSetQos();
