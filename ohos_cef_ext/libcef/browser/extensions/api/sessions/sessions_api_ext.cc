@@ -154,7 +154,7 @@ void SessionsGetDevicesFunction::OnGetDevices(
     function->Respond(function->Error(error.value()));
   } else {
     if (devices.empty()) {
-      LOG(ERROR) << "GetDevices called back with neither devices nor "
+      LOG(INFO) << "GetDevices called back with neither devices nor "
                     "error msg";
       function->Respond(function->WithArguments(base::Value::List()));
     } else {
