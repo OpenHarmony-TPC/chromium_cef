@@ -223,9 +223,8 @@ void BrowsingDataRemoverFunction::OnRemovedDownload(const base::WeakPtr<Browsing
     return;
   }
 
-  if (error) {
-    std::string errorMessage = error ? error.value() : "remove download failed";
-    function->Respond(function->Error(errorMessage));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }
@@ -244,9 +243,8 @@ void BrowsingDataRemoverFunction::OnRemovedHistory(const base::WeakPtr<BrowsingD
     return;
   }
 
-  if (error) {
-    std::string errorMessage = error ? error.value() : "remove history failed";
-    function->Respond(function->Error(errorMessage));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }

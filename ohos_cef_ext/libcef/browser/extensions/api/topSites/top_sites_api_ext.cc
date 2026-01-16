@@ -57,9 +57,8 @@ void TopSitesGetFunction::OnGet(const base::WeakPtr<TopSitesGetFunction>& functi
     return;
   }
 
-  if (error) {
-    std::string err_msg = error ? error.value() : "get failed";
-    function->Respond(function->Error(err_msg));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     base::Value::List pages_value;
     for (const auto& url : data) {
