@@ -299,6 +299,7 @@ void ArkWebBrowserHostExtImpl::ExitFullScreen() {
       "{if(document.fullscreenElement){document.exitFullscreen()}}");
   wc->GetPrimaryMainFrame()->ExecuteJavaScript(base::UTF8ToUTF16(jscode),
                                                base::NullCallback());
+  wc->NotifyRemoteExitFullScreen();
 }
 #endif  // BUILDFLAG(ARKWEB_FULLSCREEN)
 
