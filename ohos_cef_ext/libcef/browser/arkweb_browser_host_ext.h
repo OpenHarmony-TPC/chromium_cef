@@ -78,6 +78,7 @@
 #include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
+
 #if BUILDFLAG(ARKWEB_MSGPORT)
 class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
  public:
@@ -724,6 +725,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void PutUserAgent(const CefString& ua, bool from_app) override;
   CefString GetCustomUserAgent() override;
   CefString DefaultUserAgent() override;
+  void SetUserAgentMetadata(const std::string& user_agent,
+                            const blink::UserAgentMetadata& metadata) override;
+  const blink::UserAgentMetadata GetUserAgentMetadata(
+      const std::string& user_agent) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DRAG_DROP)

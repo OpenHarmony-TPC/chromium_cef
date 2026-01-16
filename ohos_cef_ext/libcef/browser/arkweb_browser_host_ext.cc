@@ -3746,6 +3746,35 @@ CefString ArkWebBrowserHostExtImpl::DefaultUserAgent() {
 CefString ArkWebBrowserHostExtImpl::GetCustomUserAgent() {
   return custom_user_agent_;
 }
+
+void ArkWebBrowserHostExtImpl::SetUserAgentMetadata(
+    const std::string& user_agent,
+    const blink::UserAgentMetadata& metadata) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return;
+  }
+  return web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
+                                                                    metadata);
+}
+
+const blink::UserAgentMetadata ArkWebBrowserHostExtImpl::GetUserAgentMetadata(
+    const std::string& user_agent) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return embedder_support::GetUserAgentMetadata();
+  }
+  return web_contents->AsWebContentsImplExt()->GetUserAgentMetadata(user_agent);
+}
+
 #endif  // BUILDFLAG(ARKWEB_USERAGENT)
 
 #if BUILDFLAG(ARKWEB_FIND_IN_PAGE)

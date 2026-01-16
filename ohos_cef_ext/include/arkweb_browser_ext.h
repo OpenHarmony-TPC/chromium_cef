@@ -52,6 +52,9 @@
 #include "arkweb/ohos_nweb/include/nweb_vault_plain_text_callback.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+#include "third_party/blink/public/common/user_agent/user_agent_metadata.h"
+#endif
 class CefClient;
 
 ///
@@ -1500,6 +1503,21 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Evict frame back buffers when nweb was hidden
   ///
   virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+#endif
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  ///
+  /// Set metaData by userAgent.
+  ///
+  virtual void SetUserAgentMetadata(const std::string& user_agent,
+                                    const blink::UserAgentMetadata& metadata){};
+
+  ///
+  /// Get userAgent by metaData.
+  ///
+  virtual const blink::UserAgentMetadata GetUserAgentMetadata(
+      const std::string& user_agent) {
+    return blink::UserAgentMetadata();
+  };
 #endif
 };
 
