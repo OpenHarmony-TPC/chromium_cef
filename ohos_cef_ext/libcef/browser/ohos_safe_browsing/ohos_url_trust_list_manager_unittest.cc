@@ -354,4 +354,298 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_009) {
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
 }
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_001) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "*.example.com",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://www.example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_002) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "Example.COM",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_003) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "www.*.com",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://www.example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_004) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "www.example.*",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://www.example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_005) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "*.*.example.com",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://sub.www.example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_006) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "*.example.com",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_007) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "EXAMPLE.COM",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_008) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "test" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://Example.COM/test");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_009) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/ddd" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb/ddd");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_010) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/ddd" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb/ccc/ddd");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_011) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_012) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb/ccc");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_013) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/xxx.txt");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_014) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/bbb/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/xxx/bbb/yyy");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_015) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/bbb/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/xxx/bbb/yyy/zzz");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_016) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/bbb/ccc" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb/ccc");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_017) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/bbb/ccc" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_018) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/*/ccc" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb/ddd/ccc");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_019) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "aaa/*/ccc" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_020) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "AAA" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_021) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "example.com",
+        "path": "AAA/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://example.com/aaa/bbb");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
 }  // namespace ohos_safe_browsing
