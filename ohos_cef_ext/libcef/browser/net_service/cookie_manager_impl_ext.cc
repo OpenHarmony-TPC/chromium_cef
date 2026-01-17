@@ -295,7 +295,7 @@ int CefCookieManagerImplExt::StartCookieTaskSync() {
 }
 
 int CefCookieManagerImplExt::StartCookieTaskSyncForLazyInit() {
-  if (set_qos_times_ >0) {
+  if (set_qos_times_ > 0) {
     set_qos_times_++;
     return -1;
   }
