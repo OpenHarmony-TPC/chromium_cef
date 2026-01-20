@@ -46,31 +46,25 @@ bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHo
     return true;
 }
 
-bool PathMatch(const std::string& rulePath, const std::string& urlPath) {
-    if (rulePath.empty()) {
-      return true;
-    }
-
-    if (urlPath.find(rulePath) != 0) {
-        return false;
-    }
-    size_t next = rulePath.size();
-    if (next < urlPath.size() && !rulePath.ends_with('/') && urlPath[next] != '/') {
-        return false;
-    }
-    return true;
+std::string FormatUrlPath(const std::string& path) {
+  std::string ret = path;
+  if (!ret.empty() && ret.back() == '/') {
+    ret.pop_back();
+  }
+  if (!ret.empty() && ret.front() != '/') {
+    ret = "/" + ret;
+  }
+  return ret;
 }
 
 bool PathMatchWithWildcard(const std::string& rulePath, const std::string& urlPath) {
-    if (rulePath.find('*') == std::string::npos) {
-        return PathMatch(rulePath, urlPath);
-    }
-
-    std::vector<std::string> rulePathParts = base::SplitString(rulePath, "/",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-    std::vector<std::string> urlPathParts = base::SplitString(urlPath, "/",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-    if (rulePath.size() > urlPath.size() || rulePathParts.size() > urlPathParts.size()) {
+    std::string formatRulePath = FormatUrlPath(rulePath);
+    std::string formatUrlPath = FormatUrlPath(urlPath);
+    std::vector<std::string> rulePathParts = base::SplitString(formatRulePath, "/",
+        base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+    std::vector<std::string> urlPathParts = base::SplitString(formatUrlPath, "/",
+        base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+    if (formatRulePath.size() > formatUrlPath.size() || rulePathParts.size() > urlPathParts.size()) {
         return false;
     }
 
@@ -81,7 +75,7 @@ bool PathMatchWithWildcard(const std::string& rulePath, const std::string& urlPa
             continue;
         }
 
-        if (rulePathParts[i] == "*" && i + 1 >= rulePathParts.size()) {
+        if (rulePathParts[i] == "*" && i >= rulePathParts.size() - 1) {
             break;
         }
 
@@ -106,7 +100,7 @@ char UrlTrustListInterface::interfaceKey;
 UrlTrustListManager::UrlTrustListManager() {}
 
 static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err, bool supportWildcard) {
-  if (supportWildcard && 
+  if (supportWildcard &&
       (urlRule.host.find('*') != std::string::npos || urlRule.path.find('*') != std::string::npos)) {
       return true;
   }
@@ -283,8 +277,15 @@ UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(const GURL& url) {
     if (rule.port > 0 && (rule.port != url.EffectiveIntPort())) {
       continue;
     }
-    if (!PathMatch(rule.path, path)) {
-      continue;
+    if (!rule.path.empty()) {
+      if (path.find(rule.path) != 0) {
+        continue;
+      }
+      size_t next = rule.path.size();
+      if (next < path.size() && !rule.path.ends_with('/') &&
+          path[next] != '/') {
+        continue;
+      }
     }
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
