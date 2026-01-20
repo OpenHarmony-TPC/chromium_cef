@@ -1554,6 +1554,13 @@ void ArkWebBrowserHostExtImpl::SetScrollable(bool enable, int scrollType) {
       static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(true);
     }
   }
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(
+      rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetScrollable(enable);
+  }
+#endif
 }
 
 void ArkWebBrowserHostExtImpl::SetOverscrollMode(int overscrollMode) {
