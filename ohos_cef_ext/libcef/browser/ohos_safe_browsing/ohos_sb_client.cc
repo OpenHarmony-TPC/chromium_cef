@@ -123,21 +123,24 @@ void SbClient::ShowBlockingPage() {
     if (blocking_cached != blocking_page_info_cache.end()) {
       SbBlockingPageInfo blocking_page_info = blocking_cached->second;
       bool is_display_block_page = false;
+      int code = blocking_page_info.info_hw_code;
       int policy = blocking_page_info.info_policy;
       OHSBThreatType block_type = blocking_page_info.info_block_type;
 
-      LOG(INFO) << "SafeBrowsing ShowBlockingPage, policy: " << policy
-                << ", block_type: " << block_type;
+      LOG(INFO) << "SafeBrowsing ShowBlockingPage, hw_code: " << code
+                << ", policy: " << policy << ", block_type: " << block_type;
 
       if (policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
         is_display_block_page = true;
         HandleChildModePolicy(block_type);
+        NotifySafeBrowsingCheckDetail(code, policy, block_type);
       }
 
       if (block_type == OHSBThreatType::THREAT_WARNING &&
           (policy == OHSBPolicyType::POLICY_DANGER_LABEL ||
            policy == OHSBPolicyType::POLICY_HALF_POPUP)) {
         NotifySafeBrowsingCheckResult(block_type);
+        NotifySafeBrowsingCheckDetail(code, policy, block_type);
         return;
       }
 
@@ -146,6 +149,7 @@ void SbClient::ShowBlockingPage() {
           block_type != OHSBThreatType::THREAT_WARNING) {
         is_display_block_page = true;
         NotifySafeBrowsingCheckResult(block_type);
+        NotifySafeBrowsingCheckDetail(code, policy, block_type);
       }
 
       if (policy != OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS &&
@@ -296,6 +300,38 @@ void SbClient::NotifySafeBrowsingCheckResult(OHSBThreatType threat_type) {
   }
   int type = static_cast<int>(threat_type);
   load_handler->AsArkWebLoadHandlerExt()->OnSafeBrowsingCheckResult(type);
+}
+
+void SbClient::NotifySafeBrowsingCheckDetail(int code,
+                                             int policy,
+                                             OHSBThreatType threat_type) {
+  if (!web_contents()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckDetail: web_contents is null";
+    return;
+  }
+  CefRefPtr<AlloyBrowserHostImpl> browser =
+      AlloyBrowserHostImpl::GetBrowserForContents(web_contents());
+  if (!browser.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckDetail: browser is null";
+    return;
+  }
+  CefRefPtr<CefClient> client = browser->GetClient();
+  if (!client.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckDetail: client is null";
+    return;
+  }
+  CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+  if (!load_handler.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckDetail: load_handler is null";
+    return;
+  }
+  int threat = static_cast<int>(threat_type);
+  if (policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS &&
+      threat_type == OHSBThreatType::THREAT_WARNING) {
+    threat = static_cast<int>(OHSBThreatType::THREAT_RISK);
+  }
+  load_handler->AsArkWebLoadHandlerExt()->OnSafeBrowsingCheckDetail(
+      code, policy, threat);
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(SbClient::BlockingPageInfo);

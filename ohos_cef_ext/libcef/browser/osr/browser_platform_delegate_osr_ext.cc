@@ -1026,3 +1026,18 @@ void CefBrowserPlatformDelegateOsrExt::OnDocumentEndReady(const FrameInfos& fram
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+void CefBrowserPlatformDelegateOsrExt::OnSafeBrowsingCheckDetail(
+    int code,
+    int policy,
+    int threat) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnSafeBrowsingCheckDetail(code, policy, threat);
+  }
+}
+#endif

@@ -204,6 +204,10 @@ public:
   void OnDocumentEndReady(const FrameInfos& frameInfo) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  void OnSafeBrowsingCheckDetail(int code, int policy, int threat) override;
+#endif
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(

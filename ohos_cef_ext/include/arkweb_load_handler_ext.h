@@ -162,6 +162,13 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
  virtual void OnMediaCastEnter() {}
 #endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
 
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  ///
+  /// Called when received website security risk check result.
+  ///
+  /*--cef()--*/
+  virtual void OnSafeBrowsingCheckDetail(int code, int policy, int threat) {}
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_
