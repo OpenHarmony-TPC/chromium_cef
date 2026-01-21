@@ -39,6 +39,7 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void SendTouchpadFlingEvent(const CefMouseEvent& event,
                                       double vx,
                                       double vy);
+  virtual void SendCancelFlingEvent(const CefMouseEvent& event);
 #endif
 
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)

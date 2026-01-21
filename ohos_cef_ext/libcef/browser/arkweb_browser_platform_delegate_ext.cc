@@ -83,6 +83,10 @@ void ArkWebCefBrowserPlatformDelegateExt::SendTouchpadFlingEvent(
     double vy) {
   NOTIMPLEMENTED();
 }
+void ArkWebCefBrowserPlatformDelegateExt::SendCancelFlingEvent(
+    const CefMouseEvent& event) {
+  NOTIMPLEMENTED();
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)

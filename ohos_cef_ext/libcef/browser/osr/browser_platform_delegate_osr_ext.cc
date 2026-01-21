@@ -213,6 +213,18 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchpadFlingEvent(
   view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
       fling_start);
 }
+
+void CefBrowserPlatformDelegateOsrExt::SendCancelFlingEvent(
+    const CefMouseEvent& event)
+{
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+ blink::WebGestureEvent fling_cancel =
+      native_delegate_->TranslateTouchpadFlingEvent(event);
+  view->AsArkWebRenderWidgetHostViewOSRExt()->SendCancelFlingEvent(fling_cancel);
+}
 #endif
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
 void CefBrowserPlatformDelegateOsrExt::NotifyScreenInfoChangedV2()

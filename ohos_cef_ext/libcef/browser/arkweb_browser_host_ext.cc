@@ -3069,6 +3069,20 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SendTouchpadFlingEvent(event, vx, vy);
   }
 }
+
+void ArkWebBrowserHostExtImpl::SendCancelFlingEvent(const CefMouseEvent& event) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::SendCancelFlingEvent, this,
+                       event));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SendCancelFlingEvent(event);
+  }
+}
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 void ArkWebBrowserHostExtImpl::PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) {
