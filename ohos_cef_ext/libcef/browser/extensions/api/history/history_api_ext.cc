@@ -381,7 +381,7 @@ void HistoryAddUrlFunction::OnHistoryAddUrl(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->NoArguments());
@@ -434,7 +434,7 @@ void HistoryDeleteUrlFunction::OnHistoryDeleteUrl(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->NoArguments());
@@ -477,7 +477,7 @@ void HistoryDeleteAllFunction::OnHistoryDeleteAll(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->NoArguments());

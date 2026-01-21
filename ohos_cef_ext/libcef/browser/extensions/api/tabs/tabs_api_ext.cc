@@ -313,7 +313,7 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {
@@ -335,7 +335,7 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
 
 void OnCreateTabForExtension(const NWebExtensionTab& tab,
                              std::optional<std::string>& error) {
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     LOG(ERROR) << "OnCreateTabForExtension create error, " << error.value();
   }
 }
@@ -455,7 +455,7 @@ void TabsDiscardFunction::OnTabDiscarded(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {
@@ -511,7 +511,7 @@ void TabsDuplicateFunction::OnTabDuplicated(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {
@@ -722,7 +722,7 @@ void TabsGroupFunction::OnTabGrouped(const base::WeakPtr<TabsGroupFunction>& fun
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->has_callback()
@@ -787,7 +787,7 @@ void TabsHighlightFunction::OnTabHighlighted(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
@@ -858,7 +858,7 @@ void TabsMoveFunction::OnTabMoved(const base::WeakPtr<TabsMoveFunction>& functio
     LOG(ERROR) << "OnTabMoved is empty!!!!";
     return;
   }
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else if (!function->has_callback()) {
     function->Respond(function->NoArguments());
@@ -1034,7 +1034,7 @@ void TabsRemoveFunction::OnTabRemoved(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
@@ -1180,7 +1180,7 @@ void TabsUngroupFunction::OnTabUngrouped(const base::WeakPtr<TabsUngroupFunction
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
@@ -1202,7 +1202,7 @@ void TabsUpdateFunction::OnTabUpdated(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {

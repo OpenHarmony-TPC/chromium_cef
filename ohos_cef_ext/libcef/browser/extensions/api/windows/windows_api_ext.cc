@@ -432,8 +432,8 @@ void WindowsCreateFunction::OnCreateWindow(const base::WeakPtr<WindowsCreateFunc
     LOG(ERROR) << "OnCreateWindow is empty!!!!";
     return;
   }
-  if (!window || error) {
-    std::string errorMessage = error? *error : "create widow fail";
+  if (!window || (error.has_value() && !error.value().empty())) {
+    std::string errorMessage = (error.has_value() && !error.value().empty())? error.value() : "create widow fail";
     function->Respond(function->Error(errorMessage));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
@@ -521,8 +521,8 @@ void WindowsUpdateFunction::OnUpdateWindow(const base::WeakPtr<WindowsUpdateFunc
     LOG(ERROR) << "OnUpdateWindow is empty!!!!";
     return;
   }
-  if (!window || error) {
-    std::string errorMessage = error? *error : "update widow fail";
+  if (!window || (error.has_value() && !error.value().empty())) {
+    std::string errorMessage = (error.has_value() && !error.value().empty())? error.value() : "update widow fail";
     function->Respond(function->Error(errorMessage));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
@@ -597,8 +597,8 @@ void WindowsRemoveFunction::OnRemoveWindow(const base::WeakPtr<WindowsRemoveFunc
     LOG(ERROR) << "OnRemoveWindow is empty!!!!";
     return;
   }
-  if (error) {
-    function->Respond(function->Error(*error));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }

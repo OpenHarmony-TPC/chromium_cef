@@ -751,8 +751,8 @@ void DownloadsSetUiOptionsFunction::SetUiOptionsCallback(
   LOG(INFO) << "DownloadsSetUiOptionsFunction::SetUiOptionsCallback error: "
             << error.value_or("not exist.");
 
-  if (error) {
-    function->Respond(function->Error(*error));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }
@@ -815,8 +815,8 @@ void DownloadsSetShelfEnabledFunction::SetShelfEnabledCallback(
   LOG(INFO) << "DownloadsSetShelfEnabledFunction::SetUiOptionsCallback error: "
             << error.value_or("not exist.");
 
-  if (error) {
-    function->Respond(function->Error(*error));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }
@@ -1106,10 +1106,10 @@ void DownloadsGetFileIconFunction::GetFileIconCallback(
     std::string iconUrl) {
   LOG(INFO) << "DownloadsGetFileIconFunction GetFileIconCallback length: "
             << iconUrl.size();
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     LOG(INFO) << "DownloadsGetFileIconFunction GetFileIconCallback error: "
               << error.value_or("not exist.");
-    function->Respond(function->Error(*error));
+    function->Respond(function->Error(error.value()));
   } else {
     if (iconUrl.size() == 0) {
       function->Respond(function->Error("Icon not found"));

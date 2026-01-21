@@ -84,7 +84,7 @@ void SearchQueryFunction::OnQuery(
     return;
   }
 
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
