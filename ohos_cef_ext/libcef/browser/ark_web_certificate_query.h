@@ -37,6 +37,7 @@ namespace certificate_query {
     const std::string& referrer,
     CertificateErrorCallback callback,
     bool default_disallow);
+int IsSslCertErrorFatal(int cert_error);
 #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
 }  // namespace certificate_query

@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "base/ohos/nweb_engine_event_logger.h"
+#include "base/ohos/nweb_engine_event_logger_code.h"
+
 namespace net_service {
 
 namespace {
@@ -188,6 +193,15 @@ void InterceptedRequest::OnHttpErrorForUIThread(
   if (!factory_->request_handler_) {
     LOG(INFO) << "request handler is invalid";
     return;
+  }
+  if (base::CommandLine::ForCurrentProcess() &&
+      base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableLoggerReport)) {
+    std::ostringstream ostr;
+    ostr << "error_code=" << error_response->GetStatus();
+    base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser,
+                                  GURL(request->GetURL().ToString()).host(),
+                                  base::ohos::kReceivedHttpError, ostr.str());
   }
   factory_->request_handler_->OnHttpError(id, request, is_main_frame,
                                           has_user_gesture, error_response);
