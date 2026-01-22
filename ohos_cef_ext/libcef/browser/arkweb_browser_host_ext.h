@@ -634,7 +634,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
   int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                CefString& detailErrMsg) override;
+      bool allowOpaqueOrigin, bool supportWildcard, CefString& detailErrMsg) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
