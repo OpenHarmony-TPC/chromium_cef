@@ -55,16 +55,8 @@ class OhPageLoadMetricsObserver
                                const GURL& currently_committed_url) override;
   void OnDidInternalNavigationAbort(
       content::NavigationHandle* navigation_handle) override;
-  void ReadyToCommitNextNavigation(
-      content::NavigationHandle* navigation_handle) override;
-  void OnDidFinishSubFrameNavigation(
-      content::NavigationHandle* navigation_handle) override;
   void OnCommitSameDocumentNavigation(
       content::NavigationHandle* navigation_handle) override;
-  void OnConnectEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnDomainLookupEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnFirstPaintAfterBackForwardCacheRestoreInPage(
       const page_load_metrics::mojom::BackForwardCacheTiming& timing,
       size_t index) override;
@@ -117,9 +109,6 @@ class OhPageLoadMetricsObserver
   void ReportBufferedMetrics(
       const page_load_metrics::mojom::PageLoadTiming& timing);
   void ReportPerformanceTiming();
-  void OnLoadedResourceLoggerReport(
-      const page_load_metrics::ExtraRequestCompleteInfo&
-          extra_request_complete_info);
 #endif
 
  private:
