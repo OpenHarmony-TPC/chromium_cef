@@ -1656,6 +1656,13 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
     ResSchedStatusAdapter status = is_hidden_
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
+
+    const base::Process& process = render_process_host->GetProcess();
+
+    if (!process.IsValid()) {
+      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus renser_process is not ready yet.";
+      return;
+    }
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
 
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
