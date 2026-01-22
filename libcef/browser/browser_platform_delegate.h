@@ -323,6 +323,8 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
   // Evict frame back buffers when nweb was hidden
   virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+  // Set is offline web Component.
+  virtual void SetIsOfflineWebComponent() {}
 #endif
 
   // Notify the browser that screen information has changed. Only used with

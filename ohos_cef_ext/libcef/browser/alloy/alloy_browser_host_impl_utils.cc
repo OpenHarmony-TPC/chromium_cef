@@ -380,4 +380,22 @@ void AlloyBrowserHostImplUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
     alloyBrowserHostImpl->platform_delegate_->EvictFrameBackBuffersWhenNWebWasHidden();
   }
 }
+
+void AlloyBrowserHostImplUtils::SetIsOfflineWebComponent() {
+  if (alloyBrowserHostImpl == nullptr) {
+    LOG(INFO) << "alloyBrowserHostImpl is nullptr";
+    return;
+  }
+  if (!alloyBrowserHostImpl->IsWindowless()) {
+    return;
+  }
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetIsOfflineWebComponent,
+                                          alloyBrowserHostImpl->AsAlloyBrowserHostImpl()));
+    return;
+  }
+  if (alloyBrowserHostImpl->platform_delegate_) {
+    alloyBrowserHostImpl->platform_delegate_->SetIsOfflineWebComponent();
+  }
+}
 #endif
