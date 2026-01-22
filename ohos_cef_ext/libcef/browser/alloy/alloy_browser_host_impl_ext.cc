@@ -2010,3 +2010,14 @@ void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+void AlloyBrowserHostImplExt::OnSafeBrowsingCheckDetail(int code,
+                                                        int policy,
+                                                        int threat) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnSafeBrowsingCheckDetail(code, policy, threat);
+  }
+}
+#endif

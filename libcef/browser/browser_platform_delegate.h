@@ -421,7 +421,9 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_MEDIA_CAST)
  virtual void OnMediaCastEnter() {}
 #endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
-
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  virtual void OnSafeBrowsingCheckDetail(int code, int policy, int threat) {}
+#endif
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
