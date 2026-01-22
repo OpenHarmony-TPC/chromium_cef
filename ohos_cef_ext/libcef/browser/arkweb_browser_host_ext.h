@@ -807,6 +807,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       const CefOpenDevToolsExtOpt& ext_opt) override;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t GetLastCommittedEntryPageTransition() override;
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;

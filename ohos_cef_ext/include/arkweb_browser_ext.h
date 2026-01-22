@@ -1465,6 +1465,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void HandleInputMethodExtendAction(int32_t action) {}
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  ///
+  /// get last committed entry's page transition
+  ///
+  virtual int32_t GetLastCommittedEntryPageTransition() {}
+#endif
+
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   ///
   /// Fill autofill data.

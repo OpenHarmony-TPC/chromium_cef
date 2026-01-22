@@ -41,6 +41,11 @@
 #include "ohos_cef_ext/libcef/browser/permission/alloy_access_query.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#endif
+
 static void StartDownloadExt(GURL& gurl,
                              content::WebContents* web_contents,
                              std::unique_ptr<download::DownloadUrlParameters>& params,
@@ -433,3 +438,27 @@ void CefBrowserHostBase::DispatchBeforeUnload() {
   GetWebContents()->DispatchBeforeUnload(false);
 }
 #endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+void CefBrowserHostBase::ReloadEx(int transition_type) {
+  auto callback = base::BindOnce(&CefBrowserHostBase::ReloadEx, this, transition_type);
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, std::move(callback));
+    return;
+  }
+ 
+  if (browser_info_->IsNavigationLocked(std::move(callback))) {
+    return;
+  }
+  bool is_nweb_ex = (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx));
+  auto wc = GetWebContents();
+  if (wc) {
+    if (transition_type > 0 && is_nweb_ex) {
+      wc->GetController().ReloadEx(content::ReloadType::NORMAL, true, transition_type);
+    } else {
+      wc->GetController().Reload(content::ReloadType::NORMAL, true);
+    }
+  }
+}
+#endif

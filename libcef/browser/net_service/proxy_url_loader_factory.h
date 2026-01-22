@@ -170,6 +170,17 @@ class InterceptedRequestHandler {
       int32_t request_id,
       base::OnceCallback<void(std::string)>) {}
 #endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  virtual void OnReceiveResponse(CefRefPtr<CefRequest> request,
+                                 bool is_request_gesture,
+                                 int transition_type,
+                                 bool is_main_frame,
+                                 bool is_redirect,
+                                 int resource_type,
+                                 CefRefPtr<CefResponse> response_info,
+                                 bool is_from_network) {}
+#endif
 };
 
 // URL Loader Factory that supports request/response interception, processing

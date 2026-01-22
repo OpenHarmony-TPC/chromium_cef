@@ -62,6 +62,11 @@
 #include "content/public/common/content_switches.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+#include "arkweb/ohos_nweb/src/nweb_url_resource_request_impl.h"
+#include "arkweb/ohos_nweb/src/cef_delegate/nweb_url_resource_response_impl.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_EX_FALLBACK_PROXY)
 #include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
 #endif
@@ -322,6 +327,18 @@ class InterceptedRequest : public network::mojom::URLLoader,
                               bool is_main_frame,
                               bool has_user_gesture,
                               CefRefPtr<CefResponse> error_response);
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  void OnReceiveResponseForUIThread(CefRefPtr<CefRequest> request,
+
+                                    bool is_request_gesture,
+                                    int transition_type,
+                                    bool is_main_frame,
+                                    bool is_redirect,
+                                    int resource_type,
+                                    CefRefPtr<CefResponse> response_info,
+                                    bool is_from_network);
 #endif
 
  private:

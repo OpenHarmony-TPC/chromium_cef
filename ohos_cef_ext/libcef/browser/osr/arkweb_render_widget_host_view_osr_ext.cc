@@ -132,6 +132,10 @@ const size_t kMaxDataDetectorTextLength = 1000;
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+#include "ui/base/page_transition_types.h"
+#endif
+
 #include "arkweb/chromium_ext/ui/compositor/compositor_utils.h"
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -2601,7 +2605,11 @@ bool ArkWebRenderWidgetHostViewOSRExt::PullToRefreshAction(
     }
     case ui::PullToRefreshAction::PULL_REFRESH: {
       if (browser_impl_ && result) {
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+        browser_impl_->ReloadEx(static_cast<int32_t>(ui::PAGE_TRANSITION_FROM_PULL_DOWN));
+#else
         browser_impl_->Reload();
+#endif
       }
       break;
     }
