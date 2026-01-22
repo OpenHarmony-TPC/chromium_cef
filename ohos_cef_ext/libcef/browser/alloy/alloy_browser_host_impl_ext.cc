@@ -1660,7 +1660,7 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
     const base::Process& process = render_process_host->GetProcess();
 
     if (!process.IsValid()) {
-      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus renser_process is not ready yet.";
+      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
       return;
     }
     base::ProcessId process_id = render_process_host->GetProcess().Pid();

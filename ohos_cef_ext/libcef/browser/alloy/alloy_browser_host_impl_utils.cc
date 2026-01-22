@@ -189,7 +189,7 @@ base::ProcessId AlloyBrowserHostImplUtils::GetRenderProcessId() {
     const base::Process& process = render_process_host->GetProcess();
 
     if (!process.IsValid()) {
-      LOG(WARNING) << "AlloyBrowserHostImplUtils::GetRenderProcessId renser_process is not ready yet.";
+      LOG(WARNING) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_process is not ready yet.";
       return 0;
     }
     return render_process_host->GetProcess().Pid();
