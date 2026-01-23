@@ -2232,7 +2232,7 @@ void ArkWebRenderWidgetHostViewOSRExt::SendCancelFlingEvent(blink::WebGestureEve
 
   blink::WebGestureEvent fling_cancel = event;
   fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  fling_cancel.SetSourceDevice(blink::WebGestureDevice::kTouchscreen);
+  fling_cancel.SetSourceDevice(blink::WebGestureDevice::kTouchpad);
   fling_cancel.data.fling_cancel.prevent_boosting = false;
   fling_cancel.data.fling_cancel.target_viewport = false;
   if (ShouldRouteEvents()) {
