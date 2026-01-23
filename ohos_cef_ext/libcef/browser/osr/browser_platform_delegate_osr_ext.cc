@@ -716,6 +716,11 @@ void CefBrowserPlatformDelegateOsrExt::OnPip(int status,
   if (handler.get()) {
     handler->OnPip(browser_->GetBrowser(), status, delegate_id, child_id,
                    frame_routing_id, width, height);
+    if (status == content::PIP_STATE_ENTER) {
+      delegate_id_enter_ = delegate_id;
+      child_id_enter_ = child_id;
+      frame_routing_id_enter_ = frame_routing_id;
+    }
   }
 }
 
@@ -725,11 +730,6 @@ void CefBrowserPlatformDelegateOsrExt::OnPipEvent(int event) {
       browser_->GetClient()->GetDialogHandler();
   if (handler.get()) {
     handler->AsArkDialogHandler()->OnPipEvent(browser_->GetBrowser(), event);
-    if (status == content::PIP_STATE_ENTER) {
-      delegate_id_enter_ = delegate_id;
-      child_id_enter_ = child_id;
-      frame_routing_id_enter_ = frame_routing_id;
-    }
   }
 }
 
