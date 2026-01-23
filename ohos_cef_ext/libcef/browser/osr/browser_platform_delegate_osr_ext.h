@@ -239,6 +239,9 @@ protected:
   int delegate_id_ = 0;
   int child_id_ = 0;
   int frame_routing_id_ = 0;
+  int delegate_id_enter_ = 0;
+  int child_id_enter_ = 0;
+  int frame_routing_id_enter_ = 0;
   std::unique_ptr<base::OneShotTimer> pause_timer_;
   SEQUENCE_CHECKER(sequence_checker_);
 #endif  // BUILDFLAG(ARKWEB_PIP)

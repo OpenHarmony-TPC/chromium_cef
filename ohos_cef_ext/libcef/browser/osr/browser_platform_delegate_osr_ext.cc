@@ -716,6 +716,11 @@ void CefBrowserPlatformDelegateOsrExt::OnPip(int status,
   if (handler.get()) {
     handler->OnPip(browser_->GetBrowser(), status, delegate_id, child_id,
                    frame_routing_id, width, height);
+    if (status == content::PIP_STATE_ENTER) {
+      delegate_id_enter_ = delegate_id;
+      child_id_enter_ = child_id;
+      frame_routing_id_enter_ = frame_routing_id;
+    }
   }
 }
 
@@ -808,6 +813,10 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
       observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
       break;
     case content::PIP_STATE_EXIT: {
+      if (delegate_id_enter_ != delegate_id || child_id_enter_ != child_id ||
+          frame_routing_id_enter_ != frame_routing_id) {
+        break;
+      }
       PipExit(delegate_id, child_id, frame_routing_id, observer, web_contents_impl, it);
       web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
       break;
