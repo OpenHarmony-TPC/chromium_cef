@@ -3060,7 +3060,7 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
-        base::BindOnce(&ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent, this,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent, weak_ptr_factory_.GetWeakPtr(),
                        event, vx, vy));
     return;
   }
@@ -3074,7 +3074,7 @@ void ArkWebBrowserHostExtImpl::SendCancelFlingEvent(const CefMouseEvent& event) 
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
-        base::BindOnce(&ArkWebBrowserHostExtImpl::SendCancelFlingEvent, this,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::SendCancelFlingEvent, weak_ptr_factory_.GetWeakPtr(),
                        event));
     return;
   }
