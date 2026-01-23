@@ -186,6 +186,12 @@ base::ProcessId AlloyBrowserHostImplUtils::GetRenderProcessId() {
       LOG(ERROR) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_process_host is null";
       return 0;
     }
+    const base::Process& process = render_process_host->GetProcess();
+
+    if (!process.IsValid()) {
+      LOG(WARNING) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_process is not ready yet.";
+      return 0;
+    }
     return render_process_host->GetProcess().Pid();
   } else {
     LOG(ERROR) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_view_host is null";
