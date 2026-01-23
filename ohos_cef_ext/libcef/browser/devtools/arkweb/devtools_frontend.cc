@@ -100,10 +100,11 @@ constexpr int kMaxLogLineLength = 1024;
 static const char kTitleFormat[] = "DevTools - %s";
 static std::string GetFrontendURL(bool can_dock) {
   LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
-  return base::StringPrintf("%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked",
-                          content::kChromeDevToolsScheme,
-                          scheme::kChromeDevToolsHost,
-                          can_dock ? "true" : "false");
+  return base::StringPrintf(
+      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked&targetType=tab",
+      content::kChromeDevToolsScheme,
+      scheme::kChromeDevToolsHost,
+      can_dock ? "true" : "false");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -489,7 +490,7 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
   // Otherwise it will call AgentHostClosed which closes the DevTools window.
   // This may happen in cases where the DevTools content fails to load.
   scoped_refptr<content::DevToolsAgentHost> agent_host =
-      content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+      content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_);
   if (agent_host != agent_host_) {
     if (agent_host_) {
       agent_host_->DetachClient(this);
