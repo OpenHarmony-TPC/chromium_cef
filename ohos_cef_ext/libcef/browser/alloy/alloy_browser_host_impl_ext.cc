@@ -1662,7 +1662,6 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
       LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
       return;
     }
-
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
 
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
