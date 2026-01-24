@@ -384,6 +384,24 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+void OnReceiveResponse(CefRefPtr<CefRequest> request,
+                       bool is_request_gesture,
+                       int transition_type,
+                       bool is_main_frame,
+                       bool is_redirect,
+                       int resource_type,
+                       CefRefPtr<CefResponse> response_info,
+                       bool is_from_network) override {
+  if (wrapper_helper_) {
+      return wrapper_helper_->OnReceiveResponse(init_state_->browser_, request,
+                                                is_request_gesture, transition_type, is_main_frame,
+                                                is_redirect, resource_type,
+                                                response_info, is_from_network);
+  }
+}
+#endif
+
 private:
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 std::unique_ptr<ArkWebInterceptedRequestHandlerWrapperHelper> wrapper_helper_;

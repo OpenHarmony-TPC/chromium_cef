@@ -169,6 +169,21 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   /*--cef()--*/
   virtual void OnSafeBrowsingCheckDetail(int code, int policy, int threat) {}
 #endif
+
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+  ///
+  /// OnReceiveResponse.
+  ///
+  /*--cef()--*/
+  virtual void OnReceiveResponse(CefRefPtr<CefRequest> request,
+                                  bool is_request_gesture,
+                                  int transition_type,
+                                  bool is_main_frame,
+                                  bool is_redirect,
+                                  int resource_type,
+                                  CefRefPtr<CefResponse> response_info,
+                                  bool is_from_network) {}
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

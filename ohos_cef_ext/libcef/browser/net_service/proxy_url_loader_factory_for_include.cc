@@ -23,7 +23,7 @@ namespace net_service {
 namespace {
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-CefRefPtr<CefResponse> ExtractHttpErrorResponse(
+CefRefPtr<CefResponse> ExtractHttpResponse(
     const net::HttpResponseHeaders* headers) {
   CefRefPtr<CefResponse> response = CefResponse::Create();
   response->SetStatus(headers->response_code());
@@ -65,6 +65,19 @@ class InterceptedRequestUtils {
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+static bool IsTargetResourceTypeValue(int resource_type) {
+  switch (resource_type) {
+    case static_cast<int>(blink::mojom::ResourceType::kMainFrame):
+    case static_cast<int>(blink::mojom::ResourceType::kSubFrame):
+    case static_cast<int>(blink::mojom::ResourceType::kXhr):
+      return true;
+    default:
+      return false;
+  }
+}
+#endif
+
   static void OnReceiveResponseExt(raw_ptr<InterceptedRequest> obj) {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
     bool must_download = content::download_utils::MustDownload(
@@ -83,7 +96,7 @@ class InterceptedRequestUtils {
       // The WebViewClient onReceivedHttpError callback will be invoked for any
       // resource (such as main page, iframe, image, etc.) with status code >= 4
       auto error_reponse =
-          ExtractHttpErrorResponse(obj->current_response_->headers.get());
+          ExtractHttpResponse(obj->current_response_->headers.get());
       CefRefPtr<ArkWebRequestImplExt> request = new ArkWebRequestImplExt();
       request->SetURL(CefString(obj->request_.url.spec()));
       request->SetMethod(CefString(obj->request_.method));
@@ -95,6 +108,27 @@ class InterceptedRequestUtils {
                                   error_reponse);
 #endif
     }
+#endif
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  bool is_target_type = IsTargetResourceTypeValue(obj->request_.resource_type);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) && 
+      obj->current_response_->headers != nullptr && is_target_type) {
+      auto response_info =
+          ExtractHttpResponse(obj->current_response_->headers.get());
+      bool is_from_network = obj->current_response_->network_accessed;
+      CefRefPtr<ArkWebRequestImplExt> new_request = new ArkWebRequestImplExt();
+      new_request->SetURL(CefString(obj->request_.url.spec()));
+      new_request->SetMethod(CefString(obj->request_.method));
+      new_request->Set(obj->request_.headers);
+      bool is_request_gesture = obj->request_.has_user_gesture;
+      new_request->SetDestination(obj->request_.destination);
+      bool is_main_frame = new_request->IsMainFrame();
+      bool is_redirect = obj->request_was_redirected_;
+      int transition_type = static_cast<int>(obj->request_.transition_type);
+      obj->OnReceiveResponseForUIThread(new_request, is_request_gesture, transition_type,
+                                        is_main_frame, is_redirect, obj->request_.resource_type,
+                                        response_info, is_from_network);
+  }
 #endif
   }
 
@@ -205,6 +239,29 @@ void InterceptedRequest::OnHttpErrorForUIThread(
   }
   factory_->request_handler_->OnHttpError(id, request, is_main_frame,
                                           has_user_gesture, error_response);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+void InterceptedRequest::OnReceiveResponseForUIThread(
+    CefRefPtr<CefRequest> request,
+    bool is_request_gesture,
+    int transition_type,
+    bool is_main_frame,
+    bool is_redirect,
+    int resource_type,
+    CefRefPtr<CefResponse> response_info,
+    bool is_from_network) {
+  if (!factory_) {
+    LOG(INFO) << "factory is invalid";
+    return;
+  }
+  if (!factory_->request_handler_) {
+    LOG(INFO) << "request handler is invalid";
+    return;
+  }
+  factory_->request_handler_->OnReceiveResponse(request, is_request_gesture, transition_type, is_main_frame,
+                                                is_redirect, resource_type, response_info, is_from_network);
 }
 #endif
 

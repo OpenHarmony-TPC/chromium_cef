@@ -333,6 +333,9 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void GoForward() override;
   bool IsLoading() override;
   void Reload() override;
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  void ReloadEx(int transition_type);
+#endif
   void ReloadIgnoreCache() override;
   void StopLoad() override;
   int GetIdentifier() override;

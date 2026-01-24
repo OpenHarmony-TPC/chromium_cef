@@ -4188,6 +4188,25 @@ void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, web_contents is null";
+    return -1;
+  }
+  content::NavigationEntry* entry =
+      web_contents->GetController().GetActiveEntry();
+
+  if (!entry) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, entry is null";
+    return -1;
+  }
+  ui::PageTransition transition = entry->GetTransitionType();
+  return static_cast<int32_t>(transition);
+}
+#endif
+
 void ArkWebBrowserHostExtImpl::HandleInputMethodExtendAction(int32_t action) {
   auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
   if (web_contents == nullptr) {
