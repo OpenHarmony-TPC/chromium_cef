@@ -120,7 +120,6 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::GetSettingOfNetHelper(
     const GURL& url,
     CefRefPtr<CefBrowserHostBase> browser,
     struct NetHelperSetting& setting) {
-  CEF_REQUIRE_UIT();
   if (!browser) {
     return;
   }
