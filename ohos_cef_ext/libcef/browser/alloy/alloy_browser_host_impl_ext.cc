@@ -1667,14 +1667,16 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
 
       ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                               nweb_id_);
-      if (!is_hidden_) {
-        ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
-                                            ResSchedSceneAdapter::VISIBLE,
-                                            nweb_id_);
-      }
     } else {
       LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
     }
+
+    if (!is_hidden_) {
+      ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
+                                          ResSchedSceneAdapter::VISIBLE,
+                                          nweb_id_);
+    }
+    
   } else {
     LOG(ERROR) << "AlloyBrowserHostImplExt::ReportWindowStatus render_view_host is null";
     return;
