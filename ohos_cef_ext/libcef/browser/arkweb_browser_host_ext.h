@@ -165,7 +165,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
   void SendTouchpadFlingEvent(const CefMouseEvent& event,
                               double vx,
-                              double vy) override;  
+                              double vy) override;
   void SendCancelFlingEvent(const CefMouseEvent& event) override;
 #endif
 
