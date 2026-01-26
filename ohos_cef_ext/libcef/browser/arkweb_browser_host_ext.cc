@@ -3758,8 +3758,8 @@ void ArkWebBrowserHostExtImpl::SetUserAgentMetadata(
                << GetNWebId();
     return;
   }
-  return web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
-                                                                    metadata);
+  web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
+                                                             metadata);
 }
 
 const blink::UserAgentMetadata ArkWebBrowserHostExtImpl::GetUserAgentMetadata(
