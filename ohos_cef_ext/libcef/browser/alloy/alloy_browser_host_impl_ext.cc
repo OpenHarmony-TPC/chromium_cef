@@ -1666,17 +1666,17 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
       InactiveUnloadOldProcess(process_id);
 #endif
       TRACE_EVENT2("base", "PopNwebForNotInitRender", "nweb_id", nweb_id_, "pid", process_id);
- 	    LOG(DEBUG) << "AlloyBrowserHostImplExt::ReportWindowStatus: Nweb: " << nweb_id_
- 	               << ", window: " << window_id_ << ", pid: " << process_id << " ,rph_unique_id: " << rph_unique_id;
- 	    RenderProcessStateHandler::GetInstance()->PopNwebForNotInitRender(rph_unique_id, nweb_id_,
+      LOG(DEBUG) << "AlloyBrowserHostImplExt::ReportWindowStatus: Nweb: " << nweb_id_
+                 << ", window: " << window_id_ << ", pid: " << process_id << " ,rph_unique_id: " << rph_unique_id;
+      RenderProcessStateHandler::GetInstance()->PopNwebForNotInitRender(rph_unique_id, nweb_id_,
  	                                                                      is_hidden_, window_id_, process_id);
       ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                                 nweb_id_);
     } else {
       LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
       TRACE_EVENT1("base", "PushNwebForNotInitRender", "nweb_id", nweb_id_);
- 	       RenderProcessStateHandler::GetInstance()->PushNwebForNotInitRender(rph_unique_id, nweb_id_,
- 	                                                                          is_hidden_, window_id_, 0);
+      RenderProcessStateHandler::GetInstance()->PushNwebForNotInitRender(rph_unique_id, nweb_id_,
+                                                                         is_hidden_, window_id_, 0);
     }
 
     if (!is_hidden_) {
