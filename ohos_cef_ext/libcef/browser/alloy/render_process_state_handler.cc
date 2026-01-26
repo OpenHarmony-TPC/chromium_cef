@@ -163,4 +163,50 @@ void RenderProcessStateHandler::InitRenderProcessState(
     }
   }
 }
+
+void RenderProcessStateHandler::PushNwebForNotInitRender(int rph_unique_id, int nweb_id,
+    bool is_to_background, uint32_t windowId, uint32_t render_process_id) {
+  std::lock_guard<std::mutex> lock(list_mutex_);
+  LOG(DEBUG) << "RenderProcessStateHandler::PushNwebForNotInitRender: nweb_id: " << nweb_id
+             << ", is_to_background: " << is_to_background
+             << ", rph_unique_id: " << rph_unique_id
+             << ", render_process_id: " << render_process_id;
+  for (auto& web_item : initial_web_component_with_render_list_) {
+    if (web_item.render_process_id == render_process_id && web_item.nweb_id == nweb_id) {
+      web_item.state = is_to_background;
+      return;
+    }
+  }
+  WebComponentWithRenderState initial_web_component =
+    {nweb_id, is_to_background, windowId, rph_unique_id, render_process_id};
+  initial_web_component_with_render_list_.push_back(initial_web_component);
+}
+
+void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int nweb_id,
+    bool is_to_background,uint32_t windowId,uint32_t render_process_id) {
+  std::lock_guard<std::mutex> lock(list_mutex_);
+  for (auto item = initial_web_component_with_render_list_.begin();
+      item != initial_web_component_with_render_list_.end();) {
+    if (item->nweb_id == nweb_id) {
+      LOG(DEBUG) << "RenderProcessStateHandler::BaseNweb: nweb_id: " << nweb_id
+                 << ", is_to_background: " << is_to_background
+                 << ", rph_unique_id: " << rph_unique_id
+                 << ", render_process_id: " << render_process_id;
+      item++;
+    } else if (item->rph_unique_id == rph_unique_id) {
+      OHOS::NWeb::ResSchedStatusAdapter status = item->state
+                                    ? OHOS::NWeb::ResSchedStatusAdapter::WEB_INACTIVE
+                                    : OHOS::NWeb::ResSchedStatusAdapter::WEB_ACTIVE;
+      OHOS::NWeb::ResSchedClientAdapter::ReportWindowStatus(status, render_process_id,
+                                                            item->windowId, item->nweb_id);
+      LOG(DEBUG) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << nweb_id
+                 << ", is_to_background: " << is_to_background
+                 << ", rph_unique_id: " << rph_unique_id
+                 << ", render_process_id: " << render_process_id;
+      item = initial_web_component_with_render_list_.erase(item);
+    } else {
+      item++;
+    }
+  }
+}
  
