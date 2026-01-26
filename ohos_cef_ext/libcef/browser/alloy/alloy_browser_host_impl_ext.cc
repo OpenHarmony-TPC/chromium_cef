@@ -1663,12 +1663,12 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
       InactiveUnloadOldProcess(process_id);
 #endif
+      ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                                nweb_id_);
     } else {
       LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
     }
 
-    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
-                                              nweb_id_);
     if (!is_hidden_) {
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
