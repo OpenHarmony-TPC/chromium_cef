@@ -15,7 +15,6 @@
 #include "base/path_service.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
-#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
 
 #if BUILDFLAG(IS_LINUX)
 #include "base/environment.h"
@@ -131,18 +130,10 @@ base::FilePath GetResourcesDir() {
 void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line) {
   const base::FilePath& user_data_path =
-#if BUILDFLAG(IS_ARKWEB)
-      command_line->GetSwitchValuePath(switches::kArkwebAppDataDir);
-#else
       GetUserDataPath(settings, command_line);
-#endif
 
 #if BUILDFLAG(IS_OHOS)
-  const base::FilePath& cache_path =
-      command_line->GetSwitchValuePath(switches::kUserCacheDir);
-
   OverrideUserDataDirExt(user_data_path, command_line);
-  OverrideCacheDirExt(cache_path);
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)

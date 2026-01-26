@@ -34,6 +34,8 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
 
 void OverrideUserDataDirExt(const base::FilePath& user_data_path,
                             const base::CommandLine* command_line) {
+  base::PathService::Override(base::DIR_CACHE,
+                              user_data_path.Append("cache/web"));
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
 #if BUILDFLAG(ARKWEB_CRASHPAD)
   // log path need to get by interface
@@ -51,10 +53,6 @@ void OverrideUserDataDirExt(const base::FilePath& user_data_path,
         << "crashpad OverrideUserDataDir, get Bundle installation dir failed";
   }
 #endif  // BUILDFLAG(ARKWEB_CRASHPAD)
-}
-
-void OverrideCacheDirExt(const base::FilePath& cache_path) {
-  base::PathService::Override(base::DIR_CACHE, cache_path);
 }
 
 }  // namespace resource_util
