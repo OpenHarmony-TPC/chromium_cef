@@ -1657,26 +1657,23 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
 
+    const base::Process& process = render_process_host->GetProcess();
+    if (process.IsValid()) {
+      base::ProcessId process_id = render_process_host->GetProcess().Pid();
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+      InactiveUnloadOldProcess(process_id);
+#endif
+      ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                                nweb_id_);
+    } else {
+      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
+    }
+
     if (!is_hidden_) {
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
                                          nweb_id_);
     }
-
-    const base::Process& process = render_process_host->GetProcess();
-
-    if (!process.IsValid()) {
-      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
-      return;
-    }
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
-
-#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-    InactiveUnloadOldProcess(process_id);
-#endif
-
-    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
-                                              nweb_id_);
   } else {
     LOG(ERROR) << "AlloyBrowserHostImplExt::ReportWindowStatus render_view_host is null";
     return;
