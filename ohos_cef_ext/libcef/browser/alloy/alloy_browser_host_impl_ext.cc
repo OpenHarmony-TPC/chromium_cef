@@ -372,7 +372,9 @@ AlloyBrowserHostImplExt::AlloyBrowserHostImplExt(
                             opener,
                             request_context,
                             std::move(platform_delegate)) {
+#if !DCHECK_IS_ON()
   platform_delegate_->BrowserCreated(this);
+#endif // !DCHECK_IS_ON()
 }
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
