@@ -1619,6 +1619,7 @@ void AlloyBrowserHostImplExt::SetWindowId(int window_id, int nweb_id) {
 }
 
 void AlloyBrowserHostImplExt::RenderViewReady() {
+  LOG(INFO) << "AlloyBrowserHostImplExt::RenderViewReady:nweb_id: " << nweb_id_;
   RenderProcessStateHandler::GetInstance()->InitRenderProcessState(implUtils->GetRenderProcessId(), nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
@@ -1658,15 +1659,24 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
 
     const base::Process& process = render_process_host->GetProcess();
+    int rph_unique_id = render_process_host->GetID();
     if (process.IsValid()) {
       base::ProcessId process_id = render_process_host->GetProcess().Pid();
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
       InactiveUnloadOldProcess(process_id);
 #endif
+      TRACE_EVENT2("base", "PopNwebForNotInitRender", "nweb_id", nweb_id_, "pid", process_id);
+ 	    LOG(DEBUG) << "AlloyBrowserHostImplExt::ReportWindowStatus: Nweb: " << nweb_id_
+ 	               << ", window: " << window_id_ << ", pid: " << process_id << " ,rph_unique_id: " << rph_unique_id;
+ 	    RenderProcessStateHandler::GetInstance()->PopNwebForNotInitRender(rph_unique_id, nweb_id_,
+ 	                                                                      is_hidden_, window_id_, process_id);
       ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                                 nweb_id_);
     } else {
       LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
+      TRACE_EVENT1("base", "PushNwebForNotInitRender", "nweb_id", nweb_id_);
+ 	       RenderProcessStateHandler::GetInstance()->PushNwebForNotInitRender(rph_unique_id, nweb_id_,
+ 	                                                                          is_hidden_, window_id_, 0);
     }
 
     if (!is_hidden_) {
