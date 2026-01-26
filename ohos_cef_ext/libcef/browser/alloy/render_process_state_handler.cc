@@ -195,8 +195,8 @@ void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int n
       item++;
     } else if (item->rph_unique_id == rph_unique_id) {
       OHOS::NWeb::ResSchedStatusAdapter status = item->state
-                                    ? OHOS::NWeb::ResSchedStatusAdapter::WEB_INACTIVE
-                                    : OHOS::NWeb::ResSchedStatusAdapter::WEB_ACTIVE;
+                                                 ? OHOS::NWeb::ResSchedStatusAdapter::WEB_INACTIVE
+                                                 : OHOS::NWeb::ResSchedStatusAdapter::WEB_ACTIVE;
       OHOS::NWeb::ResSchedClientAdapter::ReportWindowStatus(status, render_process_id,
                                                             item->windowId, item->nweb_id);
       LOG(DEBUG) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << nweb_id
