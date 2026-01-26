@@ -56,6 +56,10 @@ static inline void setForInclude(const struct_type* src,
   target->agent_need_highlight = src->agent_need_highlight;
 #endif
 
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  target->cast_enabled = src->cast_enabled;
+#endif  // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   target->native_embed_mode_enabled = src->native_embed_mode_enabled;
   target->intrinsic_size_enabled = src->intrinsic_size_enabled;

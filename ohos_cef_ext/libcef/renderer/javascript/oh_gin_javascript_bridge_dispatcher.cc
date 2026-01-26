@@ -54,6 +54,7 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
   if (inside_did_clear_window_object_) {
     return;
   }
+  base::WeakPtr<OhGinJavascriptBridgeDispatcher> weak_self = AsWeakPtr();
   base::AutoReset<bool> flag_entry(&inside_did_clear_window_object_, true);
   for (NamedObjectMap::const_iterator iter = named_objects_.begin();
        iter != named_objects_.end(); ++iter) {
@@ -65,6 +66,10 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
         OhGinJavascriptBridgeObject::InjectNamed(render_frame()->GetWebFrame(),
                                                  AsWeakPtr(), iter->first,
                                                  iter->second);
+    if (!weak_self) {
+      return;
+    }
+
     if (object) {
       objects_.AddWithID(object, iter->second);
     } else {

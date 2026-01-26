@@ -120,7 +120,6 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::GetSettingOfNetHelper(
     const GURL& url,
     CefRefPtr<CefBrowserHostBase> browser,
     struct NetHelperSetting& setting) {
-  CEF_REQUIRE_UIT();
   if (!browser) {
     return;
   }
@@ -188,6 +187,37 @@ std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigat
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+void ArkWebInterceptedRequestHandlerWrapperHelper::
+     OnReceiveResponse(CefRefPtr<CefBrowserHostBase> browser,
+                       CefRefPtr<CefRequest> request,
+                       bool is_request_gesture,
+                       int transition_type,
+                       bool is_main_frame,
+                       bool is_redirect,
+                       int resource_type,
+                       CefRefPtr<CefResponse> response_info,
+                       bool is_from_network) {
+  if (!browser || !browser->GetHost()) {
+    LOG(ERROR) << "ArkWebInterceptedRequestHandlerWrapperHelper::OnReceiveResponse failed, browser is null";
+    return;
+  }
+ 
+  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
+  if (!client) {
+    LOG(ERROR) << "ArkWebInterceptedRequestHandlerWrapperHelper::OnReceiveResponse failed, client is null";
+    return;
+  }
+  CefRefPtr<ArkWebLoadHandlerExt> load_handler = client->GetLoadHandler();
+  if (!load_handler) {
+    LOG(ERROR) << "ArkWebInterceptedRequestHandlerWrapperHelper::OnReceiveResponse failed, load_handler is null";
+    return;
+  }
+  return load_handler->OnReceiveResponse(request, is_request_gesture, transition_type, is_main_frame,
+                                         is_redirect, resource_type, response_info, is_from_network);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_ITP)
 void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                              CefString tracker_host,
@@ -249,5 +279,7 @@ void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
   }
 }
 #endif
+
+
 
 }  // namespace net_service

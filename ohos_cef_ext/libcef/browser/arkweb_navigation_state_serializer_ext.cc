@@ -77,18 +77,19 @@ bool NavigationStateSerializer::RestoreNavigationStatus(
     LOG(ERROR) << "web state size invalid.";
     return false;
   }
-  uint8_t temp_buffer[state_size];
-  state->GetData(temp_buffer, state_size, 0);
-  std::span<const uint8_t> dataSpan(temp_buffer, state_size);
+  std::vector<uint8_t> temp_buffer;
+  temp_buffer.resize(state_size);
+  state->GetData(temp_buffer.data(), state_size, 0);
+  std::span<const uint8_t> dataSpan(temp_buffer.data(), state_size);
   base::Pickle pickle = base::Pickle::WithUnownedBuffer(dataSpan);
   base::PickleIterator iterator(pickle);
   int entry_count = -1;
   int entry_index = -2;
-  if (!iterator.ReadInt(&entry_count) || !iterator.ReadInt(&entry_index) ||
-      entry_index >= entry_count || entry_index > kMaxNavigationEntrySize) {
+  bool read_success = iterator.ReadInt(&entry_count) && iterator.ReadInt(&entry_index);
+  if (!read_success || entry_index >= entry_count || entry_count > kMaxNavigationEntrySize) {
     LOG(ERROR) << "web state size invalid.";
     return false;
-  }
+  }  
 
   std::unique_ptr<content::NavigationEntryRestoreContext> context =
       content::NavigationEntryRestoreContext::Create();

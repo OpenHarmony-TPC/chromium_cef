@@ -1656,14 +1656,19 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
     ResSchedStatusAdapter status = is_hidden_
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
 
+    const base::Process& process = render_process_host->GetProcess();
+    if (process.IsValid()) {
+      base::ProcessId process_id = render_process_host->GetProcess().Pid();
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-    InactiveUnloadOldProcess(process_id);
+      InactiveUnloadOldProcess(process_id);
 #endif
+      ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                                nweb_id_);
+    } else {
+      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
+    }
 
-    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
-                                              nweb_id_);
     if (!is_hidden_) {
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
@@ -2007,6 +2012,17 @@ std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(
 void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnDocumentEndReady(frameInfo);
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+void AlloyBrowserHostImplExt::OnSafeBrowsingCheckDetail(int code,
+                                                        int policy,
+                                                        int threat) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnSafeBrowsingCheckDetail(code, policy, threat);
   }
 }
 #endif

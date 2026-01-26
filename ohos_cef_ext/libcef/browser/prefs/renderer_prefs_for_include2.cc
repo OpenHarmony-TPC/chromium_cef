@@ -92,6 +92,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_SCROLLBAR)
   web.scrollbar_color = cef.scrollbar_color;
 #endif  // ARKWEB_SCROLLBAR
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  SET_STATE(cef.cast_enabled, web.cast_enabled);
+#endif
   if (cef.viewport_meta_enabled.has_value()) {
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   }

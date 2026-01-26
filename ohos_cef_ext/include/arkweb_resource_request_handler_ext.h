@@ -48,6 +48,14 @@ class CefInterceptCallback : public virtual CefBaseRefCounted {
   virtual void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) {}
 };
 
+class CefRewriteUrlCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called once the task is complete.
+  ///
+  virtual void OnComplete(const CefString& url) = 0;
+};
+
 ///
 /// Extended from CefRequest
 ///
@@ -70,6 +78,16 @@ class ArkWebResourceRequestHandlerExt
       CefRefPtr<CefInterceptCallback> callback,
       CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
       const CefString& scheme) {}
+
+  ///
+  /// OnRewriteUrlForNavigationAsync.
+  ///
+  virtual void OnRewriteUrlForNavigationAsync(
+      const CefString& original_url,
+      const CefString& referrer,
+      int transition_type,
+      bool is_key_request,
+      CefRefPtr<CefRewriteUrlCallback> callback) {}
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_RESOURCE_REQUEST_HANDLER_EXT_H_

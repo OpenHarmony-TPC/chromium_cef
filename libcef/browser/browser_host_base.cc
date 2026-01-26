@@ -1057,6 +1057,9 @@ bool CefBrowserHostBase::IsLoading() {
 }
 
 void CefBrowserHostBase::Reload() {
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  ReloadEx(-1);
+#else
   auto callback = base::BindOnce(&CefBrowserHostBase::Reload, this);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT, std::move(callback));
@@ -1071,6 +1074,7 @@ void CefBrowserHostBase::Reload() {
   if (wc) {
     wc->GetController().Reload(content::ReloadType::NORMAL, true);
   }
+#endif
 }
 
 void CefBrowserHostBase::ReloadIgnoreCache() {

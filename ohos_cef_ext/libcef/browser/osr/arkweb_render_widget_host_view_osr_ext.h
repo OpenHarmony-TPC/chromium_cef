@@ -228,6 +228,10 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void EvictFrameBackBuffers() override;
 #endif
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void SetIsOfflineWebComponentInactive(bool is_inactive) override;
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override;

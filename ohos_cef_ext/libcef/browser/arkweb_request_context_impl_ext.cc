@@ -96,7 +96,10 @@ CefRefPtr<CefCookieManagerExt> ArkWebRequestContextImplExt::GetCookieManagerExt(
     CefRefPtr<CefCompletionCallback> callback) {
   CefRefPtr<CefCookieManagerImplExt> cookie_manager =
       CefCookieManagerImplExt::GetInstance(support_incognito);
-  InitializeCookieManagerInternal(cookie_manager, callback);
+  if (!cookiemanager_initialized_flag_) {
+    cookiemanager_initialized_flag_ = true;
+    InitializeCookieManagerInternal(cookie_manager, callback);
+  }
   return cookie_manager.get();
 }
 #endif  // BUILDFLAG(ARKWEB_COOKIE)

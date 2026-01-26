@@ -78,10 +78,13 @@ class UrlTrustListManager : public UrlTrustListInterface {
   virtual ~UrlTrustListManager() = default;
   UrlTrustCheckResult CheckUrlTrustList(const GURL& url) override;
   UrlListSetResult SetUrlTrustListWithErrMsg(const std::string& urlTrustList,
-                                             std::string& detailErrMsg);
+      bool allowOpaqueOrigin, bool supportWildcard, std::string& detailErrMsg);
 
  private:
+  UrlTrustCheckResult CheckUrlTrustListWithWildcard(const GURL& url);
   std::multimap<std::string, UrlTrustRule> ruleMap_;
+  bool allowOpaqueOrigin_ = true;
+  bool supportWildcard_ = false;
 };
 }  // namespace ohos_safe_browsing
 #endif  //  CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_URL_TRUST_LIST_MANAGER_H_

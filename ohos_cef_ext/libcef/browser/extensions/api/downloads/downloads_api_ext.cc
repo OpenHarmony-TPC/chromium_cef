@@ -348,8 +348,6 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
     return RespondNow(BadMessage());
   }
 
-  // Extensions with debugger permission could fake user gestures and should
-  // not be trusted.
   std::string error;
   if (Fault(!user_gesture(), download_extension_errors::kUserGesture, &error) ||
       Fault(!extension()->permissions_data()->HasAPIPermission(
@@ -358,16 +356,19 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
     return RespondNow(Error(std::move(error)));
   }
 
+  // Extensions with debugger permission could fake user gestures and should
+  // not be trusted.
+  if (GetSenderWebContents() &&
+      GetSenderWebContents()->HasRecentInteraction() &&
+      !extension()->permissions_data()->HasAPIPermission(
+          APIPermissionID::kDebugger)) {
+    return RespondNow(NoArguments());
+  }
+
   // Prompt user for ack to open the download.
   // TODO(qinmin): check if user prefers to open all download using the same
   // extension, or check the recent user gesture on the originating webcontents
   // to avoid showing the prompt.
-  if (!GetSenderWebContents() ||
-      !GetSenderWebContents()->HasRecentInteraction() ||
-      extension()->permissions_data()->HasAPIPermission(
-          APIPermissionID::kDebugger)) {
-    return RespondNow(NoArguments());
-  }
   int downloadId = params->download_id;
   LOG(INFO) << "DownloadsOpenFunction::Run downloadId: " << downloadId;
 
@@ -750,8 +751,8 @@ void DownloadsSetUiOptionsFunction::SetUiOptionsCallback(
   LOG(INFO) << "DownloadsSetUiOptionsFunction::SetUiOptionsCallback error: "
             << error.value_or("not exist.");
 
-  if (error) {
-    function->Respond(function->Error(*error));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }
@@ -814,8 +815,8 @@ void DownloadsSetShelfEnabledFunction::SetShelfEnabledCallback(
   LOG(INFO) << "DownloadsSetShelfEnabledFunction::SetUiOptionsCallback error: "
             << error.value_or("not exist.");
 
-  if (error) {
-    function->Respond(function->Error(*error));
+  if (error.has_value() && !error.value().empty()) {
+    function->Respond(function->Error(error.value()));
   } else {
     function->Respond(function->NoArguments());
   }
@@ -1105,10 +1106,10 @@ void DownloadsGetFileIconFunction::GetFileIconCallback(
     std::string iconUrl) {
   LOG(INFO) << "DownloadsGetFileIconFunction GetFileIconCallback length: "
             << iconUrl.size();
-  if (error) {
+  if (error.has_value() && !error.value().empty()) {
     LOG(INFO) << "DownloadsGetFileIconFunction GetFileIconCallback error: "
               << error.value_or("not exist.");
-    function->Respond(function->Error(*error));
+    function->Respond(function->Error(error.value()));
   } else {
     if (iconUrl.size() == 0) {
       function->Respond(function->Error("Icon not found"));

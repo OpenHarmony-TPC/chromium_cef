@@ -78,6 +78,7 @@
 #include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
+
 #if BUILDFLAG(ARKWEB_MSGPORT)
 class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
  public:
@@ -633,7 +634,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
   int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                CefString& detailErrMsg) override;
+      bool allowOpaqueOrigin, bool supportWildcard, CefString& detailErrMsg) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
@@ -724,6 +725,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void PutUserAgent(const CefString& ua, bool from_app) override;
   CefString GetCustomUserAgent() override;
   CefString DefaultUserAgent() override;
+  void SetUserAgentMetadata(const std::string& user_agent,
+                            const blink::UserAgentMetadata& metadata) override;
+  const blink::UserAgentMetadata GetUserAgentMetadata(
+      const std::string& user_agent) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
@@ -801,6 +806,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       const CefPoint& inspect_element_at,
       const CefOpenDevToolsExtOpt& ext_opt) override;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t GetLastCommittedEntryPageTransition() override;
+#endif
 
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)

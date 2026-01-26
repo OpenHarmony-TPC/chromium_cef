@@ -204,6 +204,10 @@ public:
   void OnDocumentEndReady(const FrameInfos& frameInfo) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  void OnSafeBrowsingCheckDetail(int code, int policy, int threat) override;
+#endif
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(
@@ -235,6 +239,9 @@ protected:
   int delegate_id_ = 0;
   int child_id_ = 0;
   int frame_routing_id_ = 0;
+  int delegate_id_enter_ = 0;
+  int child_id_enter_ = 0;
+  int frame_routing_id_enter_ = 0;
   std::unique_ptr<base::OneShotTimer> pause_timer_;
   SEQUENCE_CHECKER(sequence_checker_);
 #endif  // BUILDFLAG(ARKWEB_PIP)

@@ -55,7 +55,13 @@ void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
         blink::UserAgentOverride::UserAgentOnly(user_agent);
     user_agent_override.from_app =
         (match_policy < UserAgentOverridePolicy::ARKWEB_DEFAULT);
+    if (AlloyBrowserUAConfig::GetInstance()->GetUserAgentClientHintsEnabled()) {
+      user_agent_override.ua_metadata_override =
+          web_contents_impl->AsWebContentsImplExt()->GetUserAgentMetadata(
+              user_agent);
+    }
     web_contents->SetUserAgentOverride(user_agent_override, true);
+    navigation->SetIsOverridingUserAgent(true);
   }
 }
 

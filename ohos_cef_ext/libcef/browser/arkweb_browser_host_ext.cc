@@ -299,6 +299,7 @@ void ArkWebBrowserHostExtImpl::ExitFullScreen() {
       "{if(document.fullscreenElement){document.exitFullscreen()}}");
   wc->GetPrimaryMainFrame()->ExecuteJavaScript(base::UTF8ToUTF16(jscode),
                                                base::NullCallback());
+  wc->NotifyRemoteExitFullScreen();
 }
 #endif  // BUILDFLAG(ARKWEB_FULLSCREEN)
 
@@ -788,6 +789,10 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
   settings_.clipboard_site_permission_enabled = browser_settings.clipboard_site_permission_enabled;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+  settings_.cast_enabled = browser_settings.cast_enabled;
+#endif  // BUILDFLAG(ARKWEB_MEDIA_CAST)
 }
 
 void ArkWebBrowserHostExtImpl::SetDrawRect(int x,
@@ -1549,6 +1554,13 @@ void ArkWebBrowserHostExtImpl::SetScrollable(bool enable, int scrollType) {
       static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(true);
     }
   }
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(
+      rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetScrollable(enable);
+  }
+#endif
 }
 
 void ArkWebBrowserHostExtImpl::SetOverscrollMode(int overscrollMode) {
@@ -2707,7 +2719,7 @@ bool ArkWebBrowserHostExtImpl::NeedsReload() {
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
 int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList,
+    const CefString& urlTrustList, bool allowOpaqueOrigin, bool supportWildcard,
     CefString& detailErrMsg) {
   std::string urlTrustListUpdated = urlTrustList.ToString();
   content::WebContents* webContents = GetWebContents();
@@ -2740,7 +2752,7 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
         std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
   int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
-      urlTrustListUpdated, detailErrMsgUpdated));
+      urlTrustListUpdated, allowOpaqueOrigin, supportWildcard, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
 }
@@ -3742,6 +3754,35 @@ CefString ArkWebBrowserHostExtImpl::DefaultUserAgent() {
 CefString ArkWebBrowserHostExtImpl::GetCustomUserAgent() {
   return custom_user_agent_;
 }
+
+void ArkWebBrowserHostExtImpl::SetUserAgentMetadata(
+    const std::string& user_agent,
+    const blink::UserAgentMetadata& metadata) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return;
+  }
+  return web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
+                                                                    metadata);
+}
+
+const blink::UserAgentMetadata ArkWebBrowserHostExtImpl::GetUserAgentMetadata(
+    const std::string& user_agent) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return embedder_support::GetUserAgentMetadata();
+  }
+  return web_contents->AsWebContentsImplExt()->GetUserAgentMetadata(user_agent);
+}
+
 #endif  // BUILDFLAG(ARKWEB_USERAGENT)
 
 #if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
@@ -4144,6 +4185,25 @@ void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
   } else {
     LOG(ERROR, kHttpsUpgrades) << "EnableHttpsUpgrades message:helperIsNull";
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, web_contents is null";
+    return -1;
+  }
+  content::NavigationEntry* entry =
+      web_contents->GetController().GetActiveEntry();
+
+  if (!entry) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, entry is null";
+    return -1;
+  }
+  ui::PageTransition transition = entry->GetTransitionType();
+  return static_cast<int32_t>(transition);
 }
 #endif
 

@@ -504,14 +504,11 @@ StreamReaderURLLoader::StreamReaderURLLoader(
   stream_work_task_runner_ =
       base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()});
 #if BUILDFLAG(IS_ARKWEB)
-  loader_utils_ = new StreamReaderURLLoaderUtils(this);
+  loader_utils_ = std::make_unique<StreamReaderURLLoaderUtils>(this);
 #endif
 }
 
 StreamReaderURLLoader::~StreamReaderURLLoader() {
-#if BUILDFLAG(IS_ARKWEB)
-  delete loader_utils_;
-#endif
   if (open_cancel_callback_) {
     // Release the Delegate held by OpenInputStreamWrapper.
     std::move(open_cancel_callback_).Run();
