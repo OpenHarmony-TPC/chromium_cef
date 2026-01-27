@@ -126,8 +126,8 @@ bool BrowserPolicyHandler::SetPolicy(const std::string& policy, int version) {
     return false;
   }
 
-  if (version <= current_version_) {
-    LOG(WARNING) << "BrowserPolicyHandler set policy failed: version not newer";
+  if (version == current_version_) {
+    LOG(WARNING) << "BrowserPolicyHandler set policy failed: same version";
     return false;
   }
 
