@@ -277,7 +277,7 @@ class CefDevToolsFrontend::NetworkResourceLoader
   void OnRetry(base::OnceClosure start_retry) override { DCHECK(false); }
 
   const int stream_id_;
-  CefDevToolsFrontend* const bindings_;
+  raw_ptr<CefDevToolsFrontend> const bindings_;
   std::unique_ptr<network::SimpleURLLoader> loader_;
   int request_id_;
   scoped_refptr<net::HttpResponseHeaders> response_headers_;
