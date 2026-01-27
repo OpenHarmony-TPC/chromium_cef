@@ -167,6 +167,7 @@ void RenderProcessStateHandler::InitRenderProcessState(
 void RenderProcessStateHandler::PushNwebForNotInitRender(int rph_unique_id, int nweb_id,
     bool is_to_background, uint32_t windowId, uint32_t render_process_id) {
   std::lock_guard<std::mutex> lock(list_mutex_);
+  TRACE_EVENT2("base", "PushNwebForNotInitRender", "nweb_id", nweb_id, "pid", render_process_id);
   LOG(DEBUG) << "RenderProcessStateHandler::PushNwebForNotInitRender: nweb_id: " << nweb_id
              << ", is_to_background: " << is_to_background
              << ", rph_unique_id: " << rph_unique_id
@@ -188,21 +189,25 @@ void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int n
   for (auto item = initial_web_component_with_render_list_.begin();
       item != initial_web_component_with_render_list_.end();) {
     if (item->nweb_id == nweb_id) {
+      TRACE_EVENT2("base", "RenderProcessStateHandler::BaseNweb", "nweb_id", nweb_id,
+                                                                  "pid", render_process_id);
       LOG(DEBUG) << "RenderProcessStateHandler::BaseNweb: nweb_id: " << nweb_id
                  << ", is_to_background: " << is_to_background
                  << ", rph_unique_id: " << rph_unique_id
                  << ", render_process_id: " << render_process_id;
-      item++;
+      item = initial_web_component_with_render_list_.erase(item);
     } else if (item->rph_unique_id == rph_unique_id) {
       OHOS::NWeb::ResSchedStatusAdapter status = item->state
                                                  ? OHOS::NWeb::ResSchedStatusAdapter::WEB_INACTIVE
                                                  : OHOS::NWeb::ResSchedStatusAdapter::WEB_ACTIVE;
       OHOS::NWeb::ResSchedClientAdapter::ReportWindowStatus(status, render_process_id,
                                                             item->windowId, item->nweb_id);
-      LOG(DEBUG) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << nweb_id
-                 << ", is_to_background: " << is_to_background
-                 << ", rph_unique_id: " << rph_unique_id
-                 << ", render_process_id: " << render_process_id;
+      TRACE_EVENT2("base", "PopNwebForNotInitRender", "nweb_id", item->nweb_id,
+                                                      "pid", item->render_process_id);
+      LOG(DEBUG) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << item->nweb_id
+                 << ", is_to_background: " << item->state
+                 << ", rph_unique_id: " << item->rph_unique_id
+                 << ", render_process_id: " << item->render_process_id;
       item = initial_web_component_with_render_list_.erase(item);
     } else {
       item++;
