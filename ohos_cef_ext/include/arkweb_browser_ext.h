@@ -1128,6 +1128,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void SendTouchpadFlingEvent(const CefMouseEvent& event,
                                       double vx,
                                       double vy) = 0;
+  
+  ///
+  /// SendCancelFlingEvent
+  ///
+  virtual void SendCancelFlingEvent(const CefMouseEvent& event) = 0;
 
   ///
   /// Set the fit content mode

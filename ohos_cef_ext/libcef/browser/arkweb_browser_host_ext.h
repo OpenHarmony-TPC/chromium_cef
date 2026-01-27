@@ -166,6 +166,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SendTouchpadFlingEvent(const CefMouseEvent& event,
                               double vx,
                               double vy) override;
+  void SendCancelFlingEvent(const CefMouseEvent& event) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_PDF)
