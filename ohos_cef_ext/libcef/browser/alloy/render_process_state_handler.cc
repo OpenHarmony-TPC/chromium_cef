@@ -184,7 +184,7 @@ void RenderProcessStateHandler::PushNwebForNotInitRender(int rph_unique_id, int 
 }
 
 void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int nweb_id,
-    bool is_to_background,uint32_t windowId,uint32_t render_process_id) {
+    bool is_to_background, uint32_t windowId, uint32_t render_process_id) {
   std::lock_guard<std::mutex> lock(list_mutex_);
   for (auto item = initial_web_component_with_render_list_.begin();
       item != initial_web_component_with_render_list_.end();) {
