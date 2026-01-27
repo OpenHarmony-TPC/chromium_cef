@@ -1531,6 +1531,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
     return blink::UserAgentMetadata();
   };
 #endif
+
+  ///
+  /// Get the window id of the UI framework
+  ///
+  virtual int32_t GetWindowId() { return -1; }
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

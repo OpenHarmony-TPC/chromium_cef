@@ -304,6 +304,11 @@ public:
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   void OnDocumentEndReady(const FrameInfos& frameInfo) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+  int32_t GetWindowId() override;
+#endif
+
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
   void OnSafeBrowsingCheckDetail(int code, int policy, int threat) override;
 #endif
