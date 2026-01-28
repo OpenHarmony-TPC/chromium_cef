@@ -54,16 +54,9 @@ void RenderProcessStateHandler::UpdateRenderProcessState(
     return;
   }
 
-  LOG(DEBUG)
-      << "RenderProcessStateHandler::UpdateRenderProcessState: render_id:"
-      << render_process_id << " nweb_id: " << nweb_id
-      << " is_to_background: " << is_to_background;
   bool report_background_state = is_to_background;
   bool is_render_init = true;
   for (RenderProcessStateMap& item : render_process_map_list_) {
-    LOG(DEBUG)
-        << "RenderProcessStateHandler::UpdateRenderProcessState: for_render_id:"
-        << item.render_process_id;
     if (item.render_process_id != render_process_id) {
       continue;
     }
@@ -86,10 +79,6 @@ void RenderProcessStateHandler::UpdateRenderProcessState(
     }
 
     if (is_web_init) {
-      LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: add "
-                    "new web: "
-                 << nweb_id << " state: " << is_to_background;
-
       WebComponentState new_web_component = {nweb_id, is_to_background};
       item.web_component_list.push_back(new_web_component);
     }
