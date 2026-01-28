@@ -1852,9 +1852,6 @@ void AlloyBrowserHostImplExt::NotifyScreenInfoChangedV2()
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->NotifyScreenInfoChangedV2();
   }
-#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
-  base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
-#endif
 }
 #endif  // BUILDFLAG(ARKWEB_SCREEN_OFFSET)
 
