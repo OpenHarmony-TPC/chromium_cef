@@ -168,7 +168,7 @@ void RenderProcessStateHandler::PushNwebForNotInitRender(int rph_unique_id, int 
     bool is_to_background, uint32_t windowId, uint32_t render_process_id) {
   std::lock_guard<std::mutex> lock(list_mutex_);
   TRACE_EVENT2("base", "PushNwebForNotInitRender", "nweb_id", nweb_id, "pid", render_process_id);
-  LOG(DEBUG) << "RenderProcessStateHandler::PushNwebForNotInitRender: nweb_id: " << nweb_id
+  LOG(INFO) << "RenderProcessStateHandler::PushNwebForNotInitRender: nweb_id: " << nweb_id
              << ", is_to_background: " << is_to_background
              << ", rph_unique_id: " << rph_unique_id
              << ", render_process_id: " << render_process_id;
@@ -191,7 +191,7 @@ void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int n
     if (item->nweb_id == nweb_id) {
       TRACE_EVENT2("base", "RenderProcessStateHandler::BaseNweb", "nweb_id", nweb_id,
                                                                   "pid", render_process_id);
-      LOG(DEBUG) << "RenderProcessStateHandler::BaseNweb: nweb_id: " << nweb_id
+      LOG(INFO) << "RenderProcessStateHandler::BaseNweb: nweb_id: " << nweb_id
                  << ", is_to_background: " << is_to_background
                  << ", rph_unique_id: " << rph_unique_id
                  << ", render_process_id: " << render_process_id;
@@ -204,7 +204,7 @@ void RenderProcessStateHandler::PopNwebForNotInitRender(int rph_unique_id, int n
                                                             item->windowId, item->nweb_id);
       TRACE_EVENT2("base", "PopNwebForNotInitRender", "nweb_id", item->nweb_id,
                                                       "pid", item->render_process_id);
-      LOG(DEBUG) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << item->nweb_id
+      LOG(INFO) << "RenderProcessStateHandler::PopNwebForNotInitRender: nweb_id: " << item->nweb_id
                  << ", is_to_background: " << item->state
                  << ", rph_unique_id: " << item->rph_unique_id
                  << ", render_process_id: " << item->render_process_id;
