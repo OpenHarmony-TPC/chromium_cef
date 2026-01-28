@@ -174,3 +174,16 @@ void CefHostDisplayClientOSR::DidCompleteSwapWithNewSizeOHOS(
   }
 }
 #endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+void CefHostDisplayClientOSR::NotifyFirstRealSwapBuffer() {
+  TRACE_EVENT0("cef", "CefHostDisplayClientOSR::NotifyFirstRealSwapBuffer");
+  if (first_real_swap_buffer_listener_) {
+    first_real_swap_buffer_listener_.Run();
+  }
+}
+
+void CefHostDisplayClientOSR::AddFirstRealSwapBufferListener(base::RepeatingCallback<void()> func) {
+  first_real_swap_buffer_listener_ = std::move(func);
+}
+#endif  // BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
