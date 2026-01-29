@@ -2028,6 +2028,12 @@ void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+int32_t AlloyBrowserHostImplExt::GetWindowId() {
+  return window_id_;
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
 void AlloyBrowserHostImplExt::OnSafeBrowsingCheckDetail(int code,
                                                         int policy,
