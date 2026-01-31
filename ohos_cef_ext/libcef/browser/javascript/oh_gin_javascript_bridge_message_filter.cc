@@ -413,7 +413,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
 
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  // native object no need deleted
+  // native object no need to call webview side impl
   if (host && object_id < OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
     LOG(INFO) << "OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted object_id: " << object_id;
     host->OnObjectWrapperDeleted(current_routing_id, object_id);
