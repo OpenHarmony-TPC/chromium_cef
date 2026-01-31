@@ -479,7 +479,7 @@ base::OnceClosure ChromeContentBrowserClientCef::SelectClientCertificate(
 #endif
       certs, callbackImpl.get());
 
-#if BUILDFLAG(IS_ARKWEB)
+#if !BUILDFLAG(IS_ARKWEB)
   if (!handled) {
     delegate = callbackImpl->DisconnectDelegate();
     if (delegate) {
