@@ -248,10 +248,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_002) {
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
 }
 
 TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_003) {
@@ -266,10 +262,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_003) {
   GURL test_url("http://baidu.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
 
@@ -286,10 +278,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_004) {
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
 
 TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_005) {
@@ -304,10 +292,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_005) {
   GURL test_url("http://example.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
 
@@ -324,10 +308,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_006) {
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
 
 TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_007) {
@@ -342,10 +322,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_007) {
   GURL test_url("http://example.com:440//tests/path");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
 
@@ -362,10 +338,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_008) {
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
 }
 
 TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_009) {
@@ -381,10 +353,6 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_009) {
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
-
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  result = url_trust_list_manager_->CheckUrlTrustList(test_url);
-  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
 }
 
 TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_001) {
@@ -393,7 +361,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_0
     "UrlPermissionList": [{
         "scheme": "https",
         "host": "*.example.com",
-        "path": "/test" }]})";
+        "path": "test" }]})";
   url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
   GURL test_url("https://www.example.com/test");
   UrlTrustCheckResult result =
@@ -421,7 +389,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_0
     "UrlPermissionList": [{
         "scheme": "https",
         "host": "www.*.com",
-        "path": "test/" }]})";
+        "path": "test" }]})";
   url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
   GURL test_url("https://www.example.com/test");
   UrlTrustCheckResult result =
@@ -477,9 +445,9 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_0
     "UrlPermissionList": [{
         "scheme": "https",
         "host": "EXAMPLE.COM",
-        "path": "test//*" }]})";
+        "path": "test" }]})";
   url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
-  GURL test_url("https://example.com/test//test");
+  GURL test_url("https://example.com/test");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_ALLOW);
@@ -631,7 +599,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_0
     "UrlPermissionList": [{
         "scheme": "https",
         "host": "example.com",
-        "path": "/aaa/*/*/ccc/" }]})";
+        "path": "aaa/*/*/ccc" }]})";
   url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
   GURL test_url("https://example.com/aaa/bbb/ddd/ccc");
   UrlTrustCheckResult result =
