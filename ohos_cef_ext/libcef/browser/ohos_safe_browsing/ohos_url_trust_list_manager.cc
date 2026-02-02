@@ -16,17 +16,26 @@
 
 #include "base/json/json_reader.h"
 #include "base/values.h"
-#include "base/strings/string_split.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
 #include "arkweb/chromium_ext/url/ohos/log_utils.h"
 
 namespace {
+std::vector<std::string> SplitString(const std::string& str, char ch) {
+    std::vector<std::string> parts;
+    std::stringstream ss(str);
+    std::string part;
+    while (std::getline(ss, part, ch)) {
+        if (!part.empty()) {
+            parts.push_back(part);
+        }
+    }
+    return parts;
+}
+
 bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHost) {
-    std::vector<std::string> ruleHostParts = base::SplitString(ruleHost, ".",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-    std::vector<std::string> urlHostParts = base::SplitString(urlHost, ".",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+    std::vector<std::string> ruleHostParts = SplitString(ruleHost, '.');
+    std::vector<std::string> urlHostParts = SplitString(urlHost, '.');
     if (ruleHostParts.size() != urlHostParts.size()) {
         return false;
     }
@@ -38,7 +47,7 @@ bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHo
         if (*ruleHostIt == "*") {
             continue;
         }
-        if (!base::EqualsCaseInsensitiveASCII(*ruleHostIt, *urlHostIt)) {
+        if (*ruleHostIt != *urlHostIt) {
             return false;
         }
     }
@@ -66,10 +75,8 @@ bool PathMatchWithWildcard(const std::string& rulePath, const std::string& urlPa
         return PathMatch(rulePath, urlPath);
     }
 
-    std::vector<std::string> rulePathParts = base::SplitString(rulePath, "/",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-    std::vector<std::string> urlPathParts = base::SplitString(urlPath, "/",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+    std::vector<std::string> rulePathParts = SplitString(rulePath, '/');
+    std::vector<std::string> urlPathParts = SplitString(urlPath, '/');
     if (rulePath.size() > urlPath.size() || rulePathParts.size() > urlPathParts.size()) {
         return false;
     }
