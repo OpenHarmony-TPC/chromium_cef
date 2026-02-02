@@ -603,6 +603,11 @@ void ArkWebBrowserHostExtImpl::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  if (!GetWebContents()) {
+    LOG(ERROR)
+        << "ArkWebBrowserHostExtImpl::SetWebPreferences WebContents is nullptr";
+    return;
+  }
   GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
 #else
   GetWebContents()->OnWebPreferencesChanged();
