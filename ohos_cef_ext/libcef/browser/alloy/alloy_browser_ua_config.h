@@ -24,14 +24,11 @@
 #include "base/containers/flat_set.h"
 #include "base/memory/raw_ptr.h"
 #include "base/no_destructor.h"
-#include "components/embedder_support/user_agent_utils.h"
 
-constexpr char kUserAgentMetadataTag[] = "[UserAgentMetadata]";
 using UserAgentForHostsMap =
     base::flat_map<std::string, base::flat_set<std::string>>;
 using HostForUserAgentMap = base::flat_map<std::string, std::string>;
-using UserAgentForMetadataMap =
-    base::flat_map<std::string, blink::UserAgentMetadata>;
+
 enum UserAgentOverridePolicy {
   CUSTOM,  // Object-level UA set by developers via setCustomUserAgent, with the
            // highest priority
@@ -54,9 +51,6 @@ class AlloyBrowserUAConfig {
                             const std::vector<std::string>& hosts);
   UserAgentOverridePolicy MatchUserAgent(const std::string& host,
                                          std::string& user_agent);
-  const blink::UserAgentMetadata& GetDefaultUserAgentMetadata();
-  bool GetUserAgentClientHintsEnabled();
-  void SetUserAgentClientHintsEnabled(bool enabled);
 
  private:
   friend class base::NoDestructor<AlloyBrowserUAConfig>;
@@ -66,9 +60,6 @@ class AlloyBrowserUAConfig {
   std::string app_custom_user_agent_;
   UserAgentForHostsMap user_agent_for_hosts_map_;
   HostForUserAgentMap host_for_user_agent_map_;
-  bool enable_user_agent_client_hints_{false};
-  blink::UserAgentMetadata default_user_agent_meta_data_{
-      embedder_support::GetUserAgentMetadata()};
 };
 #endif  // ARKWEB_USERAGENT
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_UA_CONFIG_H_

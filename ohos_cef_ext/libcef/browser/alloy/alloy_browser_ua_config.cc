@@ -105,22 +105,4 @@ UserAgentOverridePolicy AlloyBrowserUAConfig::MatchUserAgent(
              << ", user_agent:" << user_agent;
   return UserAgentOverridePolicy::ARKWEB_DEFAULT;
 }
-
-const blink::UserAgentMetadata&
-AlloyBrowserUAConfig::GetDefaultUserAgentMetadata() {
-  return default_user_agent_meta_data_;
-}
-
-bool AlloyBrowserUAConfig::GetUserAgentClientHintsEnabled() {
-  return enable_user_agent_client_hints_;
-}
-
-void AlloyBrowserUAConfig::SetUserAgentClientHintsEnabled(bool enabled) {
-  if (enable_user_agent_client_hints_ != enabled) {
-    LOG(INFO) << kUserAgentMetadataTag << " enable_user_agent_client_hints is "
-              << enable_user_agent_client_hints_ << " enabled is " << enabled;
-  }
-  enable_user_agent_client_hints_ = enabled;
-}
-
 #endif  // ARKWEB_USERAGENT
