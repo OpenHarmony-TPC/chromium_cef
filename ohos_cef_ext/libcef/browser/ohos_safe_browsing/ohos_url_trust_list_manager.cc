@@ -24,9 +24,9 @@
 namespace {
 bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHost) {
     std::vector<std::string> ruleHostParts = base::SplitString(ruleHost, ".",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+        base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
     std::vector<std::string> urlHostParts = base::SplitString(urlHost, ".",
-        base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+        base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
     if (ruleHostParts.size() != urlHostParts.size()) {
         return false;
     }
