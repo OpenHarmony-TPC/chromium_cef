@@ -109,30 +109,30 @@ TEST_F(UrlTrustListManagerTest,
        UrlTrustListManager_SetUrlTrustListWithErrMsg_001) {
   std::string err_msg = std::string();
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(std::string(), true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(std::string(), err_msg);
   EXPECT_EQ(result, UrlListSetResult::SET_OK);
 
   err_msg = std::string();
   result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg("{invalid json", true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg("{invalid json", err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "json format failed");
 
   err_msg = std::string();
   result = url_trust_list_manager_->SetUrlTrustListWithErrMsg(
-      "[\"array\", \"value\"]", true, false, err_msg);
+      "[\"array\", \"value\"]", err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "json format failed");
 
   err_msg = std::string();
   result = url_trust_list_manager_->SetUrlTrustListWithErrMsg(
-      "{\"otherField\": \"value\"}", true, false, err_msg);
+      "{\"otherField\": \"value\"}", err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "can not find UrlPermissionList");
 
   err_msg = std::string();
   result = url_trust_list_manager_->SetUrlTrustListWithErrMsg(
-      "{\"UrlPermissionList\": []}", true, false, err_msg);
+      "{\"UrlPermissionList\": []}", err_msg);
   EXPECT_EQ(result, UrlListSetResult::SET_OK);
 }
 
@@ -146,7 +146,7 @@ TEST_F(UrlTrustListManagerTest,
         "port": 443,
         "path": "/test/path" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "rule 1 check error, host example.com scheme is invalid");
 }
@@ -161,7 +161,7 @@ TEST_F(UrlTrustListManagerTest,
         "port": 443,
         "path": "/test/path" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "rule 1 check error, empty host");
 }
@@ -176,7 +176,7 @@ TEST_F(UrlTrustListManagerTest,
         "port": -1,
         "path": "/test/path" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "rule 1 check error, host example.com port is invalid");
 }
@@ -193,7 +193,7 @@ TEST_F(UrlTrustListManagerTest,
         "path": ")" + longPath +
                          R"(" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::PARAM_ERROR);
   EXPECT_EQ(err_msg, "rule 1 check error, host example.com path len too long");
 }
@@ -208,7 +208,7 @@ TEST_F(UrlTrustListManagerTest,
         "port": 0,
         "path": "/test/path" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::SET_OK);
   EXPECT_EQ(err_msg, "");
 }
@@ -223,7 +223,7 @@ TEST_F(UrlTrustListManagerTest,
         "port": 442,
         "path": "" }]})";
   UrlListSetResult result =
-      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+      url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   EXPECT_EQ(result, UrlListSetResult::SET_OK);
   EXPECT_EQ(err_msg, "");
 }
@@ -243,7 +243,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_002) {
         "host": "example.com",
         "port": 440,
         "path": "/test/path" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("ftp://test.example.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -258,7 +258,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_003) {
         "host": "example.com",
         "port": 440,
         "path": "/test/path" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://baidu.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -273,7 +273,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_004) {
         "host": "example.com",
         "port": 440,
         "path": "/test/path" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -288,7 +288,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_005) {
         "host": "example.com",
         "port": 440,
         "path": "/test/path" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -303,7 +303,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_006) {
         "host": "example.com",
         "port": 0,
         "path": "/test" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com//stest/path");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -318,7 +318,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_007) {
         "host": "example.com",
         "port": 440,
         "path": "/test" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com:440//tests/path");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -333,7 +333,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_008) {
         "host": "example.com",
         "port": 440,
         "path": "/test/" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com:440//test/path");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);
@@ -348,7 +348,7 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_009) {
         "host": "example.com",
         "port": 440,
         "path": "/test" }]})";
-  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, false, err_msg);
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, err_msg);
   GURL test_url("http://example.com:440//test");
   UrlTrustCheckResult result =
       url_trust_list_manager_->CheckUrlTrustList(test_url);

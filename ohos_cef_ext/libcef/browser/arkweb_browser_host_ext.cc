@@ -2719,7 +2719,7 @@ bool ArkWebBrowserHostExtImpl::NeedsReload() {
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
 int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList, bool allowOpaqueOrigin, bool supportWildcard,
+    const CefString& urlTrustList,
     CefString& detailErrMsg) {
   std::string urlTrustListUpdated = urlTrustList.ToString();
   content::WebContents* webContents = GetWebContents();
@@ -2752,7 +2752,7 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
         std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
   int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
-      urlTrustListUpdated, allowOpaqueOrigin, supportWildcard, detailErrMsgUpdated));
+      urlTrustListUpdated, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
 }
