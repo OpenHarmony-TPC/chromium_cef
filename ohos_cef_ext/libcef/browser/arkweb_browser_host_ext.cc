@@ -4105,6 +4105,54 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
                                    this, callback));
 }
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+void ArkWebBrowserHostExtImpl::GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) {
+  LOG(DEBUG) << "GetAllFrameInfos enter";
+  GetFrameInfosParam value;
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    callback->OnFrameInfosCallback(value);
+    return;
+  }
+
+  std::map<std::string, std::string> frameinfos;
+  frameinfos.clear();
+
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  if (web_contents_ex) {
+    LOG(DEBUG) << "GetAllFrameInfos be called.";
+    web_contents_ex->GetAllFrameInfos(frameinfos);
+  }
+
+  for (const auto& pair : frameinfos) {
+    FrameInfos item;
+    item.id = pair.first;
+    item.parentId = pair.second;
+    value.frameinfoList.push_back(item);
+  }
+
+  callback->OnFrameInfosCallback(value);
+}
+
+void ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) {
+  LOG(DEBUG) << "GetLastJavaScriptProxyCallingFrameInfo enter";
+  NWEB::OhJavascriptInjector* javascriptInjector =
+    NWEB::OhJavascriptInjector::FromWebContents(GetWebContents());
+  if (!javascriptInjector) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo "
+                  "javascriptInjector is null";
+    FrameInfos value;
+    callback->OnLastFrameInfoCallback(value);
+    return;
+  }
+  
+  FrameInfos value = javascriptInjector->GetLastCallingFrameInfo();
+  callback->OnLastFrameInfoCallback(value);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_BGTASK)
 void ArkWebBrowserHostExtImpl::OnBrowserForeground() {
   auto web_contents = GetWebContents();
