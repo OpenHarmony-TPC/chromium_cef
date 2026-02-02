@@ -1122,7 +1122,9 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
       network::mojom::ReferrerPolicy::kDefault);
 
   loadUrlParams.extra_headers = headers;
-  ArkWebDealWithPostData(post_data, &loadUrlParams);
+  if (loadUrlParams.load_type == content::NavigationController::LOAD_TYPE_HTTP_POST) {
+      ArkWebDealWithPostData(post_data, &loadUrlParams);
+  }
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
 
   loadUrlParams.transition_type = static_cast<ui::PageTransition>(
