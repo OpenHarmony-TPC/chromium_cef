@@ -123,8 +123,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
 #endif
 //#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
   int SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList, bool allowOpaqueOrigin,
-    bool supportWildcard, CefString& detailErrMsg) override {
+    const CefString& urlTrustList, CefString& detailErrMsg) override {
     return 0;
   }
 //#endif
