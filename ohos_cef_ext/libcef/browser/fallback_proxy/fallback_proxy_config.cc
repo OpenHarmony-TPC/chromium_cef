@@ -21,6 +21,7 @@
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
 #include "net/base/proxy_string_util.h"
+#include "net/base/url_util.h"
 
 namespace fallback_proxy {
 FallbackProxyConfig::FallbackProxyConfig() : enabled_(false) {}
@@ -34,6 +35,8 @@ void FallbackProxyConfig::WriteCurrentConfigToLog() {
     << "; hw_codes_size = " << safe_browsing_hw_codes_.size()
     << "; malicious_types_size = "
     << safe_browsing_malicious_types_.size()
+    << "; direct_proxy_host_list_size = "
+    << direct_proxy_host_list_.size()
     << "; proxy_tunnel_timeout = " << proxy_tunnel_timeout_
     << "; proxy_connect_timeout = " << proxy_connect_timeout_
     << "; malicious_url_check_wait_time = "
@@ -49,6 +52,8 @@ void FallbackProxyConfig::SetFallbackProxyConfigData(
       config_data.safe_browsing_hw_code_list;
   std::vector<int> safe_browsing_malicious_types =
       config_data.safe_browsing_malicious_type_list;
+  std::vector<std::string> direct_proxy_host_list =
+      config_data.direct_proxy_host_list;
   int restart_proxy_internal = config_data.restart_proxy_internal;
   int proxy_tunnel_timeout = config_data.proxy_tunnel_timeout;
   int proxy_connect_timeout = config_data.proxy_connect_timeout;
@@ -65,15 +70,25 @@ void FallbackProxyConfig::SetFallbackProxyConfigData(
   if (using_proxy_error_codes != using_proxy_error_codes_ ||
       safe_browsing_hw_codes != safe_browsing_hw_codes_ ||
       safe_browsing_malicious_types != safe_browsing_malicious_types_ ||
+      direct_proxy_host_list != direct_proxy_host_list_ ||
       proxy_tunnel_timeout != proxy_tunnel_timeout_ ||
       proxy_connect_timeout != proxy_connect_timeout_ ||
       malicious_url_check_wait_time != malicious_url_check_wait_time_) {
     using_proxy_error_codes_ = using_proxy_error_codes;
     safe_browsing_hw_codes_ = safe_browsing_hw_codes;
     safe_browsing_malicious_types_ = safe_browsing_malicious_types;
+    direct_proxy_host_list_ = direct_proxy_host_list;
     proxy_tunnel_timeout_ = proxy_tunnel_timeout;
     proxy_connect_timeout_ = proxy_connect_timeout;
     malicious_url_check_wait_time_ = malicious_url_check_wait_time;
+
+    bypass_rules_.Clear();
+    for (const std::string& host : direct_proxy_host_list_) {
+      if (net::IsCanonicalizedHostCompliant(host)) {
+        bypass_rules_.AddRuleFromString(host);
+      }
+    }
+
     LOG(INFO) << "Fallback proxy config data is changed";
     WriteCurrentConfigToLog();
     if (proxy_info_updated_callback_) {
