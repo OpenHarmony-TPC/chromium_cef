@@ -52,6 +52,10 @@
 #include "extensions/browser/view_type_utils.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "ohos_cef_ext/libcef/browser/web_navigation_info_impl.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -371,5 +375,31 @@ bool ChromeContentBrowserClientCef::ShouldLockProcessToSite(
     content::BrowserContext* browser_context,
     const GURL& effective_url) {
   return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+void ChromeContentBrowserClientCef::OnReportNewNavigationInfo(
+    content::WebContents* web_contents,
+    const net::WebNavigationInfo& navigation_info) {
+  CefRefPtr<CefBrowserHostBase> browser =
+      CefBrowserHostBase::GetBrowserForContents(web_contents);
+  if (!browser) {
+    return;
+  }
+
+  CefRefPtr<CefClient> client = browser->GetClient();
+  if (!client) {
+    return;
+  }
+
+  CefRefPtr<CefRequestHandler> handler = client->GetRequestHandler();
+  if (!handler) {
+    return;
+  }
+
+  CefRefPtr<CefWebNavigationInfo> cef_info =
+      new CefWebNavigationInfoImpl(navigation_info);
+  handler->AsCefRequestHandlerExt()->OnReportNewNavigationInfo(cef_info);
 }
 #endif
