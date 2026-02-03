@@ -37,19 +37,23 @@ std::string SbBlockPage::GetHTMLContents() {
   webui::SetLoadTimeDataDefaults(controller()->GetApplicationLocale(),
                                  &load_time_data);
   std::string html;
+  bool is_large_screen =
+      base::ohos::IsPcDevice() || base::ohos::IsTabletDevice();
+  int resource_id = 0;
   if (policy_ == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
-    html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
-        IDR_MINOR_CONTROL_HTML);
+    resource_id = is_large_screen ? IDR_MINOR_CONTROL_HTML_LARGE
+                                  : IDR_MINOR_CONTROL_HTML_PHONE;
+  } else if (policy_ == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS &&
+             block_type_ == OHSBThreatType::THREAT_FRAUD) {
+    resource_id = is_large_screen ? IDR_BLOCK_ERROR_OHOS_HTML_HIGH_RISK_LARGE
+                                  : IDR_BLOCK_ERROR_OHOS_HTML_HIGH_RISK_PHONE;
   } else {
-    if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
-      html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
-          IDR_BLOCK_ERROR_OHOS_HTML_LARGE);
-    } else {
-      html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
-          IDR_BLOCK_ERROR_OHOS_HTML_PHONE);
-    }
+    resource_id = is_large_screen ? IDR_BLOCK_ERROR_OHOS_HTML_LARGE
+                                  : IDR_BLOCK_ERROR_OHOS_HTML_PHONE;
   }
 
+  html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
+      resource_id);
   webui::AppendWebUiCssTextDefaults(&html);
   return webui::GetI18nTemplateHtml(html, load_time_data);
 }
