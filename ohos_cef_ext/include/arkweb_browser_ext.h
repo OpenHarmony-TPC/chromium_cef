@@ -72,6 +72,20 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   virtual void SetErrorDescription(const std::string& description) {}
 };
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+class CefFrameInfosCallback : public CefBaseRefCounted {
+ public:
+  virtual void OnFrameInfosCallback(GetFrameInfosParam value) = 0;
+
+};
+
+class CefLastJavaScriptProxyCallingFrameInfoCallback : public CefBaseRefCounted {
+ public:
+  virtual void OnLastFrameInfoCallback(FrameInfos value) = 0;
+
+};
+#endif
+
 #if BUILDFLAG(ARKWEB_READER_MODE)
 class CefDistillCallback : public virtual CefBaseRefCounted {
   public:
@@ -1430,7 +1444,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                                      bool recursive, IsolatedWorld world,
                                      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
-
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  virtual void GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) = 0;
+  virtual void GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) = 0;
+#endif
 #if BUILDFLAG(ARKWEB_BGTASK)
   ///
   /// Notify browser is foreground.
