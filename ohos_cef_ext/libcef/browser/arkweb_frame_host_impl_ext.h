@@ -166,6 +166,7 @@ void SetIsFling(bool is_fling);
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool SetFocusByPosition(float x, float y);
+    1
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
   virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,
