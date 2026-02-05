@@ -84,6 +84,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback,
       const CefOpenDevToolsExtOpt& ext_opt);
+  static std::string CefGetFrontendURL(bool can_dock);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   void Activate();
@@ -153,6 +154,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   void SendMessageAck(int request_id, base::Value arg);
   void RequestFileSystems();
+  bool ShouldUseTabTarget();
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   base::Value::Dict BuildExtensionInfo(const extensions::Extension*);
@@ -178,6 +180,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler_;
+  static bool isTabTarget_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   base::WeakPtrFactory<CefDevToolsFrontend> weak_factory_;
