@@ -380,8 +380,9 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
   return devtools_frontend;
 }
 
-static std::string CefDevToolsFrontend::CefGetFrontendURL(bool can_dock) {
-  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
+std::string CefDevToolsFrontend::CefGetFrontendURL(bool can_dock) {
+  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
+             << ", isTabTarget_: " << isTabTarget_;
   return base::StringPrintf(
       "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
       content::kChromeDevToolsScheme,
