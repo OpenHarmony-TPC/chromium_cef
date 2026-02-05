@@ -23,6 +23,14 @@
 
 namespace {
 bool HostMatchWithWildcard(const std::string& ruleHost, const std::string& urlHost) {
+    net::IPAddress ip_address;
+    if (net::ParseURLHostnameToAddress(urlHost, &ip_address)) {
+      (void)ip_address;
+      if (ruleHost != urlHost) {
+        return false;
+      }
+      return true;
+    }
     std::vector<std::string> ruleHostParts = base::SplitString(ruleHost, ".",
         base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
     std::vector<std::string> urlHostParts = base::SplitString(urlHost, ".",
@@ -64,7 +72,7 @@ bool PathMatchWithWildcard(const std::string& rulePath, const std::string& urlPa
         base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
     std::vector<std::string> urlPathParts = base::SplitString(formatUrlPath, "/",
         base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
-    if (formatRulePath.size() > formatUrlPath.size() || rulePathParts.size() > urlPathParts.size()) {
+    if (rulePathParts.size() > urlPathParts.size()) {
         return false;
     }
 
