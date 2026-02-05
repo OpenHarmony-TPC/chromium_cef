@@ -154,7 +154,6 @@ std::string OverrideErrorPage(const CefString& url,
     receivers_.Add(this, std::move(receiver));
   }
   mojo::ReceiverSet<cef::mojom::RenderFrame> receivers_;
-  mojo::ReceiverSet<cef::mojom::RenderFrame> receivers_;
   void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
   GURL GetChildImageUrlFromElement(const blink::WebElement& element);
   blink::WebElement GetImgChild(const blink::WebNode& node);
