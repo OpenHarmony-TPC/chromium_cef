@@ -98,6 +98,16 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
+static std::string GetFrontendURL(bool can_dock, bool is_tab_target) {
+  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
+             << ", is_tab_target: " << is_tab_target;
+  return base::StringPrintf(
+      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
+      content::kChromeDevToolsScheme,
+      scheme::kChromeDevToolsHost,
+      can_dock ? "true" : "false",
+      is_tab_target ? "&targetType=tab" : "");
+}
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 static std::string GetFrontendURL() {
@@ -346,7 +356,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(CefGetFrontendURL(false));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, isTabTarget_));
 
   return devtools_frontend;
 }
@@ -375,20 +385,9 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(CefGetFrontendURL(ext_opt.canDock));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, isTabTarget_));
 
   return devtools_frontend;
-}
-
-std::string CefDevToolsFrontend::CefGetFrontendURL(bool can_dock) {
-  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
-             << ", isTabTarget_: " << isTabTarget_;
-  return base::StringPrintf(
-      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
-      content::kChromeDevToolsScheme,
-      scheme::kChromeDevToolsHost,
-      can_dock ? "true" : "false",
-      isTabTarget_ ? "&targetType=tab" : "");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -505,7 +504,7 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
 #else
   agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-  
+
   if (agent_host != agent_host_) {
     if (agent_host_) {
       agent_host_->DetachClient(this);

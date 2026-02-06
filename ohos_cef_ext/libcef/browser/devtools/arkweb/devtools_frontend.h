@@ -84,7 +84,6 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback,
       const CefOpenDevToolsExtOpt& ext_opt);
-  static std::string CefGetFrontendURL(bool can_dock);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   void Activate();
