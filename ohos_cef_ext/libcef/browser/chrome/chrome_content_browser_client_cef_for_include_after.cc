@@ -222,8 +222,9 @@ void ArkWebInnerConfigureNetworkContextParamsAfter(
 #if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   network_context_params->file_paths =
       ::network::mojom::NetworkContextFilePaths::New();
+  network_context_params->http_cache_enabled = true;
   base::FilePath cache_path;
-  if (context->IsOffTheRecord() || context->GetPath().empty()) {
+  if (context->GetPath().empty()) {
     network_context_params->http_cache_enabled = false;
   } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
     base::FilePath data_path;
@@ -235,7 +236,6 @@ void ArkWebInnerConfigureNetworkContextParamsAfter(
     network_context_params->file_paths->cookie_database_name =
         base::FilePath(chrome::kCookieFilename);
 
-    network_context_params->http_cache_enabled = true;
     network_context_params->file_paths->http_cache_directory =
         cache_path.AppendASCII(chrome::kCacheDirname);
   }
