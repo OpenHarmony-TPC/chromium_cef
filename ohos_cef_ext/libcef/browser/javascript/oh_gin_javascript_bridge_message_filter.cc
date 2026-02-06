@@ -160,6 +160,14 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     return handled;
   }
 
+  // Validate attachment type before casting to prevent undefined behavior
+  if (attachment->GetType() != IPC::MessageAttachment::Type::PLATFORM_FILE) {
+    LOG(ERROR) << "OnMessageReceivedThreadFlowbuf Invalid attachment type: "
+               << static_cast<int>(attachment->GetType())
+               << ", expected PLATFORM_FILE";
+    return handled;
+  }
+
   int fd = static_cast<IPC::internal::PlatformFileAttachment*>(attachment.get())
                ->file();
   IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(OhGinJavascriptBridgeMessageFilter, message,
