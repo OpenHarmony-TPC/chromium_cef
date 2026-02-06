@@ -333,7 +333,6 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 // static
-bool CefDevToolsFrontend::isTabTarget_ = false;
 CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
@@ -356,7 +355,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, isTabTarget_));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
@@ -385,7 +384,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, isTabTarget_));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
