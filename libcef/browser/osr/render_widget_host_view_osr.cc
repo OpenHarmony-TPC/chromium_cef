@@ -97,6 +97,11 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
 
   bool DelegatedFrameHostIsVisible() const override {
     // Called indirectly from DelegatedFrameHost::WasShown.
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    if (view_->evictUnlockFrameEnabled_) {
+      return !view_->host()->is_hidden();
+    }
+#endif
     return view_->IsShowing();
   }
 
@@ -124,10 +129,34 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
     viz::FrameEvictorClient::EvictIds ids;
     ids.embedded_ids =
         view_->render_widget_host()->CollectSurfaceIdsForEviction();
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    if (view_->GetUtils() && view_->GetUtils()->IsRenderWidgetHostViewForActiveMainFrame()) {
+      // If the ui compositor is no longer visible, include its surface ID for eviction as well.
+      if (auto compositor = view_->GetCompositor()) {
+        if (!compositor->IsVisible() && compositor->local_surface_id_from_parent().is_valid()) {
+          LOG(INFO) << "Collect ui surface with frame_sink_id: " << compositor->frame_sink_id()
+            << " local_surface_id: " << compositor->local_surface_id_from_parent();
+          ids.embedded_ids.emplace_back(compositor->frame_sink_id(), compositor->local_surface_id_from_parent());
+        }
+      }
+    }
+#endif
     return ids;
   }
 
   void InvalidateLocalSurfaceIdOnEviction() override {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    if (view_->GetUtils() && view_->GetUtils()->IsRenderWidgetHostViewForActiveMainFrame()) {
+      // If the ui compositor is no longer visible, include its surface ID for eviction as well.
+      if (auto compositor = view_->GetCompositor()) {
+        if (!compositor->IsVisible() && compositor->local_surface_id_from_parent().is_valid()) {
+          LOG(INFO) << "Invalidate ui surface with frame_sink_id: " << compositor->frame_sink_id() <<
+          " local_surface_id: " << compositor->local_surface_id_from_parent();
+          compositor->SetLocalSurfaceIdFromParent(viz::LocalSurfaceId());
+        }
+      }
+    }
+#endif
     view_->InvalidateLocalSurfaceId();
   }
 
@@ -226,6 +255,10 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       mouse_wheel_phase_handler_(this),
       gesture_provider_(CreateGestureProviderConfig(), this),
       weak_ptr_factory_(this) {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  evictUnlockFrameEnabled_ = OHOS::NWeb::OhosAdapterHelper::GetInstance().GetSystemPropertiesInstance()
+    .GetBoolParameter("persist.web.frame_evictor.enabled", false);
+#endif
   arkweb_rwhv_osr_utils_ = std::make_unique<ArkWebRenderWidgetHostViewOSRUtils>(this);
   DCHECK(render_widget_host_);
   DCHECK(!render_widget_host_->GetView());
@@ -442,8 +475,13 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
   }
 #endif
 #ifndef DISABLE_GPU
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  auto [compositor, compositor_local_surface_id_allocator] = ArkWebRenderWidgetHostViewOSRUtils::GetCompositorData(
+    browser_impl_->GetAcceleratedWidget(is_popup_));
+#else
   auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
       browser_impl_->GetAcceleratedWidget(is_popup_));
+#endif
   arkweb_rwhv_osr_utils_->SetupCompositor(compositor);
 #endif
 
@@ -463,6 +501,24 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
     GetTextInputManager()->AddObserver(this);
   }
 #endif
+
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  if (arkweb_rwhv_osr_utils_->IsRenderWidgetHostViewForActiveMainFrame() && compositor) {
+    // If the compositor viz::LocalSurfaceId is invalid, we may have been evicted.
+    if (!compositor->local_surface_id_from_parent().is_valid() && compositor_local_surface_id_allocator) {
+      compositor_local_surface_id_allocator->GenerateId();
+      compositor->SetLocalSurfaceIdFromParent(compositor_local_surface_id_allocator->GetCurrentLocalSurfaceId());
+    }
+    compositor->SetVisible(true);
+    LOG(INFO) << "ShowWithVisibility set ui compositor visible frame_sink_id: " << compositor->frame_sink_id()
+        << "local_surface_id: " << compositor->local_surface_id_from_parent();
+    timer_.Stop();
+    timer_.Start(FROM_HERE, base::Seconds(10), // 10：timeout
+                  base::BindOnce(&CefRenderWidgetHostViewOSR::SetUseSpecifiedDeadlinePolicy,
+                  weak_ptr_factory_.GetWeakPtr(), false));
+  }
+#endif
+
   if (delegated_frame_host_) {
 #ifdef DISABLE_GPU
     delegated_frame_host_->AttachToCompositor(compositor_.get());
@@ -470,6 +526,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
     LOG(INFO) << "CefRenderWidgetHostViewOSR::ShowWithVisibility AttachToCompositor";
     delegated_frame_host_->AttachToCompositor(compositor);
 #endif
+
 #if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
     delegated_frame_host_->WasShown(GetLocalSurfaceId(), GetPhysicalViewBounds().size(),
 #else
@@ -525,7 +582,20 @@ void CefRenderWidgetHostViewOSR::Hide() {
     provider->RemoveObserver(this);
   }
 
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  if (arkweb_rwhv_osr_utils_->IsRenderWidgetHostViewForActiveMainFrame()) {
+    if (auto compositor = GetCompositor()) {
+      compositor->SetVisible(false);
+      LOG(INFO) << "Hide set ui compositor invisible frame_sink_id: " << compositor->frame_sink_id()
+          << "local_surface_id: " << compositor->local_surface_id_from_parent();
+    }
+  }
+#endif
+
   if (delegated_frame_host_) {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    SetUseSpecifiedDeadlinePolicy(true);
+#endif
     delegated_frame_host_->WasHidden(
         content::DelegatedFrameHost::HiddenCause::kOther);
     delegated_frame_host_->DetachFromCompositor();
@@ -1191,8 +1261,31 @@ CefRenderWidgetHostViewOSR::CreateHostDisplayClient() {
   host_display_client_ =
       new CefHostDisplayClientOSR(this, gfx::kNullAcceleratedWidget);
   host_display_client_->SetActive(true);
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  host_display_client_->AddFirstRealSwapBufferListener(base::BindRepeating(
+    &CefRenderWidgetHostViewOSR::OnDisplayFirstRealSwap, weak_ptr_factory_.GetWeakPtr()));
+#endif
   return base::WrapUnique(host_display_client_.get());
 }
+
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+void CefRenderWidgetHostViewOSR::OnDisplayFirstRealSwap() {
+    SetUseSpecifiedDeadlinePolicy(false);
+}
+
+void CefRenderWidgetHostViewOSR::SetUseSpecifiedDeadlinePolicy(bool shouldUse) {
+  if (!evictUnlockFrameEnabled_) {
+    return;
+  }
+  if (!shouldUse) {
+    timer_.Stop();
+  }
+  if (delegated_frame_host_) {
+    delegated_frame_host_->SetUseSpecifiedDeadlinePolicy(shouldUse);
+  }
+  LOG(INFO) << "CefRenderWidgetHostViewOSR::SetUseSpecifiedDeadlinePolicy shouldUse: " << shouldUse;
+}
+#endif
 
 bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 #if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
@@ -2161,3 +2254,9 @@ void CefRenderWidgetHostViewOSR::UpdateBackgroundColorFromRenderer(
   GetRootLayer()->SetFillsBoundsOpaquely(opaque);
   GetRootLayer()->SetColor(color);
 }
+
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+ArkWebRenderWidgetHostViewOSRUtils* CefRenderWidgetHostViewOSR::GetUtils() const {
+  return arkweb_rwhv_osr_utils_.get();
+}
+#endif

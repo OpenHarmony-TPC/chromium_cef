@@ -31,6 +31,11 @@ class CefHostDisplayClientOSR : public viz::HostDisplayClient {
   const void* GetPixelMemory() const;
   gfx::Size GetPixelSize() const;
 
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  void NotifyFirstRealSwapBuffer() override;
+  void AddFirstRealSwapBufferListener(base::RepeatingCallback<void()> func);
+#endif  // BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+
  private:
   // mojom::DisplayClient implementation.
   void UseProxyOutputDevice(UseProxyOutputDeviceCallback callback) override;
@@ -51,6 +56,9 @@ class CefHostDisplayClientOSR : public viz::HostDisplayClient {
   const raw_ptr<CefRenderWidgetHostViewOSR> view_;
   std::unique_ptr<CefLayeredWindowUpdaterOSR> layered_window_updater_;
   bool active_ = false;
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  base::RepeatingCallback<void()> first_real_swap_buffer_listener_;
+#endif  // BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_HOST_DISPLAY_CLIENT_OSR_H_
