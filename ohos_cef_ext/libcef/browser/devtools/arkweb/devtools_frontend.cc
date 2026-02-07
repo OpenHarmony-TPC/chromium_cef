@@ -98,13 +98,15 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
-static std::string GetFrontendURL(bool can_dock) {
-  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
+static std::string GetFrontendURL(bool can_dock, bool is_tab_target) {
+  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
+             << ", is_tab_target: " << is_tab_target;
   return base::StringPrintf(
-      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked&targetType=tab",
+      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
       content::kChromeDevToolsScheme,
       scheme::kChromeDevToolsHost,
-      can_dock ? "true" : "false");
+      can_dock ? "true" : "false",
+      is_tab_target ? "&targetType=tab" : "");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -353,7 +355,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
@@ -382,7 +384,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
@@ -449,6 +451,7 @@ CefDevToolsFrontend::CefDevToolsFrontend(
   DCHECK(!frontend_destroyed_callback_.is_null());
   file_manager_.SetDevToolsMessageHandler(devtools_message_handler_.get());
   devtools_message_handler_->SetDevToolsFrontend(this);
+  isTabTarget_ = ShouldUseTabTarget();
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -489,8 +492,18 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
   // Don't call AttachClient multiple times for the same DevToolsAgentHost.
   // Otherwise it will call AgentHostClosed which closes the DevTools window.
   // This may happen in cases where the DevTools content fails to load.
-  scoped_refptr<content::DevToolsAgentHost> agent_host =
-      content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_);
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  isTabTarget_ = ShouldUseTabTarget();
+  scoped_refptr<content::DevToolsAgentHost> agent_host;
+  if (isTabTarget_) {
+    agent_host = content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_);
+  } else {
+    agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+  }
+#else
+  agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
   if (agent_host != agent_host_) {
     if (agent_host_) {
       agent_host_->DetachClient(this);
@@ -987,6 +1000,22 @@ void CefDevToolsFrontend::RequestFileSystems() {
   }
   CallClientFunction("DevToolsAPI", "fileSystemsLoaded",
       base::Value(std::move(file_systems_value)));
+}
+
+bool CefDevToolsFrontend::ShouldUseTabTarget() {
+  if (inspected_contents_->GetURL().SchemeIs("chrome-extension")) {
+    return false;
+  }
+
+  scoped_refptr<content::DevToolsAgentHost> host = content::DevToolsAgentHost::GetForTab(inspected_contents_);
+  if (host && host->GetType() == content::DevToolsAgentHost::kTypeTab) {
+    return true;
+  }
+
+  if (!inspected_contents_->GetOuterWebContents() && inspected_contents_->GetPrimaryMainFrame()) {
+    return true;
+  }
+  return false;
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
