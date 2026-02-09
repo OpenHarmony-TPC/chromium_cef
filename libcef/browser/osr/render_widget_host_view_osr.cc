@@ -151,7 +151,7 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
       if (auto compositor = view_->GetCompositor()) {
         if (!compositor->IsVisible() && compositor->local_surface_id_from_parent().is_valid()) {
           LOG(INFO) << "Invalidate ui surface with frame_sink_id: " << compositor->frame_sink_id() <<
-          " local_surface_id: " << compositor->local_surface_id_from_parent();
+            " local_surface_id: " << compositor->local_surface_id_from_parent();
           compositor->SetLocalSurfaceIdFromParent(viz::LocalSurfaceId());
         }
       }
@@ -257,7 +257,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       weak_ptr_factory_(this) {
 #if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
   evictUnlockFrameEnabled_ = OHOS::NWeb::OhosAdapterHelper::GetInstance().GetSystemPropertiesInstance()
-    .GetBoolParameter("persist.web.frame_evictor.enabled", false);
+    .GetBoolParameter("const.web.frame_evictor.enabled", false);
 #endif
   arkweb_rwhv_osr_utils_ = std::make_unique<ArkWebRenderWidgetHostViewOSRUtils>(this);
   DCHECK(render_widget_host_);
