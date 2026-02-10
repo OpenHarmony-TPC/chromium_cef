@@ -614,20 +614,86 @@ void ArkwebFrameHostExtImpl::RemoveCache(bool include_disk_files) {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 bool ArkwebFrameHostExtImpl::SetFocusByPosition(float x, float y) {
-  if (is_temporary() || !render_frame_host_) {
+  if (is_temporary() || !render_frame_host_ || !render_frame_) {
     LOG(ERROR) << "is_temporary or not render_frame_host_";
     return false;
   }
-
+ 
   if (!render_frame_.is_bound()) {
     LOG(ERROR) << "render_frame_.is_bound";
     return false;
   }
   bool out_isEditable = false;
-  render_frame_->SetFocusByPosition(x, y, &out_isEditable);
-  LOG(INFO) << "received result from render:" << out_isEditable;
+  auto focus_promise = std::make_shared<std::promise<bool>>();
+  std::future<bool> focus_future = focus_promise->get_future();
+  mojo::PendingRemote<cef::mojom::RenderFrame> pending_clone;
+  if (!is_io_frame_connected_.load()) {
+    LOG(INFO) << "SetFocusByPosition clone a new connect";
+    render_frame_->Clone(pending_clone.InitWithNewPipeAndPassReceiver());
+  }
+  LOG(INFO) << "SetFocusByPosition MainThread: Post task to TID_IO";
+  CEF_POST_TASK(CEF_IOT, base::BindOnce(&ArkwebFrameHostExtImpl::RequirePositionEditAble,
+                                        weak_ptr_factory_.GetWeakPtr(), focus_promise, x, y,
+                                        std::move(pending_clone)));
+  /**
+   * The 50ms timeout is because if the render process is frozen,
+   * the browser process will also be frozen when stylus down.
+   * When a stylus 'down' on the Web, we must determine if the target element 
+   * is editable before the 'down' event is processed.
+   * If it's an editable element (returns true), the handwriting canvas is 
+   *    activated and subsequent 'down' events are intercepted.
+   * The event is then handed over to the stylus canvas for writing.
+   * This requires a synchronous check. We use a new Mojo connection on the 
+   * IO thread to send/receive the request, while the UI thread waits for a 
+   * maximum of 50ms, which can meet the stylus requirements.
+   */
+  std::future_status status = focus_future.wait_for(std::chrono::milliseconds(50));
+  if (status == std::future_status::ready) {
+    out_isEditable = focus_future.get();
+  } else if (status == std::future_status::timeout) {
+    LOG(WARNING) << "SetFocusByPosition timeout";
+    out_isEditable = false;
+  }
+  LOG(INFO) << "SetFocusByPosition received result from render:" << out_isEditable;
   return out_isEditable;
 }
+
+void ArkwebFrameHostExtImpl::RequirePositionEditAble(std::shared_ptr<std::promise<bool>> result_promise,
+                                                     float x,
+                                                     float y,
+                                                     mojo::PendingRemote<cef::mojom::RenderFrame> pending_remote) {
+  LOG(INFO) << "SetFocusByPosition send in io thread";
+  CEF_REQUIRE_IOT();
+  if (pending_remote.is_valid()) {
+    LOG(INFO) << "SetFocusByPosition pending_remote is valid, need bind pending_remote";
+    io_thread_render_frame_.reset();
+    io_thread_render_frame_.Bind(std::move(pending_remote));
+    is_io_frame_connected_.store(true);
+    io_thread_render_frame_.set_disconnect_handler(
+      base::BindOnce(&ArkwebFrameHostExtImpl::OnIoRenderFrameDisconnect, weak_ptr_factory_.GetWeakPtr()));
+  }
+  if (io_thread_render_frame_ && io_thread_render_frame_.is_bound()) {
+    io_thread_render_frame_->SetFocusByPosition(x, y, base::BindOnce(
+      [](std::shared_ptr<std::promise<bool>> promise, bool isEditable) {
+        LOG(INFO) << "SetFocusByPosition SubThread: Callback received: " << isEditable;
+        if (promise) {
+          promise->set_value(isEditable);
+        }
+      }, result_promise));
+  } else {
+    LOG(INFO) << "SetFocusByPosition io_thread_render_frame_ is not bound";
+    if (result_promise) {
+      result_promise->set_value(false);
+    }
+  }
+}
+
+void ArkwebFrameHostExtImpl::OnIoRenderFrameDisconnect() {
+  CEF_REQUIRE_IOT();
+  is_io_frame_connected_.store(false);
+  io_thread_render_frame_.reset();
+}
+
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
