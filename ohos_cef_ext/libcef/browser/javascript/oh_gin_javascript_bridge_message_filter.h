@@ -60,6 +60,7 @@ class OhGinJavascriptBridgeMessageFilter
  private:
   friend class BrowserThread;
   friend class base::DeleteHelper<OhGinJavascriptBridgeMessageFilter>;
+  friend class OhGinJavascriptBridgeMessageFilterTest;  // For unit testing
 
   typedef std::map<int32_t, scoped_refptr<OhGinJavascriptBridgeDispatcherHost>>
       HostMap;

@@ -31,6 +31,8 @@ const char kOhGinJavascriptBridgeMessageFilterKey[] =
 
 // The routing id of the RenderFrameHost whose request we are processing.
 // Used on the background thread.
+// Extern declaration for unit test access.
+extern thread_local int32_t current_routing_id;
 thread_local int32_t current_routing_id = MSG_ROUTING_NONE;
 
 namespace NWEB {
