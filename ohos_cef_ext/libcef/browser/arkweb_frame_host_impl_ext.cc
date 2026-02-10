@@ -614,11 +614,11 @@ void ArkwebFrameHostExtImpl::RemoveCache(bool include_disk_files) {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 bool ArkwebFrameHostExtImpl::SetFocusByPosition(float x, float y) {
-  if (is_temporary() || !render_frame_host_) {
+  if (is_temporary() || !render_frame_host_ || !render_frame_) {
     LOG(ERROR) << "is_temporary or not render_frame_host_";
     return false;
   }
-
+ 
   if (!render_frame_.is_bound()) {
     LOG(ERROR) << "render_frame_.is_bound";
     return false;
@@ -632,9 +632,21 @@ bool ArkwebFrameHostExtImpl::SetFocusByPosition(float x, float y) {
     render_frame_->Clone(pending_clone.InitWithNewPipeAndPassReceiver());
   }
   LOG(INFO) << "SetFocusByPosition MainThread: Post task to TID_IO";
-  CEF_POST_TASK(CEF_IOT, base::BindOnce(&ArkwebFrameHostExtImpl::RequirePositionEditAble, base::RetainedRef(this),
-                                        focus_promise, x, y, std::move(pending_clone)));
-
+  CEF_POST_TASK(CEF_IOT, base::BindOnce(&ArkwebFrameHostExtImpl::RequirePositionEditAble,
+                                        weak_ptr_factory_.GetWeakPtr(), focus_promise, x, y,
+                                        std::move(pending_clone)));
+  /**
+   * The 50ms timeout is because if the render process is frozen,
+   * the browser process will also be frozen when stylus down.
+   * When a stylus 'down' on the Web, we must determine if the target element 
+   * is editable before the 'down' event is processed.
+   * If it's an editable element (returns true), the handwriting canvas is 
+   *    activated and subsequent 'down' events are intercepted.
+   * The event is then handed over to the stylus canvas for writing.
+   * This requires a synchronous check. We use a new Mojo connection on the 
+   * IO thread to send/receive the request, while the UI thread waits for a 
+   * maximum of 50ms, which can meet the stylus requirements.
+   */
   std::future_status status = focus_future.wait_for(std::chrono::milliseconds(50));
   if (status == std::future_status::ready) {
     out_isEditable = focus_future.get();
@@ -658,9 +670,9 @@ void ArkwebFrameHostExtImpl::RequirePositionEditAble(std::shared_ptr<std::promis
     io_thread_render_frame_.Bind(std::move(pending_remote));
     is_io_frame_connected_.store(true);
     io_thread_render_frame_.set_disconnect_handler(
-      base::BindOnce(&ArkwebFrameHostExtImpl::OnIoRenderFrameDisconnect, this));
+      base::BindOnce(&ArkwebFrameHostExtImpl::OnIoRenderFrameDisconnect, weak_ptr_factory_.GetWeakPtr()));
   }
-  if (io_thread_render_frame_.is_bound()) {
+  if (io_thread_render_frame_ && io_thread_render_frame_.is_bound()) {
     io_thread_render_frame_->SetFocusByPosition(x, y, base::BindOnce(
       [](std::shared_ptr<std::promise<bool>> promise, bool isEditable) {
         LOG(INFO) << "SetFocusByPosition SubThread: Callback received: " << isEditable;
