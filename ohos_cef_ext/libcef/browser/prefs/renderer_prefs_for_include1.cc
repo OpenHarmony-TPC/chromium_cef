@@ -34,8 +34,8 @@ namespace renderer_prefs {
 #if BUILDFLAG(IS_ARKWEB)
 void SetDefaultPrefsExt(blink::web_pref::WebPreferences& web) {
   // These OHOS default prefs defined in web_preferences.cc is only used for
-  // none PC device, PC device has different prefs as below.
-  if (base::ohos::IsPcDevice() || base::ohos::IsPcMode()) {
+  // none PC device or compatible mode, PC device in non-compatible mode has different prefs as below.
+  if ((base::ohos::IsPcDevice() || base::ohos::IsPcMode()) && !base::ohos::IsCompatibleMode()) {
     web.viewport_meta_enabled = false;
     web.auto_zoom_focused_editable_to_legible_scale = false;
     web.shrinks_viewport_contents_to_fit = false;
