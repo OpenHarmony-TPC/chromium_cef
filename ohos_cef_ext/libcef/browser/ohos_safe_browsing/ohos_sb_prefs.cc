@@ -4,6 +4,7 @@
 
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
+#include "components/prefs/pref_store.h"
 #include "components/prefs/pref_registry_simple.h"
 
 namespace ohos_safe_browsing {
@@ -14,8 +15,11 @@ const char kIncognitoMaliciousAllowList[] =
     "oh.safe_browsing.incognito_malicious_allowlist";
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
-  registry->RegisterListPref(kMaliciousAllowList);
-  registry->RegisterListPref(kIncognitoMaliciousAllowList);
+
+  if(!registry->defaults()->GetValue(kMaliciousAllowList, nullptr)){
+    registry->RegisterListPref(kMaliciousAllowList);
+    registry->RegisterListPref(kIncognitoMaliciousAllowList);
+  }
 }
 
 }  // namespace ohos_safe_browsing
