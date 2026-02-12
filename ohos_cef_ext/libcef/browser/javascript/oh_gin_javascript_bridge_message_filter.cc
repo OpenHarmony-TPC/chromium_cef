@@ -161,11 +161,12 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
   }
 
   // Validate attachment type before casting to prevent undefined behavior
-  if (attachment->GetType() != IPC::MessageAttachment::Type::PLATFORM_FILE) {
-    LOG(ERROR) << "OnMessageReceivedThreadFlowbuf Invalid attachment type: "
-               << static_cast<int>(attachment->GetType())
+  auto* msg_attachment = static_cast<IPC::MessageAttachment*>(attachment.get());
+  if (msg_attachment->GetType() != IPC::MessageAttachment::Type::PLATFORM_FILE) {
+    LOG(ERROR) << "OnMessageThreadFlowbuf Invalid attachment type: " 
+               << static_cast<int>(msg_attachment->GetType())
                << ", expected PLATFORM_FILE";
-    return handled;
+    return handled; 
   }
 
   int fd = static_cast<IPC::internal::PlatformFileAttachment*>(attachment.get())
