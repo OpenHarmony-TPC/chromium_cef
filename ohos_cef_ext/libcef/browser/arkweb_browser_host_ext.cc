@@ -4212,6 +4212,22 @@ void ArkWebBrowserHostExtImpl::AbortDistill() {
 }
 #endif // ARKWEB_READER_MODE
 
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+bool ArkWebBrowserHostExtImpl::SavePage(int32_t type, CefString& filePath) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents is null";
+    return false;
+  }
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  if (!web_contents_ex) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents_ex is null";
+    return false;
+  }
+  return web_contents_ex->SavePageEx(filePath, static_cast<content::SavePageType>(type));
+}
+#endif // ARKWEB_SAVE_PAGE
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
                                                    CefString& frame_url) {
