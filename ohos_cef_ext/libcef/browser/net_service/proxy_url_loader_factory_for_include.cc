@@ -110,9 +110,8 @@ static bool IsTargetResourceTypeValue(int resource_type) {
     }
 #endif
 #if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
-  bool is_target_type = IsTargetResourceTypeValue(obj->request_.resource_type);
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) && 
-      obj->current_response_->headers != nullptr && is_target_type) {
+      obj->current_response_->headers != nullptr) {
       auto response_info =
           ExtractHttpResponse(obj->current_response_->headers.get());
       bool is_from_network = obj->current_response_->network_accessed;
