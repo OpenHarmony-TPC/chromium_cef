@@ -79,5 +79,59 @@ class CefDownloadItemExt : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefValue> GetOriginContentDisposition() = 0;
+
+  ///
+  /// Returns can resume.
+  ///
+  /*--cef()--*/
+  virtual bool CanResume() = 0;
+
+  ///
+  /// Returns referrer url.
+  ///
+  /*--cef()--*/
+  virtual CefString GetReferrerUrl() = 0;
+
+  ///
+  /// Returns request initiator.
+  ///
+  /*--cef()--*/
+  virtual CefString GetRequestInitiator() = 0;
+
+  ///
+  /// Returns referrer url.
+  ///
+  /*--cef()--*/
+  virtual bool IsTransient() = 0;
+
+  ///
+  /// Returns the download resource,
+  ///
+  /*--cef()--*/
+  virtual int GetDownloadSource() = 0;
+
+  ///
+  /// Returns the target disposition.
+  ///
+  /*--cef()--*/
+  virtual int GetTargetDisposition() = 0;
+
+  ///
+  /// Returns the extension id.
+  ///
+  /*--cef()--*/
+  virtual CefString GetByExtensionId() = 0;
+
+  ///
+  /// Returns the extension name.
+  ///
+  /*--cef()--*/
+  virtual CefString GetByExtensionName() = 0;
+
+  ///
+  /// Returns the conflict action.
+  ///
+  /*--cef()--*/
+  virtual int GetConflictAction() = 0;
 };
 #endif

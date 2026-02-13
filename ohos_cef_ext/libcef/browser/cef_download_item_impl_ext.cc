@@ -144,3 +144,62 @@ CefRefPtr<CefValue> CefDownloadItemImplExt::GetOriginContentDisposition() {
 CefRefPtr<CefDownloadItemExt> CefDownloadItemImplExt::AsArkDownloadItem() {
   return this;
 }
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+bool CefDownloadItemImplExt::CanResume() {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  return const_value().CanResume();
+}
+
+bool CefDownloadItemImplExt::IsTransient() {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  return const_value().IsTransient();
+}
+
+CefString CefDownloadItemImplExt::GetReferrerUrl() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  return const_value().GetReferrerUrl().spec();
+}
+
+CefString CefDownloadItemImplExt::GetRequestInitiator() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  auto initiator = const_value().GetRequestInitiator().value_or(url::Origin());
+  auto initiator_value = initiator.GetURL();
+  return initiator_value.spec();
+}
+
+int CefDownloadItemImplExt::GetDownloadSource() {
+  CEF_VALUE_VERIFY_RETURN(false, -1);
+  int state = static_cast<int>(const_value().GetDownloadSource());
+  return state;
+}
+
+int CefDownloadItemImplExt::GetTargetDisposition() {
+  CEF_VALUE_VERIFY_RETURN(false, -1);
+  int state = static_cast<int>(const_value().GetTargetDisposition());
+  return state;
+}
+
+CefString CefDownloadItemImplExt::GetByExtensionId() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
+  auto id = item_impl.GetByExtensionId();
+  return id;
+}
+
+CefString CefDownloadItemImplExt::GetByExtensionName() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
+  auto name = item_impl.GetByExtensionName();
+  return name;
+}
+
+int CefDownloadItemImplExt::GetConflictAction() {
+  CEF_VALUE_VERIFY_RETURN(false, -1);
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
+  int action = static_cast<int>(item_impl.GetConflictAction());
+  return action;
+}
+#endif
