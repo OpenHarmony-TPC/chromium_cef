@@ -149,7 +149,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
     view_->delegated_frame_host_->DetachFromCompositor();
     view_->delegated_frame_host_.reset(nullptr);
   }
-
+  view_->host_display_client_ = nullptr;
 #ifdef DISABLE_GPU
   view_->compositor_.reset(nullptr);
 #else
