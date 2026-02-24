@@ -56,6 +56,10 @@
 #include "ohos_cef_ext/libcef/browser/web_navigation_info_impl.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -403,5 +407,14 @@ void ChromeContentBrowserClientCef::OnReportNewNavigationInfo(
   CefRefPtr<CefWebNavigationInfo> cef_info =
       new CefWebNavigationInfoImpl(navigation_info);
   handler->AsCefRequestHandlerExt()->OnReportNewNavigationInfo(cef_info);
+}
+
+bool ChromeContentBrowserClientCef::ShouldReportNewNavigationInfo() {
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+  return nweb_ex::AlloyArkWebGlobalConfig::GetInstance()
+      ->ShouldReportNewNavigationInfo();
+#else
+  return false;
+#endif
 }
 #endif

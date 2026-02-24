@@ -191,6 +191,8 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
   void OnReportNewNavigationInfo(
       content::WebContents* web_contents,
       const net::WebNavigationInfo& navigation_info) override;
+
+  bool ShouldReportNewNavigationInfo() override;
 #endif
 
  private:
