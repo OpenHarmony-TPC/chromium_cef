@@ -514,7 +514,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
-  void FillAutofillData(CefRefPtr<CefValue> message, int32_t trigger_type) override;
+  void FillAutofillData(CefRefPtr<CefValue> message) override;
+  void FillAutofillDataFromTriggerType(
+      CefRefPtr<CefValue> message, int32_t trigger_type) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
