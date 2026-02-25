@@ -2076,10 +2076,6 @@ typedef enum {
 #endif
   MENU_ID_CUSTOM_LAST = 250,
 
-#if BUILDFLAG(ARKWEB_MENU)
-  MENU_ID_IMAGE_SAVE = 251,
-#endif
-
   // All user-defined menu IDs should come between MENU_ID_USER_FIRST and
   // MENU_ID_USER_LAST to avoid overlapping the Chromium and CEF ID ranges
   // defined in the tools/gritsettings/resource_ids file.

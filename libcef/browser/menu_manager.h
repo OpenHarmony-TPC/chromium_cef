@@ -63,7 +63,6 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   bool IsCustomContextMenuCommand(int command_id);
 
 #if BUILDFLAG(ARKWEB_MENU)
-  content::RenderFrameHost* GetFocusedFrame();
   void ExecuteSaveImage();
   void ExecuteCopyImageAt();
 #endif

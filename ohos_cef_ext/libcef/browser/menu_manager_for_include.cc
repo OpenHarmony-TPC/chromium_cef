@@ -19,6 +19,7 @@
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(ARKWEB_MENU)
+#include "content/public/common/referrer.h"
 #include "third_party/blink/public/common/loader/network_utils.h"
 
 using blink::mojom::ContextMenuDataMediaType;
@@ -32,42 +33,46 @@ constexpr cef_context_menu_edit_state_flags_t kMenuCommands[] = {
     CM_EDITFLAG_CAN_DELETE, CM_EDITFLAG_CAN_SELECT_ALL};
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
+#if BUILDFLAG(ARKWEB_MENU)
+content::Referrer CreateReferrer(const GURL& url,
+                                 const content::ContextMenuParams& params) {
+  const GURL& referring_url = params.frame_url;
+  return content::Referrer::SanitizeForRequest(
+      url,
+      content::Referrer(referring_url.GetAsReferrer(), params.referrer_policy));
+}
+#endif
+
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_MENU)
-content::RenderFrameHost* CefMenuManager::GetFocusedFrame() {
-  if (!web_contents()) {
-    return nullptr;
-  }
-
-  return web_contents()->GetFocusedFrame();
-}
-
 void CefMenuManager::ExecuteSaveImage() {
-  content::RenderFrameHost* frame_host = GetFocusedFrame();
-  if (!frame_host) {
-    LOG(ERROR) << "frame_host is nullptr";
+  if (!web_contents()) {
+    LOG(ERROR) << "web_contents is nullptr";
     return;
   }
 
-  bool is_large_data_url =
-    params_.has_image_contents && params_.src_url.is_empty();
+  content::RenderFrameHost* frame_host = web_contents()->GetFocusedFrame();
+  bool is_large_data_url = params_.has_image_contents && params_.src_url.is_empty();
   if (params_.media_type == ContextMenuDataMediaType::kCanvas ||
-      (params_.media_type == ContextMenuDataMediaType::kImage &&
-       is_large_data_url)) {
-    LOG(INFO) << "save image at";
+      (params_.media_type == ContextMenuDataMediaType::kImage && is_large_data_url)) {
+    if (!frame_host) {
+      LOG(ERROR) << "frame_host is nullptr";
+      return;
+    }
+    LOG(INFO) << "save canvas image or large image";
     frame_host->SaveImageAt(params_.x, params_.y);
     return;
   }
 
-  RenderFrameHost* target_frame_host =
-      (params_.media_type == ContextMenuDataMediaType::kPlugin)
-          ? web_contents()->GetOuterWebContentsFrame()
-          : frame_host;
+  bool is_plugin = params_.media_type == ContextMenuDataMediaType::kPlugin;
+  content::RenderFrameHost* target_frame_host = is_plugin ?
+      web_contents()->GetOuterWebContentsFrame() : frame_host;
   if (!target_frame_host) {
-    LOG(ERROR) << "target_frame_host is nullptr";
+    LOG(ERROR) << "target_frame_host is nullptr, is_plugin: " << is_plugin;
     return;
   }
+
   if (params_.media_type == ContextMenuDataMediaType::kImage) {
     LOG(INFO) << "save small image";
     GURL url = params_.src_url;
@@ -75,19 +80,26 @@ void CefMenuManager::ExecuteSaveImage() {
     net::HttpRequestHeaders headers;
     headers.SetHeaderIfMissing(net::HttpRequestHeaders::kAccept,
                                blink::network_utils::ImageAcceptHeader());
-    source_web_contents_->SaveFrameWithHeaders(
-        url, referrer, headers.ToString(), params_.suggested_filename,
-        target_frame_host);
+    bool is_subresource = params_.media_type != ContextMenuDataMediaType::kNone &&
+                          !params_.is_image_media_plugin_document;
+    web_contents()->SaveFrameWithHeaders(url, referrer, headers.ToString(),
+                                         params_.suggested_filename,
+                                         target_frame_host, is_subresource);
   }
 }
 
 void CefMenuManager::ExecuteCopyImageAt() {
-  content::RenderFrameHost* frame_host = GetFocusedFrame();
+  if (!web_contents()) {
+    LOG(ERROR) << "web_contents is nullptr";
+    return;
+  }
+
+  content::RenderFrameHost* frame_host = web_contents()->GetFocusedFrame();
   if (!frame_host) {
     LOG(ERROR) << "frame_host is nullptr";
     return;
   }
-
+  LOG(INFO) << "copy image at (" << params_.x << ", " << params_.y << ")";
   frame_host->CopyImageAt(params_.x, params_.y);
 }
 #endif
