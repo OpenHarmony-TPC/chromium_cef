@@ -438,7 +438,7 @@ Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
   LOG(INFO) << "CefDevToolsMessageHandler::SetDockMode isdocked: " << params[0].GetBool()
             << ", can_dock_: " << can_dock_;
   bool dock_requested = params[0].is_bool() ? params[0].GetBool() : false;
- 
+
   is_docked_ = dock_requested;
   if (!is_docked_) {
     dock_mode_ = DockMode::UNDOCKED;
