@@ -172,9 +172,10 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   // Destroy the browser members. This method should only be called after the
   // native browser window is not longer processing messages.
   void DestroyBrowser() override;
-
+89
   // Cancel display of the context menu, if any.
   void CancelContextMenu();
+  CefMenuManager* GetMenuManager();
 
   bool MaybeAllowNavigation(content::RenderFrameHost* opener,
                             const content::OpenURLParams& params) override;

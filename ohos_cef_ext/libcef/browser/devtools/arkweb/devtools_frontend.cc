@@ -370,7 +370,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       const CefOpenDevToolsExtOpt& ext_opt) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWithByPb({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})"
-            << ", canDock: " << ext_opt.canDock;
+            << ", canDock: " << ext_opt.canDock << ", useNativeMenu: " << ext_opt.useNativeMenu;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
@@ -382,6 +382,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       frontend_browser, std::move(handler),
       inspected_contents, inspect_element_at,
       std::move(frontend_destroyed_callback));
+  devtools_frontend->useNativeMenu_ = ext_opt.useNativeMenu;
 
   // Need to load the URL after creating the DevTools objects.
   frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_));
@@ -592,8 +593,16 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     if (rfh == nullptr) {
       return;
     }
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+    LOG(INFO) << "CefDevToolsFrontend::HandleMessageFromDevToolsFrontend useNativeMenu_: " << useNativeMenu_;
+    if (!useNativeMenu_) {
+      rfh->ExecuteJavaScriptForTests(
+          u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
+    }
+#else
     rfh->ExecuteJavaScriptForTests(
         u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   } else if (*method == "loadNetworkResource") {
     if (params.size() < 3) {
       return;
