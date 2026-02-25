@@ -187,6 +187,12 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
   std::string GetUAStringForHost(const std::string& host) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+  void OnReportNewNavigationInfo(
+      content::WebContents* web_contents,
+      const net::WebNavigationInfo& navigation_info) override;
+#endif
+
  private:
   static std::unique_ptr<content::WebContentsViewDelegate>
   CreateWebContentsViewDelegate(content::WebContents* web_contents);
