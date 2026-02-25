@@ -18,6 +18,7 @@
  
 struct CefOpenDevToolsExtOpt {
   bool canDock = false;
+  bool useNativeMenu = false;
 };
  
 #endif // OHOS_CEF_EXT_LIBCEF_COMMON_CEF_OPEN_DEVTOOLS_EXT_OPT_H_
