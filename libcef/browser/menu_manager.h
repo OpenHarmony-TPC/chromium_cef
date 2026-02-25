@@ -62,6 +62,12 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   // Returns true if the specified id is a custom context menu command.
   bool IsCustomContextMenuCommand(int command_id);
 
+#if BUILDFLAG(ARKWEB_MENU)
+  content::RenderFrameHost* GetFocusedFrame();
+  void ExecuteSaveImage();
+  void ExecuteCopyImageAt();
+#endif
+
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
   bool IsCommandIdEnabled(int command_id,
                           content::ContextMenuParams& params) const;

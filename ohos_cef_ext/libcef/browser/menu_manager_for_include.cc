@@ -18,6 +18,12 @@
 #include "ui/base/data_transfer_policy/data_transfer_endpoint.h"
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
+#if BUILDFLAG(ARKWEB_MENU)
+#include "third_party/blink/public/common/loader/network_utils.h"
+
+using blink::mojom::ContextMenuDataMediaType;
+#endif
+
 namespace {
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
@@ -27,6 +33,64 @@ constexpr cef_context_menu_edit_state_flags_t kMenuCommands[] = {
 #endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
 }  // namespace
+
+#if BUILDFLAG(ARKWEB_MENU)
+content::RenderFrameHost* CefMenuManager::GetFocusedFrame() {
+  if (!web_contents()) {
+    return nullptr;
+  }
+
+  return web_contents()->GetFocusedFrame();
+}
+
+void CefMenuManager::ExecuteSaveImage() {
+  content::RenderFrameHost* frame_host = GetFocusedFrame();
+  if (!frame_host) {
+    LOG(ERROR) << "frame_host is nullptr";
+    return;
+  }
+
+  bool is_large_data_url =
+    params_.has_image_contents && params_.src_url.is_empty();
+  if (params_.media_type == ContextMenuDataMediaType::kCanvas ||
+      (params_.media_type == ContextMenuDataMediaType::kImage &&
+       is_large_data_url)) {
+    LOG(INFO) << "save image at";
+    frame_host->SaveImageAt(params_.x, params_.y);
+    return;
+  }
+
+  RenderFrameHost* target_frame_host =
+      (params_.media_type == ContextMenuDataMediaType::kPlugin)
+          ? web_contents()->GetOuterWebContentsFrame()
+          : frame_host;
+  if (!target_frame_host) {
+    LOG(ERROR) << "target_frame_host is nullptr";
+    return;
+  }
+  if (params_.media_type == ContextMenuDataMediaType::kImage) {
+    LOG(INFO) << "save small image";
+    GURL url = params_.src_url;
+    content::Referrer referrer = CreateReferrer(url, params_);
+    net::HttpRequestHeaders headers;
+    headers.SetHeaderIfMissing(net::HttpRequestHeaders::kAccept,
+                               blink::network_utils::ImageAcceptHeader());
+    source_web_contents_->SaveFrameWithHeaders(
+        url, referrer, headers.ToString(), params_.suggested_filename,
+        target_frame_host);
+  }
+}
+
+void CefMenuManager::ExecuteCopyImageAt() {
+  content::RenderFrameHost* frame_host = GetFocusedFrame();
+  if (!frame_host) {
+    LOG(ERROR) << "frame_host is nullptr";
+    return;
+  }
+
+  frame_host->CopyImageAt(params_.x, params_.y);
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 bool CefMenuManager::IsCommandIdEnabled(

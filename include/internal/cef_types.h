@@ -2049,6 +2049,10 @@ typedef enum {
   MENU_ID_FIND = 130,
   MENU_ID_PRINT = 131,
   MENU_ID_VIEW_SOURCE = 132,
+#if BUILDFLAG(ARKWEB_MENU)
+  MENU_ID_IMAGE_SAVE = 133,
+  MENU_ID_IMAGE_COPY_AT = 134,
+#endif
 
   // Spell checking word correction suggestions.
   MENU_ID_SPELLCHECK_SUGGESTION_0 = 200,
@@ -2071,6 +2075,10 @@ typedef enum {
   MENU_ID_FEED_SHARE = 223,
 #endif
   MENU_ID_CUSTOM_LAST = 250,
+
+#if BUILDFLAG(ARKWEB_MENU)
+  MENU_ID_IMAGE_SAVE = 251,
+#endif
 
   // All user-defined menu IDs should come between MENU_ID_USER_FIRST and
   // MENU_ID_USER_LAST to avoid overlapping the Chromium and CEF ID ranges

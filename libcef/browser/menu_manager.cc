@@ -503,6 +503,15 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
       browser_->GetHost()->AddWordToDictionary(params_.misspelled_word);
       break;
 
+#if BUILDFLAG(ARKWEB_MENU)
+    case MENU_ID_IMAGE_SAVE:
+      ExecuteSaveImage();
+      break;
+    case MENU_ID_IMAGE_COPY_AT:
+      ExecuteCopyImageAt();
+      break;
+#endif
+
     default:
       break;
   }
