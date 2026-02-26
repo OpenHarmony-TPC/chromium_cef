@@ -377,7 +377,7 @@ Result CefDevToolsMessageHandler::ClearPreferences(const base::Value::List& para
 Result CefDevToolsMessageHandler::SetInspectedPageBounds(
     const base::Value::List& params) {
   if (params.empty()) {
-    LOG(WARNING)
+    LOG(INFO)
         << "CefDevToolsMessageHandler::SetInspectedPageBounds params is empty.";
     return {false, {}};
   }
@@ -391,9 +391,16 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
  
   const gfx::Rect rect(left, top, width, height);
   CefResizingStrategy strategy(rect);
-  if (!resizing_strategy_.Equals(strategy)) {
-    resizing_strategy_.CopyFrom(strategy);
+  if (resizing_strategy_.Equals(strategy)) {
+    LOG(INFO)
+        << "CefDevToolsMessageHandler::SetInspectedPageBounds resizing_strategy_.Equals.";
+    if (dock_mode_changed_) {
+      dock_mode_changed_ = false;
+      delegate_->SetDockMode((int)dock_mode_);
+    }
+    return {delegate_->SetInspectedPageBounds(left, top, width, height), {}};
   }
+  resizing_strategy_.CopyFrom(strategy);
   if (dock_mode_changed_ && can_dock_) {
     UpdateDockMode();
   }
@@ -404,32 +411,38 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
 void CefDevToolsMessageHandler::UpdateDockMode() {
   dock_mode_changed_ = false;
   gfx::Rect inspected_page_bounds = resizing_strategy_.bounds();
-  if (inspected_page_bounds.x() > 0) {
-    delegate_->SetDockMode((int)DockMode::LEFT);
-    return;
-  }
  
   gfx::Rect devtools_bounds = devtools_frontend_->web_contents()
                                   ->GetRenderWidgetHostView()
                                   ->GetViewBounds();
+  if (inspected_page_bounds.x() > 0) {
+    dock_mode_ = DockMode::LEFT;
+    delegate_->SetDockMode((int)dock_mode_);
+    return;
+  }
   if (inspected_page_bounds.width() == devtools_bounds.width()) {
-    delegate_->SetDockMode((int)DockMode::BOTTOM);
+    dock_mode_ = DockMode::BOTTOM;
+    delegate_->SetDockMode((int)dock_mode_);
   } else {
-    delegate_->SetDockMode((int)DockMode::RIGHT);
+    dock_mode_ = DockMode::RIGHT;
+    delegate_->SetDockMode((int)dock_mode_);
   }
 }
  
 Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
-  if (params.empty() || !can_dock_) {
-    LOG(WARNING) << "CefDevToolsMessageHandler::SetDockMode params is empty or "
+  if (params.empty()) {
+    LOG(INFO) << "CefDevToolsMessageHandler::SetDockMode params is empty or "
                     "not candock.";
     return {false, {}};
   }
+  LOG(INFO) << "CefDevToolsMessageHandler::SetDockMode isdocked: " << params[0].GetBool()
+            << ", can_dock_: " << can_dock_;
   bool dock_requested = params[0].is_bool() ? params[0].GetBool() : false;
 
   is_docked_ = dock_requested;
   if (!is_docked_) {
-    return {delegate_->SetDockMode((int)DockMode::UNDOCKED), {}};
+    dock_mode_ = DockMode::UNDOCKED;
+    return {delegate_->SetDockMode((int)dock_mode_), {}};
   }
   dock_mode_changed_ = true;
  

@@ -676,6 +676,11 @@ void AlloyBrowserHostImpl::CancelContextMenu() {
   }
 }
 
+CefMenuManager* AlloyBrowserHostImpl::GetMenuManager() {
+  CEF_REQUIRE_UIT();
+  return menu_manager_.get();
+}
+
 bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     content::RenderFrameHost* opener,
     const content::OpenURLParams& params) {

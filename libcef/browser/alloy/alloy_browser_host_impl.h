@@ -175,6 +175,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
 
   // Cancel display of the context menu, if any.
   void CancelContextMenu();
+  CefMenuManager* GetMenuManager();
 
   bool MaybeAllowNavigation(content::RenderFrameHost* opener,
                             const content::OpenURLParams& params) override;
