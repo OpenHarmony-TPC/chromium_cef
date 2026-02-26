@@ -239,6 +239,10 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Update browser controls height.
   ///
   virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
+
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+  virtual bool SavePage(int32_t type, CefString& filePath) { return false; }
+#endif // ARKWEB_SAVE_PAGE
   ///
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
