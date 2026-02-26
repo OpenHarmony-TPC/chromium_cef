@@ -100,6 +100,9 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/javascript/oh_javascript_injector.h",
   "//cef/ohos_cef_ext/libcef/browser/load_committed_details_impl.cc",
   "//cef/ohos_cef_ext/libcef/browser/load_committed_details_impl.h",
+  "//cef/ohos_cef_ext/include/cef_web_navigation_info.h",
+  "//cef/ohos_cef_ext/libcef/browser/web_navigation_info_impl.h",
+  "//cef/ohos_cef_ext/libcef/browser/web_navigation_info_impl.cc",
 
   "//cef/ohos_cef_ext/libcef/browser/alloy/render_process_state_handler.cc",
   "//cef/ohos_cef_ext/libcef/browser/alloy/render_process_state_handler.h",

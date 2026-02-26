@@ -783,7 +783,11 @@ void InterceptedRequest::OnHeadersReceived(
   if (current_headers_->IsRedirect(&location)) {
     const GURL new_url = request_.url.Resolve(location);
     redirect_info =
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+        MakeRedirectInfo(request_, current_headers_.get(), new_url, current_headers_->response_code());
+#else
         MakeRedirectInfo(request_, current_headers_.get(), new_url, 0);
+#endif
   }
 
   HandleResponseOrRedirectHeaders(

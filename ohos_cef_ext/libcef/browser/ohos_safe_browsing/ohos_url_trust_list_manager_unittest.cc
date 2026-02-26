@@ -680,4 +680,18 @@ TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_0
       url_trust_list_manager_->CheckUrlTrustList(test_url);
   EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
 }
+
+TEST_F(UrlTrustListManagerTest, UrlTrustListManager_CheckUrlTrustList_Wildcard_022) {
+  std::string err_msg = std::string();
+  std::string rule_json = R"({
+    "UrlPermissionList": [{
+        "scheme": "https",
+        "host": "www.example.*",
+        "path": "aaa/*" }]})";
+  url_trust_list_manager_->SetUrlTrustListWithErrMsg(rule_json, true, true, err_msg);
+  GURL test_url("https://www.example.com./aaa/bbb");
+  UrlTrustCheckResult result =
+      url_trust_list_manager_->CheckUrlTrustList(test_url);
+  EXPECT_EQ(result, UrlTrustCheckResult::RESULT_DENY);
+}
 }  // namespace ohos_safe_browsing

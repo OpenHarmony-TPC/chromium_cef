@@ -453,7 +453,9 @@ test("libcef_static_unittests") {
       "ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_data_base_impl_unittest.cc",
+      "ohos_cef_ext/libcef/browser/javascript/oh_gin_javascript_bridge_message_filter_unittest.cc",
       "ohos_cef_ext/libcef/common/resource_util_for_include_unittest.cc",
+
     ]
     deps += [
       ":libcef_static",

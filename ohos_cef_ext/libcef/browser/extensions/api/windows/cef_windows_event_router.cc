@@ -69,8 +69,9 @@ bool ControllerVisibleToListener(const std::string& window_type,
 }
 
 bool WillDispatchWindowFocusedEvent(
-    const std::string& window_type,
     content::BrowserContext* browser_context,
+    const std::string& window_type,
+    content::BrowserContext* listener_context, 
     mojom::ContextType target_context,
     const Extension* extension,
     const base::Value::Dict* listener_filter,
@@ -90,7 +91,8 @@ bool WillDispatchWindowFocusedEvent(
   }
 
   bool cant_cross_incognito =
-      !util::CanCrossIncognito(extension, browser_context);
+      browser_context && browser_context != listener_context &&
+      !util::CanCrossIncognito(extension, listener_context); 
   bool visible_to_listener =
       ControllerVisibleToListener(window_type, filter_value);
   if (cant_cross_incognito || !visible_to_listener) {
@@ -186,10 +188,9 @@ void CefWindowsEventRouter::DispatchWindowFocusChangedEvent(content::BrowserCont
   args.Append(*window.id);
   auto event = std::make_unique<Event>(events::WINDOWS_ON_FOCUS_CHANGED,
                                        api::windows::OnFocusChanged::kEventName,
-                                       std::move(args),
-                                       browser_context);
+                                       std::move(args));
   event->will_dispatch_callback =
-      base::BindRepeating(&WillDispatchWindowFocusedEvent, *window.type);
+      base::BindRepeating(&WillDispatchWindowFocusedEvent, browser_context, *window.type);
   EventRouter::Get(browser_context)->BroadcastEvent(std::move(event));
 }
  

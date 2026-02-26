@@ -117,6 +117,8 @@ class FallbackProxyConfig {
 
   std::vector<int> safe_browsing_malicious_types_;
 
+  std::vector<std::string> direct_proxy_host_list_;
+
   // 等待多久重新启用代理服务时间，单位为秒.
   int restart_proxy_internal_ = 300;
 

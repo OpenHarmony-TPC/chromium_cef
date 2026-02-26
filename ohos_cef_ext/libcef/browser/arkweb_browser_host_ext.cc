@@ -603,6 +603,11 @@ void ArkWebBrowserHostExtImpl::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  if (!GetWebContents()) {
+    LOG(ERROR)
+        << "ArkWebBrowserHostExtImpl::SetWebPreferences WebContents is nullptr";
+    return;
+  }
   GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
 #else
   GetWebContents()->OnWebPreferencesChanged();
@@ -1122,7 +1127,9 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
       network::mojom::ReferrerPolicy::kDefault);
 
   loadUrlParams.extra_headers = headers;
-  ArkWebDealWithPostData(post_data, &loadUrlParams);
+  if (loadUrlParams.load_type == content::NavigationController::LOAD_TYPE_HTTP_POST) {
+      ArkWebDealWithPostData(post_data, &loadUrlParams);
+  }
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
 
   loadUrlParams.transition_type = static_cast<ui::PageTransition>(
@@ -3780,8 +3787,8 @@ void ArkWebBrowserHostExtImpl::SetUserAgentMetadata(
                << GetNWebId();
     return;
   }
-  return web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
-                                                                    metadata);
+  web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
+                                                             metadata);
 }
 
 const blink::UserAgentMetadata ArkWebBrowserHostExtImpl::GetUserAgentMetadata(
@@ -4102,6 +4109,54 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
                     base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
                                    this, callback));
 }
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+void ArkWebBrowserHostExtImpl::GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) {
+  LOG(DEBUG) << "GetAllFrameInfos enter";
+  GetFrameInfosParam value;
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    callback->OnFrameInfosCallback(value);
+    return;
+  }
+
+  std::map<std::string, std::string> frameinfos;
+  frameinfos.clear();
+
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  if (web_contents_ex) {
+    LOG(DEBUG) << "GetAllFrameInfos be called.";
+    web_contents_ex->GetAllFrameInfos(frameinfos);
+  }
+
+  for (const auto& pair : frameinfos) {
+    FrameInfos item;
+    item.id = pair.first;
+    item.parentId = pair.second;
+    value.frameinfoList.push_back(item);
+  }
+
+  callback->OnFrameInfosCallback(value);
+}
+
+void ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) {
+  LOG(DEBUG) << "GetLastJavaScriptProxyCallingFrameInfo enter";
+  NWEB::OhJavascriptInjector* javascriptInjector =
+    NWEB::OhJavascriptInjector::FromWebContents(GetWebContents());
+  if (!javascriptInjector) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo "
+                  "javascriptInjector is null";
+    FrameInfos value;
+    callback->OnLastFrameInfoCallback(value);
+    return;
+  }
+  
+  FrameInfos value = javascriptInjector->GetLastCallingFrameInfo();
+  callback->OnLastFrameInfoCallback(value);
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_BGTASK)
 void ArkWebBrowserHostExtImpl::OnBrowserForeground() {

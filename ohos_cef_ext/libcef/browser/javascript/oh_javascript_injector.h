@@ -44,12 +44,21 @@ class OhJavascriptInjector
   }
   std::string GetLastCallingFrameUrl() { return last_calling_frame_url_; }
 
+  void SetLastCallingFrameInfo(const FrameInfos& frame_info) {
+    last_calling_frame_info_ = frame_info;
+  }
+ 
+  FrameInfos GetLastCallingFrameInfo() {
+    return last_calling_frame_info_;
+  }
+
  private:
   friend class content::WebContentsUserData<OhJavascriptInjector>;
 
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
       javascript_bridge_dispatcher_host_;
   std::string last_calling_frame_url_;
+  FrameInfos last_calling_frame_info_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };
 }  // namespace NWEB

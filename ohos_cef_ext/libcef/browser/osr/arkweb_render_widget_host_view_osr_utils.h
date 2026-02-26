@@ -106,6 +106,11 @@ class ArkWebRenderWidgetHostViewOSRUtils {
   static void AddCompositor(gfx::AcceleratedWidget widget,
                             ui::Compositor* compositor);
   static ui::Compositor* GetCompositor(gfx::AcceleratedWidget widget);
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  static std::pair<ui::Compositor*, viz::ParentLocalSurfaceIdAllocator*> GetCompositorData(
+    gfx::AcceleratedWidget widget);
+  bool IsRenderWidgetHostViewForActiveMainFrame();
+#endif
 #if BUILDFLAG(ARKWEB_DSS)
   bool SetCurrentSizeInPixel();
 #endif
@@ -117,8 +122,14 @@ class ArkWebRenderWidgetHostViewOSRUtils {
 
  private:
   const raw_ptr<CefRenderWidgetHostViewOSR> view_;
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  static std::unordered_map<gfx::AcceleratedWidget,
+                            std::pair<ui::Compositor*, std::unique_ptr<viz::ParentLocalSurfaceIdAllocator>>>
+    compositor_map_;
+#else
   static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
       compositor_map_;
+#endif
   static std::unordered_map<gfx::AcceleratedWidget, uint32_t>
       accelerate_widget_map_;
 #if BUILDFLAG(ARKWEB_DSS)

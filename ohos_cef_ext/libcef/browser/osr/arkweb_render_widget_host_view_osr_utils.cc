@@ -20,9 +20,19 @@
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 #include "cef/ohos_cef_ext/libcef/common/soc_perf_util.h"
 #endif
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+#include "content/browser/renderer_host/render_view_host_impl.h"
+#endif
 
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+std::unordered_map<
+    gfx::AcceleratedWidget,
+    std::pair<ui::Compositor*, std::unique_ptr<viz::ParentLocalSurfaceIdAllocator>>>
+  ArkWebRenderWidgetHostViewOSRUtils::compositor_map_;
+#else
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     ArkWebRenderWidgetHostViewOSRUtils::compositor_map_;
+#endif
 
 std::unordered_map<gfx::AcceleratedWidget, uint32_t>
     ArkWebRenderWidgetHostViewOSRUtils::accelerate_widget_map_;
@@ -99,9 +109,15 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositorCreation(
 void ArkWebRenderWidgetHostViewOSRUtils::DetachView() {
   LOG(WARNING) << "DetachView";
   for (const auto& pair : ArkWebRenderWidgetHostViewOSRUtils::compositor_map_) {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    if (pair.second.first && pair.second.first->delegate() == view_) {
+      pair.second.first->SetDelegate(nullptr);
+    }
+#else
     if (pair.second && pair.second->delegate() == view_) {
       pair.second->SetDelegate(nullptr);
     }
+#endif
   }
 }
 
@@ -133,7 +149,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
     view_->delegated_frame_host_->DetachFromCompositor();
     view_->delegated_frame_host_.reset(nullptr);
   }
-
+  view_->host_display_client_ = nullptr;
 #ifdef DISABLE_GPU
   view_->compositor_.reset(nullptr);
 #else
@@ -151,19 +167,32 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
                      view_->browser_impl_->GetAcceleratedWidget(
                          view_->is_popup_));
     if (com != compositor_map_.end()) {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+      if (com->second.first) {
+        delete com->second.first;
+        com->second.first = nullptr;
+      }
+#else
       if (com->second != nullptr) {
         delete com->second;
         com->second = nullptr;
       }
+#endif
       compositor_map_.erase(com);
     }
     accelerate_widget_map_.erase(
         view_->browser_impl_->GetAcceleratedWidget(view_->is_popup_));
   } else {
     if (com != compositor_map_.end()) {
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+      if (com->second.first && com->second.first->delegate() == view_) {
+        com->second.first->SetDelegate(nullptr);
+      }
+#else
       if (com->second->delegate() == view_) {
         com->second->SetDelegate(nullptr);
       }
+#endif
     }
   }
 #endif  // DISABLE_GPU
@@ -196,8 +225,13 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleInvalidLocalSurfaceId() {
   DCHECK(view_);
   if (!view_->GetLocalSurfaceId().is_valid()) {
     view_->AllocateLocalSurfaceId();
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+    view_->SynchronizeVisualProperties(content::DelegatedFrameHost::FirstFrameDeadlinePolicy(),
+                                       view_->GetLocalSurfaceId());
+#else
     view_->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
                                        view_->GetLocalSurfaceId());
+#endif
   }
 }
 
@@ -637,6 +671,54 @@ void ArkWebRenderWidgetHostViewOSRUtils::SetFocusEx() {
   view_->OnFocusInternal();
 }
 
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+void ArkWebRenderWidgetHostViewOSRUtils::AddCompositor(gfx::AcceleratedWidget widget, ui::Compositor* compositor) {
+  compositor_map_.emplace(widget,
+                          std::make_pair(compositor, std::make_unique<viz::ParentLocalSurfaceIdAllocator>()));
+}
+
+ui::Compositor* ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(gfx::AcceleratedWidget widget) {
+  auto it = compositor_map_.find(widget);
+  if (it == compositor_map_.end()) {
+    return nullptr;
+  }
+
+  return it->second.first;
+}
+
+std::pair<ui::Compositor*, viz::ParentLocalSurfaceIdAllocator*> ArkWebRenderWidgetHostViewOSRUtils::GetCompositorData(
+  gfx::AcceleratedWidget widget) {
+  auto it = compositor_map_.find(widget);
+  if (it == compositor_map_.end()) {
+    return { nullptr, nullptr };
+  }
+
+  return { it->second.first, it->second.second.get() };
+}
+
+bool ArkWebRenderWidgetHostViewOSRUtils::IsRenderWidgetHostViewForActiveMainFrame() {
+  DCHECK(view_);
+  if (!view_->evictUnlockFrameEnabled_ || !view_->render_widget_host()) {
+    return false;
+  }
+
+  content::RenderWidgetHostOwnerDelegate* owner_delegate = view_->render_widget_host()->owner_delegate();
+  if (!owner_delegate) {
+    return false;
+  }
+
+  content::RenderViewHostImpl* rvh = static_cast<content::RenderViewHostImpl*>(owner_delegate);
+  DCHECK_EQ(view_->render_widget_host(), rvh->GetWidget());
+  if (rvh->is_active()) {
+    content::RenderFrameHostImpl* rfh = rvh->GetMainRenderFrameHost();
+    if (rfh && rfh->IsActive()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#else
 void ArkWebRenderWidgetHostViewOSRUtils::AddCompositor(gfx::AcceleratedWidget widget,
                                                ui::Compositor* compositor) {
   ArkWebRenderWidgetHostViewOSRUtils::compositor_map_.emplace(widget, compositor);
@@ -650,6 +732,7 @@ ui::Compositor* ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
   }
   return it->second;
 }
+#endif
 
 #if BUILDFLAG(ARKWEB_DSS)
 gfx::Size ArkWebRenderWidgetHostViewOSRUtils::SizeInPixels() {

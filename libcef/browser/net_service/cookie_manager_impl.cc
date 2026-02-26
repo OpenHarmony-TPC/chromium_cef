@@ -129,7 +129,9 @@ void CefCookieManagerImpl::Initialize(
   CEF_REQUIRE_UIT();
   DCHECK(!initialized_);
   DCHECK(!browser_context_getter.is_null());
+#if !BUILDFLAG(IS_OHOS)
   DCHECK(browser_context_getter_.is_null());
+#endif
   browser_context_getter_ = browser_context_getter;
 
   initialized_ = true;
