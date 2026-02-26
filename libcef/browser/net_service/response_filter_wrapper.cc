@@ -2,10 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/net_service/response_filter_wrapper.h"
+#include "cef/libcef/browser/net_service/response_filter_wrapper.h"
 
 #include <queue>
 
+#include "base/containers/span.h"
 #include "base/logging.h"
 #include "mojo/public/cpp/system/simple_watcher.h"
 #include "mojo/public/cpp/system/string_data_source.h"
@@ -92,10 +93,9 @@ bool ResponseFilterWrapper::CreateOutputHandle(
 
 void ResponseFilterWrapper::OnSourceReadable(MojoResult,
                                              const mojo::HandleSignalsState&) {
-  const void* buffer = nullptr;
-  uint32_t read_bytes = 0;
-  MojoResult result = source_handle_->BeginReadData(&buffer, &read_bytes,
-                                                    MOJO_READ_DATA_FLAG_NONE);
+  base::span<const uint8_t> buffer;
+  MojoResult result =
+      source_handle_->BeginReadData(MOJO_READ_DATA_FLAG_NONE, buffer);
   if (result == MOJO_RESULT_SHOULD_WAIT) {
     source_watcher_.ArmOrNotify();
     return;
@@ -107,14 +107,15 @@ void ResponseFilterWrapper::OnSourceReadable(MojoResult,
     return;
   }
 
-  Filter(static_cast<const char*>(buffer), read_bytes);
+  base::span<const char> chars = base::as_chars(buffer);
+  Filter(chars.data(), chars.size());
   if (last_status_ == RESPONSE_FILTER_ERROR) {
     // Something went wrong.
     Drain(false);
     return;
   }
 
-  source_handle_->EndReadData(read_bytes);
+  source_handle_->EndReadData(buffer.size());
   source_watcher_.ArmOrNotify();
 }
 
@@ -142,8 +143,9 @@ void ResponseFilterWrapper::Filter(const char* data, size_t size) {
     last_status_ = filter_->Filter(
         const_cast<char*>(data_in_ptr), data_in_size, data_in_read,
         const_cast<char*>(data_out_ptr), data_out_size, data_out_written);
-    if (last_status_ == RESPONSE_FILTER_ERROR)
+    if (last_status_ == RESPONSE_FILTER_ERROR) {
       break;
+    }
 
     // Validate the out values.
     if (data_in_read > data_in_size) {
@@ -214,7 +216,7 @@ void ResponseFilterWrapper::Write(std::unique_ptr<std::string> data) {
 
   write_pending_ = true;
 
-  base::StringPiece string_piece(*data);
+  std::string_view string_piece(*data);
   forwarder_->Write(std::make_unique<mojo::StringDataSource>(
                         string_piece, mojo::StringDataSource::AsyncWritingMode::
                                           STRING_STAYS_VALID_UNTIL_COMPLETION),
@@ -268,13 +270,15 @@ void ResponseFilterWrapper::MaybeSuccess() {
     return;
   }
 
-  if (!read_pending_ && !write_pending_)
+  if (!read_pending_ && !write_pending_) {
     Cleanup(true);
+  }
 }
 
 void ResponseFilterWrapper::Cleanup(bool success) {
-  if (!success && error_callback_)
+  if (!success && error_callback_) {
     std::move(error_callback_).Run();
+  }
   delete this;
 }
 
@@ -290,8 +294,9 @@ mojo::ScopedDataPipeConsumerHandle CreateResponseFilterHandler(
   auto filter_wrapper = new ResponseFilterWrapper(
       filter, std::move(source_handle), std::move(error_callback));
   mojo::ScopedDataPipeConsumerHandle output_handle;
-  if (!filter_wrapper->CreateOutputHandle(&output_handle))
+  if (!filter_wrapper->CreateOutputHandle(&output_handle)) {
     delete filter_wrapper;
+  }
   return output_handle;
 }
 

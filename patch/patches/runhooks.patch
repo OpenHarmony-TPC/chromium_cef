@@ -1,15 +1,15 @@
 diff --git build/toolchain/win/setup_toolchain.py build/toolchain/win/setup_toolchain.py
-index ec9e9eeda7cb7..b58e1900de059 100644
+index e0b7c03a522040d58afdf82cbe20acc38f96b43e..f1583a4f4dcd04bbf4c12c1a567a245a76a0f908 100644
 --- build/toolchain/win/setup_toolchain.py
 +++ build/toolchain/win/setup_toolchain.py
-@@ -157,13 +157,17 @@ def _LoadToolchainEnv(cpu, toolchain_root, sdk_dir, target_store):
+@@ -168,13 +168,17 @@ def _LoadToolchainEnv(cpu, toolchain_root, sdk_dir, target_store):
            del os.environ['LIB']
          if 'LIBPATH' in os.environ:
            del os.environ['LIBPATH']
--      other_path = os.path.normpath(os.path.join(
-+      script_path = os.path.normpath(os.path.join(
-                                         os.environ['GYP_MSVS_OVERRIDE_PATH'],
-                                         'VC/Auxiliary/Build/vcvarsall.bat'))
+-      other_path = os.path.normpath(
++      script_path = os.path.normpath(
+           os.path.join(os.environ['GYP_MSVS_OVERRIDE_PATH'],
+                        'VC/Auxiliary/Build/vcvarsall.bat'))
 -      if not os.path.exists(other_path):
 -        raise Exception('%s is missing - make sure VC++ tools are installed.' %
 -                        script_path)
@@ -26,10 +26,10 @@ index ec9e9eeda7cb7..b58e1900de059 100644
      if (cpu != 'x64'):
        # x64 is default target CPU thus any other CPU requires a target set
 diff --git build/vs_toolchain.py build/vs_toolchain.py
-index e759bd6ca2afe..c146bfea59fc8 100755
+index d909f5b36f48a23c379516995d4f1129d950fcd0..a82f5bc5474219e2ef81debf6584714b1d09c389 100755
 --- build/vs_toolchain.py
 +++ build/vs_toolchain.py
-@@ -107,9 +107,16 @@ def SetEnvironmentAndGetRuntimeDllDirs():
+@@ -136,9 +136,16 @@ def SetEnvironmentAndGetRuntimeDllDirs():
      runtime_path = os.path.pathsep.join(vs_runtime_dll_dirs)
      os.environ['PATH'] = runtime_path + os.path.pathsep + os.environ['PATH']
    elif sys.platform == 'win32' and not depot_tools_win_toolchain:
@@ -46,7 +46,7 @@ index e759bd6ca2afe..c146bfea59fc8 100755
      # When using an installed toolchain these files aren't needed in the output
      # directory in order to run binaries locally, but they are needed in order
      # to create isolates or the mini_installer. Copying them to the output
-@@ -158,6 +165,10 @@ def _RegistryGetValue(key, value):
+@@ -187,6 +194,10 @@ def _RegistryGetValue(key, value):
  def GetVisualStudioVersion():
    """Return best available version of Visual Studio.
    """

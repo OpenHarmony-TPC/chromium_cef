@@ -6,7 +6,9 @@
 
 #include "base/memory/shared_memory_mapping.h"
 #include "base/trace_event/trace_event.h"
-#include "components/viz/common/resources/resource_sizes.h"
+#include "components/viz/common/resources/shared_image_format.h"
+#include "components/viz/common/resources/shared_image_format_utils.h"
+#include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/system/platform_handle.h"
 #include "skia/ext/platform_canvas.h"
 #include "third_party/skia/include/core/SkCanvas.h"
@@ -14,8 +16,9 @@
 
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
+
 #include "skia/ext/skia_utils_win.h"
-#include "ui/gfx/gdi_util.h"
+#include "ui/gfx/win/gdi_util.h"
 #include "ui/gfx/win/hwnd_util.h"
 #endif
 
@@ -24,13 +27,14 @@ namespace viz {
 SoftwareOutputDeviceProxy::~SoftwareOutputDeviceProxy() = default;
 
 SoftwareOutputDeviceProxy::SoftwareOutputDeviceProxy(
-    mojom::LayeredWindowUpdaterPtr layered_window_updater)
+    mojo::PendingRemote<mojom::LayeredWindowUpdater> layered_window_updater)
     : layered_window_updater_(std::move(layered_window_updater)) {
   DCHECK(layered_window_updater_.is_bound());
 }
 
 void SoftwareOutputDeviceProxy::OnSwapBuffers(
-    SwapBuffersCallback swap_ack_callback) {
+    SwapBuffersCallback swap_ack_callback,
+    gfx::FrameData data) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   DCHECK(swap_ack_callback_.is_null());
 
@@ -51,20 +55,22 @@ void SoftwareOutputDeviceProxy::Resize(const gfx::Size& viewport_pixel_size,
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   DCHECK(!in_paint_);
 
-  if (viewport_pixel_size_ == viewport_pixel_size)
+  if (viewport_pixel_size_ == viewport_pixel_size) {
     return;
+  }
 
   viewport_pixel_size_ = viewport_pixel_size;
 
   canvas_.reset();
 
-  size_t required_bytes;
-  if (!ResourceSizes::MaybeSizeInBytes(
-          viewport_pixel_size_, ResourceFormat::RGBA_8888, &required_bytes)) {
+  auto bytes = SharedMemorySizeForSharedImageFormat(
+      SinglePlaneFormat::kRGBA_8888, viewport_pixel_size_);
+  if (!bytes) {
     DLOG(ERROR) << "Invalid viewport size " << viewport_pixel_size_.ToString();
     return;
   }
 
+  auto required_bytes = bytes.value();
   base::UnsafeSharedMemoryRegion region =
       base::UnsafeSharedMemoryRegion::Create(required_bytes);
   if (!region.IsValid()) {
@@ -87,7 +93,7 @@ void SoftwareOutputDeviceProxy::Resize(const gfx::Size& viewport_pixel_size,
 
   canvas_ = skia::CreatePlatformCanvasWithPixels(
       viewport_pixel_size_.width(), viewport_pixel_size_.height(), false,
-      static_cast<uint8_t*>(shm_.memory()), skia::CRASH_ON_FAILURE);
+      static_cast<uint8_t*>(shm_.memory()), 0U, skia::CRASH_ON_FAILURE);
 #else
   canvas_ = skia::CreatePlatformCanvasWithSharedSection(
       viewport_pixel_size_.width(), viewport_pixel_size_.height(), false,
@@ -118,11 +124,13 @@ void SoftwareOutputDeviceProxy::EndPaint() {
 
   gfx::Rect intersected_damage_rect = damage_rect_;
   intersected_damage_rect.Intersect(gfx::Rect(viewport_pixel_size_));
-  if (intersected_damage_rect.IsEmpty())
+  if (intersected_damage_rect.IsEmpty()) {
     return;
+  }
 
-  if (!canvas_)
+  if (!canvas_) {
     return;
+  }
 
   layered_window_updater_->Draw(
       damage_rect_, base::BindOnce(&SoftwareOutputDeviceProxy::DrawAck,

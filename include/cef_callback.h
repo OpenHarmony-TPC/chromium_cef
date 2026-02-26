@@ -41,62 +41,35 @@
 #include "include/cef_base.h"
 
 ///
-// Generic callback interface used for asynchronous continuation.
+/// Generic callback interface used for asynchronous continuation.
 ///
 /*--cef(source=library)--*/
 class CefCallback : public virtual CefBaseRefCounted {
  public:
   ///
-  // Continue processing.
+  /// Continue processing.
   ///
   /*--cef(capi_name=cont)--*/
   virtual void Continue() = 0;
 
   ///
-  // Cancel processing.
+  /// Cancel processing.
   ///
   /*--cef()--*/
   virtual void Cancel() = 0;
 };
 
 ///
-// Generic callback interface used for asynchronous completion.
+/// Generic callback interface used for asynchronous completion.
 ///
 /*--cef(source=client)--*/
 class CefCompletionCallback : public virtual CefBaseRefCounted {
  public:
   ///
-  // Method that will be called once the task is complete.
+  /// Method that will be called once the task is complete.
   ///
   /*--cef()--*/
   virtual void OnComplete() = 0;
-};
-
-///
-// Callback interface used to select a client certificate for authentication.
-///
-/*--cef(source=library)--*/
-class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  // Chooses the specified certificate for client certificate authentication.
-  // NULL value means that no client certificate should be used.
-  ///
-  /*--cef(optional_param=cert)--*/
-  virtual void Select(const CefString& private_key_file,
-                      const CefString& cert_chain_file) = 0;
-
-  ///
-  // Cancel the select cert request.
-  ///
-  /*--cef()--*/
-  virtual void Cancel() = 0;
-
-  ///
-  // Ignore the select cert request.
-  ///
-  /*--cef()--*/
-  virtual void Ignore() = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_CALLBACK_H_

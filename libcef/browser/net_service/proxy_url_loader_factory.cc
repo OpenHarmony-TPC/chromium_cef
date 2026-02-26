@@ -3,60 +3,146 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/browser/net_service/proxy_url_loader_factory.h"
+#include "cef/libcef/browser/net_service/proxy_url_loader_factory.h"
 
+#include <map>
+#include <memory>
 #include <tuple>
-
-#include "libcef/browser/context.h"
-#include "libcef/browser/origin_whitelist_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/common/net/scheme_registration.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
 
 #include "base/barrier_closure.h"
 #include "base/command_line.h"
+#include "base/memory/raw_ptr.h"
+#include "base/no_destructor.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/origin_whitelist_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "cef/libcef/common/net/scheme_registration.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "components/safe_browsing/core/common/safebrowsing_constants.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_frame_host.h"
-#include "content/public/browser/resource_context.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/referrer.h"
 #include "mojo/public/cpp/base/big_buffer.h"
 #include "mojo/public/cpp/bindings/receiver.h"
-#include "net/base/load_flags.h"
 #include "net/http/http_status_code.h"
 #include "net/url_request/redirect_util.h"
 #include "net/url_request/url_request.h"
 #include "services/network/public/cpp/cors/cors.h"
 #include "services/network/public/cpp/features.h"
 #include "services/network/public/mojom/early_hints.mojom.h"
+#include "third_party/blink/public/common/loader/referrer_utils.h"
 
 namespace net_service {
 
 namespace {
 
-// User data key for ResourceContextData.
-const void* const kResourceContextUserDataKey = &kResourceContextUserDataKey;
+//==============================
+// ContextIdManager
+//==============================
 
-absl::optional<std::string> GetHeaderString(
-    const net::HttpResponseHeaders* headers,
-    const std::string& header_name) {
-  std::string header_value;
-  if (!headers || !headers->GetNormalizedHeader(header_name, &header_value)) {
-    return absl::nullopt;
+// Manages the mapping from BrowserContext* to ContextId. All methods must be
+// called on the UI thread. This class ensures that:
+// 1. Each BrowserContext gets a unique, never-reused ID
+// 2. IDs are invalidated when a BrowserContext is destroyed
+// 3. No raw BrowserContext pointers are passed to the IO thread
+class ContextIdManager {
+ public:
+  ContextIdManager(const ContextIdManager&) = delete;
+  ContextIdManager& operator=(const ContextIdManager&) = delete;
+
+  static ContextIdManager& GetInstance() {
+    static base::NoDestructor<ContextIdManager> instance;
+    return *instance;
   }
-  return header_value;
+
+  // Gets or creates a ContextId for the given BrowserContext.
+  ContextId GetContextId(content::BrowserContext* browser_context) {
+    CEF_REQUIRE_UIT();
+    DCHECK(browser_context);
+
+    // Perform insertion or lookup as a single operation.
+    auto [it, inserted] = context_to_id_.try_emplace(browser_context, next_id_);
+    if (inserted) {
+      ++next_id_;
+    }
+    return it->second;
+  }
+
+  // Invalidates the ContextId for the given BrowserContext and returns
+  // the ID that was associated with it (or kInvalidContextId if none).
+  ContextId InvalidateContextId(content::BrowserContext* browser_context) {
+    CEF_REQUIRE_UIT();
+    DCHECK(browser_context);
+
+    auto it = context_to_id_.find(browser_context);
+    if (it != context_to_id_.end()) {
+      ContextId id = it->second;
+      context_to_id_.erase(it);
+      return id;
+    }
+    return kInvalidContextId;
+  }
+
+ private:
+  friend class base::NoDestructor<ContextIdManager>;
+
+  ContextIdManager() = default;
+  ~ContextIdManager() = default;
+
+  ContextId next_id_ = 1;
+  std::map<raw_ptr<content::BrowserContext>, ContextId> context_to_id_;
+};
+
+// Global map to track proxies per ContextId.
+// Access only on the IO thread.
+using ProxyMap = std::map<ContextId,
+                          std::set<std::unique_ptr<ProxyURLLoaderFactory>,
+                                   base::UniquePtrComparator>>;
+
+ProxyMap& GetProxyMap() {
+  CEF_REQUIRE_IOT();
+  static base::NoDestructor<ProxyMap> proxy_map;
+  return *proxy_map;
 }
 
-void CreateProxyHelper(
-    content::WebContents::Getter web_contents_getter,
-    mojo::PendingReceiver<network::mojom::URLLoaderFactory> loader_receiver,
-    std::unique_ptr<InterceptedRequestHandler> request_handler) {
-  ProxyURLLoaderFactory::CreateProxy(web_contents_getter,
-                                     std::move(loader_receiver),
-                                     std::move(request_handler));
+void AddProxyToMap(ContextId context_id,
+                   std::unique_ptr<ProxyURLLoaderFactory> proxy) {
+  CEF_REQUIRE_IOT();
+  if (context_id == kInvalidContextId) {
+    // Context was invalidated before we could add the proxy.
+    // unique_ptr will delete proxy when it goes out of scope.
+    return;
+  }
+  GetProxyMap()[context_id].insert(std::move(proxy));
+}
+
+void RemoveProxyFromMap(ContextId context_id, ProxyURLLoaderFactory* proxy) {
+  CEF_REQUIRE_IOT();
+  DCHECK_NE(context_id, kInvalidContextId);
+  auto& proxy_map = GetProxyMap();
+  auto it = proxy_map.find(context_id);
+  if (it != proxy_map.end()) {
+    auto& proxies = it->second;
+    auto proxy_it = proxies.find(proxy);
+    if (proxy_it != proxies.end()) {
+      proxies.erase(proxy_it);
+      if (proxies.empty()) {
+        proxy_map.erase(it);
+      }
+    }
+  }
+}
+
+std::optional<std::string> GetHeaderString(
+    const net::HttpResponseHeaders* headers,
+    const std::string& header_name) {
+  if (headers) {
+    return headers->GetNormalizedHeader(header_name);
+  }
+  return std::nullopt;
 }
 
 bool DisableRequestHandlingForTesting() {
@@ -67,108 +153,41 @@ bool DisableRequestHandlingForTesting() {
   return disabled;
 }
 
-CefRefPtr<CefResponse> ExtractHttpErrorResponse(
-    const net::HttpResponseHeaders* headers) {
-  CefRefPtr<CefResponse> response = CefResponse::Create();
-  response->SetStatus(headers->response_code());
-  response->SetStatusText(headers->GetStatusText());
-
-  size_t headers_line = 0;
-  std::string header_name, header_value;
-  CefResponse::HeaderMap map;
-  while (headers->EnumerateHeaderLines(&headers_line, &header_name,
-                                       &header_value)) {
-    map.insert({CefString(header_name), CefString(header_value)});
+// Match logic in devtools_url_loader_interceptor.cc
+// InterceptionJob::CalculateResponseTainting.
+network::mojom::FetchResponseType CalculateResponseTainting(
+    bool should_check_cors,
+    network::mojom::RequestMode mode,
+    bool tainted_origin) {
+  if (should_check_cors) {
+    return network::mojom::FetchResponseType::kCors;
   }
-  response->SetHeaderMap(map);
-  std::string mime_type;
-  std::string encoding;
-  headers->GetMimeType(&mime_type);
-  headers->GetCharset(&encoding);
-  response->SetMimeType(CefString(mime_type));
-  response->SetCharset(CefString(encoding));
-  return response;
+  if (mode == network::mojom::RequestMode::kNoCors && tainted_origin) {
+    return network::mojom::FetchResponseType::kOpaque;
+  }
+  return network::mojom::FetchResponseType::kBasic;
 }
 
 }  // namespace
 
-// Owns all of the ProxyURLLoaderFactorys for a given BrowserContext. Since
-// these live on the IO thread this is done indirectly through the
-// ResourceContext.
-class ResourceContextData : public base::SupportsUserData::Data {
- public:
-  ResourceContextData(const ResourceContextData&) = delete;
-  ResourceContextData& operator=(const ResourceContextData&) = delete;
-
-  ~ResourceContextData() override {}
-
-  static void AddProxyOnUIThread(
-      ProxyURLLoaderFactory* proxy,
-      content::WebContents::Getter web_contents_getter) {
-    CEF_REQUIRE_UIT();
-
-    content::WebContents* web_contents = web_contents_getter.Run();
-
-    // Maybe the browser was destroyed while AddProxyOnUIThread was pending.
-    if (!web_contents) {
-      // Delete on the IO thread as expected by mojo bindings.
-      content::BrowserThread::DeleteSoon(content::BrowserThread::IO, FROM_HERE,
-                                         proxy);
-      return;
-    }
-
-    content::BrowserContext* browser_context =
-        web_contents->GetBrowserContext();
-    DCHECK(browser_context);
-
-    content::ResourceContext* resource_context =
-        browser_context->GetResourceContext();
-    DCHECK(resource_context);
-
-    CEF_POST_TASK(CEF_IOT, base::BindOnce(ResourceContextData::AddProxy,
-                                          base::Unretained(proxy),
-                                          base::Unretained(resource_context)));
+void ClearProxiesForContextId(ContextId context_id) {
+  CEF_REQUIRE_IOT();
+  if (context_id == kInvalidContextId) {
+    return;
   }
-
-  static void AddProxy(ProxyURLLoaderFactory* proxy,
-                       content::ResourceContext* resource_context) {
-    CEF_REQUIRE_IOT();
-
-    // Maybe the proxy was destroyed while AddProxyOnUIThread was pending.
-    if (proxy->destroyed_) {
-      delete proxy;
-      return;
+  auto& proxy_map = GetProxyMap();
+  auto it = proxy_map.find(context_id);
+  if (it != proxy_map.end()) {
+    // Reset disconnect callbacks before destroying the proxies to prevent
+    // them from trying to remove themselves from the map during destruction.
+    auto& proxies = it->second;
+    for (const auto& proxy : proxies) {
+      proxy->SetDisconnectCallback(base::DoNothing());
     }
-
-    auto* self = static_cast<ResourceContextData*>(
-        resource_context->GetUserData(kResourceContextUserDataKey));
-    if (!self) {
-      self = new ResourceContextData();
-      resource_context->SetUserData(kResourceContextUserDataKey,
-                                    base::WrapUnique(self));
-    }
-
-    proxy->SetDisconnectCallback(base::BindOnce(
-        &ResourceContextData::RemoveProxy, self->weak_factory_.GetWeakPtr()));
-    self->proxies_.emplace(base::WrapUnique(proxy));
+    // Clear the set, which will delete all proxies for this context.
+    proxy_map.erase(it);
   }
-
- private:
-  void RemoveProxy(ProxyURLLoaderFactory* proxy) {
-    CEF_REQUIRE_IOT();
-
-    auto it = proxies_.find(proxy);
-    DCHECK(it != proxies_.end());
-    proxies_.erase(it);
-  }
-
-  ResourceContextData() : weak_factory_(this) {}
-
-  std::set<std::unique_ptr<ProxyURLLoaderFactory>, base::UniquePtrComparator>
-      proxies_;
-
-  base::WeakPtrFactory<ResourceContextData> weak_factory_;
-};
+}
 
 // CORS preflight requests are handled in the network process, so we just need
 // to continue all of the callbacks and then delete ourself.
@@ -194,6 +213,7 @@ class CorsPreflightRequest : public network::mojom::TrustedHeaderClient {
 
   void OnHeadersReceived(const std::string& headers,
                          const net::IPEndPoint& remote_endpoint,
+                         const std::optional<net::SSLInfo>& ssl_info,
                          OnHeadersReceivedCallback callback) override {
     std::move(callback).Run(net::OK, headers, /*redirect_url=*/GURL());
     OnDestroy();
@@ -234,45 +254,35 @@ class InterceptedRequest : public network::mojom::URLLoader,
   ~InterceptedRequest() override;
 
   // Restart the request. This happens on initial start and after redirect.
-#if BUILDFLAG(IS_OHOS)
-  void Restart(bool is_redirect);
-#else
   void Restart();
-#endif
 
   // Called from ProxyURLLoaderFactory::OnLoaderCreated.
   void OnLoaderCreated(
       mojo::PendingReceiver<network::mojom::TrustedHeaderClient> receiver);
 
   // Called from InterceptDelegate::OnInputStreamOpenFailed.
-  void InputStreamFailed(bool restart_needed);
-
-  void OnHttpErrorForUIThread(int32_t,
-                              CefRefPtr<CefRequest> request,
-                              bool is_main_frame,
-                              bool has_user_gesture,
-                              CefRefPtr<CefResponse> error_response);
+  bool InputStreamFailed();
 
   // mojom::TrustedHeaderClient methods:
   void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
                            OnBeforeSendHeadersCallback callback) override;
   void OnHeadersReceived(const std::string& headers,
                          const net::IPEndPoint& remote_endpoint,
+                         const std::optional<net::SSLInfo>& ssl_info,
                          OnHeadersReceivedCallback callback) override;
 
   // mojom::URLLoaderClient methods:
   void OnReceiveEarlyHints(network::mojom::EarlyHintsPtr early_hints) override;
-  void OnReceiveResponse(network::mojom::URLResponseHeadPtr head,
-                         mojo::ScopedDataPipeConsumerHandle body) override;
+  void OnReceiveResponse(
+      network::mojom::URLResponseHeadPtr head,
+      mojo::ScopedDataPipeConsumerHandle body,
+      std::optional<mojo_base::BigBuffer> cached_metadata) override;
   void OnReceiveRedirect(const net::RedirectInfo& redirect_info,
                          network::mojom::URLResponseHeadPtr head) override;
   void OnUploadProgress(int64_t current_position,
                         int64_t total_size,
                         OnUploadProgressCallback callback) override;
-  void OnReceiveCachedMetadata(mojo_base::BigBuffer data) override;
   void OnTransferSizeUpdated(int32_t transfer_size_diff) override;
-  void OnStartLoadingResponseBody(
-      mojo::ScopedDataPipeConsumerHandle body) override;
   void OnComplete(const network::URLLoaderCompletionStatus& status) override;
 
   // mojom::URLLoader methods:
@@ -280,11 +290,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
       const std::vector<std::string>& removed_headers,
       const net::HttpRequestHeaders& modified_headers,
       const net::HttpRequestHeaders& modified_cors_exempt_headers,
-      const absl::optional<GURL>& new_url) override;
+      const std::optional<GURL>& new_url) override;
   void SetPriority(net::RequestPriority priority,
                    int32_t intra_priority_value) override;
-  void PauseReadingBodyFromNet() override;
-  void ResumeReadingBodyFromNet() override;
 
   int32_t id() const { return id_; }
 
@@ -301,7 +309,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   // Helpers for optionally overriding headers.
   void HandleResponseOrRedirectHeaders(
-      absl::optional<net::RedirectInfo> redirect_info,
+      std::optional<net::RedirectInfo> redirect_info,
       net::CompletionOnceCallback continuation);
   void ContinueResponseOrRedirect(
       net::CompletionOnceCallback continuation,
@@ -337,9 +345,6 @@ class InterceptedRequest : public network::mojom::URLLoader,
                       bool wait_for_loader_error);
 
   void SendErrorAndCompleteImmediately(int error_code);
-#if BUILDFLAG(IS_OHOS)
-  void CancelRequest(int error_code);
-#endif  //  BUILDFLAG(IS_OHOS)
   void SendErrorStatusAndCompleteImmediately(
       const network::URLLoaderCompletionStatus& status);
 
@@ -347,12 +352,12 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   void OnUploadProgressACK();
 
-  ProxyURLLoaderFactory* const factory_;
+  const raw_ptr<ProxyURLLoaderFactory> factory_;
   const int32_t id_;
   const uint32_t options_;
-  bool input_stream_previously_failed_ = false;
   bool request_was_redirected_ = false;
   int redirect_limit_ = net::URLRequest::kMaxRedirects;
+  bool redirect_in_progress_ = false;
 
   // To avoid sending multiple OnReceivedError callbacks.
   bool sent_error_callback_ = false;
@@ -366,6 +371,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   network::URLLoaderCompletionStatus status_;
   bool got_loader_error_ = false;
+  bool completed_ = false;
 
   // Used for rate limiting OnUploadProgress callbacks.
   bool waiting_for_upload_progress_ack_ = false;
@@ -373,12 +379,14 @@ class InterceptedRequest : public network::mojom::URLLoader,
   network::ResourceRequest request_;
   network::mojom::URLResponseHeadPtr current_response_;
   mojo::ScopedDataPipeConsumerHandle current_body_;
+  std::optional<mojo_base::BigBuffer> current_cached_metadata_;
   scoped_refptr<net::HttpResponseHeaders> current_headers_;
   scoped_refptr<net::HttpResponseHeaders> override_headers_;
   GURL original_url_;
   GURL redirect_url_;
   GURL header_client_redirect_url_;
   const net::MutableNetworkTrafficAnnotationTag traffic_annotation_;
+  std::optional<network::mojom::CredentialsMode> original_crendentials_mode_;
 
   mojo::Receiver<network::mojom::URLLoader> proxied_loader_receiver_;
   mojo::Remote<network::mojom::URLLoaderClient> target_client_;
@@ -393,7 +401,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
   mojo::Receiver<network::mojom::TrustedHeaderClient> header_client_receiver_{
       this};
 
-  StreamReaderURLLoader* stream_loader_ = nullptr;
+  std::unique_ptr<StreamReaderURLLoader> stream_loader_;
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
 };
@@ -410,9 +418,8 @@ class InterceptDelegate : public StreamReaderURLLoader::Delegate {
     return response_->OpenInputStream(request_id, request, std::move(callback));
   }
 
-  void OnInputStreamOpenFailed(int32_t request_id, bool* restarted) override {
-    request_->InputStreamFailed(false /* restart_needed */);
-    *restarted = false;
+  bool OnInputStreamOpenFailed(int32_t request_id) override {
+    return request_->InputStreamFailed();
   }
 
   void GetResponseHeaders(int32_t request_id,
@@ -465,80 +472,109 @@ InterceptedRequest::InterceptedRequest(
 }
 
 InterceptedRequest::~InterceptedRequest() {
-  if (status_.error_code != net::OK)
+  if (status_.error_code != net::OK) {
     SendErrorCallback(status_.error_code, false);
+  }
   if (on_headers_received_callback_) {
     std::move(on_headers_received_callback_)
-        .Run(net::ERR_ABORTED, absl::nullopt, GURL());
+        .Run(net::ERR_ABORTED, std::nullopt, GURL());
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
-void InterceptedRequest::Restart(bool is_redirect) {
-#else
 void InterceptedRequest::Restart() {
-#endif
-  stream_loader_ = nullptr;
-  if (!is_redirect) {
-    if (proxied_client_receiver_.is_bound()) {
-      proxied_client_receiver_.reset();
-      target_loader_.reset();
-    }
+  // May exist if the previous stream resulted in a redirect.
+  if (stream_loader_) {
+    stream_loader_.reset();
+  }
 
-    if (header_client_receiver_.is_bound())
-      std::ignore = header_client_receiver_.Unbind();
+  if (proxied_client_receiver_.is_bound()) {
+    proxied_client_receiver_.reset();
+    target_loader_.reset();
+  }
+
+  if (header_client_receiver_.is_bound()) {
+    std::ignore = header_client_receiver_.Unbind();
   }
 
   current_request_uses_header_client_ =
       factory_->url_loader_header_client_receiver_.is_bound();
 
-  if (request_.request_initiator &&
-      network::cors::ShouldCheckCors(request_.url, request_.request_initiator,
-                                     request_.mode)) {
-    if (scheme::IsCorsEnabledScheme(request_.url.scheme())) {
-      // Add the Origin header for CORS-enabled scheme requests.
-      request_.headers.SetHeaderIfMissing(
-          net::HttpRequestHeaders::kOrigin,
-          request_.request_initiator->Serialize());
-    } else if (!HasCrossOriginWhitelistEntry(
-                   *request_.request_initiator,
-                   url::Origin::Create(request_.url))) {
-      // Fail requests if a CORS check is required and the scheme is not CORS
-      // enabled. This matches the error condition that would be generated by
-      // CorsURLLoader::StartRequest in the network process.
-      SendErrorStatusAndCompleteImmediately(
-          network::URLLoaderCompletionStatus(network::CorsErrorStatus(
-              network::mojom::CorsError::kCorsDisabledScheme)));
-      return;
-    }
-  }
+  const bool is_cross_origin =
+      request_.request_initiator &&
+      !request_.request_initiator->IsSameOriginWith(request_.url);
+  const bool is_cors_enabled_scheme =
+      scheme::IsCorsEnabledScheme(request_.url.scheme());
 
-  struct NetHelperSetting setting;
-  factory_->request_handler_->GetSettingOfNetHelper(setting);
-  if (IsURLBlocked(request_.url, setting)) {
-    SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
-    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
+  // Match logic in network::cors::ShouldCheckCors.
+  bool should_check_cors =
+      is_cross_origin &&
+      request_.mode != network::mojom::RequestMode::kNavigate &&
+      request_.mode != network::mojom::RequestMode::kNoCors;
+
+  if (should_check_cors && !is_cors_enabled_scheme &&
+      !HasCrossOriginWhitelistEntry(*request_.request_initiator,
+                                    url::Origin::Create(request_.url))) {
+    // Fail requests if a CORS check is required and the scheme is not CORS
+    // enabled. This matches the error condition that would be generated by
+    // CorsURLLoader::StartRequest in the network process.
+    SendErrorStatusAndCompleteImmediately(
+        network::URLLoaderCompletionStatus(network::CorsErrorStatus(
+            network::mojom::CorsError::kCorsDisabledScheme)));
     return;
   }
 
-  request_.load_flags = UpdateLoadFlags(request_.load_flags, setting);
+  // Maybe update |credentials_mode| for fetch requests.
+  if (request_.credentials_mode ==
+      network::mojom::CredentialsMode::kSameOrigin) {
+    // Match logic in devtools_url_loader_interceptor.cc
+    // InterceptionJob::FollowRedirect.
+    bool tainted_origin = false;
+    if (redirect_in_progress_ && request_.request_initiator &&
+        !url::IsSameOriginWith(request_.url, original_url_) &&
+        !request_.request_initiator->IsSameOriginWith(original_url_)) {
+      tainted_origin = true;
+    }
+
+    // Match logic in CorsURLLoader::StartNetworkRequest.
+    const auto response_tainting = CalculateResponseTainting(
+        should_check_cors, request_.mode, tainted_origin);
+    original_crendentials_mode_ = request_.credentials_mode;
+    request_.credentials_mode =
+        network::cors::CalculateCredentialsFlag(request_.credentials_mode,
+                                                response_tainting)
+            ? network::mojom::CredentialsMode::kInclude
+            : network::mojom::CredentialsMode::kOmit;
+  }
+
+  const bool should_add_origin_header =
+      // Cross-origin requests that are not kNavigate nor kNoCors.
+      should_check_cors ||
+      // Same-origin requests except for GET and HEAD.
+      (!is_cross_origin &&
+       request_.method != net::HttpRequestHeaders::kGetMethod &&
+       request_.method != net::HttpRequestHeaders::kHeadMethod);
+
+  if (should_add_origin_header) {
+    // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
+    url::Origin origin_header_value =
+        request_.request_initiator.value_or(url::Origin());
+    origin_header_value = content::Referrer::SanitizeOriginForRequest(
+        request_.url, origin_header_value,
+        blink::ReferrerUtils::NetToMojoReferrerPolicy(
+            request_.referrer_policy));
+
+    request_.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kOrigin,
+                                        origin_header_value.Serialize());
+  }
 
   const GURL original_url = request_.url;
-#if BUILDFLAG(IS_OHOS)
-  factory_->request_handler_->OnBeforeRequest(
-      id_, &request_, request_was_redirected_,
-      base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
-                     weak_factory_.GetWeakPtr(), original_url),
-      base::BindOnce(&InterceptedRequest::CancelRequest,
-                     weak_factory_.GetWeakPtr()));
-#else
+
   factory_->request_handler_->OnBeforeRequest(
       id_, &request_, request_was_redirected_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                      weak_factory_.GetWeakPtr(), original_url),
       base::BindOnce(&InterceptedRequest::SendErrorAndCompleteImmediately,
                      weak_factory_.GetWeakPtr()));
-#endif  //  BUILDFLAG(IS_OHOS)
 }
 
 void InterceptedRequest::OnLoaderCreated(
@@ -549,28 +585,16 @@ void InterceptedRequest::OnLoaderCreated(
   header_client_receiver_.Bind(std::move(receiver));
 }
 
-void InterceptedRequest::InputStreamFailed(bool restart_needed) {
-  DCHECK(!input_stream_previously_failed_);
-
+bool InterceptedRequest::InputStreamFailed() {
   if (intercept_only_) {
     // This can happen for unsupported schemes, when no proper
     // response from the intercept handler is received, i.e.
     // the provided input stream in response failed to load. In
     // this case we send and error and stop loading.
     SendErrorAndCompleteImmediately(net::ERR_UNKNOWN_URL_SCHEME);
-    return;
+    return true;
   }
-
-  if (!restart_needed)
-    return;
-
-  input_stream_previously_failed_ = true;
-
-#if BUILDFLAG(IS_OHOS)
-  Restart(false);
-#else
-  Restart();
-#endif
+  return false;
 }
 
 // TrustedHeaderClient methods.
@@ -579,31 +603,33 @@ void InterceptedRequest::OnBeforeSendHeaders(
     const net::HttpRequestHeaders& headers,
     OnBeforeSendHeadersCallback callback) {
   if (!current_request_uses_header_client_) {
-    std::move(callback).Run(net::OK, absl::nullopt);
+    std::move(callback).Run(net::OK, std::nullopt);
     return;
   }
 
   request_.headers = headers;
-  std::move(callback).Run(net::OK, absl::nullopt);
+  std::move(callback).Run(net::OK, std::nullopt);
 
   // Resume handling of client messages after continuing from an async callback.
-  if (proxied_client_receiver_.is_bound())
+  if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
+  }
 }
 
 void InterceptedRequest::OnHeadersReceived(
     const std::string& headers,
     const net::IPEndPoint& remote_endpoint,
+    const std::optional<net::SSLInfo>& ssl_info,
     OnHeadersReceivedCallback callback) {
   if (!current_request_uses_header_client_) {
-    std::move(callback).Run(net::OK, absl::nullopt, GURL());
+    std::move(callback).Run(net::OK, std::nullopt, GURL());
     return;
   }
 
   current_headers_ = base::MakeRefCounted<net::HttpResponseHeaders>(headers);
   on_headers_received_callback_ = std::move(callback);
 
-  absl::optional<net::RedirectInfo> redirect_info;
+  std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
     const GURL new_url = request_.url.Resolve(location);
@@ -626,34 +652,23 @@ void InterceptedRequest::OnReceiveEarlyHints(
 
 void InterceptedRequest::OnReceiveResponse(
     network::mojom::URLResponseHeadPtr head,
-    mojo::ScopedDataPipeConsumerHandle body) {
+    mojo::ScopedDataPipeConsumerHandle body,
+    std::optional<mojo_base::BigBuffer> cached_metadata) {
   current_response_ = std::move(head);
   current_body_ = std::move(body);
+  current_cached_metadata_ = std::move(cached_metadata);
 
-  if (current_response_->headers &&
-      current_response_->headers->response_code() >= 400) {
-    // The WebViewClient onReceivedHttpError callback will be invoked for any
-    // resource (such as main page, iframe, image, etc.) with status code >= 400
-    auto error_reponse =
-        ExtractHttpErrorResponse(current_response_->headers.get());
-    CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
-    request->SetURL(CefString(request_.url.spec()));
-    request->SetMethod(CefString(request_.method));
-    request->Set(request_.headers);
-    request->SetDestination(request_.destination);
-    OnHttpErrorForUIThread(id_, request, request->IsMainFrame(), request_.has_user_gesture, error_reponse);
-  }
-
-  if (current_request_uses_header_client_) {
+  // |current_headers_| may be null for cached responses where OnHeadersReceived
+  // is not called.
+  if (current_request_uses_header_client_ && current_headers_) {
     // Use the headers we got from OnHeadersReceived as that'll contain
     // Set-Cookie if it existed.
-    DCHECK(current_headers_);
     current_response_->headers = current_headers_;
     current_headers_ = nullptr;
     ContinueToResponseStarted(net::OK);
   } else {
     HandleResponseOrRedirectHeaders(
-        absl::nullopt,
+        std::nullopt,
         base::BindOnce(&InterceptedRequest::ContinueToResponseStarted,
                        weak_factory_.GetWeakPtr()));
   }
@@ -662,20 +677,22 @@ void InterceptedRequest::OnReceiveResponse(
 void InterceptedRequest::OnReceiveRedirect(
     const net::RedirectInfo& redirect_info,
     network::mojom::URLResponseHeadPtr head) {
-  bool needs_callback = false;
+  // Whether to notify the client. True by default so that we always notify for
+  // internal redirects that originate from the network process (for HSTS, etc).
+  // False while a redirect is in-progress to avoid duplicate notifications.
+  bool notify_client = !redirect_in_progress_;
 
   current_response_ = std::move(head);
   current_body_.reset();
+  current_cached_metadata_.reset();
 
-  if (current_request_uses_header_client_) {
+  // |current_headers_| may be null for synthetic redirects where
+  // OnHeadersReceived is not called.
+  if (current_request_uses_header_client_ && current_headers_) {
     // Use the headers we got from OnHeadersReceived as that'll contain
-    // Set-Cookie if it existed. May be null for synthetic redirects.
-    if (current_headers_) {
-      current_response_->headers = current_headers_;
-      current_headers_ = nullptr;
-    }
-  } else {
-    needs_callback = true;
+    // Set-Cookie if it existed.
+    current_response_->headers = current_headers_;
+    current_headers_ = nullptr;
   }
 
   if (--redirect_limit_ == 0) {
@@ -687,18 +704,18 @@ void InterceptedRequest::OnReceiveRedirect(
 
   // When we redirect via ContinueToHandleOverrideHeaders the |redirect_info|
   // value is sometimes nonsense (HTTP_OK). Also, we won't get another call to
-  // OnHeadersReceived for the new URL so we need to execute the callback here.
+  // OnHeadersReceived for the new URL so we need to notify the client here.
   if (header_client_redirect_url_.is_valid() &&
       redirect_info.status_code == net::HTTP_OK) {
     DCHECK(current_request_uses_header_client_);
-    needs_callback = true;
+    notify_client = true;
     new_redirect_info =
         MakeRedirectResponseAndInfo(header_client_redirect_url_);
   } else {
     new_redirect_info = redirect_info;
   }
 
-  if (needs_callback) {
+  if (notify_client) {
     HandleResponseOrRedirectHeaders(
         new_redirect_info,
         base::BindOnce(&InterceptedRequest::ContinueToBeforeRedirect,
@@ -732,19 +749,8 @@ void InterceptedRequest::OnUploadProgress(int64_t current_position,
   std::move(callback).Run();
 }
 
-void InterceptedRequest::OnReceiveCachedMetadata(mojo_base::BigBuffer data) {
-  target_client_->OnReceiveCachedMetadata(std::move(data));
-}
-
 void InterceptedRequest::OnTransferSizeUpdated(int32_t transfer_size_diff) {
   target_client_->OnTransferSizeUpdated(transfer_size_diff);
-}
-
-void InterceptedRequest::OnStartLoadingResponseBody(
-    mojo::ScopedDataPipeConsumerHandle body) {
-  target_client_->OnStartLoadingResponseBody(
-      factory_->request_handler_->OnFilterResponseBody(id_, request_,
-                                                       std::move(body)));
 }
 
 void InterceptedRequest::OnComplete(
@@ -762,54 +768,30 @@ void InterceptedRequest::FollowRedirect(
     const std::vector<std::string>& removed_headers_ext,
     const net::HttpRequestHeaders& modified_headers_ext,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
-    const absl::optional<GURL>& new_url) {
+    const std::optional<GURL>& new_url) {
   std::vector<std::string> removed_headers = removed_headers_ext;
   net::HttpRequestHeaders modified_headers = modified_headers_ext;
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
-#if BUILDFLAG(IS_OHOS)
-  // We will not create a new url loader for redirects. However, the cef
-  // controls the add/save of cookies, so we need to load cookies and then
-  // transfer them to the network layer. Will only merge cookie headers bellow.
-  modified_headers.MergeFrom(request_.headers);
-  if (target_loader_) {
-    target_loader_->FollowRedirect(removed_headers, modified_headers,
-                                   modified_cors_exempt_headers, new_url);
-  }
-#endif
 
   // If |OnURLLoaderClientError| was called then we're just waiting for the
   // connection error handler of |proxied_loader_receiver_|. Don't restart the
   // job since that'll create another URLLoader.
-  if (!target_client_)
+  if (!target_client_) {
     return;
+  }
 
   // Normally we would call FollowRedirect on the target loader and it would
   // begin loading the redirected request. However, the client might want to
   // intercept that request so restart the job instead.
-#if BUILDFLAG(IS_OHOS)
-  // Continue call FollowRedirect on the target loader, if the client intercept that
-  // request the loader will be reset when OnComplete.
-  Restart(true);
-#else
   Restart();
-#endif
 }
 
 void InterceptedRequest::SetPriority(net::RequestPriority priority,
                                      int32_t intra_priority_value) {
-  if (target_loader_)
+  if (target_loader_) {
     target_loader_->SetPriority(priority, intra_priority_value);
-}
-
-void InterceptedRequest::PauseReadingBodyFromNet() {
-  if (target_loader_)
-    target_loader_->PauseReadingBodyFromNet();
-}
-
-void InterceptedRequest::ResumeReadingBodyFromNet() {
-  if (target_loader_)
-    target_loader_->ResumeReadingBodyFromNet();
+  }
 }
 
 // Helper methods.
@@ -820,7 +802,7 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
   intercept_request_ = intercept_request;
   intercept_only_ = intercept_only;
 
-  if (input_stream_previously_failed_ || !intercept_request_) {
+  if (!intercept_request_) {
     // Equivalent to no interception.
     InterceptResponseReceived(original_url, nullptr);
   } else {
@@ -837,13 +819,6 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
 void InterceptedRequest::InterceptResponseReceived(
     const GURL& original_url,
     std::unique_ptr<ResourceResponse> response) {
-#if !BUILDFLAG(IS_OHOS)
-  // We donn't reset and create a new url_loader for redirects then
-  // donn't need call HandleResponseOrRedirectHeaders when received
-  // response.
-  // See c68654c58db10e0add64ab0ddd1bcf9ace337324, if we reset and
-  // create a new url_loader for redirects then we will loss the
-  // information for cors check.
   if (request_.url != original_url) {
     // A response object shouldn't be created if we're redirecting.
     DCHECK(!response);
@@ -853,6 +828,7 @@ void InterceptedRequest::InterceptResponseReceived(
     current_response_->request_start = base::TimeTicks::Now();
     current_response_->response_start = base::TimeTicks::Now();
     current_body_.reset();
+    current_cached_metadata_.reset();
 
     auto headers = MakeResponseHeaders(
         net::HTTP_TEMPORARY_REDIRECT, std::string(), std::string(),
@@ -860,15 +836,16 @@ void InterceptedRequest::InterceptResponseReceived(
     current_response_->headers = headers;
 
     current_response_->encoded_data_length = headers->raw_headers().length();
-    current_response_->content_length = current_response_->encoded_body_length =
-        0;
+    current_response_->content_length = 0;
+    // Avoid incorrect replacement of 0 with nullptr. NOLINTNEXTLINE
+    current_response_->encoded_body_length = 0;
 
-    std::string origin;
-    if (request_.headers.GetHeader(net::HttpRequestHeaders::kOrigin, &origin) &&
-        origin != url::Origin().Serialize()) {
+    const auto origin =
+        request_.headers.GetHeader(net::HttpRequestHeaders::kOrigin);
+    if (origin && origin != url::Origin().Serialize()) {
       // Allow redirects of cross-origin resource loads.
       headers->AddHeader(network::cors::header_names::kAccessControlAllowOrigin,
-                         origin);
+                         *origin);
     }
 
     if (request_.credentials_mode ==
@@ -885,7 +862,6 @@ void InterceptedRequest::InterceptResponseReceived(
                        weak_factory_.GetWeakPtr(), redirect_info));
     return;
   }
-#endif  // IS_OHOS
 
   if (response) {
     // Non-null response: make sure to use it as an override for the
@@ -912,6 +888,14 @@ void InterceptedRequest::ContinueAfterIntercept() {
         target_loader_.BindNewPipeAndPassReceiver(), id_, options, request_,
         proxied_client_receiver_.BindNewPipeAndPassRemote(),
         traffic_annotation_);
+    if (original_crendentials_mode_) {
+      // Restore the original |credentials_mode| value after calling
+      // CreateLoaderAndStart. This matches the logic in CorsURLLoader::
+      // StartNetworkRequest and allows InterceptedRequest::Restart to compute
+      // the correct |credentials_mode| during a fetch request redirect.
+      request_.credentials_mode = *original_crendentials_mode_;
+      original_crendentials_mode_.reset();
+    }
   }
 }
 
@@ -921,20 +905,26 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
   // avoid having Set-Cookie headers stripped by the IPC layer.
   current_request_uses_header_client_ = true;
 
-  stream_loader_ = new StreamReaderURLLoader(
+  DCHECK(!stream_loader_);
+  stream_loader_ = std::make_unique<StreamReaderURLLoader>(
       id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
       header_client_receiver_.BindNewPipeAndPassRemote(), traffic_annotation_,
+      std::move(current_cached_metadata_),
       std::make_unique<InterceptDelegate>(std::move(response),
                                           weak_factory_.GetWeakPtr()));
   stream_loader_->Start();
 }
 
 void InterceptedRequest::HandleResponseOrRedirectHeaders(
-    absl::optional<net::RedirectInfo> redirect_info,
+    std::optional<net::RedirectInfo> redirect_info,
     net::CompletionOnceCallback continuation) {
   override_headers_ = nullptr;
   redirect_url_ = redirect_info.has_value() ? redirect_info->new_url : GURL();
   original_url_ = request_.url;
+
+  if (!redirect_url_.is_empty()) {
+    redirect_in_progress_ = true;
+  }
 
   // |current_response_| may be nullptr when called from OnHeadersReceived.
   auto headers =
@@ -946,8 +936,9 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
       id_, request_, redirect_url_, headers.get());
 
   // Pause handling of client messages before waiting on an async callback.
-  if (proxied_client_receiver_.is_bound())
+  if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Pause();
+  }
 
   factory_->request_handler_->OnRequestResponse(
       id_, &request_, headers.get(), redirect_info,
@@ -965,11 +956,7 @@ void InterceptedRequest::ContinueResponseOrRedirect(
     return;
   } else if (response_mode ==
              InterceptedRequestHandler::ResponseMode::RESTART) {
-#if BUILDFLAG(IS_OHOS)
-    Restart(false);
-#else
     Restart();
-#endif
     return;
   }
 
@@ -992,9 +979,10 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
   }
 
   DCHECK(on_headers_received_callback_);
-  absl::optional<std::string> headers;
-  if (override_headers_)
+  std::optional<std::string> headers;
+  if (override_headers_) {
     headers = override_headers_->raw_headers();
+  }
   header_client_redirect_url_ = redirect_url_;
   std::move(on_headers_received_callback_).Run(net::OK, headers, redirect_url_);
 
@@ -1002,8 +990,9 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
   redirect_url_ = GURL();
 
   // Resume handling of client messages after continuing from an async callback.
-  if (proxied_client_receiver_.is_bound())
+  if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
+  }
 }
 
 net::RedirectInfo InterceptedRequest::MakeRedirectResponseAndInfo(
@@ -1014,8 +1003,9 @@ net::RedirectInfo InterceptedRequest::MakeRedirectResponseAndInfo(
       net::HttpRequestHeaders::kContentType);
 
   // Clear the Content-Length values.
-  current_response_->content_length = current_response_->encoded_body_length =
-      0;
+  current_response_->content_length = 0;
+  // Avoid incorrect replacement of 0 with nullptr. NOLINTNEXTLINE
+  current_response_->encoded_body_length = 0;
   current_response_->headers->RemoveHeader(
       net::HttpRequestHeaders::kContentLength);
 
@@ -1039,17 +1029,20 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   }
 
   request_was_redirected_ = true;
+  redirect_in_progress_ = false;
 
-  if (header_client_redirect_url_.is_valid())
+  if (header_client_redirect_url_.is_valid()) {
     header_client_redirect_url_ = GURL();
+  }
 
   const GURL redirect_url = redirect_url_;
   override_headers_ = nullptr;
   redirect_url_ = GURL();
 
   // Resume handling of client messages after continuing from an async callback.
-  if (proxied_client_receiver_.is_bound())
+  if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
+  }
 
   const auto original_url = request_.url;
   const auto original_method = request_.method;
@@ -1085,13 +1078,8 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   bool should_clear_upload;
   net::RedirectUtil::UpdateHttpRequest(original_url, original_method,
                                        new_redirect_info,
-#if BUILDFLAG(IS_OHOS)
-                                       // OHOS not restart on redirect.
-                                       absl::nullopt,
-#else
-                                       absl::make_optional(remove_headers),
-#endif
-                                       /*modified_headers=*/absl::nullopt,
+                                       std::make_optional(remove_headers),
+                                       /*modified_headers=*/std::nullopt,
                                        &request_.headers, &should_clear_upload);
 
   if (should_clear_upload) {
@@ -1116,6 +1104,9 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
   const bool is_redirect =
       redirect_url.is_valid() || (headers && headers->IsRedirect(&location));
   if (stream_loader_ && is_redirect) {
+    // Don't continue reading from the stream loader.
+    stream_loader_->Cancel();
+
     // Redirecting from OnReceiveResponse generally isn't supported by the
     // NetworkService, so we can only support it when using a custom loader.
     // TODO(network): Remove this special case.
@@ -1138,7 +1129,7 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
     if (stream_loader_ && !is_redirect && request_.request_initiator &&
         network::cors::ShouldCheckCors(request_.url, request_.request_initiator,
                                        request_.mode)) {
-      const auto error_status = network::cors::CheckAccess(
+      const auto result = network::cors::CheckAccess(
           request_.url,
           GetHeaderString(
               headers.get(),
@@ -1147,33 +1138,52 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
               headers.get(),
               network::cors::header_names::kAccessControlAllowCredentials),
           request_.credentials_mode, *request_.request_initiator);
-      if (error_status &&
+      if (!result.has_value() &&
           !HasCrossOriginWhitelistEntry(*request_.request_initiator,
                                         url::Origin::Create(request_.url))) {
+        // Don't continue reading from the stream loader.
+        stream_loader_->Cancel();
+
         SendErrorStatusAndCompleteImmediately(
-            network::URLLoaderCompletionStatus(*error_status));
+            network::URLLoaderCompletionStatus(result.error()));
         return;
       }
     }
 
     // Resume handling of client messages after continuing from an async
     // callback.
-    if (proxied_client_receiver_.is_bound())
+    if (proxied_client_receiver_.is_bound()) {
       proxied_client_receiver_.Resume();
+    }
 
-    target_client_->OnReceiveResponse(std::move(current_response_),
-                                      std::move(current_body_));
+    if (stream_loader_) {
+      // Continue reading from the stream loader.
+      stream_loader_->Continue();
+    }
+
+    target_client_->OnReceiveResponse(
+        std::move(current_response_),
+        factory_->request_handler_->OnFilterResponseBody(
+            id_, request_, std::move(current_body_)),
+        std::move(current_cached_metadata_));
   }
-
-  if (stream_loader_)
-    stream_loader_->ContinueResponse(is_redirect);
 }
 
 void InterceptedRequest::OnDestroy() {
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
-  factory_->request_handler_->OnRequestComplete(id_, request_, status_);
+  bool handled_externally = false;
+  factory_->request_handler_->OnRequestComplete(id_, request_, status_,
+                                                handled_externally);
+
+  // Don't call OnComplete() if an unhandled request might be handled
+  // externally. The request will instead be canceled implicitly with
+  // ERR_ABORTED.
+  if (!handled_externally && target_client_ && !completed_) {
+    target_client_->OnComplete(status_);
+    completed_ = true;
+  }
 
   // Destroys |this|.
   factory_->RemoveRequest(this);
@@ -1187,9 +1197,10 @@ void InterceptedRequest::OnProcessRequestHeaders(
       id_, request_, redirect_url, modified_headers, removed_headers);
 
   if (!modified_headers->IsEmpty() || !removed_headers->empty()) {
-    request_.headers.MergeFrom(*modified_headers);
-    for (const std::string& name : *removed_headers)
+    for (const std::string& name : *removed_headers) {
       request_.headers.RemoveHeader(name);
+    }
+    request_.headers.MergeFrom(*modified_headers);
   }
 }
 
@@ -1203,15 +1214,18 @@ void InterceptedRequest::OnURLLoaderClientError() {
 
 void InterceptedRequest::OnURLLoaderError(uint32_t custom_reason,
                                           const std::string& description) {
-  if (custom_reason == network::mojom::URLLoader::kClientDisconnectReason)
+  if (custom_reason == network::mojom::URLLoader::kClientDisconnectReason &&
+      description == safe_browsing::kCustomCancelReasonForURLLoader) {
     SendErrorCallback(safe_browsing::kNetErrorCodeForSafeBrowsing, true);
+  }
 
   got_loader_error_ = true;
 
   // If CallOnComplete was already called, then this object is ready to be
   // deleted.
-  if (!target_client_)
+  if (!target_client_) {
     OnDestroy();
+  }
 }
 
 void InterceptedRequest::CallOnComplete(
@@ -1219,8 +1233,10 @@ void InterceptedRequest::CallOnComplete(
     bool wait_for_loader_error) {
   status_ = status;
 
-  if (target_client_)
+  if (target_client_) {
     target_client_->OnComplete(status);
+    completed_ = true;
+  }
 
   if (proxied_loader_receiver_.is_bound() &&
       (wait_for_loader_error && !got_loader_error_)) {
@@ -1245,14 +1261,6 @@ void InterceptedRequest::CallOnComplete(
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
-void InterceptedRequest::CancelRequest(int error_code) {
-  // Donn't cancel network requests. Network requests should be cannceled by the
-  // holder instead of following the tab, such as download, etc. Although the
-  // tab is destroyed, the request still needs to be maintained.
-}
-#endif  //  BUILDFLAG(IS_OHOS)
-
 void InterceptedRequest::SendErrorAndCompleteImmediately(int error_code) {
   SendErrorStatusAndCompleteImmediately(
       network::URLLoaderCompletionStatus(error_code));
@@ -1262,7 +1270,6 @@ void InterceptedRequest::SendErrorStatusAndCompleteImmediately(
     const network::URLLoaderCompletionStatus& status) {
   status_ = status;
   SendErrorCallback(status_.error_code, false);
-  target_client_->OnComplete(status_);
   OnDestroy();
 }
 
@@ -1270,8 +1277,9 @@ void InterceptedRequest::SendErrorCallback(int error_code,
                                            bool safebrowsing_hit) {
   // Ensure we only send one error callback, e.g. to avoid sending two if
   // there's both a networking error and safe browsing blocked the request.
-  if (sent_error_callback_)
+  if (sent_error_callback_) {
     return;
+  }
 
   sent_error_callback_ = true;
   factory_->request_handler_->OnRequestError(id_, request_, error_code,
@@ -1283,30 +1291,12 @@ void InterceptedRequest::OnUploadProgressACK() {
   waiting_for_upload_progress_ack_ = false;
 }
 
-void InterceptedRequest::OnHttpErrorForUIThread(
-    int32_t id,
-    CefRefPtr<CefRequest> request,
-    bool is_main_frame,
-    bool has_user_gesture,
-    CefRefPtr<CefResponse> error_response) {
-  if (!factory_) {
-    LOG(INFO) << "factory is invalid";
-    return;
-  }
-  if (!factory_->request_handler_) {
-    LOG(INFO) << "request handler is invalid";
-    return;
-  }
-  factory_->request_handler_->OnHttpError(id, request, is_main_frame,
-                                          has_user_gesture, error_response);
-}
-
 //==============================
 // InterceptedRequestHandler
 //==============================
 
-InterceptedRequestHandler::InterceptedRequestHandler() {}
-InterceptedRequestHandler::~InterceptedRequestHandler() {}
+InterceptedRequestHandler::InterceptedRequestHandler() = default;
+InterceptedRequestHandler::~InterceptedRequestHandler() = default;
 
 void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
@@ -1328,7 +1318,7 @@ void InterceptedRequestHandler::OnRequestResponse(
     int32_t request_id,
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
-    absl::optional<net::RedirectInfo> redirect_info,
+    std::optional<net::RedirectInfo> redirect_info,
     OnRequestResponseResultCallback callback) {
   std::move(callback).Run(
       ResponseMode::CONTINUE, nullptr,
@@ -1349,7 +1339,7 @@ InterceptedRequestHandler::OnFilterResponseBody(
 
 ProxyURLLoaderFactory::ProxyURLLoaderFactory(
     mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,
-    network::mojom::URLLoaderFactoryPtrInfo target_factory_info,
+    mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote,
     mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
         header_client_receiver,
     std::unique_ptr<InterceptedRequestHandler> request_handler)
@@ -1358,8 +1348,8 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
   DCHECK(request_handler_);
 
   // Actual creation of the factory.
-  if (target_factory_info) {
-    target_factory_.Bind(std::move(target_factory_info));
+  if (target_factory_remote) {
+    target_factory_.Bind(std::move(target_factory_remote));
     target_factory_.set_disconnect_handler(base::BindOnce(
         &ProxyURLLoaderFactory::OnTargetFactoryError, base::Unretained(this)));
   }
@@ -1367,8 +1357,9 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
   proxy_receivers_.set_disconnect_handler(base::BindRepeating(
       &ProxyURLLoaderFactory::OnProxyBindingError, base::Unretained(this)));
 
-  if (header_client_receiver)
+  if (header_client_receiver) {
     url_loader_header_client_receiver_.Bind(std::move(header_client_receiver));
+  }
 }
 
 ProxyURLLoaderFactory::~ProxyURLLoaderFactory() {
@@ -1378,79 +1369,135 @@ ProxyURLLoaderFactory::~ProxyURLLoaderFactory() {
 // static
 void ProxyURLLoaderFactory::CreateOnIOThread(
     mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,
-    network::mojom::URLLoaderFactoryPtrInfo target_factory_info,
+    mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory,
     mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
         header_client_receiver,
-    content::ResourceContext* resource_context,
+    ContextId context_id,
     std::unique_ptr<InterceptedRequestHandler> request_handler) {
   CEF_REQUIRE_IOT();
-  auto proxy = new ProxyURLLoaderFactory(
-      std::move(factory_receiver), std::move(target_factory_info),
-      std::move(header_client_receiver), std::move(request_handler));
-  ResourceContextData::AddProxy(proxy, resource_context);
+  auto proxy = base::WrapUnique(new ProxyURLLoaderFactory(
+      std::move(factory_receiver), std::move(target_factory),
+      std::move(header_client_receiver), std::move(request_handler)));
+
+  // Set disconnect callback to remove proxy from map when disconnected.
+  proxy->SetDisconnectCallback(base::BindOnce(
+      [](ContextId context_id, ProxyURLLoaderFactory* proxy) {
+        RemoveProxyFromMap(context_id, proxy);
+      },
+      context_id));
+
+  // Add proxy to global map.
+  AddProxyToMap(context_id, std::move(proxy));
 }
 
 void ProxyURLLoaderFactory::SetDisconnectCallback(
     DisconnectCallback on_disconnect) {
   CEF_REQUIRE_IOT();
   DCHECK(!destroyed_);
-  DCHECK(!on_disconnect_);
   on_disconnect_ = std::move(on_disconnect);
 }
 
 // static
 void ProxyURLLoaderFactory::CreateProxy(
     content::BrowserContext* browser_context,
-    mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+    network::URLLoaderFactoryBuilder& factory_builder,
     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
         header_client,
     std::unique_ptr<InterceptedRequestHandler> request_handler) {
   CEF_REQUIRE_UIT();
   DCHECK(request_handler);
 
-  auto proxied_receiver = std::move(*factory_receiver);
-  network::mojom::URLLoaderFactoryPtrInfo target_factory_info;
-  *factory_receiver = mojo::MakeRequest(&target_factory_info);
+  auto [factory_receiver, target_factory_remote] = factory_builder.Append();
 
   mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
       header_client_receiver;
-  if (header_client)
+  if (header_client) {
     header_client_receiver = header_client->InitWithNewPipeAndPassReceiver();
+  }
 
-  content::ResourceContext* resource_context =
-      browser_context->GetResourceContext();
-  DCHECK(resource_context);
+  // Get the ContextId on the UI thread while BrowserContext is known valid.
+  ContextId context_id =
+      ContextIdManager::GetInstance().GetContextId(browser_context);
 
-  CEF_POST_TASK(
-      CEF_IOT,
-      base::BindOnce(
-          &ProxyURLLoaderFactory::CreateOnIOThread, std::move(proxied_receiver),
-          std::move(target_factory_info), std::move(header_client_receiver),
-          base::Unretained(resource_context), std::move(request_handler)));
+  CEF_POST_TASK(CEF_IOT,
+                base::BindOnce(&ProxyURLLoaderFactory::CreateOnIOThread,
+                               std::move(factory_receiver),
+                               std::move(target_factory_remote),
+                               std::move(header_client_receiver), context_id,
+                               std::move(request_handler)));
 }
 
 // static
-void ProxyURLLoaderFactory::CreateProxy(
+void ProxyURLLoaderFactory::ClearProxiesForBrowserContextAsync(
+    content::BrowserContext* browser_context) {
+  CEF_REQUIRE_UIT();
+
+  // Invalidate the context ID first. This prevents any pending CreateProxy
+  // calls from adding new proxies for this context, since they will now
+  // get kInvalidContextId when they try to look up the ID.
+  ContextId context_id =
+      ContextIdManager::GetInstance().InvalidateContextId(browser_context);
+
+  if (context_id != kInvalidContextId) {
+    CEF_POST_TASK(CEF_IOT,
+                  base::BindOnce(&ClearProxiesForContextId, context_id));
+  }
+}
+
+// static
+void ProxyURLLoaderFactory::CreateProxyForWebContents(
     content::WebContents::Getter web_contents_getter,
     mojo::PendingReceiver<network::mojom::URLLoaderFactory> loader_receiver,
     std::unique_ptr<InterceptedRequestHandler> request_handler) {
   DCHECK(request_handler);
 
-  if (!CEF_CURRENTLY_ON_IOT()) {
+  // Always go to UI thread first to get the context_id while BrowserContext
+  // is known to be valid.
+  if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
-        CEF_IOT,
-        base::BindOnce(CreateProxyHelper, web_contents_getter,
-                       std::move(loader_receiver), std::move(request_handler)));
+        CEF_UIT,
+        base::BindOnce(&ProxyURLLoaderFactory::CreateProxyForWebContents,
+                       web_contents_getter, std::move(loader_receiver),
+                       std::move(request_handler)));
     return;
   }
 
-  auto proxy = new ProxyURLLoaderFactory(
-      std::move(loader_receiver), nullptr,
-      mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>(),
-      std::move(request_handler));
-  CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(ResourceContextData::AddProxyOnUIThread,
-                               base::Unretained(proxy), web_contents_getter));
+  CEF_REQUIRE_UIT();
+  content::WebContents* web_contents = web_contents_getter.Run();
+  if (!web_contents) {
+    // WebContents is gone, don't create proxy.
+    return;
+  }
+
+  content::BrowserContext* browser_context = web_contents->GetBrowserContext();
+  ContextId context_id =
+      ContextIdManager::GetInstance().GetContextId(browser_context);
+
+  // Create the proxy on the IO thread with the context_id already known.
+  CEF_POST_TASK(
+      CEF_IOT,
+      base::BindOnce(
+          [](mojo::PendingReceiver<network::mojom::URLLoaderFactory>
+                 loader_receiver,
+             std::unique_ptr<InterceptedRequestHandler> request_handler,
+             ContextId context_id) {
+            CEF_REQUIRE_IOT();
+            auto proxy = base::WrapUnique(new ProxyURLLoaderFactory(
+                std::move(loader_receiver),
+                mojo::PendingRemote<network::mojom::URLLoaderFactory>(),
+                mojo::PendingReceiver<
+                    network::mojom::TrustedURLLoaderHeaderClient>(),
+                std::move(request_handler)));
+
+            proxy->SetDisconnectCallback(base::BindOnce(
+                [](ContextId context_id, ProxyURLLoaderFactory* proxy) {
+                  RemoveProxyFromMap(context_id, proxy);
+                },
+                context_id));
+
+            AddProxyToMap(context_id, std::move(proxy));
+          },
+          std::move(loader_receiver), std::move(request_handler), context_id));
 }
 
 void ProxyURLLoaderFactory::CreateLoaderAndStart(
@@ -1465,11 +1512,8 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     // Don't start a request while we're shutting down.
     return;
   }
-#if BUILDFLAG(IS_OHOS)
-  if ((request.is_download_request)|| (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS())) {
-#else
+
   if (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS()) {
-#endif  //  BUILDFLAG(IS_OHOS)
     // This is the so-called pass-through, no-op option.
     if (target_factory_) {
       target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
@@ -1485,23 +1529,11 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
         target_factory_clone.InitWithNewPipeAndPassReceiver());
   }
 
-  bool allCookiePolicy = NetHelpers::IsAllowAcceptCookies();
-  bool thirdPartyCookiePolicy = NetHelpers::IsThirdPartyCookieAllowed();
-  if (!allCookiePolicy) {
-    options |= network::mojom::kURLLoadOptionBlockAllCookies;
-  } else if (!thirdPartyCookiePolicy) {
-    options |= network::mojom::kURLLoadOptionBlockThirdPartyCookies;
-  }
-
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-#if BUILDFLAG(IS_OHOS)
-  req->Restart(false);
-#else
   req->Restart();
-#endif
 }
 
 void ProxyURLLoaderFactory::Clone(
@@ -1515,8 +1547,9 @@ void ProxyURLLoaderFactory::OnLoaderCreated(
     mojo::PendingReceiver<network::mojom::TrustedHeaderClient> receiver) {
   CEF_REQUIRE_IOT();
   auto request_it = requests_.find(request_id);
-  if (request_it != requests_.end())
+  if (request_it != requests_.end()) {
     request_it->second->OnLoaderCreated(std::move(receiver));
+  }
 }
 
 void ProxyURLLoaderFactory::OnLoaderForCorsPreflightCreated(
@@ -1535,8 +1568,9 @@ void ProxyURLLoaderFactory::OnTargetFactoryError() {
 }
 
 void ProxyURLLoaderFactory::OnProxyBindingError() {
-  if (proxy_receivers_.empty())
+  if (proxy_receivers_.empty()) {
     target_factory_.reset();
+  }
 
   MaybeDestroySelf();
 }
@@ -1552,8 +1586,9 @@ void ProxyURLLoaderFactory::RemoveRequest(InterceptedRequest* request) {
 void ProxyURLLoaderFactory::MaybeDestroySelf() {
   // Even if all URLLoaderFactory pipes connected to this object have been
   // closed it has to stay alive until all active requests have completed.
-  if (target_factory_.is_bound() || !requests_.empty())
+  if (target_factory_.is_bound() || !requests_.empty()) {
     return;
+  }
 
   destroyed_ = true;
 

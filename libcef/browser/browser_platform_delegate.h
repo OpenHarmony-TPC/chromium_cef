@@ -9,24 +9,18 @@
 #include <string>
 #include <vector>
 
-#include "include/cef_client.h"
-#include "include/cef_drag_data.h"
-#include "include/internal/cef_types.h"
-#include "include/views/cef_browser_view.h"
-
-#include "base/callback_forward.h"
-#include "extensions/common/mojom/view_type.mojom-forward.h"
+#include "base/functional/callback_forward.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/include/cef_client.h"
+#include "cef/include/cef_drag_data.h"
+#include "cef/include/internal/cef_types.h"
+#include "cef/include/views/cef_browser_view.h"
+#include "cef/libcef/renderer/browser_config.h"
 #include "third_party/blink/public/common/page/drag_operation.h"
-#include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 #include "third_party/blink/public/mojom/drag/drag.mojom-forward.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-forward.h"
 #include "ui/base/window_open_disposition.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "components/autofill/core/browser/ui/suggestion.h"
-#include "ui/gfx/geometry/rect_f.h"
-#endif
 
 class GURL;
 
@@ -36,25 +30,20 @@ class WebMouseEvent;
 class WebMouseWheelEvent;
 class WebInputEvent;
 class WebTouchEvent;
+
+namespace mojom {
+class WindowFeatures;
+}
 }  // namespace blink
 
 namespace content {
-struct AXEventNotificationDetails;
-struct AXLocationChangeNotificationDetails;
-class BrowserAccessibilityManager;
 struct DropData;
-struct NativeWebKeyboardEvent;
 class RenderViewHost;
 class RenderViewHostDelegateView;
 class RenderWidgetHostImpl;
 class WebContents;
 class WebContentsView;
 }  // namespace content
-
-namespace extensions {
-class Extension;
-class ExtensionHost;
-}  // namespace extensions
 
 namespace gfx {
 class ImageSkia;
@@ -64,15 +53,26 @@ class Size;
 class Vector2d;
 }  // namespace gfx
 
-#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
+namespace input {
+struct NativeWebKeyboardEvent;
+}
+
+namespace ui {
+class AXTreeID;
+struct AXLocationAndScrollUpdates;
+struct AXUpdatesAndEvents;
+}  // namespace ui
+
 namespace views {
 class Widget;
 }
-#endif
+
+namespace web_modal {
+class WebContentsModalDialogHost;
+}
 
 struct CefBrowserCreateParams;
 class CefBrowserHostBase;
-class CefFileDialogRunner;
 class CefJavaScriptDialogRunner;
 class CefMenuRunner;
 
@@ -90,7 +90,7 @@ class CefBrowserPlatformDelegate {
   static std::unique_ptr<CefBrowserPlatformDelegate> Create(
       const CefBrowserCreateParams& create_params);
 
-  // Called from AlloyBrowserHostImpl::Create.
+  // Called from BrowserHost::Create.
   // Wait for the call to WebContentsCreated(owned=true) before taking ownership
   // of the resulting WebContents object.
   virtual content::WebContents* CreateWebContents(
@@ -101,8 +101,8 @@ class CefBrowserPlatformDelegate {
   // called a single time per instance. May be called on multiple threads. Only
   // used with windowless rendering.
   virtual void CreateViewForWebContents(
-      content::WebContentsView** view,
-      content::RenderViewHostDelegateView** delegate_view);
+      raw_ptr<content::WebContentsView>* view,
+      raw_ptr<content::RenderViewHostDelegateView>* delegate_view);
 
   // Called after the WebContents for a browser has been created. |owned| will
   // be true if |web_contents| was created via CreateWebContents() and we should
@@ -120,7 +120,7 @@ class CefBrowserPlatformDelegate {
       std::unique_ptr<content::WebContents> new_contents,
       const GURL& target_url,
       WindowOpenDisposition disposition,
-      const gfx::Rect& initial_rect,
+      const blink::mojom::WindowFeatures& window_features,
       bool user_gesture,
       bool* was_blocked);
 
@@ -128,28 +128,16 @@ class CefBrowserPlatformDelegate {
   // BrowserDestroyed(). Will only be called a single time per instance.
   virtual void WebContentsDestroyed(content::WebContents* web_contents);
 
-  // See WebContentsDelegate documentation.
-  virtual bool ShouldAllowRendererInitiatedCrossProcessNavigation(
-      bool is_main_frame_navigation);
-
   // Called after the RenderViewHost is created.
   virtual void RenderViewCreated(content::RenderViewHost* render_view_host);
 
   // See WebContentsObserver documentation.
   virtual void RenderViewReady();
 
-  // Called after the owning AlloyBrowserHostImpl is created. Will only be
+  // Called after the owning BrowserHost is created. Will only be
   // called a single time per instance. Do not send any client notifications
   // from this method.
   virtual void BrowserCreated(CefBrowserHostBase* browser);
-
-  // Called from AlloyBrowserHostImpl::Create.
-  virtual void CreateExtensionHost(const extensions::Extension* extension,
-                                   const GURL& url,
-                                   extensions::mojom::ViewType host_type);
-
-  // Returns the current extension host.
-  virtual extensions::ExtensionHost* GetExtensionHost() const;
 
   // Send any notifications related to browser creation. Called after
   // BrowserCreated().
@@ -159,9 +147,9 @@ class CefBrowserPlatformDelegate {
   // BrowserDestroyed().
   virtual void NotifyBrowserDestroyed();
 
-  // Called before the owning AlloyBrowserHostImpl is destroyed. Will only be
+  // Called before the owning BrowserHost is destroyed. Will only be
   // called a single time per instance. All references to the
-  // AlloyBrowserHostImpl and WebContents should be cleared when this method is
+  // BrowserHost and WebContents should be cleared when this method is
   // called. Do not send any client notifications from this method.
   virtual void BrowserDestroyed(CefBrowserHostBase* browser);
 
@@ -180,37 +168,52 @@ class CefBrowserPlatformDelegate {
   // the client, which may be NULL. May be called on multiple threads.
   virtual CefWindowHandle GetHostWindowHandle() const;
 
-#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
   // Returns the Widget owner for the browser window. Only used with windowed
   // rendering.
   virtual views::Widget* GetWindowWidget() const;
 
-  // Returns the BrowserView associated with this browser. Only used with views-
+  // Returns the BrowserView associated with this browser. Only used with Views-
   // based browsers.
   virtual CefRefPtr<CefBrowserView> GetBrowserView() const;
-#endif
+
+  // Sets the BrowserView associated with this browser. Only used with
+  // Views-based browsers.
+  virtual void SetBrowserView(CefRefPtr<CefBrowserView> browser_view);
+
+  // Returns the WebContentsModalDialogHost associated with this browser.
+  virtual web_modal::WebContentsModalDialogHost* GetWebContentsModalDialogHost()
+      const;
 
   // Called after the WebContents have been created for a new popup browser
-  // parented to this browser but before the AlloyBrowserHostImpl is created for
-  // the popup. |is_devtools| will be true if the popup will host DevTools. This
+  // parented to this browser but before the BrowserHost is created for the
+  // popup. |is_devtools| will be true if the popup will host DevTools. This
   // method will be called before WebContentsCreated() is called on
-  // |new_platform_delegate|. Do not make the new browser visible in this
+  // |new_platform_delegate|. Does not make the new browser visible in this
   // callback.
-  virtual void PopupWebContentsCreated(
+  void PopupWebContentsCreated(
       const CefBrowserSettings& settings,
       CefRefPtr<CefClient> client,
       content::WebContents* new_web_contents,
       CefBrowserPlatformDelegate* new_platform_delegate,
       bool is_devtools);
 
-  // Called after the AlloyBrowserHostImpl is created for a new popup browser
-  // parented to this browser. |is_devtools| will be true if the popup will host
-  // DevTools. This method will be called immediately after
+  // Called after the BrowserHost is created for a new popup browser parented to
+  // this browser. |is_devtools| will be true if the popup will host DevTools.
+  // This method will be called immediately after
   // CefLifeSpanHandler::OnAfterCreated() for the popup browser. It is safe to
   // make the new browser visible in this callback (for example, add the browser
   // to a window and show it).
-  virtual void PopupBrowserCreated(CefBrowserHostBase* new_browser,
-                                   bool is_devtools);
+  void PopupBrowserCreated(CefBrowserPlatformDelegate* new_platform_delegate,
+                           CefBrowserHostBase* new_browser,
+                           bool is_devtools);
+
+  // Called from PopupWebContentsCreated/PopupBrowserCreated to retrieve the
+  // default BrowserViewDelegate in cases where this is a new Views-based popup
+  // and the opener is either not Views-based or doesn't implement the
+  // BrowserViewDelegate. Only implemented for specific configurations where
+  // special handling of new popups is required for proper functioning.
+  virtual CefRefPtr<CefBrowserViewDelegate>
+  GetDefaultBrowserViewDelegateForPopupOpener();
 
   // Returns the background color for the browser. The alpha component will be
   // either SK_AlphaTRANSPARENT or SK_AlphaOPAQUE (e.g. fully transparent or
@@ -251,34 +254,25 @@ class CefBrowserPlatformDelegate {
   virtual void SizeTo(int width, int height);
 #endif
 
-  // Convert from view coordinates to screen coordinates. Potential display
-  // scaling will be applied to the result.
-  virtual gfx::Point GetScreenPoint(const gfx::Point& view) const;
+  // Convert from view DIP coordinates to screen coordinates. If
+  // |want_dip_coords| is true return DIP instead of device (pixel) coordinates
+  // on Windows/Linux.
+  virtual gfx::Point GetScreenPoint(const gfx::Point& view,
+                                    bool want_dip_coords) const;
 
   // Open the specified text in the default text editor.
   virtual void ViewText(const std::string& text);
 
   // Forward the keyboard event to the application or frame window to allow
   // processing of shortcut keys.
-  virtual bool HandleKeyboardEvent(
-      const content::NativeWebKeyboardEvent& event);
-
-  // See WebContentsDelegate documentation.
-  virtual bool PreHandleGestureEvent(content::WebContents* source,
-                                     const blink::WebGestureEvent& event);
-
-  // See WebContentsDelegate documentation.
-  virtual bool IsNeverComposited(content::WebContents* web_contents);
+  virtual bool HandleKeyboardEvent(const input::NativeWebKeyboardEvent& event);
 
   // Invoke platform specific handling for the external protocol.
   static void HandleExternalProtocol(const GURL& url);
 
   // Returns the OS event handle, if any, associated with |event|.
   virtual CefEventHandle GetEventHandle(
-      const content::NativeWebKeyboardEvent& event) const;
-
-  // Create the platform-specific file dialog runner.
-  virtual std::unique_ptr<CefFileDialogRunner> CreateFileDialogRunner();
+      const input::NativeWebKeyboardEvent& event) const;
 
   // Create the platform-specific JavaScript dialog runner.
   virtual std::unique_ptr<CefJavaScriptDialogRunner>
@@ -295,16 +289,24 @@ class CefBrowserPlatformDelegate {
   // be called on multiple threads.
   virtual bool IsViewsHosted() const;
 
+  // Returns the runtime style implemented by this delegate. May be called on
+  // multiple threads.
+  virtual bool IsAlloyStyle() const = 0;
+  bool IsChromeStyle() const { return !IsAlloyStyle(); }
+
+  // Returns true if this delegate implements a browser with external
+  // (client-provided) parent window. May be called on multiple threads.
+  virtual bool HasExternalParent() const;
+
   // Notify the browser that it was hidden. Only used with windowless rendering.
   virtual void WasHidden(bool hidden);
 
-#if BUILDFLAG(IS_OHOS)
-  // Notify the browser that it was occluded. Only used with windowless rendering.
-  virtual void WasOccluded(bool occluded);
-#endif
+  // Returns true if the browser is currently hidden. Only used with windowless
+  // rendering.
+  virtual bool IsHidden() const;
 
   // Notify the browser that screen information has changed. Only used with
-  // windowless rendering.
+  // windowless rendering and external (client-provided) root window.
   virtual void NotifyScreenInfoChanged();
 
   // Invalidate the view. Only used with windowless rendering.
@@ -345,66 +347,29 @@ class CefBrowserPlatformDelegate {
       const gfx::Vector2d& image_offset,
       const blink::mojom::DragEventSourceInfo& event_info,
       content::RenderWidgetHostImpl* source_rwh);
-  virtual void UpdateDragCursor(ui::mojom::DragOperation operation);
+  virtual void UpdateDragOperation(ui::mojom::DragOperation operation,
+                                   bool document_is_handling_drag);
   virtual void DragSourceEndedAt(int x, int y, cef_drag_operations_mask_t op);
   virtual void DragSourceSystemDragEnded();
   virtual void AccessibilityEventReceived(
-      const content::AXEventNotificationDetails& eventData);
+      const ui::AXUpdatesAndEvents& details);
   virtual void AccessibilityLocationChangesReceived(
-      const std::vector<content::AXLocationChangeNotificationDetails>& locData);
+      const ui::AXTreeID& tree_id,
+      ui::AXLocationAndScrollUpdates& details);
   virtual gfx::Point GetDialogPosition(const gfx::Size& size);
   virtual gfx::Size GetMaximumDialogSize();
 
   // See CefBrowserHost documentation.
-  virtual void SetAutoResizeEnabled(bool enabled,
-                                    const CefSize& min_size,
-                                    const CefSize& max_size);
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
-  virtual content::BrowserAccessibilityManager*
-  GetOrCreateRootBrowserAccessibilityManager() {
-    return nullptr;
-  }
   virtual bool IsPrintPreviewSupported() const;
-  virtual void Print();
-  virtual void PrintToPDF(const CefString& path,
-                          const CefPdfPrintSettings& settings,
-                          CefRefPtr<CefPdfPrintCallback> callback);
-  virtual void Find(const CefString& searchText,
-                    bool forward,
-                    bool matchCase,
-                    bool findNext,
-                    bool newSession);
-  virtual void StopFinding(bool clearSelection);
 
-#if defined(OHOS_NWEB_EX)
-  virtual void OnShowAutofillPopup(
-      const gfx::RectF& element_bounds,
-      bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions);
-  virtual void OnHideAutofillPopup();
-  virtual void ShowPasswordDialog(bool is_update, const std::string& url);
-#endif // IS_OHOS
+  virtual bool IsMovePictureInPictureEnabled() const;
+  virtual bool AllowPictureInPictureWithoutUserActivation() const;
 
-  virtual void ShowPopupMenu(
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection);
+  // CefBrowser configuration determined prior to CefBrowserHost creation and
+  // passed to the renderer process via the GetNewBrowserInfo Mojo request.
+  cef::BrowserConfig GetBrowserConfig() const;
 
-#if BUILDFLAG(IS_OHOS)
-  virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
-  virtual void SetDrawRect(int x, int y, int width, int height) {};
-  virtual void SetDrawMode(int mode) {};
-  virtual void WasKeyboardResized() {};
-  virtual void SetToken(void* token) {};
-  virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard){};
-  virtual bool ShouldVirtualKeyboardOverlay(){return false;};
-  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {};
-#endif
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
@@ -412,11 +377,11 @@ class CefBrowserPlatformDelegate {
   CefBrowserPlatformDelegate();
   virtual ~CefBrowserPlatformDelegate();
 
-  static int TranslateWebEventModifiers(uint32 cef_modifiers);
+  static int TranslateWebEventModifiers(uint32_t cef_modifiers);
 
   // Not owned by this object.
-  content::WebContents* web_contents_ = nullptr;
-  CefBrowserHostBase* browser_ = nullptr;
+  raw_ptr<content::WebContents> web_contents_ = nullptr;
+  raw_ptr<CefBrowserHostBase> browser_ = nullptr;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_H_

@@ -8,7 +8,6 @@
 
 #include "base/location.h"
 #include "base/logging.h"
-#include "base/task/post_task.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/scoped_blocking_call.h"
 #include "base/threading/thread_restrictions.h"
@@ -26,25 +25,35 @@
 #define CEF_REQUIRE_UIT() CEF_REQUIRE(CEF_UIT)
 #define CEF_REQUIRE_IOT() CEF_REQUIRE(CEF_IOT)
 
-#define CEF_REQUIRE_RETURN(id, var)             \
-  if (!CEF_CURRENTLY_ON(id)) {                  \
-    NOTREACHED() << "called on invalid thread"; \
-    return var;                                 \
+#define CEF_REQUIRE_RETURN(id, var)              \
+  if (!CEF_CURRENTLY_ON(id)) {                   \
+    DCHECK(false) << "called on invalid thread"; \
+    return var;                                  \
   }
 #define CEF_REQUIRE_UIT_RETURN(var) CEF_REQUIRE_RETURN(CEF_UIT, var)
 #define CEF_REQUIRE_IOT_RETURN(var) CEF_REQUIRE_RETURN(CEF_IOT, var)
 
-#define CEF_REQUIRE_RETURN_VOID(id)             \
-  if (!CEF_CURRENTLY_ON(id)) {                  \
-    NOTREACHED() << "called on invalid thread"; \
-    return;                                     \
+#define CEF_REQUIRE_RETURN_VOID(id)              \
+  if (!CEF_CURRENTLY_ON(id)) {                   \
+    DCHECK(false) << "called on invalid thread"; \
+    return;                                      \
   }
 #define CEF_REQUIRE_UIT_RETURN_VOID() CEF_REQUIRE_RETURN_VOID(CEF_UIT)
 #define CEF_REQUIRE_IOT_RETURN_VOID() CEF_REQUIRE_RETURN_VOID(CEF_IOT)
 
-#define CEF_POST_TASK(id, task) base::PostTask(FROM_HERE, {id}, task)
-#define CEF_POST_DELAYED_TASK(id, task, delay_ms) \
-  base::PostDelayedTask(FROM_HERE, {id}, task, base::Milliseconds(delay_ms))
+template <int id, std::enable_if_t<id == CEF_UIT, bool> = true>
+auto CEF_TASK_RUNNER() {
+  return content::GetUIThreadTaskRunner({});
+}
+template <int id, std::enable_if_t<id == CEF_IOT, bool> = true>
+auto CEF_TASK_RUNNER() {
+  return content::GetIOThreadTaskRunner({});
+}
+
+#define CEF_POST_TASK(id, task) CEF_TASK_RUNNER<id>()->PostTask(FROM_HERE, task)
+#define CEF_POST_DELAYED_TASK(id, task, delay_ms)         \
+  CEF_TASK_RUNNER<id>()->PostDelayedTask(FROM_HERE, task, \
+                                         base::Milliseconds(delay_ms))
 
 // Post a blocking task with the specified |priority|. Tasks that have not
 // started executing at shutdown will never run. However, any task that has
@@ -79,22 +88,26 @@
       FROM_HERE, base::BlockingType::WILL_BLOCK)
 
 // Same as IMPLEMENT_REFCOUNTING() but using the specified Destructor.
-#define IMPLEMENT_REFCOUNTING_EX(ClassName, Destructor)              \
- public:                                                             \
-  void AddRef() const override { ref_count_.AddRef(); }              \
-  bool Release() const override {                                    \
-    if (ref_count_.Release()) {                                      \
-      Destructor::Destruct(this);                                    \
-      return true;                                                   \
-    }                                                                \
-    return false;                                                    \
-  }                                                                  \
-  bool HasOneRef() const override { return ref_count_.HasOneRef(); } \
-  bool HasAtLeastOneRef() const override {                           \
-    return ref_count_.HasAtLeastOneRef();                            \
-  }                                                                  \
-                                                                     \
- private:                                                            \
+#define IMPLEMENT_REFCOUNTING_EX(ClassName, Destructor) \
+ public:                                                \
+  void AddRef() const override {                        \
+    ref_count_.AddRef();                                \
+  }                                                     \
+  bool Release() const override {                       \
+    if (ref_count_.Release()) {                         \
+      Destructor::Destruct(this);                       \
+      return true;                                      \
+    }                                                   \
+    return false;                                       \
+  }                                                     \
+  bool HasOneRef() const override {                     \
+    return ref_count_.HasOneRef();                      \
+  }                                                     \
+  bool HasAtLeastOneRef() const override {              \
+    return ref_count_.HasAtLeastOneRef();               \
+  }                                                     \
+                                                        \
+ private:                                               \
   CefRefCount ref_count_
 
 #define IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(ClassName) \

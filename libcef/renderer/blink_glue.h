@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
-#include "include/internal/cef_types.h"
-
+#include "cef/include/internal/cef_types.h"
+#include "third_party/blink/public/mojom/frame/lifecycle.mojom-blink-forward.h"
 #include "third_party/blink/public/platform/web_common.h"
 #include "v8/include/v8.h"
 
@@ -24,22 +24,14 @@ class WebString;
 class WebURLRequest;
 class WebURLResponse;
 class WebView;
-
-namespace scheduler {
-class WebResourceLoadingTaskRunnerHandle;
-}
 }  // namespace blink
 
 namespace blink_glue {
-
-BLINK_EXPORT extern const int64_t kInvalidFrameId;
 
 BLINK_EXPORT bool CanGoBack(blink::WebView* view);
 BLINK_EXPORT bool CanGoForward(blink::WebView* view);
 BLINK_EXPORT void GoBack(blink::WebView* view);
 BLINK_EXPORT void GoForward(blink::WebView* view);
-BLINK_EXPORT bool CanGoBackOrForward(blink::WebView* view, int num_steps);
-BLINK_EXPORT void GoBackOrForward(blink::WebView* view, int num_steps);
 
 BLINK_EXPORT bool IsInBackForwardCache(blink::WebLocalFrame* frame);
 
@@ -70,9 +62,39 @@ BLINK_EXPORT v8::Local<v8::Value> ExecuteV8ScriptAndReturnValue(
     const blink::WebString& source_url,
     int start_line,
     v8::Local<v8::Context> context,
-    v8::TryCatch& tryCatch);
+    v8::TryCatch& tryCatch,
+    v8::Isolate* isolate);
+
+BLINK_EXPORT v8::MicrotaskQueue* GetMicrotaskQueue(
+    v8::Local<v8::Context> context);
 
 BLINK_EXPORT bool IsScriptForbidden();
+
+class BLINK_EXPORT CefObserverRegistration {
+ public:
+  CefObserverRegistration() = default;
+
+  CefObserverRegistration(const CefObserverRegistration&) = delete;
+  CefObserverRegistration& operator=(const CefObserverRegistration&) = delete;
+
+  virtual ~CefObserverRegistration() = default;
+};
+
+class BLINK_EXPORT CefExecutionContextLifecycleStateObserver {
+ public:
+  virtual void ContextLifecycleStateChanged(
+      blink::mojom::blink::FrameLifecycleState state) {}
+
+ protected:
+  virtual ~CefExecutionContextLifecycleStateObserver() = default;
+};
+
+// Register an ExecutionContextLifecycleStateObserver. Remains registered until
+// the returned object is destroyed.
+BLINK_EXPORT std::unique_ptr<CefObserverRegistration>
+RegisterExecutionContextLifecycleStateObserver(
+    v8::Local<v8::Context> context,
+    CefExecutionContextLifecycleStateObserver* observer);
 
 BLINK_EXPORT void RegisterURLSchemeAsSupportingFetchAPI(
     const blink::WebString& scheme);
@@ -100,14 +122,8 @@ BLINK_EXPORT bool HasPluginFrameOwner(blink::WebLocalFrame* frame);
 BLINK_EXPORT void StartNavigation(blink::WebLocalFrame* frame,
                                   const blink::WebURLRequest& request);
 
-// Used by CefFrameImpl::CreateURLLoader.
-BLINK_EXPORT
-std::unique_ptr<blink::scheduler::WebResourceLoadingTaskRunnerHandle>
-CreateResourceLoadingTaskRunnerHandle(blink::WebLocalFrame* frame);
-BLINK_EXPORT
-std::unique_ptr<blink::scheduler::WebResourceLoadingTaskRunnerHandle>
-CreateResourceLoadingMaybeUnfreezableTaskRunnerHandle(
-    blink::WebLocalFrame* frame);
+// Sets whether select popup menus should be rendered by the browser.
+BLINK_EXPORT void SetUseExternalPopupMenus(blink::WebView* view, bool value);
 
 }  // namespace blink_glue
 

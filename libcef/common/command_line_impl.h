@@ -6,18 +6,23 @@
 #define CEF_LIBCEF_COMMON_COMMAND_LINE_IMPL_H_
 #pragma once
 
-#include "include/cef_command_line.h"
-#include "libcef/common/value_base.h"
-
 #include "base/command_line.h"
+#include "cef/include/cef_command_line.h"
+#include "cef/libcef/common/value_base.h"
 
 // CefCommandLine implementation
 class CefCommandLineImpl
     : public CefValueBase<CefCommandLine, base::CommandLine> {
  public:
+  // If |will_delete=false| make sure to call |std::ignore =
+  // obj->Detach(nullptr);| to invalidate this object when the client should no
+  // longer be accessing it.
   CefCommandLineImpl(base::CommandLine* value,
                      bool will_delete,
                      bool read_only);
+
+  // Shortcut for |will_delete=false|, |read_only=true|.
+  explicit CefCommandLineImpl(const base::CommandLine& value);
 
   CefCommandLineImpl(const CefCommandLineImpl&) = delete;
   CefCommandLineImpl& operator=(const CefCommandLineImpl&) = delete;
@@ -40,6 +45,7 @@ class CefCommandLineImpl
   void AppendSwitch(const CefString& name) override;
   void AppendSwitchWithValue(const CefString& name,
                              const CefString& value) override;
+  void RemoveSwitch(const CefString& name) override;
   bool HasArguments() override;
   void GetArguments(ArgumentList& arguments) override;
   void AppendArgument(const CefString& argument) override;

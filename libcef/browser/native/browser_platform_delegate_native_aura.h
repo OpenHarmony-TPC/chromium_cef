@@ -5,16 +5,17 @@
 #ifndef CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_AURA_H_
 #define CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_AURA_H_
 
-#include "libcef/browser/native/browser_platform_delegate_native.h"
+#include <optional>
 
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native.h"
 #include "ui/events/event.h"
+#include "ui/gfx/geometry/rect.h"
+#include "ui/gfx/geometry/vector2d.h"
 
 namespace content {
 class RenderWidgetHostViewAura;
-}
-
-namespace gfx {
-class Vector2d;
 }
 
 // Windowed browser implementation for Aura platforms.
@@ -24,7 +25,10 @@ class CefBrowserPlatformDelegateNativeAura
   CefBrowserPlatformDelegateNativeAura(const CefWindowInfo& window_info,
                                        SkColor background_color);
 
+  void InstallRootWindowBoundsCallback();
+
   // CefBrowserPlatformDelegate methods:
+  void RenderViewReady() override;
   void SendKeyEvent(const CefKeyEvent& event) override;
   void SendMouseClickEvent(const CefMouseEvent& event,
                            CefBrowserHost::MouseButtonType type,
@@ -35,9 +39,12 @@ class CefBrowserPlatformDelegateNativeAura
                            int deltaX,
                            int deltaY) override;
   void SendTouchEvent(const CefTouchEvent& event) override;
+  std::unique_ptr<CefMenuRunner> CreateMenuRunner() override;
+  gfx::Point GetScreenPoint(const gfx::Point& view,
+                            bool want_dip_coords) const override;
 
   // CefBrowserPlatformDelegateNative methods:
-  content::NativeWebKeyboardEvent TranslateWebKeyEvent(
+  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
       const CefKeyEvent& key_event) const override;
   blink::WebMouseEvent TranslateWebClickEvent(
       const CefMouseEvent& mouse_event,
@@ -67,13 +74,33 @@ class CefBrowserPlatformDelegateNativeAura
       int deltaY) const;
   virtual gfx::Vector2d GetUiWheelEventOffset(int deltaX, int deltaY) const;
 
+  // Returns the root window bounds in screen DIP coordinates.
+  virtual std::optional<gfx::Rect> GetRootWindowBounds() {
+    return std::nullopt;
+  }
+
  protected:
+  base::OnceClosure GetWidgetDeleteCallback();
+
+  std::optional<gfx::Rect> RootWindowBoundsCallback();
+
   static base::TimeTicks GetEventTimeStamp();
-  static int TranslateUiEventModifiers(uint32 cef_modifiers);
-  static int TranslateUiChangedButtonFlags(uint32 cef_modifiers);
+  static int TranslateUiEventModifiers(uint32_t cef_modifiers);
+  static int TranslateUiChangedButtonFlags(uint32_t cef_modifiers);
+
+  // Widget hosting the web contents. It will be deleted automatically when the
+  // associated root window is destroyed.
+  raw_ptr<views::Widget> window_widget_ = nullptr;
 
  private:
+  // Will only be called if the Widget is deleted before
+  // CefBrowserHostBase::DestroyBrowser() is called.
+  void WidgetDeleted();
+
   content::RenderWidgetHostViewAura* GetHostView() const;
+
+  base::WeakPtrFactory<CefBrowserPlatformDelegateNativeAura> weak_ptr_factory_{
+      this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_AURA_H_

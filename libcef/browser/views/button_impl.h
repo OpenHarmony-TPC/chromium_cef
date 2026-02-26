@@ -6,12 +6,10 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_BUTTON_IMPL_H_
 #pragma once
 
-#include "include/views/cef_button.h"
-#include "include/views/cef_label_button.h"
-
-#include "libcef/browser/views/view_impl.h"
-
 #include "base/logging.h"
+#include "cef/include/views/cef_button.h"
+#include "cef/include/views/cef_label_button.h"
+#include "cef/libcef/browser/views/view_impl.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/views/animation/ink_drop.h"
 #include "ui/views/controls/button/button.h"
@@ -79,13 +77,14 @@ CEF_BUTTON_IMPL_T cef_button_state_t CEF_BUTTON_IMPL_D::GetState() {
 
 CEF_BUTTON_IMPL_T void CEF_BUTTON_IMPL_D::SetInkDropEnabled(bool enabled) {
   CEF_REQUIRE_VALID_RETURN_VOID();
-  views::InkDrop::Get(ParentClass::root_view())
-      ->SetMode(enabled ? views::InkDropHost::InkDropMode::ON
-                        : views::InkDropHost::InkDropMode::OFF);
+  auto* inkdrop = views::InkDrop::Get(ParentClass::root_view());
+  inkdrop->SetMode(enabled ? views::InkDropHost::InkDropMode::ON
+                           : views::InkDropHost::InkDropMode::OFF);
   if (enabled) {
-    views::InkDrop::Get(ParentClass::root_view())
-        ->SetBaseColor(color_utils::BlendTowardMaxContrast(
-            ParentClass::root_view()->background()->get_color(), 0x61));
+    // Never returns an empty value.
+    const auto& color = view_util::GetBackgroundColor(
+        ParentClass::root_view(), /*allow_transparent=*/false);
+    inkdrop->SetBaseColor(color_utils::BlendTowardMaxContrast(*color, 0x61));
   }
 }
 

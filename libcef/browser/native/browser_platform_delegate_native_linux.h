@@ -5,11 +5,11 @@
 #ifndef CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_LINUX_H_
 #define CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_LINUX_H_
 
-#include "libcef/browser/native/browser_platform_delegate_native_aura.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_aura.h"
+#include "ui/base/ozone_buildflags.h"
 
-#include "ui/ozone/buildflags.h"
-
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
 class CefWindowX11;
 #endif
 
@@ -29,31 +29,22 @@ class CefBrowserPlatformDelegateNativeLinux
   void SetFocus(bool setFocus) override;
   void NotifyMoveOrResizeStarted() override;
   void SizeTo(int width, int height) override;
-  gfx::Point GetScreenPoint(const gfx::Point& view) const override;
   void ViewText(const std::string& text) override;
-  bool HandleKeyboardEvent(
-      const content::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(const input::NativeWebKeyboardEvent& event) override;
   CefEventHandle GetEventHandle(
-      const content::NativeWebKeyboardEvent& event) const override;
-  std::unique_ptr<CefMenuRunner> CreateMenuRunner() override;
-  gfx::Point GetDialogPosition(const gfx::Size& size) override;
-  gfx::Size GetMaximumDialogSize() override;
+      const input::NativeWebKeyboardEvent& event) const override;
 
   // CefBrowserPlatformDelegateNativeAura methods:
   ui::KeyEvent TranslateUiKeyEvent(const CefKeyEvent& key_event) const override;
-  content::NativeWebKeyboardEvent TranslateWebKeyEvent(
+  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
       const CefKeyEvent& key_event) const override;
 
  private:
   // True if the host window has been created.
-  bool host_window_created_;
+  bool host_window_created_ = false;
 
-  // Widget hosting the web contents. It will be deleted automatically when the
-  // associated root window is destroyed.
-  views::Widget* window_widget_;
-
-#if BUILDFLAG(OZONE_PLATFORM_X11)
-  CefWindowX11* window_x11_ = nullptr;
+#if BUILDFLAG(IS_OZONE_X11)
+  raw_ptr<CefWindowX11> window_x11_ = nullptr;
 #endif
 };
 

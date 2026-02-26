@@ -8,13 +8,16 @@
 
 #include <memory>
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/chrome/browser_delegate.h"
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/chrome/browser_delegate.h"
+#include "chrome/browser/ui/browser.h"
 
-class Browser;
 class ChromeBrowserDelegate;
+class ChromeBrowserView;
 
-// CefBrowser implementation for the chrome runtime. Method calls are delegated
+// CefBrowser implementation for Chrome style. Method calls are delegated
 // to the chrome Browser object or the WebContents as appropriate. See the
 // ChromeBrowserDelegate documentation for additional details. All methods are
 // thread-safe unless otherwise indicated.
@@ -24,7 +27,7 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   // possibly shared by multiple Browser instances.
   class DelegateCreateParams : public cef::BrowserDelegate::CreateParams {
    public:
-    DelegateCreateParams(const CefBrowserCreateParams& create_params)
+    explicit DelegateCreateParams(const CefBrowserCreateParams& create_params)
         : create_params_(create_params) {}
 
     CefBrowserCreateParams create_params_;
@@ -34,6 +37,11 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   // ChromeBrowserHostImpl instance.
   static CefRefPtr<ChromeBrowserHostImpl> Create(
       const CefBrowserCreateParams& params);
+
+  // Safe (checked) conversion from CefBrowserHostBase to ChromeBrowserHostImpl.
+  // Use this method instead of static_cast.
+  static CefRefPtr<ChromeBrowserHostImpl> FromBaseChecked(
+      CefRefPtr<CefBrowserHostBase> host_base);
 
   // Returns the browser associated with the specified RenderViewHost.
   static CefRefPtr<ChromeBrowserHostImpl> GetBrowserForHost(
@@ -47,6 +55,9 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   // Returns the browser associated with the specified global ID.
   static CefRefPtr<ChromeBrowserHostImpl> GetBrowserForGlobalId(
       const content::GlobalRenderFrameHostId& global_id);
+  // Returns the browser associated with the specified Browser.
+  static CefRefPtr<ChromeBrowserHostImpl> GetBrowserForBrowser(
+      const Browser* browser);
 
   ~ChromeBrowserHostImpl() override;
 
@@ -56,45 +67,22 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   // CefBrowserHostBase methods called from CefFrameHostImpl:
   void OnSetFocus(cef_focus_source_t source) override;
 
+  // CefBrowserHostBase methods:
+  bool IsWindowless() const override { return false; }
+  bool IsAlloyStyle() const override { return false; }
+
   // CefBrowserHost methods:
   void CloseBrowser(bool force_close) override;
   bool TryCloseBrowser() override;
-  void SetFocus(bool focus) override;
   CefWindowHandle GetWindowHandle() override;
   CefWindowHandle GetOpenerWindowHandle() override;
-  double GetZoomLevel() override;
-  void SetZoomLevel(double zoomLevel) override;
-  void RunFileDialog(FileDialogMode mode,
-                     const CefString& title,
-                     const CefString& default_file_path,
-                     const std::vector<CefString>& accept_filters,
-                     int selected_accept_filter,
-                     CefRefPtr<CefRunFileDialogCallback> callback) override;
-  void Print() override;
-  void PrintToPDF(const CefString& path,
-                  const CefPdfPrintSettings& settings,
-                  CefRefPtr<CefPdfPrintCallback> callback) override;
-  void Find(const CefString& searchText,
-            bool forward,
-            bool matchCase,
-            bool findNext,
-            bool newSession) override;
-  void StopFinding(bool clearSelection) override;
-  void ShowDevTools(const CefWindowInfo& windowInfo,
-                    CefRefPtr<CefClient> client,
-                    const CefBrowserSettings& settings,
-                    const CefPoint& inspect_element_at) override;
-  void CloseDevTools() override;
-  bool HasDevTools() override;
-  bool IsWindowRenderingDisabled() override;
+  bool IsWindowRenderingDisabled() override { return false; }
   void WasResized() override;
   void WasHidden(bool hidden) override;
-  void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
   void SendCaptureLostEvent() override;
-  void NotifyMoveOrResizeStarted() override;
   int GetWindowlessFrameRate() override;
   void SetWindowlessFrameRate(int frame_rate) override;
   void ImeSetComposition(const CefString& text,
@@ -115,18 +103,19 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   void DragTargetDrop(const CefMouseEvent& event) override;
   void DragSourceSystemDragEnded() override;
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
-  void SetAudioMuted(bool mute) override;
-  bool IsAudioMuted() override;
-  void SetAccessibilityState(cef_state_t accessibility_state) override;
-  void SetAutoResizeEnabled(bool enabled,
-                            const CefSize& min_size,
-                            const CefSize& max_size) override;
-  CefRefPtr<CefExtension> GetExtension() override;
-  bool IsBackgroundHost() override;
+  bool CanExecuteChromeCommand(int command_id) override;
+  void ExecuteChromeCommand(int command_id,
+                            cef_window_open_disposition_t disposition) override;
 
-  /* ohos webview begin */
-  void SetBackgroundColor(int color) override;
-  /* ohos webview end */
+  Browser* browser() const { return browser_; }
+
+  // Return the CEF specialization of BrowserView.
+  ChromeBrowserView* chrome_browser_view() const;
+
+  base::WeakPtr<ChromeBrowserHostImpl> GetWeakPtr() {
+    return weak_ptr_factory_.GetWeakPtr();
+  }
+
  protected:
   bool Navigate(const content::OpenURLParams& params) override;
 
@@ -141,16 +130,23 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
       CefRefPtr<CefRequestContextImpl> request_context);
 
   // Create a new Browser without initializing the WebContents.
-  static Browser* CreateBrowser(const CefBrowserCreateParams& params);
+  // |browser_create_params| may be empty for default Browser creation behavior.
+  static Browser* CreateBrowser(
+      const CefBrowserCreateParams& params,
+      std::optional<Browser::CreateParams> browser_create_params);
 
   // Called from ChromeBrowserDelegate::CreateBrowser when this object is first
   // created. Must be called on the UI thread.
   void Attach(content::WebContents* web_contents,
-              CefRefPtr<ChromeBrowserHostImpl> opener);
+              bool is_devtools_popup,
+              CefRefPtr<CefBrowserHostBase> opener);
 
   // Called from ChromeBrowserDelegate::AddNewContents to take ownership of a
-  // popup WebContents.
-  void AddNewContents(std::unique_ptr<content::WebContents> contents);
+  // popup WebContents. |browser_create_params| may be empty for default Browser
+  // creation behavior.
+  void AddNewContents(
+      std::unique_ptr<content::WebContents> contents,
+      std::optional<Browser::CreateParams> browser_create_params);
 
   // Called when this object changes Browser ownership (e.g. initially created,
   // dragging between windows, etc). The old Browser, if any, will be cleared
@@ -159,15 +155,20 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
 
   // CefBrowserHostBase methods:
   void WindowDestroyed() override;
+  bool WillBeDestroyed() const override;
   void DestroyBrowser() override;
 
-  void DoCloseBrowser(bool force_close);
+  void DoCloseBrowser();
 
   // Returns the current tab index for the associated WebContents, or
   // TabStripModel::kNoTab if not found.
   int GetCurrentTabIndex() const;
 
-  Browser* browser_ = nullptr;
+  raw_ptr<Browser> browser_ = nullptr;
+  CefWindowHandle host_window_handle_ = kNullWindowHandle;
+  bool is_destroying_browser_ = false;
+
+  base::WeakPtrFactory<ChromeBrowserHostImpl> weak_ptr_factory_{this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_CHROME_BROWSER_HOST_IMPL_H_

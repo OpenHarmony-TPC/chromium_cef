@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/audio_loopback_stream_creator.h"
+#include "cef/libcef/browser/audio_loopback_stream_creator.h"
 
 #include <memory>
 #include <utility>
 
-#include "base/bind.h"
 #include "base/check_op.h"
+#include "base/functional/bind.h"
 #include "base/location.h"
 #include "content/browser/browser_main_loop.h"
 #include "content/browser/web_contents/web_contents_impl.h"
@@ -16,7 +16,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "media/audio/audio_device_description.h"
-#include "media/base/user_input_monitor.h"
+#include "media/mojo/mojom/audio_processing.mojom.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
 #include "third_party/blink/public/mojom/media/renderer_audio_input_stream_factory.mojom.h"
@@ -39,16 +39,16 @@ class StreamCreatedCallbackAdapter final
   StreamCreatedCallbackAdapter& operator=(const StreamCreatedCallbackAdapter&) =
       delete;
 
-  ~StreamCreatedCallbackAdapter() override {}
+  ~StreamCreatedCallbackAdapter() override = default;
 
   // blink::mojom::RendererAudioInputStreamFactoryClient implementation.
   void StreamCreated(
       mojo::PendingRemote<media::mojom::AudioInputStream> stream,
       mojo::PendingReceiver<media::mojom::AudioInputStreamClient>
           client_receiver,
-      media::mojom::ReadOnlyAudioDataPipePtr data_pipe,
+      media::mojom::ReadWriteAudioDataPipePtr data_pipe,
       bool initially_muted,
-      const absl::optional<base::UnguessableToken>& stream_id) override {
+      const std::optional<base::UnguessableToken>& stream_id) override {
     DCHECK(!initially_muted);  // Loopback streams shouldn't be started muted.
     callback_.Run(std::move(stream), std::move(client_receiver),
                   std::move(data_pipe));
@@ -83,19 +83,14 @@ void CreateSystemWideLoopbackStreamHelper(
   const bool enable_agc = false;
   factory->CreateInputStream(
       -1, -1, media::AudioDeviceDescription::kLoopbackWithMuteDeviceId, params,
-      total_segments, enable_agc, std::move(client_remote));
+      total_segments, enable_agc, media::mojom::AudioProcessingConfigPtr(),
+      std::move(client_remote));
 }
 
 }  // namespace
 
 CefAudioLoopbackStreamCreator::CefAudioLoopbackStreamCreator()
-    : factory_(nullptr,
-               content::BrowserMainLoop::GetInstance()
-                   ? static_cast<media::UserInputMonitorBase*>(
-                         content::BrowserMainLoop::GetInstance()
-                             ->user_input_monitor())
-                   : nullptr,
-               content::AudioStreamBrokerFactory::CreateImpl()) {
+    : factory_(nullptr, content::AudioStreamBrokerFactory::CreateImpl()) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 }
 

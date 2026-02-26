@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_FRAME_H_
 #pragma once
 
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/frame_service_base.h"
-
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/frame_service_base.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "mojo/public/cpp/bindings/binder_map.h"
 
@@ -17,8 +16,7 @@
 // association with the RenderFrameHost (which may be speculative, etc.), and so
 // that messages are always routed to the most appropriate CefFrameHostImpl
 // instance. Lifespan is tied to the RFH via FrameServiceBase.
-class CefBrowserFrame
-    : public content::FrameServiceBase<cef::mojom::BrowserFrame> {
+class CefBrowserFrame : public CefFrameServiceBase<cef::mojom::BrowserFrame> {
  public:
   CefBrowserFrame(content::RenderFrameHost* render_frame_host,
                   mojo::PendingReceiver<cef::mojom::BrowserFrame> receiver);
@@ -35,23 +33,18 @@ class CefBrowserFrame
 
  private:
   // cef::mojom::BrowserFrame methods:
-  void SendMessage(const std::string& name, base::Value arguments) override;
+  void SendMessage(const std::string& name,
+                   base::Value::List arguments) override;
+  void SendSharedMemoryRegion(const std::string& name,
+                              base::WritableSharedMemoryRegion region) override;
   void FrameAttached(mojo::PendingRemote<cef::mojom::RenderFrame> render_frame,
                      bool reattached) override;
-  void DidFinishFrameLoad(const GURL& validated_url,
-                          int32_t http_status_code) override;
   void UpdateDraggableRegions(
-      absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
+      std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
-  void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params) override;
-  void OnGetImageForContextNodeNull() override;
 
-  // FrameServiceBase methods:
-  bool ShouldCloseOnFinishNavigation() const override { return false; }
-
-  CefRefPtr<CefFrameHostImpl> GetFrameHost(
-      bool prefer_speculative = false) const;
+  CefRefPtr<CefFrameHostImpl> GetFrameHost(bool prefer_speculative,
+                                           bool* is_excluded = nullptr) const;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_FRAME_H_

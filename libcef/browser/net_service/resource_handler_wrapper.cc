@@ -2,14 +2,14 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/net_service/resource_handler_wrapper.h"
+#include "cef/libcef/browser/net_service/resource_handler_wrapper.h"
 
-#include "libcef/browser/net_service/proxy_url_loader_factory.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/libcef/browser/net_service/proxy_url_loader_factory.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
+#include "cef/libcef/common/request_impl.h"
 #include "net/http/http_status_code.h"
 
 namespace net_service {
@@ -20,7 +20,8 @@ class SkipCallbackWrapper : public CefResourceSkipCallback {
  public:
   explicit SkipCallbackWrapper(InputStream::SkipCallback callback)
       : callback_(std::move(callback)),
-        work_thread_task_runner_(base::SequencedTaskRunnerHandle::Get()) {}
+        work_thread_task_runner_(
+            base::SequencedTaskRunner::GetCurrentDefault()) {}
 
   SkipCallbackWrapper(const SkipCallbackWrapper&) = delete;
   SkipCallbackWrapper& operator=(const SkipCallbackWrapper&) = delete;
@@ -33,7 +34,7 @@ class SkipCallbackWrapper : public CefResourceSkipCallback {
     }
   }
 
-  void Continue(int64 bytes_skipped) override {
+  void Continue(int64_t bytes_skipped) override {
     if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
       work_thread_task_runner_->PostTask(
           FROM_HERE,
@@ -59,7 +60,8 @@ class ReadCallbackWrapper : public CefResourceReadCallback {
  public:
   explicit ReadCallbackWrapper(InputStream::ReadCallback callback)
       : callback_(std::move(callback)),
-        work_thread_task_runner_(base::SequencedTaskRunnerHandle::Get()) {}
+        work_thread_task_runner_(
+            base::SequencedTaskRunner::GetCurrentDefault()) {}
 
   ReadCallbackWrapper(const ReadCallbackWrapper&) = delete;
   ReadCallbackWrapper& operator=(const ReadCallbackWrapper&) = delete;
@@ -113,8 +115,9 @@ class HandlerProvider : public base::RefCountedThreadSafe<HandlerProvider> {
 
   void Detach() {
     base::AutoLock lock_scope(lock_);
-    if (!handler_)
+    if (!handler_) {
       return;
+    }
 
     // Execute on the expected thread.
     CEF_POST_TASK(CEF_IOT,
@@ -186,8 +189,9 @@ class ReadResponseCallbackWrapper : public CefCallback {
 
   void DoRead() {
     CEF_REQUIRE_IOT();
-    if (!callback_)
+    if (!callback_) {
       return;
+    }
 
     auto handler = handler_provider_->handler();
     if (!handler) {
@@ -221,7 +225,7 @@ class ReadResponseCallbackWrapper : public CefCallback {
   }
 
   scoped_refptr<HandlerProvider> handler_provider_;
-  net::IOBuffer* const dest_;
+  const raw_ptr<net::IOBuffer> dest_;
   int length_;
   CefRefPtr<ReadCallbackWrapper> callback_;
 
@@ -312,7 +316,8 @@ class OpenCallbackWrapper : public CefCallback {
                       std::unique_ptr<InputStreamWrapper> stream)
       : callback_(std::move(callback)),
         stream_(std::move(stream)),
-        work_thread_task_runner_(base::SequencedTaskRunnerHandle::Get()) {}
+        work_thread_task_runner_(
+            base::SequencedTaskRunner::GetCurrentDefault()) {}
 
   OpenCallbackWrapper(const OpenCallbackWrapper&) = delete;
   OpenCallbackWrapper& operator=(const OpenCallbackWrapper&) = delete;
@@ -480,8 +485,10 @@ class ResourceResponseWrapper : public ResourceResponse {
     }
 
     if (reason_phrase->empty() && *status_code > 0) {
-      *reason_phrase = net::GetHttpReasonPhrase(
-          static_cast<net::HttpStatusCode>(*status_code));
+      if (const char *text = net::GetHttpReasonPhrase(
+              static_cast<net::HttpStatusCode>(*status_code))) {
+        *reason_phrase = text;
+      }
     }
 
     *mime_type = response->GetMimeType();
@@ -489,8 +496,9 @@ class ResourceResponseWrapper : public ResourceResponse {
 
     // A |content_length| value may already be specified if the request included
     // a Range header.
-    if (response_length >= 0 && *content_length == -1)
+    if (response_length >= 0 && *content_length == -1) {
       *content_length = response_length;
+    }
 
     CefResponse::HeaderMap headerMap;
     response->GetHeaderMap(headerMap);

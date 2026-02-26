@@ -2,20 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#include "cef/libcef/common/drag_data_impl.h"
+
 #include <string>
 
 #include "base/files/file_path.h"
-#if BUILDFLAG(IS_OHOS)
-#include "base/files/file_util.h"
-#endif
+#include "cef/libcef/browser/stream_impl.h"
 
-#include "libcef/browser/stream_impl.h"
-#include "libcef/common/drag_data_impl.h"
-
-#define CHECK_READONLY_RETURN_VOID()       \
-  if (read_only_) {                        \
-    NOTREACHED() << "object is read only"; \
-    return;                                \
+#define CHECK_READONLY_RETURN_VOID()        \
+  if (read_only_) {                         \
+    DCHECK(false) << "object is read only"; \
+    return;                                 \
   }
 
 CefDragDataImpl::CefDragDataImpl(const content::DropData& data)
@@ -51,13 +48,13 @@ bool CefDragDataImpl::IsReadOnly() {
 
 bool CefDragDataImpl::IsLink() {
   base::AutoLock lock_scope(lock_);
-  return (data_.url.is_valid() &&
+  return (!data_.url_infos.empty() && data_.url_infos[0].url.is_valid() &&
           data_.file_contents_content_disposition.empty());
 }
 
 bool CefDragDataImpl::IsFragment() {
   base::AutoLock lock_scope(lock_);
-  return (!data_.url.is_valid() &&
+  return ((data_.url_infos.empty() || !data_.url_infos[0].url.is_valid()) &&
           data_.file_contents_content_disposition.empty() &&
           data_.filenames.empty());
 }
@@ -70,12 +67,13 @@ bool CefDragDataImpl::IsFile() {
 
 CefString CefDragDataImpl::GetLinkURL() {
   base::AutoLock lock_scope(lock_);
-  return data_.url.spec();
+  return !data_.url_infos.empty() ? CefString(data_.url_infos[0].url.spec())
+                                  : CefString();
 }
 
 CefString CefDragDataImpl::GetLinkTitle() {
   base::AutoLock lock_scope(lock_);
-  return data_.url_title;
+  return !data_.url_infos.empty() ? data_.url_infos[0].title : std::u16string();
 }
 
 CefString CefDragDataImpl::GetLinkMetadata() {
@@ -106,29 +104,48 @@ CefString CefDragDataImpl::GetFileName() {
 
 size_t CefDragDataImpl::GetFileContents(CefRefPtr<CefStreamWriter> writer) {
   base::AutoLock lock_scope(lock_);
-  if (data_.file_contents.empty())
+  if (data_.file_contents.empty()) {
     return 0;
+  }
 
   char* data = const_cast<char*>(data_.file_contents.c_str());
   size_t size = data_.file_contents.size();
 
-  if (!writer.get())
+  if (!writer.get()) {
     return size;
+  }
 
   return writer->Write(data, 1, size);
 }
 
 bool CefDragDataImpl::GetFileNames(std::vector<CefString>& names) {
   base::AutoLock lock_scope(lock_);
-  if (data_.filenames.empty())
+  if (data_.filenames.empty()) {
     return false;
+  }
 
   std::vector<ui::FileInfo>::const_iterator it = data_.filenames.begin();
   for (; it != data_.filenames.end(); ++it) {
     auto name = it->display_name.value();
-    if (name.empty())
-      name = it->path.value();
+    if (name.empty()) {
+      name = it->path.BaseName().value();
+    }
     names.push_back(name);
+  }
+
+  return true;
+}
+
+bool CefDragDataImpl::GetFilePaths(std::vector<CefString>& paths) {
+  base::AutoLock lock_scope(lock_);
+  if (data_.filenames.empty()) {
+    return false;
+  }
+
+  std::vector<ui::FileInfo>::const_iterator it = data_.filenames.begin();
+  for (; it != data_.filenames.end(); ++it) {
+    auto path = it->path.value();
+    paths.push_back(path);
   }
 
   return true;
@@ -137,13 +154,19 @@ bool CefDragDataImpl::GetFileNames(std::vector<CefString>& names) {
 void CefDragDataImpl::SetLinkURL(const CefString& url) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-  data_.url = GURL(url.ToString());
+  if (data_.url_infos.empty()) {
+    data_.url_infos.emplace_back();
+  }
+  data_.url_infos[0].url = GURL(url.ToString());
 }
 
 void CefDragDataImpl::SetLinkTitle(const CefString& title) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-  data_.url_title = title.ToString16();
+  if (data_.url_infos.empty()) {
+    data_.url_infos.emplace_back();
+  }
+  data_.url_infos[0].title = title.ToString16();
 }
 
 void CefDragDataImpl::SetLinkMetadata(const CefString& data) {
@@ -183,14 +206,20 @@ void CefDragDataImpl::AddFile(const CefString& path,
                               const CefString& display_name) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-  data_.filenames.push_back(
-      ui::FileInfo(base::FilePath(path), base::FilePath(display_name)));
+  data_.filenames.emplace_back(base::FilePath(path),
+                               base::FilePath(display_name));
+}
+
+void CefDragDataImpl::ClearFilenames() {
+  base::AutoLock lock_scope(lock_);
+  data_.filenames.clear();
 }
 
 void CefDragDataImpl::SetReadOnly(bool read_only) {
   base::AutoLock lock_scope(lock_);
-  if (read_only_ == read_only)
+  if (read_only_ == read_only) {
     return;
+  }
 
   read_only_ = read_only;
 }
@@ -209,22 +238,3 @@ bool CefDragDataImpl::HasImage() {
   base::AutoLock lock_scope(lock_);
   return image_ ? true : false;
 }
-
-#if BUILDFLAG(IS_OHOS)
-size_t CefDragDataImpl::GetImageFileSize() {
-  base::AutoLock lock_scope(lock_);
-  if (data_.file_contents.empty())
-    return 0;
-  return data_.file_contents.size();
-}
-
-void CefDragDataImpl::ClearFileNames() {
-  base::AutoLock lock_scope(lock_);
-  CHECK_READONLY_RETURN_VOID();
-  data_.filenames.clear();
-}
-
-bool CefDragDataImpl::IsImageFileContents() {
-  return data_.IsImageFileContents();
-}
-#endif

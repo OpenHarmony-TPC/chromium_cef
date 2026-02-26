@@ -2,10 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/chrome/browser_platform_delegate_chrome.h"
+#include "cef/libcef/browser/chrome/browser_platform_delegate_chrome.h"
 
+#include "base/notimplemented.h"
+#include "cef/libcef/browser/views/view_util.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window.h"
+#include "chrome/browser/ui/chrome_web_modal_dialog_manager_delegate.h"
+#include "chrome/common/pref_names.h"
+#include "ui/display/display.h"
 #include "ui/display/screen.h"
 #include "ui/gfx/geometry/point.h"
 
@@ -40,6 +46,21 @@ void CefBrowserPlatformDelegateChrome::BrowserDestroyed(
   native_delegate_->BrowserDestroyed(browser);
 }
 
+CefWindowHandle CefBrowserPlatformDelegateChrome::GetHostWindowHandle() const {
+  return view_util::GetWindowHandle(GetNativeWindow());
+}
+
+web_modal::WebContentsModalDialogHost*
+CefBrowserPlatformDelegateChrome::GetWebContentsModalDialogHost() const {
+  if (chrome_browser_) {
+    ChromeWebModalDialogManagerDelegate* manager = chrome_browser_;
+    return manager->GetWebContentsModalDialogHost(
+        chrome_browser_->tab_strip_model()->GetActiveWebContents());
+  }
+  DCHECK(false);
+  return nullptr;
+}
+
 SkColor CefBrowserPlatformDelegateChrome::GetBackgroundColor() const {
   return native_delegate_->GetBackgroundColor();
 }
@@ -70,16 +91,24 @@ void CefBrowserPlatformDelegateChrome::SendMouseWheelEvent(
 }
 
 gfx::Point CefBrowserPlatformDelegateChrome::GetScreenPoint(
-    const gfx::Point& view) const {
-  auto screen = display::Screen::GetScreen();
+    const gfx::Point& view,
+    bool want_dip_coords) const {
+  auto screen = display::Screen::Get();
 
-  gfx::NativeWindow native_window =
-      chrome_browser_ ? chrome_browser_->window()->GetNativeWindow() : nullptr;
-
-  // Returns screen pixel coordinates.
+  // Get device (pixel) coordinates.
   auto screen_rect = screen->DIPToScreenRectInWindow(
-      native_window, gfx::Rect(view, gfx::Size(0, 0)));
-  return screen_rect.origin();
+      GetNativeWindow(), gfx::Rect(view, gfx::Size(0, 0)));
+  auto screen_point = screen_rect.origin();
+
+  if (want_dip_coords) {
+    // Convert to DIP coordinates.
+    const auto& display = view_util::GetDisplayNearestPoint(
+        screen_point, /*input_pixel_coords=*/true);
+    view_util::ConvertPointFromPixels(&screen_point,
+                                      display.device_scale_factor());
+  }
+
+  return screen_point;
 }
 
 void CefBrowserPlatformDelegateChrome::ViewText(const std::string& text) {
@@ -87,7 +116,7 @@ void CefBrowserPlatformDelegateChrome::ViewText(const std::string& text) {
 }
 
 CefEventHandle CefBrowserPlatformDelegateChrome::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   return native_delegate_->GetEventHandle(event);
 }
 
@@ -97,10 +126,22 @@ CefWindowHandle CefBrowserPlatformDelegateChrome::GetParentWindowHandle()
 }
 
 gfx::Point CefBrowserPlatformDelegateChrome::GetParentScreenPoint(
-    const gfx::Point& view) const {
-  return GetScreenPoint(view);
+    const gfx::Point& view,
+    bool want_dip_coords) const {
+  return GetScreenPoint(view, want_dip_coords);
 }
 
 void CefBrowserPlatformDelegateChrome::set_chrome_browser(Browser* browser) {
   chrome_browser_ = browser;
+}
+
+gfx::NativeWindow CefBrowserPlatformDelegateChrome::GetNativeWindow() const {
+  if (chrome_browser_ && chrome_browser_->window()) {
+    return chrome_browser_->window()->GetNativeWindow();
+  }
+  if (web_contents_) {
+    return web_contents_->GetTopLevelNativeWindow();
+  }
+  NOTIMPLEMENTED();
+  return gfx::NativeWindow();
 }

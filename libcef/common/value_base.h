@@ -8,14 +8,15 @@
 
 #include <map>
 #include <set>
-#include "include/cef_base.h"
 
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
 #include "base/notreached.h"
 #include "base/synchronization/lock.h"
 #include "base/thread_annotations.h"
 #include "base/threading/platform_thread.h"
+#include "cef/include/cef_base.h"
 
 // Controller implementation base class.
 class CefValueController
@@ -24,7 +25,7 @@ class CefValueController
   // Implemented by a class controlled using the access controller.
   class Object {
    public:
-    virtual ~Object() {}
+    virtual ~Object() = default;
 
     // Called when the value has been removed.
     virtual void OnControlRemoved() = 0;
@@ -36,16 +37,18 @@ class CefValueController
     explicit AutoLock(CefValueController* impl)
         : impl_(impl), verified_(impl && impl->VerifyThread()) {
       DCHECK(impl);
-      if (verified_)
+      if (verified_) {
         impl_->lock();
+      }
     }
 
     AutoLock(const AutoLock&) = delete;
     AutoLock& operator=(const AutoLock&) = delete;
 
     ~AutoLock() {
-      if (verified_)
+      if (verified_) {
         impl_->unlock();
+      }
     }
 
     inline bool verified() { return verified_; }
@@ -82,7 +85,7 @@ class CefValueController
   inline bool VerifyThread() {
     if (!thread_safe() && !on_correct_thread()) {
       // This object should only be accessed from the thread that created it.
-      NOTREACHED() << "object accessed from incorrect thread.";
+      DCHECK(false) << "object accessed from incorrect thread.";
       return false;
     }
     return true;
@@ -126,23 +129,23 @@ class CefValueController
 
  private:
   // Owner object.
-  void* owner_value_;
-  Object* owner_object_;
+  raw_ptr<void> owner_value_ = nullptr;
+  raw_ptr<Object> owner_object_ = nullptr;
 
   // Map of reference objects.
-  using ReferenceMap = std::map<void*, Object*>;
+  using ReferenceMap = std::map<raw_ptr<void>, raw_ptr<Object>>;
   ReferenceMap reference_map_;
 
   // Map of dependency objects.
-  using DependencySet = std::set<void*>;
-  using DependencyMap = std::map<void*, DependencySet>;
+  using DependencySet = std::set<raw_ptr<void>>;
+  using DependencyMap = std::map<raw_ptr<void>, DependencySet>;
   DependencyMap dependency_map_;
 };
 
 // Thread-safe access control implementation.
 class CefValueControllerThreadSafe : public CefValueController {
  public:
-  explicit CefValueControllerThreadSafe() : locked_thread_id_(0) {}
+  explicit CefValueControllerThreadSafe() = default;
 
   CefValueControllerThreadSafe(const CefValueControllerThreadSafe&) = delete;
   CefValueControllerThreadSafe& operator=(const CefValueControllerThreadSafe&) =
@@ -156,7 +159,7 @@ class CefValueControllerThreadSafe : public CefValueController {
     locked_thread_id_ = base::PlatformThread::CurrentId();
   }
   void unlock() override NO_THREAD_SAFETY_ANALYSIS {
-    locked_thread_id_ = 0;
+    locked_thread_id_ = base::PlatformThreadId();
     lock_.Release();
   }
   bool locked() override {
@@ -270,8 +273,9 @@ class CefValueBase : public CefType, public CefValueController::Object {
       controller_->AddReference(value_, this);
 
       // Add a dependency on the parent value.
-      if (parent_value)
+      if (parent_value) {
         controller_->AddDependency(parent_value, value_);
+      }
     }
   }
 
@@ -279,8 +283,9 @@ class CefValueBase : public CefType, public CefValueController::Object {
   CefValueBase& operator=(const CefValueBase&) = delete;
 
   ~CefValueBase() override {
-    if (controller_.get() && value_)
+    if (controller_.get() && value_) {
       Delete();
+    }
   }
 
   // True if the underlying value is referenced instead of owned.
@@ -292,11 +297,18 @@ class CefValueBase : public CefType, public CefValueController::Object {
   // True if access to the underlying value is read-only.
   inline bool read_only() const { return read_only_; }
 
+  // Convert a writable value to read-only. The reverse could be surprising and
+  // is therefore not supported.
+  void MarkReadOnly() {
+    DCHECK(!read_only_);
+    read_only_ = true;
+  }
+
   // True if the underlying value has been detached.
-  inline bool detached() { return !controller_.get(); }
+  inline bool detached() const { return !controller_.get(); }
 
   // Returns the controller.
-  inline CefValueController* controller() { return controller_.get(); }
+  inline CefValueController* controller() const { return controller_.get(); }
 
   // Deletes the underlying value.
   void Delete() {
@@ -311,7 +323,7 @@ class CefValueBase : public CefType, public CefValueController::Object {
       controller()->RemoveDependencies(value_);
 
       // Delete the value.
-      DeleteValue(value_);
+      value_.ClearAndDelete();
     }
 
     controller_ = nullptr;
@@ -321,7 +333,7 @@ class CefValueBase : public CefType, public CefValueController::Object {
   // Detaches the underlying value and returns a pointer to it. If this is an
   // owner and a |new_controller| value is specified any existing references
   // will be passed to the new controller.
-  ValueType* Detach(CefValueController* new_controller) WARN_UNUSED_RESULT {
+  [[nodiscard]] ValueType* Detach(CefValueController* new_controller) {
     CEF_VALUE_VERIFY_RETURN(false, nullptr);
 
     if (new_controller && !reference()) {
@@ -342,10 +354,10 @@ class CefValueBase : public CefType, public CefValueController::Object {
   }
 
   // Verify that the value is attached.
-  inline bool VerifyAttached() {
+  inline bool VerifyAttached() const {
     if (detached()) {
       // This object should not be accessed after being detached.
-      NOTREACHED() << "object accessed after being detached.";
+      DCHECK(false) << "object accessed after being detached.";
       return false;
     }
     return true;
@@ -363,31 +375,34 @@ class CefValueBase : public CefType, public CefValueController::Object {
     value_ = nullptr;
   }
 
-  // Override to customize value deletion.
-  virtual void DeleteValue(ValueType* value) { delete value; }
-
   // Returns a mutable reference to the value.
-  inline ValueType* mutable_value() {
+  inline ValueType* mutable_value() const {
     DCHECK(value_);
     DCHECK(!read_only_);
     DCHECK(controller()->locked());
     return value_;
   }
+
   // Returns a const reference to the value.
-  inline const ValueType& const_value() {
+  inline const ValueType& const_value() const {
     DCHECK(value_);
     DCHECK(controller()->locked());
     return *value_;
   }
 
+  // Returns an mutable reference to the value without checking read-only state.
+  inline ValueType* mutable_value_unchecked() const {
+    return const_cast<ValueType*>(&const_value());
+  }
+
   // Verify that the value can be accessed.
-  inline bool VerifyAccess(bool modify) {
+  inline bool VerifyAccess(bool modify) const {
     // The controller must already be locked.
     DCHECK(controller()->locked());
 
     if (read_only() && modify) {
       // This object cannot be modified.
-      NOTREACHED() << "mutation attempted on read-only object.";
+      DCHECK(false) << "mutation attempted on read-only object.";
       return false;
     }
 
@@ -397,8 +412,9 @@ class CefValueBase : public CefType, public CefValueController::Object {
   // Used to indicate that this object owns the controller.
   inline void SetOwnsController() {
     CefValueController::AutoLock lock_scope(controller_.get());
-    if (lock_scope.verified())
+    if (lock_scope.verified()) {
       controller_->SetOwner(value_, this);
+    }
   }
 
   // Encapsulates value locking and verification logic.
@@ -420,7 +436,7 @@ class CefValueBase : public CefType, public CefValueController::Object {
   };
 
  private:
-  ValueType* value_;
+  raw_ptr<ValueType> value_;
   ValueMode value_mode_;
   bool read_only_;
   scoped_refptr<CefValueController> controller_;

@@ -12,13 +12,14 @@ class CefCrashReportUploadThread : public crashpad::CrashReportUploadThread {
   CefCrashReportUploadThread(crashpad::CrashReportDatabase* database,
                              const std::string& url,
                              const Options& options,
+                             ProcessPendingReportsObservationCallback callback,
                              int max_uploads);
 
   CefCrashReportUploadThread(const CefCrashReportUploadThread&) = delete;
   CefCrashReportUploadThread& operator=(const CefCrashReportUploadThread&) =
       delete;
 
-  ~CefCrashReportUploadThread();
+  ~CefCrashReportUploadThread() override;
 
  private:
   void ProcessPendingReports() override;

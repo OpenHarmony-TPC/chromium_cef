@@ -10,9 +10,8 @@
 
 #include <memory>
 
-#include "include/cef_request.h"
-
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_request.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "net/cookies/site_for_cookies.h"
 #include "services/network/public/mojom/referrer_policy.mojom-shared.h"
@@ -22,9 +21,9 @@ namespace blink {
 class WebURLRequest;
 }  // namespace blink
 
-namespace navigation_interception {
-class NavigationParams;
-}
+namespace content {
+class NavigationHandle;
+}  // namespace content
 
 namespace net {
 class HttpRequestHeaders;
@@ -80,10 +79,10 @@ class CefRequestImpl : public CefRequest {
   void SetFirstPartyForCookies(const CefString& url) override;
   ResourceType GetResourceType() override;
   TransitionType GetTransitionType() override;
-  uint64 GetIdentifier() override;
-  bool IsMainFrame() override;
+  uint64_t GetIdentifier() override;
+
   // Populate this object from the ResourceRequest object.
-  void Set(const network::ResourceRequest* request, uint64 identifier);
+  void Set(const network::ResourceRequest* request, uint64_t identifier);
 
   // Populate the ResourceRequest object from this object.
   // If |changed_only| is true then only the changed fields will be updated.
@@ -92,15 +91,12 @@ class CefRequestImpl : public CefRequest {
   // Populate this object from the RedirectInfo object.
   void Set(const net::RedirectInfo& redirect_info);
 
-  // Populate this object from teh HttpRequestHeaders object.
+  // Populate this object from the HttpRequestHeaders object.
   void Set(const net::HttpRequestHeaders& headers);
 
   // Populate this object from the NavigationParams object.
-  // TODO(cef): Remove the |is_main_frame| argument once NavigationParams is
-  // reliable in reporting that value.
-  // Called from content_browser_client.cc NavigationOnUIThread().
-  void Set(const navigation_interception::NavigationParams& params,
-           bool is_main_frame);
+  // Called from throttle_handler.cc NavigationOnUIThread().
+  void Set(content::NavigationHandle* navigation_handle);
 
   // Populate the WebURLRequest object based on the contents of |params|.
   // Called from CefBrowserImpl::LoadRequest().
@@ -128,7 +124,6 @@ class CefRequestImpl : public CefRequest {
   static cef_referrer_policy_t BlinkReferrerPolicyToNetReferrerPolicy(
       network::mojom::ReferrerPolicy blink_policy);
 
-  void SetDestination(network::mojom::RequestDestination destination);
  private:
   // Mark values as changed. Must be called before the new values are assigned.
   void Changed(uint8_t changes);
@@ -149,8 +144,7 @@ class CefRequestImpl : public CefRequest {
   HeaderMap headermap_;
   ResourceType resource_type_;
   TransitionType transition_type_;
-  uint64 identifier_;
-  network::mojom::RequestDestination destination_;
+  uint64_t identifier_;
 
   // The below members are used by CefURLRequest.
   int flags_;
@@ -216,16 +210,16 @@ class CefPostDataImpl : public CefPostData {
   ElementVector elements_;
 
   // True if this object is read-only.
-  bool read_only_;
+  bool read_only_ = false;
 
   // True if this object has excluded elements.
-  bool has_excluded_elements_;
+  bool has_excluded_elements_ = false;
 
   // True if this object should track changes.
-  bool track_changes_;
+  bool track_changes_ = false;
 
   // True if this object has changes.
-  bool has_changes_;
+  bool has_changes_ = false;
 
   mutable base::Lock lock_;
 
@@ -261,23 +255,23 @@ class CefPostDataElementImpl : public CefPostDataElement {
   void Changed();
   void Cleanup();
 
-  Type type_;
+  Type type_ = PDE_TYPE_EMPTY;
   union {
     struct {
-      void* bytes;
+      RAW_PTR_EXCLUSION void* bytes;
       size_t size;
     } bytes;
     cef_string_t filename;
   } data_;
 
   // True if this object is read-only.
-  bool read_only_;
+  bool read_only_ = false;
 
   // True if this object should track changes.
-  bool track_changes_;
+  bool track_changes_ = false;
 
   // True if this object has changes.
-  bool has_changes_;
+  bool has_changes_ = false;
 
   mutable base::Lock lock_;
 

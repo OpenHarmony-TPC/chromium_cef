@@ -8,13 +8,14 @@
 #include "include/cef_stream.h"
 #include "include/wrapper/cef_byte_read_handler.h"
 #include "include/wrapper/cef_stream_resource_handler.h"
+#include "tests/shared/browser/util_win.h"
 
 namespace client {
 
 namespace {
 
 bool LoadBinaryResource(int binaryId, DWORD& dwSize, LPBYTE& pBytes) {
-  HINSTANCE hInst = GetModuleHandle(nullptr);
+  HINSTANCE hInst = GetCodeModuleHandle();
   HRSRC hRes =
       FindResource(hInst, MAKEINTRESOURCE(binaryId), MAKEINTRESOURCE(256));
   if (hRes) {
@@ -22,8 +23,9 @@ bool LoadBinaryResource(int binaryId, DWORD& dwSize, LPBYTE& pBytes) {
     if (hGlob) {
       dwSize = SizeofResource(hInst, hRes);
       pBytes = (LPBYTE)LockResource(hGlob);
-      if (dwSize > 0 && pBytes)
+      if (dwSize > 0 && pBytes) {
         return true;
+      }
     }
   }
 
@@ -56,8 +58,9 @@ class BinaryResourceProvider : public CefResourceManager::Provider {
 
     std::string relative_path = url.substr(url_path_.length());
     if (!relative_path.empty()) {
-      if (!resource_path_prefix_.empty())
+      if (!resource_path_prefix_.empty()) {
         relative_path = resource_path_prefix_ + relative_path;
+      }
 
       CefRefPtr<CefStreamReader> stream =
           GetBinaryResourceReader(relative_path.data());
@@ -85,8 +88,9 @@ extern int GetResourceId(const char* resource_name);
 
 bool LoadBinaryResource(const char* resource_name, std::string& resource_data) {
   int resource_id = GetResourceId(resource_name);
-  if (resource_id == 0)
+  if (resource_id == 0) {
     return false;
+  }
 
   DWORD dwSize;
   LPBYTE pBytes;
@@ -102,8 +106,9 @@ bool LoadBinaryResource(const char* resource_name, std::string& resource_data) {
 
 CefRefPtr<CefStreamReader> GetBinaryResourceReader(const char* resource_name) {
   int resource_id = GetResourceId(resource_name);
-  if (resource_id == 0)
+  if (resource_id == 0) {
     return nullptr;
+  }
 
   DWORD dwSize;
   LPBYTE pBytes;

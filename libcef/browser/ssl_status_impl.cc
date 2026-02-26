@@ -2,10 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/ssl_status_impl.h"
+#include "cef/libcef/browser/ssl_status_impl.h"
 
-#include "libcef/browser/x509_certificate_impl.h"
-
+#include "cef/libcef/browser/x509_certificate_impl.h"
 #include "net/ssl/ssl_connection_status_flags.h"
 
 CefSSLStatusImpl::CefSSLStatusImpl(const content::SSLStatus& value) {
@@ -33,7 +32,8 @@ cef_ssl_content_status_t CefSSLStatusImpl::GetContentStatus() {
 }
 
 CefRefPtr<CefX509Certificate> CefSSLStatusImpl::GetX509Certificate() {
-  if (certificate_ && !cef_certificate_)
+  if (certificate_ && !cef_certificate_) {
     cef_certificate_ = new CefX509CertificateImpl(certificate_);
+  }
   return cef_certificate_;
 }

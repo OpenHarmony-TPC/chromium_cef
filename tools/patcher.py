@@ -26,11 +26,13 @@ def write_note(type, note):
   sys.stdout.write(separator)
   sys.stdout.write('!!!! %s: %s\n' % (type, note))
   sys.stdout.write(separator)
+  sys.stdout.flush()
 
 
 def apply_patch_file(patch_file, patch_dir):
   ''' Apply a specific patch file in optional patch directory. '''
-  patch_path = os.path.join(cef_patch_dir, 'patches', patch_file + '.patch')
+  patch_name = patch_file + '.patch'
+  patch_path = os.path.join(cef_patch_dir, 'patches', patch_name)
 
   if patch_dir is None or len(patch_dir) == 0:
     patch_dir = src_dir
@@ -39,6 +41,10 @@ def apply_patch_file(patch_file, patch_dir):
       # Apply patch relative to the Chromium 'src' directory.
       patch_dir = os.path.join(src_dir, patch_dir)
     patch_dir = os.path.abspath(patch_dir)
+    if not os.path.isdir(patch_dir):
+      sys.stdout.write('\nApply %s in %s\n' % (patch_name, patch_dir))
+      sys.stdout.write('... target directory does not exist (skipping).\n')
+      return 'skip'
 
   result = git_apply_patch_file(patch_path, patch_dir)
   if result == 'fail':
@@ -55,10 +61,10 @@ def apply_patch_config():
 
   # Parse the configuration file.
   scope = {}
-  exec (compile(open(config_file, "rb").read(), config_file, 'exec'), scope)
+  exec(compile(open(config_file, "rb").read(), config_file, 'exec'), scope)
   patches = scope["patches"]
 
-  results = {'apply': 0, 'skip': 0, 'fail': 0}
+  results = {'apply': [], 'skip': [], 'fail': []}
 
   for patch in patches:
     patch_file = patch['name']
@@ -73,21 +79,25 @@ def apply_patch_config():
     if dopatch:
       result = apply_patch_file(patch_file, patch['path']
                                 if 'path' in patch else None)
-      results[result] += 1
+      results[result].append(patch_file)
 
       if 'note' in patch:
         write_note('NOTE', patch['note'])
     else:
-      results['skip'] += 1
+      results['skip'].append(patch_file)
 
   sys.stdout.write('\n%d patches total (%d applied, %d skipped, %d failed)\n' % \
-      (len(patches), results['apply'], results['skip'], results['fail']))
+      (len(patches), len(results['apply']), len(results['skip']), len(results['fail'])))
+  sys.stdout.flush()
 
-  if results['fail'] > 0:
+  if len(results['fail']) > 0:
     sys.stdout.write('\n')
     write_note('ERROR',
                '%d patches failed to apply. Your build will not be correct.' %
-               results['fail'])
+               len(results['fail']))
+    sys.stdout.write('\nTo manually revert failed patches run:' \
+                     '\n$ %s ./tools/patch_updater.py --revert --patch %s\n' %
+                     (os.path.basename(sys.executable), ' --patch '.join(results['fail'])))
     sys.exit(1)
 
 
@@ -107,6 +117,8 @@ parser.add_option(
 (options, args) = parser.parse_args()
 
 if not options.patchfile is None:
-  apply_patch_file(options.patchfile, options.patchdir)
+  result = apply_patch_file(options.patchfile, options.patchdir)
+  if result == 'fail':
+    sys.exit(1)
 else:
   apply_patch_config()

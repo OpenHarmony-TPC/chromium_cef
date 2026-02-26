@@ -8,14 +8,19 @@
 
 #include <list>
 #include <map>
+#include <optional>
 #include <string>
 
-#include "include/cef_app.h"
-#include "libcef/browser/main_runner.h"
-
 #include "base/observer_list.h"
+#include "base/task/current_thread.h"
 #include "base/threading/platform_thread.h"
+#include "cef/include/cef_app.h"
+#include "cef/libcef/browser/main_runner.h"
 #include "third_party/skia/include/core/SkColor.h"
+
+namespace pref_helper {
+class Registrar;
+}
 
 class CefBrowserInfoManager;
 class CefTraceSubscriber;
@@ -30,7 +35,7 @@ class CefContext {
     virtual void OnContextDestroyed() = 0;
 
    protected:
-    virtual ~Observer() {}
+    virtual ~Observer() = default;
   };
 
   CefContext();
@@ -52,10 +57,13 @@ class CefContext {
   bool OnInitThread();
 
   // Returns true if the context is initialized.
-  bool initialized() { return initialized_; }
+  bool initialized() const { return initialized_; }
 
   // Returns true if the context is shutting down.
-  bool shutting_down() { return shutting_down_; }
+  bool shutting_down() const { return shutting_down_; }
+
+  // Only valid after Initialize is called.
+  int exit_code() const { return exit_code_; }
 
   const CefSettings& settings() const { return settings_; }
 
@@ -71,6 +79,7 @@ class CefContext {
                              cef_state_t windowless_state) const;
 
   CefTraceSubscriber* GetTraceSubscriber();
+  pref_helper::Registrar* GetPrefRegistrar();
 
   // Populate request context settings for the global system context based on
   // CefSettings and command-line flags.
@@ -79,6 +88,9 @@ class CefContext {
 
   // Normalize and validate request context settings for user-created contexts.
   void NormalizeRequestContextSettings(CefRequestContextSettings* settings);
+
+  // See CefSetNestableTasksAllowed documentation.
+  void SetNestableTasksAllowed(bool allowed);
 
   // Manage observer objects. The observer must either outlive this object or
   // remove itself before destruction. These methods can only be called on the
@@ -98,8 +110,9 @@ class CefContext {
   void FinalizeShutdown();
 
   // Track context state.
-  bool initialized_;
-  bool shutting_down_;
+  bool initialized_ = false;
+  bool shutting_down_ = false;
+  int exit_code_ = -1;
 
   // The thread on which the context was initialized.
   base::PlatformThreadId init_thread_id_;
@@ -109,7 +122,12 @@ class CefContext {
 
   std::unique_ptr<CefMainRunner> main_runner_;
   std::unique_ptr<CefTraceSubscriber> trace_subscriber_;
+  std::unique_ptr<pref_helper::Registrar> pref_registrar_;
   std::unique_ptr<CefBrowserInfoManager> browser_info_manager_;
+
+  std::optional<
+      base::CurrentThread::ScopedAllowApplicationTasksInNativeNestedLoop>
+      nestable_tasks_allowed_;
 
   // Observers that want to be notified of changes to this object.
   base::ObserverList<Observer>::Unchecked observers_;

@@ -2,14 +2,14 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/media_router/media_router_manager.h"
+#include "cef/libcef/browser/media_router/media_router_manager.h"
 
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/thread_util.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "components/media_router/browser/media_router_factory.h"
 #include "components/media_router/browser/media_routes_observer.h"
-#include "components/media_router/browser/route_message_observer.h"
+#include "components/media_router/browser/presentation_connection_message_observer.h"
 #include "components/media_router/browser/route_message_util.h"
 
 namespace {
@@ -35,21 +35,26 @@ class CefMediaRoutesObserver : public media_router::MediaRoutesObserver {
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
 };
 
 // Used to receive messages if PresentationConnection is not supported.
-class CefRouteMessageObserver : public media_router::RouteMessageObserver {
+class CefPresentationConnectionMessageObserver
+    : public media_router::PresentationConnectionMessageObserver {
  public:
-  CefRouteMessageObserver(CefMediaRouterManager* manager,
-                          const media_router::MediaRoute& route)
-      : media_router::RouteMessageObserver(manager->GetMediaRouter(),
-                                           route.media_route_id()),
+  CefPresentationConnectionMessageObserver(
+      CefMediaRouterManager* manager,
+      const media_router::MediaRoute& route)
+      : media_router::PresentationConnectionMessageObserver(
+            manager->GetMediaRouter(),
+            route.media_route_id()),
         manager_(manager),
         route_(route) {}
 
-  CefRouteMessageObserver(const CefRouteMessageObserver&) = delete;
-  CefRouteMessageObserver& operator=(const CefRouteMessageObserver&) = delete;
+  CefPresentationConnectionMessageObserver(
+      const CefPresentationConnectionMessageObserver&) = delete;
+  CefPresentationConnectionMessageObserver& operator=(
+      const CefPresentationConnectionMessageObserver&) = delete;
 
   void OnMessagesReceived(
       CefMediaRouterManager::MediaMessageVector messages) override {
@@ -57,7 +62,7 @@ class CefRouteMessageObserver : public media_router::RouteMessageObserver {
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
   const media_router::MediaRoute route_;
 };
 
@@ -114,7 +119,7 @@ class CefPresentationConnection : public blink::mojom::PresentationConnection {
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
   const media_router::MediaRoute route_;
 
   // Used to receive messages from the MRP.
@@ -184,10 +189,10 @@ void CefMediaRouterManager::CreateRoute(
     const url::Origin& origin,
     CreateRouteResultCallback callback) {
   GetMediaRouter()->CreateRoute(
-      source_id, sink_id, origin, nullptr /* web_contents */,
+      source_id, sink_id, origin, /*web_contents=*/nullptr,
       base::BindOnce(&CefMediaRouterManager::OnCreateRoute,
                      weak_ptr_factory_.GetWeakPtr(), std::move(callback)),
-      base::Milliseconds(kTimeoutMs), false /* incognito */);
+      base::Milliseconds(kTimeoutMs));
 }
 
 void CefMediaRouterManager::SendRouteMessage(
@@ -208,7 +213,7 @@ void CefMediaRouterManager::TerminateRoute(
   GetMediaRouter()->TerminateRoute(route_id);
 }
 
-void CefMediaRouterManager::OnResultsUpdated(const MediaSinkVector& sinks) {
+void CefMediaRouterManager::OnSinksUpdated(const MediaSinkVector& sinks) {
   sinks_ = sinks;
   NotifyCurrentSinks();
 }
@@ -269,7 +274,7 @@ void CefMediaRouterManager::CreateRouteState(
   } else {
     // Fallback if PresentationConnection is not supported.
     state->message_observer_ =
-        std::make_unique<CefRouteMessageObserver>(this, route);
+        std::make_unique<CefPresentationConnectionMessageObserver>(this, route);
     state->state_subscription_ =
         GetMediaRouter()->AddPresentationConnectionStateChangedCallback(
             route_id,
@@ -283,14 +288,16 @@ void CefMediaRouterManager::CreateRouteState(
 CefMediaRouterManager::RouteState* CefMediaRouterManager::GetRouteState(
     const media_router::MediaRoute::Id& route_id) {
   const auto it = route_state_map_.find(route_id);
-  if (it != route_state_map_.end())
+  if (it != route_state_map_.end()) {
     return it->second.get();
+  }
   return nullptr;
 }
 
 void CefMediaRouterManager::RemoveRouteState(
     const media_router::MediaRoute::Id& route_id) {
   auto it = route_state_map_.find(route_id);
-  if (it != route_state_map_.end())
+  if (it != route_state_map_.end()) {
     route_state_map_.erase(it);
+  }
 }

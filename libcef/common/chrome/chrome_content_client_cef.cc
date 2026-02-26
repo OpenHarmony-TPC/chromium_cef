@@ -3,12 +3,31 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/chrome/chrome_content_client_cef.h"
+#include "cef/libcef/common/chrome/chrome_content_client_cef.h"
 
-#include "libcef/common/app_manager.h"
+#include "cef/libcef/common/app_manager.h"
+#include "chrome/common/media/cdm_registration.h"
+
+#if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
+#include "cef/libcef/common/cdm_host_file_path.h"
+#endif
 
 ChromeContentClientCef::ChromeContentClientCef() = default;
 ChromeContentClientCef::~ChromeContentClientCef() = default;
+
+void ChromeContentClientCef::AddContentDecryptionModules(
+    std::vector<content::CdmInfo>* cdms,
+    std::vector<media::CdmHostFilePath>* cdm_host_file_paths) {
+  if (cdms) {
+    RegisterCdmInfo(cdms);
+  }
+
+#if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
+  if (cdm_host_file_paths) {
+    cef::AddCdmHostFilePaths(cdm_host_file_paths);
+  }
+#endif
+}
 
 void ChromeContentClientCef::AddAdditionalSchemes(Schemes* schemes) {
   ChromeContentClient::AddAdditionalSchemes(schemes);

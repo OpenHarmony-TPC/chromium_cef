@@ -18,8 +18,7 @@ class ScopedGLContext {
  public:
   ScopedGLContext(HDC hdc, HGLRC hglrc, bool swap_buffers)
       : hdc_(hdc), swap_buffers_(swap_buffers) {
-    BOOL result = wglMakeCurrent(hdc, hglrc);
-    ALLOW_UNUSED_LOCAL(result);
+    [[maybe_unused]] BOOL result = wglMakeCurrent(hdc, hglrc);
     DCHECK(result);
   }
   ~ScopedGLContext() {
@@ -41,11 +40,7 @@ class ScopedGLContext {
 OsrRenderHandlerWinGL::OsrRenderHandlerWinGL(
     const OsrRendererSettings& settings,
     HWND hwnd)
-    : OsrRenderHandlerWin(settings, hwnd),
-      renderer_(settings),
-      hdc_(nullptr),
-      hrc_(nullptr),
-      painting_popup_(false) {}
+    : OsrRenderHandlerWin(settings, hwnd), renderer_(settings) {}
 
 void OsrRenderHandlerWinGL::Initialize(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
@@ -136,7 +131,7 @@ void OsrRenderHandlerWinGL::OnAcceleratedPaint(
     CefRefPtr<CefBrowser> browser,
     CefRenderHandler::PaintElementType type,
     const CefRenderHandler::RectList& dirtyRects,
-    void* share_handle) {
+    const CefAcceleratedPaintInfo& info) {
   // Not used with this implementation.
   NOTREACHED();
 }
@@ -188,8 +183,7 @@ void OsrRenderHandlerWinGL::DisableGL() {
 
   if (IsWindow(hwnd())) {
     // wglDeleteContext will make the context not current before deleting it.
-    BOOL result = wglDeleteContext(hrc_);
-    ALLOW_UNUSED_LOCAL(result);
+    [[maybe_unused]] BOOL result = wglDeleteContext(hrc_);
     DCHECK(result);
     ReleaseDC(hwnd(), hdc_);
   }

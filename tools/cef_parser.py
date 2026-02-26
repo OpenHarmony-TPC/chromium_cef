@@ -3,6 +3,7 @@
 # can be found in the LICENSE file.
 
 from __future__ import absolute_import
+import bisect
 from date_util import *
 from file_util import *
 import os
@@ -12,22 +13,44 @@ import string
 import sys
 import textwrap
 import time
+from version_util import version_as_numeric, version_as_variable
+
+_NOTIFY_CONTEXT = None
+_NOTIFY_CONTEXT_LAST = None
+
+
+def set_notify_context(context):
+  global _NOTIFY_CONTEXT
+  _NOTIFY_CONTEXT = context
 
 
 def notify(msg):
   """ Display a message. """
-  sys.stdout.write('  NOTE: ' + msg + '\n')
+  global _NOTIFY_CONTEXT_LAST
+
+  if not _NOTIFY_CONTEXT is None and _NOTIFY_CONTEXT != _NOTIFY_CONTEXT_LAST:
+    print('In %s:' % _NOTIFY_CONTEXT)
+    _NOTIFY_CONTEXT_LAST = _NOTIFY_CONTEXT
+
+  print('  NOTE: ' + msg)
 
 
-def wrap_text(text, indent='', maxchars=80):
+def wrap_text(text, indent='', maxchars=80, listitem=False):
   """ Wrap the text to the specified number of characters. If
     necessary a line will be broken and wrapped after a word.
     """
-  result = ''
-  lines = textwrap.wrap(text, maxchars - len(indent))
-  for line in lines:
-    result += indent + line + '\n'
-  return result
+  if listitem:
+    initial_indent = indent + '- '
+    subsequent_indent = indent + '  '
+  else:
+    initial_indent = indent
+    subsequent_indent = indent
+  lines = textwrap.wrap(
+      text,
+      maxchars,
+      initial_indent=initial_indent,
+      subsequent_indent=subsequent_indent)
+  return '\n'.join(lines) + '\n'
 
 
 def is_base_class(clsname):
@@ -37,24 +60,27 @@ def is_base_class(clsname):
   return clsname == 'CefBaseRefCounted' or clsname == 'CefBaseScoped'
 
 
-def get_capi_file_name(cppname):
+def get_capi_file_name(cppname, versions=False):
   """ Convert a C++ header file name to a C API header file name. """
-  return cppname[:-2] + '_capi.h'
+  return cppname[:-2] + ('_capi_versions.h' if versions else '_capi.h')
 
 
-def get_capi_name(cppname, isclassname, prefix=None):
+def get_capi_name(cppname, isclassname, prefix=None, version=None):
   """ Convert a C++ CamelCaps name to a C API underscore name. """
   result = ''
   lastchr = ''
   for chr in cppname:
     # add an underscore if the current character is an upper case letter
-    # and the last character was a lower case letter
-    if len(result) > 0 and not chr.isdigit() \
+    # and the last character was a lower case letter or number.
+    if len(result) > 0 and chr.isalpha() \
         and chr.upper() == chr \
-        and not lastchr.upper() == lastchr:
+        and lastchr.isalnum() and lastchr.lower() == lastchr:
       result += '_'
     result += chr.lower()
     lastchr = chr
+
+  if isclassname and not version is None:
+    result += '_%d' % version
 
   if isclassname:
     result += '_t'
@@ -99,13 +125,7 @@ def get_comment(body, name):
     line = data['line'].strip()
     pos = data['start']
     if len(line) == 0:
-      # check if the next previous line is a comment
-      prevdata = get_prev_line(body, pos)
-      prevline = prevdata['line'].strip()
-      if prevline[0:2] == '//' and prevline[0:3] != '///':
-        result.append(None)
-      else:
-        break
+      break
     # single line /*--cef()--*/
     elif line[0:2] == '/*' and line[-2:] == '*/':
       continue
@@ -119,9 +139,9 @@ def get_comment(body, name):
       continue
     elif in_block_comment:
       continue
-    elif line[0:2] == '//':
+    elif line[0:3] == '///':
       # keep the comment line including any leading spaces
-      result.append(line[2:])
+      result.append(line[3:])
     else:
       break
 
@@ -132,15 +152,9 @@ def get_comment(body, name):
 def validate_comment(file, name, comment):
   """ Validate the comment array returned by get_comment(). """
   # Verify that the comment contains beginning and ending '///' as required by
-  # CppDoc (the leading '//' from each line will already have been removed by
-  # the get_comment() logic). There may be additional comments proceeding the
-  # CppDoc block so we look at the quantity of lines equaling '/' and expect
-  # the last line to be '/'.
-  docct = 0
-  for line in comment:
-    if not line is None and len(line) > 0 and line == '/':
-      docct = docct + 1
-  if docct != 2 or len(comment) < 3 or comment[len(comment) - 1] != '/':
+  # Doxygen (the leading '///' from each line will already have been removed by
+  # the get_comment() logic).
+  if len(comment) < 3 or len(comment[0]) != 0 or len(comment[-1]) != 0:
     raise Exception('Missing or incorrect comment in %s for: %s' % \
         (file, name))
 
@@ -155,40 +169,51 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
   result = ''
   wrapme = ''
   hasemptyline = False
+  listitem = False
   for line in comment:
     # if the line starts with a leading space, remove that space
-    if not line is None and len(line) > 0 and line[0:1] == ' ':
+    if not line is None and len(line) > 0 and line[0] == ' ':
       line = line[1:]
       didremovespace = True
     else:
       didremovespace = False
 
-    if line is None or len(line) == 0 or line[0:1] == ' ' \
-        or line[0:1] == '/':
-      # the previous paragraph, if any, has ended
+    if line is None or len(line) == 0 or (line[0] == ' ' and not listitem) \
+        or line[0] == '-':
+      # the previous paragraph or list item, if any, has ended
       if len(wrapme) > 0:
         if not translate_map is None:
           # apply the translation
           for key in translate_keys:
             wrapme = wrapme.replace(key, translate_map[key])
         # output the previous paragraph
-        result += wrap_text(wrapme, indent + '// ', maxchars)
+        result += wrap_text(wrapme, indent + '/// ', maxchars, listitem)
         wrapme = ''
+        listitem = False
 
     if not line is None:
-      if len(line) == 0 or line[0:1] == ' ' or line[0:1] == '/':
+      if len(line) > 0 and line[0] == '-':
+        # list item
+        listitem = True
+        wrapme = line[1:].strip()
+      if len(line) > 0 and line[0] == ' ' and listitem:
+        # list item continues
+        wrapme += line[1:]
+      if len(line) == 0 or (line[0] == ' ' and not listitem):
         # blank lines or anything that's further indented should be
         # output as-is
-        result += indent + '//'
+        result += indent + '///'
         if len(line) > 0:
           if didremovespace:
             result += ' ' + line
           else:
             result += line
         result += '\n'
+        listitem = False
       else:
-        # add to the current paragraph
-        wrapme += line + ' '
+        if not listitem:
+          # add to the current paragraph
+          wrapme += line + ' '
     else:
       # output an empty line
       hasemptyline = True
@@ -200,7 +225,7 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
       for key in translate_map.keys():
         wrapme = wrapme.replace(key, translate_map[key])
     # output the previous paragraph
-    result += wrap_text(wrapme, indent + '// ', maxchars)
+    result += wrap_text(wrapme, indent + '/// ', maxchars, listitem)
 
   if hasemptyline:
     # an empty line means a break between comments, so the comment is
@@ -247,13 +272,16 @@ def format_translation_changes(old, new):
               '\n  //   NOW: '+new['retval']
 
   if changed:
-    result += '\n  #pragma message("Warning: "__FILE__": '+new['name']+ \
+    result += '\n  #pragma message("Warning: " __FILE__ ": '+new['name']+ \
               ' prototype has changed")\n'
 
   return result
 
 
-def format_translation_includes(header, body):
+def format_translation_includes(header,
+                                body,
+                                with_versions=False,
+                                other_includes=None):
   """ Return the necessary list of includes based on the contents of the
     body.
     """
@@ -263,42 +291,185 @@ def format_translation_includes(header, body):
   if body.find('std::min') > 0 or body.find('std::max') > 0:
     result += '#include <algorithm>\n'
 
-  if body.find('cef_api_hash(') > 0:
-    result += '#include "include/cef_api_hash.h"\n'
+  paths = set()
 
-  # identify what CppToC classes are being used
-  p = re.compile('([A-Za-z0-9_]{1,})CppToC')
-  list = sorted(set(p.findall(body)))
-  for item in list:
-    directory = ''
-    if not is_base_class(item):
-      cls = header.get_class(item)
-      dir = cls.get_file_directory()
-      if not dir is None:
-        directory = dir + '/'
-    result += '#include "libcef_dll/cpptoc/'+directory+ \
-              get_capi_name(item[3:], False)+'_cpptoc.h"\n'
+  if body.find('cef_api_hash(') > 0 or body.find('cef_api_version(') > 0:
+    paths.add('include/cef_api_hash.h')
 
-  # identify what CToCpp classes are being used
-  p = re.compile('([A-Za-z0-9_]{1,})CToCpp')
-  list = sorted(set(p.findall(body)))
-  for item in list:
-    directory = ''
-    if not is_base_class(item):
-      cls = header.get_class(item)
-      dir = cls.get_file_directory()
-      if not dir is None:
-        directory = dir + '/'
-    result += '#include "libcef_dll/ctocpp/'+directory+ \
-              get_capi_name(item[3:], False)+'_ctocpp.h"\n'
+  if body.find('template_util::has_valid_size(') > 0:
+    paths.add('libcef_dll/template_util.h')
+
+  search = ((True, True, r'([A-Za-z0-9_]{1,})_[0-9]{1,}_CppToC'),
+            (True, False, r'([A-Za-z0-9_]{1,})CppToC'),
+            (False, True, r'([A-Za-z0-9_]{1,})_[0-9]{1,}_CToCpp'),
+            (False, False, r'([A-Za-z0-9_]{1,})CToCpp'))
+  for cpptoc, versioned, regex in search:
+    # identify what classes are being used
+    p = re.compile(regex)
+    items = set(p.findall(body))
+    for item in items:
+      if item == 'Cef':
+        continue
+      if not versioned and item[-1] == '_':
+        # skip versioned names that are picked up by the unversioned regex
+        continue
+      directory = ''
+      if not is_base_class(item):
+        cls = header.get_class(item)
+        if cls is None:
+          raise Exception('Class does not exist: ' + item)
+        dir = cls.get_file_directory()
+        if not dir is None:
+          directory = dir + '/'
+      type = 'cpptoc' if cpptoc else 'ctocpp'
+      paths.add('libcef_dll/' + type + '/'+directory+ \
+                get_capi_name(item[3:], False)+'_' + type + '.h')
 
   if body.find('shutdown_checker') > 0:
-    result += '#include "libcef_dll/shutdown_checker.h"\n'
+    paths.add('libcef_dll/shutdown_checker.h')
 
   if body.find('transfer_') > 0:
-    result += '#include "libcef_dll/transfer_util.h"\n'
+    paths.add('libcef_dll/transfer_util.h')
+
+  if not other_includes is None:
+    paths.update(other_includes)
+
+  if len(paths) > 0:
+    if len(result) > 0:
+      result += '\n'
+
+    paths = sorted(list(paths))
+    result += '\n'.join(['#include "%s"' % p for p in paths]) + '\n'
 
   return result
+
+
+def format_notreached(library_side, msg, default_retval='', indent='  '):
+  if library_side:
+    return 'NOTREACHED() << __func__ << ' + msg + ';'
+  return 'CHECK(false) << __func__ << ' + msg + ';\n' + \
+         indent + 'return%s;' % ((' '  + default_retval) if len(default_retval) > 0 else '')
+
+
+def _has_version_added(attribs):
+  return 'added' in attribs
+
+
+def _has_version_removed(attribs):
+  return 'removed' in attribs
+
+
+def _has_version(attribs):
+  return _has_version_added(attribs) or _has_version_removed(attribs)
+
+
+def get_version_check(attribs):
+  assert _has_version(attribs)
+
+  added = attribs.get('added', None)
+  if not added is None:
+    added = version_as_variable(added)
+  removed = attribs.get('removed', None)
+  if not removed is None:
+    removed = version_as_variable(removed)
+
+  if not added is None and not removed is None:
+    return 'CEF_API_RANGE(%s, %s)' % (added, removed)
+  elif not added is None:
+    return 'CEF_API_ADDED(%s)' % added
+  return 'CEF_API_REMOVED(%s)' % removed
+
+
+def _get_version_attrib(attribs, key):
+  value = attribs.get(key, None)
+  if not value is None:
+    return version_as_numeric(value)
+
+  # Unversioned is always the first value.
+  return 0
+
+
+def _get_version_added(attribs):
+  """ Returns a numeric 'added' value used for sorting purposes. """
+  return _get_version_attrib(attribs, 'added')
+
+
+def _get_version_removed(attribs):
+  """ Returns a numeric 'removed' value used for sorting purposes. """
+  return _get_version_attrib(attribs, 'removed')
+
+
+def get_version_surround(obj, long=False):
+  """ Returns (pre,post) strings for a version check. """
+  version_check = obj.get_version_check() if obj.has_version() else None
+
+  # Don't duplicate the surrounding class version check for a virtual method.
+  if not version_check is None and \
+    isinstance(obj, obj_function) and isinstance(obj.parent, obj_class) and \
+    obj.parent.has_version() and obj.parent.get_version_check() == version_check:
+    version_check = None
+
+  if not version_check is None:
+    return ('#if %s\n' % version_check, ('#endif  // %s\n' % version_check)
+            if long else '#endif\n')
+  return ('', '')
+
+
+def get_clsname(cls, version):
+  name = cls.get_name()
+
+  if not version is None:
+    # Select the appropriate version for this class.
+    closest_version = cls.get_closest_version(version)
+    if closest_version is None:
+      raise Exception('Cannot find version <= %d for %s' % (version, name))
+    return '%s_%d_' % (name, closest_version)
+
+  return name
+
+
+def _version_order_funcs(funcs, max_version=None):
+  """ Applies version-based ordering to a list of funcs. """
+  versions = {0: []}
+
+  for func in funcs:
+    if func.has_version():
+      added = func.get_version_added()
+      if not added in versions:
+        versions[added] = [func]
+      else:
+        versions[added].append(func)
+    else:
+      # Unversioned funcs.
+      versions[0].append(func)
+
+  result = []
+  for version in sorted(versions.keys()):
+    if not max_version is None and version > max_version:
+      break
+    result.extend(versions[version])
+  return result
+
+
+def _get_all_versions(funcs):
+  # Using a set to ensure uniqueness.
+  versions = set({0})
+
+  for func in funcs:
+    if func.has_version():
+      versions.add(func.get_version_added())
+      versions.add(func.get_version_removed())
+
+  return versions
+
+
+def _find_closest_not_greater(lst, target):
+  assert isinstance(lst, list), lst
+  assert isinstance(target, int), target
+  idx = bisect.bisect_right(lst, target) - 1
+  if idx < 0:
+    return None
+  return lst[idx]
 
 
 def str_to_dict(str):
@@ -348,24 +519,29 @@ def dict_to_str(dict):
   return ','.join(str)
 
 
+# Attribute keys allowed in CEF metadata comments.
+COMMON_ATTRIB_KEYS = ('added', 'removed')
+CLASS_ATTRIB_KEYS = COMMON_ATTRIB_KEYS + ('no_debugct_check', 'source')
+FUNCTION_ATTRIB_KEYS = COMMON_ATTRIB_KEYS + (
+    'api_hash_check', 'capi_name', 'count_func', 'default_retval',
+    'index_param', 'no_stack_protector', 'optional_param')
+
 # regex for matching comment-formatted attributes
-_cre_attrib = '/\*--cef\(([A-Za-z0-9_ ,=:\n]{0,})\)--\*/'
+_cre_attrib = r'/\*--cef\(([A-Za-z0-9_ ,=:\n]{0,})\)--\*/'
 # regex for matching class and function names
-_cre_cfname = '([A-Za-z0-9_]{1,})'
+_cre_cfname = r'([A-Za-z0-9_]{1,})'
 # regex for matching class and function names including path separators
-_cre_cfnameorpath = '([A-Za-z0-9_\/]{1,})'
-# regex for matching function return values
-_cre_retval = '([A-Za-z0-9_<>:,\*\&]{1,})'
+_cre_cfnameorpath = r'([A-Za-z0-9_\/]{1,})'
 # regex for matching typedef value and name combination
-_cre_typedef = '([A-Za-z0-9_<>:,\*\&\s]{1,})'
+_cre_typedef = r'([A-Za-z0-9_<>:,\*\&\s]{1,})'
 # regex for matching function return value and name combination
-_cre_func = '([A-Za-z][A-Za-z0-9_<>:,\*\&\s]{1,})'
+_cre_func = r'([A-Za-z][A-Za-z0-9_<>:,\*\&\s]{1,})'
 # regex for matching virtual function modifiers + arbitrary whitespace
-_cre_vfmod = '([\sA-Za-z0-9_]{0,})'
+_cre_vfmod = r'([\sA-Za-z0-9_]{0,})'
 # regex for matching arbitrary whitespace
-_cre_space = '[\s]{1,}'
+_cre_space = r'[\s]{1,}'
 # regex for matching optional virtual keyword
-_cre_virtual = '(?:[\s]{1,}virtual){0,1}'
+_cre_virtual = r'(?:[\s]{1,}virtual){0,1}'
 
 # Simple translation types. Format is:
 #   'cpp_type' : ['capi_type', 'capi_default_value']
@@ -373,12 +549,12 @@ _simpletypes = {
     'void': ['void', ''],
     'void*': ['void*', 'NULL'],
     'int': ['int', '0'],
-    'int16': ['int16', '0'],
-    'uint16': ['uint16', '0'],
-    'int32': ['int32', '0'],
-    'uint32': ['uint32', '0'],
-    'int64': ['int64', '0'],
-    'uint64': ['uint64', '0'],
+    'int16_t': ['int16_t', '0'],
+    'uint16_t': ['uint16_t', '0'],
+    'int32_t': ['int32_t', '0'],
+    'uint32_t': ['uint32_t', '0'],
+    'int64_t': ['int64_t', '0'],
+    'uint64_t': ['uint64_t', '0'],
     'double': ['double', '0'],
     'float': ['float', '0'],
     'float*': ['float*', 'NULL'],
@@ -391,24 +567,38 @@ _simpletypes = {
     'char* const': ['char* const', 'NULL'],
     'cef_color_t': ['cef_color_t', '0'],
     'cef_json_parser_error_t': ['cef_json_parser_error_t', 'JSON_NO_ERROR'],
-    'cef_plugin_policy_t': ['cef_plugin_policy_t', 'PLUGIN_POLICY_ALLOW'],
-    'CefCursorHandle': ['cef_cursor_handle_t', 'kNullCursorHandle'],
+    'CefAcceleratedPaintInfo': [
+        'cef_accelerated_paint_info_t', 'CefAcceleratedPaintInfo()'
+    ],
+    'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()'],
+    'CefBaseTime': ['cef_basetime_t', 'CefBaseTime()'],
+    'CefBoxLayoutSettings': [
+        'cef_box_layout_settings_t', 'CefBoxLayoutSettings()'
+    ],
     'CefCompositionUnderline': [
         'cef_composition_underline_t', 'CefCompositionUnderline()'
     ],
-    'CefEventHandle': ['cef_event_handle_t', 'kNullEventHandle'],
-    'CefWindowHandle': ['cef_window_handle_t', 'kNullWindowHandle'],
-    'CefInsets': ['cef_insets_t', 'CefInsets()'],
-    'CefPoint': ['cef_point_t', 'CefPoint()'],
-    'CefRect': ['cef_rect_t', 'CefRect()'],
-    'CefSize': ['cef_size_t', 'CefSize()'],
-    'CefRange': ['cef_range_t', 'CefRange()'],
+    'CefCursorHandle': ['cef_cursor_handle_t', 'kNullCursorHandle'],
+    'CefCursorInfo': ['cef_cursor_info_t', 'CefCursorInfo()'],
     'CefDraggableRegion': ['cef_draggable_region_t', 'CefDraggableRegion()'],
+    'CefEventHandle': ['cef_event_handle_t', 'kNullEventHandle'],
+    'CefInsets': ['cef_insets_t', 'CefInsets()'],
+    'CefKeyEvent': ['cef_key_event_t', 'CefKeyEvent()'],
+    'CefMainArgs': ['cef_main_args_t', 'CefMainArgs()'],
+    'CefMouseEvent': ['cef_mouse_event_t', 'CefMouseEvent()'],
+    'CefPoint': ['cef_point_t', 'CefPoint()'],
+    'CefPopupFeatures': ['cef_popup_features_t', 'CefPopupFeatures()'],
+    'CefRange': ['cef_range_t', 'CefRange()'],
+    'CefRect': ['cef_rect_t', 'CefRect()'],
+    'CefScreenInfo': ['cef_screen_info_t', 'CefScreenInfo()'],
+    'CefSize': ['cef_size_t', 'CefSize()'],
+    'CefTouchEvent': ['cef_touch_event_t', 'CefTouchEvent()'],
+    'CefTouchHandleState': [
+        'cef_touch_handle_state_t', 'CefTouchHandleState()'
+    ],
     'CefThreadId': ['cef_thread_id_t', 'TID_UI'],
     'CefTime': ['cef_time_t', 'CefTime()'],
-    'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()'],
-    'CefSelectPopupItem': ['cef_select_popup_item_t', 'CefSelectPopupItem()'],
-    'CefAutofillPopupItem': ['cef_autofill_popup_item_t', 'CefAutofillPopupItem()']
+    'CefWindowHandle': ['cef_window_handle_t', 'kNullWindowHandle'],
 }
 
 
@@ -417,12 +607,16 @@ def get_function_impls(content, ident, has_impl=True):
     return value, name, arguments and body. Ident must occur somewhere in
     the value.
     """
+  # Remove prefix from methods in CToCpp files.
+  content = content.replace('NO_SANITIZE("cfi-icall") ', '')
+  content = content.replace('NO_SANITIZE("cfi-icall")\n', '')
+
   # extract the functions
-  find_regex = '\n' + _cre_func + '\((.*?)\)([A-Za-z0-9_\s]{0,})'
+  find_regex = r'\n' + _cre_func + r'\((.*?)\)([A-Za-z0-9_\s]{0,})'
   if has_impl:
-    find_regex += '\{(.*?)\n\}'
+    find_regex += r'\{(.*?)\n\}'
   else:
-    find_regex += '(;)'
+    find_regex += r'(;)'
   p = re.compile(find_regex, re.MULTILINE | re.DOTALL)
   list = p.findall(content)
 
@@ -448,10 +642,11 @@ def get_function_impls(content, ident, has_impl=True):
 
     # parse the arguments
     args = []
-    for v in argval.split(','):
-      v = v.strip()
-      if len(v) > 0:
-        args.append(v)
+    if argval != 'void':
+      for v in argval.split(','):
+        v = v.strip()
+        if len(v) > 0:
+          args.append(v)
 
     result.append({
         'retval': retval.strip(),
@@ -567,8 +762,12 @@ class obj_header:
       filename = os.path.relpath(filepath, self.root_directory)
       filename = filename.replace('\\', '/')
 
-    # read the input file into memory
-    self.add_data(filename, read_file(filepath))
+    try:
+      # read the input file into memory
+      self.add_data(filename, read_file(filepath))
+    except Exception:
+      print('Exception while parsing %s' % filepath)
+      raise
 
   def add_data(self, filename, data):
     """ Add header file contents. """
@@ -579,7 +778,7 @@ class obj_header:
     data = data.replace("> >", ">>")
 
     # extract global typedefs
-    p = re.compile('\ntypedef' + _cre_space + _cre_typedef + ';',
+    p = re.compile(r'\ntypedef' + _cre_space + _cre_typedef + r';',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -593,7 +792,7 @@ class obj_header:
         self.typedefs.append(obj_typedef(self, filename, value, alias))
 
     # extract global functions
-    p = re.compile('\n' + _cre_attrib + '\n' + _cre_func + '\((.*?)\)',
+    p = re.compile(r'\n' + _cre_attrib + r'\n' + _cre_func + r'\((.*?)\)',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -607,17 +806,17 @@ class obj_header:
             obj_function(self, filename, attrib, retval, argval, comment))
 
     # extract includes
-    p = re.compile('\n#include \"include/' + _cre_cfnameorpath + '.h')
+    p = re.compile(r'\n#include \"include/' + _cre_cfnameorpath + r'.h')
     includes = p.findall(data)
 
     # extract forward declarations
-    p = re.compile('\nclass' + _cre_space + _cre_cfname + ';')
+    p = re.compile(r'\nclass' + _cre_space + _cre_cfname + r';')
     forward_declares = p.findall(data)
 
     # extract empty classes
-    p = re.compile('\n' + _cre_attrib + '\nclass' + _cre_space + _cre_cfname +
-                   _cre_space + ':' + _cre_space + 'public' + _cre_virtual +
-                   _cre_space + _cre_cfname + _cre_space + '{};',
+    p = re.compile(r'\n' + _cre_attrib + r'\nclass' + _cre_space + _cre_cfname +
+                   _cre_space + r':' + _cre_space + r'public' + _cre_virtual +
+                   _cre_space + _cre_cfname + _cre_space + r'{};',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -639,9 +838,9 @@ class obj_header:
       data = p.sub('', data)
 
     # extract classes
-    p = re.compile('\n' + _cre_attrib + '\nclass' + _cre_space + _cre_cfname +
-                   _cre_space + ':' + _cre_space + 'public' + _cre_virtual +
-                   _cre_space + _cre_cfname + _cre_space + '{(.*?)\n};',
+    p = re.compile(r'\n' + _cre_attrib + r'\nclass' + _cre_space + _cre_cfname +
+                   _cre_space + r':' + _cre_space + r'public' + _cre_virtual +
+                   _cre_space + _cre_cfname + _cre_space + r'{(.*?)\n};',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -717,13 +916,18 @@ class obj_header:
           res.append(cls)
       return res
 
-  def get_class(self, classname, defined_structs=None):
+  def get_class(self, classname):
     """ Return the specified class or None if not found. """
     for cls in self.classes:
       if cls.get_name() == classname:
         return cls
-      elif not defined_structs is None:
-        defined_structs.append(cls.get_capi_name())
+    return None
+
+  def get_capi_class(self, classname):
+    """ Return the specified class or None if not found. """
+    for cls in self.classes:
+      if cls.get_capi_name() == classname:
+        return cls
     return None
 
   def get_class_names(self):
@@ -826,9 +1030,11 @@ class obj_class:
     self.includes = includes
     self.forward_declares = forward_declares
 
+    self._validate_attribs()
+
     # extract typedefs
     p = re.compile(
-        '\n' + _cre_space + 'typedef' + _cre_space + _cre_typedef + ';',
+        r'\n' + _cre_space + r'typedef' + _cre_space + _cre_typedef + r';',
         re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
@@ -843,8 +1049,8 @@ class obj_class:
       self.typedefs.append(obj_typedef(self, filename, value, alias))
 
     # extract static functions
-    p = re.compile('\n' + _cre_space + _cre_attrib + '\n' + _cre_space +
-                   'static' + _cre_space + _cre_func + '\((.*?)\)',
+    p = re.compile(r'\n' + _cre_space + _cre_attrib + r'\n' + _cre_space +
+                   r'static' + _cre_space + _cre_func + r'\((.*?)\)',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
@@ -858,19 +1064,25 @@ class obj_class:
 
     # extract virtual functions
     p = re.compile(
-        '\n' + _cre_space + _cre_attrib + '\n' + _cre_space + 'virtual' +
-        _cre_space + _cre_func + '\((.*?)\)' + _cre_vfmod,
+        r'\n' + _cre_space + _cre_attrib + r'\n' + _cre_space + r'virtual' +
+        _cre_space + _cre_func + r'\((.*?)\)' + _cre_vfmod,
         re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
     # build the virtual function objects
     self.virtualfuncs = []
+    self.has_versioned_funcs = False
     for attrib, retval, argval, vfmod in list:
       comment = get_comment(body, retval + '(' + argval + ')')
       validate_comment(filename, retval, comment)
+      if not self.has_versioned_funcs and _has_version(attrib):
+        self.has_versioned_funcs = True
       self.virtualfuncs.append(
           obj_function_virtual(self, attrib, retval, argval, comment,
                                vfmod.strip()))
+
+    self.virtualfuncs_ordered = None
+    self.allversions = None
 
   def __repr__(self):
     result = '/* ' + dict_to_str(
@@ -900,15 +1112,21 @@ class obj_class:
     result += "\n};\n"
     return result
 
+  def _validate_attribs(self):
+    for key in self.attribs.keys():
+      if not key in CLASS_ATTRIB_KEYS:
+        raise Exception('Invalid attribute key \"%s\" for class %s' %
+                        (key, self.get_name()))
+
   def get_file_name(self):
     """ Return the C++ header file name. Includes the directory component,
             if any. """
     return self.filename
 
-  def get_capi_file_name(self):
+  def get_capi_file_name(self, versions=False):
     """ Return the CAPI header file name. Includes the directory component,
             if any. """
-    return get_capi_file_name(self.filename)
+    return get_capi_file_name(self.filename, versions)
 
   def get_file_directory(self):
     """ Return the file directory component, if any. """
@@ -917,21 +1135,44 @@ class obj_class:
       return self.filename[:pos]
     return None
 
-  def get_name(self):
+  def get_name(self, version=None):
     """ Return the class name. """
+    if not version is None:
+      # Select the appropriate version for this class.
+      closest_version = self.get_closest_version(version)
+      if closest_version is None:
+        raise Exception('Cannot find version <= %d for %s' % (version,
+                                                              self.name))
+      return '%s_%d_' % (self.name, closest_version)
     return self.name
 
-  def get_capi_name(self):
+  def get_capi_name(self, version=None, first_version=False):
     """ Return the CAPI structure name for this class. """
-    return get_capi_name(self.name, True)
+    # Select the appropriate version for this class.
+    if first_version:
+      version = self.get_first_version()
+    elif not version is None:
+      closest_version = self.get_closest_version(version)
+      if closest_version is None:
+        raise Exception('Cannot find version <= %d for %s' % (version,
+                                                              self.name))
+      version = closest_version
+    return get_capi_name(self.name, True, version=version)
 
   def get_parent_name(self):
     """ Return the parent class name. """
     return self.parent_name
 
-  def get_parent_capi_name(self):
+  def get_parent_capi_name(self, version=None):
     """ Return the CAPI structure name for the parent class. """
-    return get_capi_name(self.parent_name, True)
+    if not version is None:
+      # Select the appropriate version for the parent class.
+      if is_base_class(self.parent_name):
+        version = None
+      else:
+        parent_cls = self.parent.get_class(self.parent_name)
+        version = parent_cls.get_closest_version(version)
+    return get_capi_name(self.parent_name, True, version=version)
 
   def has_parent(self, parent_name):
     """ Returns true if this class has the specified class anywhere in its
@@ -1013,8 +1254,17 @@ class obj_class:
     """ Return the array of static function objects. """
     return self.staticfuncs
 
-  def get_virtual_funcs(self):
+  def get_virtual_funcs(self, version_order=False, version=None):
     """ Return the array of virtual function objects. """
+    if version_order and self.has_versioned_funcs:
+      if version is None:
+        # Cache the ordering result for future use.
+        if self.virtualfuncs_ordered is None:
+          self.virtualfuncs_ordered = _version_order_funcs(self.virtualfuncs)
+        return self.virtualfuncs_ordered
+
+      # Need to order each time to apply the max version.
+      return _version_order_funcs(self.virtualfuncs, version)
     return self.virtualfuncs
 
   def get_types(self, list):
@@ -1048,6 +1298,80 @@ class obj_class:
     """ Returns true if the class is implemented by the client. """
     return self.attribs['source'] == 'client'
 
+  def has_version(self):
+    """ Returns true if the class has an associated version. """
+    return _has_version(self.attribs)
+
+  def has_version_added(self):
+    """ Returns true if the class has an associated 'added' version. """
+    return _has_version_added(self.attribs)
+
+  def get_version_added(self):
+    """ Returns the associated 'added' version. """
+    return _get_version_added(self.attribs)
+
+  def has_version_removed(self):
+    """ Returns true if the class has an associated 'removed' version. """
+    return _has_version_removed(self.attribs)
+
+  def get_version_removed(self):
+    """ Returns the associated 'removed' version. """
+    return _get_version_removed(self.attribs)
+
+  def removed_at_version(self, version):
+    """ Returns true if this class is removed at the specified version. """
+    return self.has_version_removed() and self.get_version_removed() <= version
+
+  def exists_at_version(self, version):
+    """ Returns true if this class exists at the specified version. """
+    if self.has_version_added() and self.get_version_added() > version:
+      return False
+    return not self.removed_at_version(version)
+
+  def get_version_check(self):
+    """ Returns the #if check for the associated version. """
+    return get_version_check(self.attribs)
+
+  def get_all_versions(self):
+    """ Returns all distinct versions of this class. """
+    if not self.allversions is None:
+      return self.allversions
+
+    # Using a set to ensure uniqueness.
+    versions = set()
+
+    # Versions from class inheritance.
+    if not is_base_class(self.parent_name):
+      versions.update(
+          self.parent.get_class(self.parent_name).get_all_versions())
+
+    # Versions from virtual methods.
+    versions.update(_get_all_versions(self.virtualfuncs))
+
+    versions = list(versions)
+
+    # Clamp to class versions, if specified.
+    if self.has_version_added():
+      version_added = self.get_version_added()
+      versions = [x for x in versions if x >= version_added]
+      if not version_added in versions:
+        versions.append(version_added)
+    if self.has_version_removed():
+      versions = [x for x in versions if x < self.get_version_removed()]
+
+    assert len(versions) > 0, self.get_name()
+
+    self.allversions = sorted(versions)
+    return self.allversions
+
+  def get_first_version(self):
+    """ Returns the first version. """
+    return self.get_all_versions()[0]
+
+  def get_closest_version(self, version):
+    """ Returns the closest version to |version| that is not greater, or None. """
+    return _find_closest_not_greater(self.get_all_versions(), version)
+
 
 class obj_typedef:
   """ Class representing a typedef statement. """
@@ -1069,9 +1393,9 @@ class obj_typedef:
     """ Return the C++ header file name. """
     return self.filename
 
-  def get_capi_file_name(self):
+  def get_capi_file_name(self, versions=False):
     """ Return the CAPI header file name. """
-    return get_capi_file_name(self.filename)
+    return get_capi_file_name(self.filename, versions)
 
   def get_alias(self):
     """ Return the alias. """
@@ -1100,6 +1424,8 @@ class obj_function:
     self.retval = obj_argument(self, retval)
     self.name = self.retval.remove_name()
     self.comment = comment
+
+    self._validate_attribs()
 
     # build the argument objects
     self.arguments = []
@@ -1133,13 +1459,19 @@ class obj_function:
   def __repr__(self):
     return '/* ' + dict_to_str(self.attribs) + ' */ ' + self.get_cpp_proto()
 
+  def _validate_attribs(self):
+    for key in self.attribs.keys():
+      if not key in FUNCTION_ATTRIB_KEYS:
+        raise Exception('Invalid attribute key \"%s\" for %s' %
+                        (key, self.get_qualified_name()))
+
   def get_file_name(self):
     """ Return the C++ header file name. """
     return self.filename
 
-  def get_capi_file_name(self):
+  def get_capi_file_name(self, versions=False):
     """ Return the CAPI header file name. """
-    return get_capi_file_name(self.filename)
+    return get_capi_file_name(self.filename, versions)
 
   def get_name(self):
     """ Return the function name. """
@@ -1156,9 +1488,7 @@ class obj_function:
 
   def get_capi_name(self, prefix=None):
     """ Return the CAPI function name. """
-    if 'capi_name' in self.attribs:
-      return self.attribs['capi_name']
-    return get_capi_name(self.name, False, prefix)
+    return get_capi_name(self.get_attrib('capi_name', self.name), False, prefix)
 
   def get_comment(self):
     """ Return the function comment as an array of lines. """
@@ -1172,7 +1502,7 @@ class obj_function:
     """ Return true if the specified attribute exists. """
     return name in self.attribs
 
-  def get_attrib(self, name):
+  def get_attrib(self, name, default=None):
     """ Return the first or only value for specified attribute. """
     if name in self.attribs:
       if isinstance(self.attribs[name], list):
@@ -1181,7 +1511,7 @@ class obj_function:
       else:
         # the value is a string
         return self.attribs[name]
-    return None
+    return default
 
   def get_attrib_list(self, name):
     """ Return all values for specified attribute as a list. """
@@ -1207,10 +1537,15 @@ class obj_function:
     for cls in self.arguments:
       cls.get_types(list)
 
-  def get_capi_parts(self, defined_structs=[], prefix=None):
+  def get_capi_parts(self,
+                     defined_structs=[],
+                     isimpl=False,
+                     prefix=None,
+                     version=None,
+                     version_finder=None):
     """ Return the parts of the C API function definition. """
     retval = ''
-    dict = self.retval.get_type().get_capi(defined_structs)
+    dict = self.retval.get_type().get_capi(defined_structs, version_finder)
     if dict['format'] == 'single':
       retval = dict['value']
 
@@ -1219,16 +1554,18 @@ class obj_function:
 
     if isinstance(self, obj_function_virtual):
       # virtual functions get themselves as the first argument
-      str = 'struct _' + self.parent.get_capi_name() + '* self'
+      str = 'struct _' + self.parent.get_capi_name(version=version) + '* self'
       if isinstance(self, obj_function_virtual) and self.is_const():
         # const virtual functions get const self pointers
         str = 'const ' + str
       args.append(str)
+    elif not isimpl and len(self.arguments) == 0:
+      args.append('void')
 
     if len(self.arguments) > 0:
       for cls in self.arguments:
         type = cls.get_type()
-        dict = type.get_capi(defined_structs)
+        dict = type.get_capi(defined_structs, version_finder)
         if dict['format'] == 'single':
           args.append(dict['value'])
         elif dict['format'] == 'multi-arg':
@@ -1244,9 +1581,15 @@ class obj_function:
 
     return {'retval': retval, 'name': name, 'args': args}
 
-  def get_capi_proto(self, defined_structs=[], prefix=None):
+  def get_capi_proto(self,
+                     defined_structs=[],
+                     isimpl=False,
+                     prefix=None,
+                     version=None,
+                     version_finder=None):
     """ Return the prototype of the C API function. """
-    parts = self.get_capi_parts(defined_structs, prefix)
+    parts = self.get_capi_parts(defined_structs, isimpl, prefix, version,
+                                version_finder)
     result = parts['retval']+' '+parts['name']+ \
              '('+', '.join(parts['args'])+')'
     return result
@@ -1304,6 +1647,14 @@ class obj_function:
 
     return other_is_library_side == this_is_library_side
 
+  def has_version(self):
+    """ Returns true if the class has an associated version. """
+    return _has_version(self.attribs)
+
+  def get_version_check(self):
+    """ Returns the #if check for the associated version. """
+    return get_version_check(self.attribs)
+
 
 class obj_function_static(obj_function):
   """ Class representing a static function. """
@@ -1344,6 +1695,34 @@ class obj_function_virtual(obj_function):
   def is_const(self):
     """ Returns true if the method declaration is const. """
     return self.isconst
+
+  def has_version_added(self):
+    """ Returns true if a 'added' value was specified. """
+    return _has_version_added(self.attribs)
+
+  def get_version_added(self):
+    """ Returns the numeric 'added' value, or 0 if unspecified.
+        Used for sorting purposes only. """
+    return _get_version_added(self.attribs)
+
+  def has_version_removed(self):
+    """ Returns true if a 'removed' value was specified. """
+    return _has_version_removed(self.attribs)
+
+  def get_version_removed(self):
+    """ Returns the numeric 'removed' value, or 0 if unspecified.
+        Used for sorting purposes only. """
+    return _get_version_removed(self.attribs)
+
+  def removed_at_version(self, version):
+    """ Returns true if this function is removed at the specified version. """
+    return self.has_version_removed() and self.get_version_removed() <= version
+
+  def exists_at_version(self, version):
+    """ Returns true if this function exists at the specified version. """
+    if self.has_version_added() and self.get_version_added() > version:
+      return False
+    return not self.removed_at_version(version)
 
 
 class obj_argument:
@@ -1482,6 +1861,7 @@ class obj_argument:
     if self.type.is_result_vector():
       # all vector types must be passed by reference
       if not self.type.is_byref():
+        print('ERROR: Invalid (vector not byref) type')
         return 'invalid'
 
       if self.type.is_result_vector_string():
@@ -1517,6 +1897,8 @@ class obj_argument:
     # string single map type
     if self.type.is_result_map_single():
       if not self.type.is_byref():
+        print('ERROR: Invalid (single map not byref) type for %s' %
+              self.type.get_name())
         return 'invalid'
       if self.type.is_const():
         return 'string_map_single_byref_const'
@@ -1525,11 +1907,14 @@ class obj_argument:
     # string multi map type
     if self.type.is_result_map_multi():
       if not self.type.is_byref():
+        print('ERROR: Invalid (multi map not byref) type for %s' %
+              self.type.get_name())
         return 'invalid'
       if self.type.is_const():
         return 'string_map_multi_byref_const'
       return 'string_map_multi_byref'
 
+    print('ERROR: Invalid (unknown) type for %s' % self.type.get_name())
     return 'invalid'
 
   def get_retval_type(self):
@@ -1537,9 +1922,19 @@ class obj_argument:
     if self.type.has_name():
       raise Exception('Cannot be called for argument types')
 
+    # special case for void* return value (may also be const)
+    if self.type.get_type() == 'void' and self.type.is_byaddr():
+      return 'simple_byaddr'
+
     # unsupported modifiers
-    if self.type.is_const() or self.type.is_byref() or \
-        self.type.is_byaddr():
+    if self.type.is_const():
+      print('ERROR: Invalid (const) type for retval')
+      return 'invalid'
+    if self.type.is_byref():
+      print('ERROR: Invalid (byref) type for retval')
+      return 'invalid'
+    if self.type.is_byaddr():
+      print('ERROR: Invalid (byaddr) type for retval')
       return 'invalid'
 
     # void types don't have a return value
@@ -1564,6 +1959,7 @@ class obj_argument:
       else:
         return prefix + 'ptr_diff'
 
+    print('ERROR: Invalid (unknown) type for retval')
     return 'invalid'
 
   def get_retval_default(self, for_capi):
@@ -1583,6 +1979,10 @@ class obj_argument:
     type = self.get_retval_type()
     if type == 'simple':
       return self.get_type().get_result_simple_default()
+    elif type == 'simple_byaddr':
+      if for_capi:
+        return 'NULL'
+      return 'nullptr'
     elif type == 'bool':
       if for_capi:
         return '0'
@@ -1740,7 +2140,7 @@ class obj_analysis:
       return {'result_type': 'structure', 'result_value': value}
 
     # check for CEF reference pointers
-    p = re.compile('^CefRefPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefRefPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {
@@ -1750,7 +2150,7 @@ class obj_analysis:
       }
 
     # check for CEF owned pointers
-    p = re.compile('^CefOwnPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefOwnPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {
@@ -1760,7 +2160,7 @@ class obj_analysis:
       }
 
     # check for CEF raw pointers
-    p = re.compile('^CefRawPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefRawPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {
@@ -1854,12 +2254,15 @@ class obj_analysis:
     """ Return the *Ptr type structure name. """
     return self.result_value[:-1]
 
-  def get_result_ptr_type(self, defined_structs=[]):
+  def get_result_ptr_type(self, defined_structs=[], version_finder=None):
     """ Return the *Ptr type. """
     result = ''
-    if not self.result_value[:-1] in defined_structs:
+    name = self.result_value[:-1]
+    if not version_finder is None:
+      name = version_finder(name)
+    if not name in defined_structs:
       result += 'struct _'
-    result += self.result_value
+    result += name + self.result_value[-1]
     if self.is_byref() or self.is_byaddr():
       result += '*'
     return result
@@ -1898,16 +2301,22 @@ class obj_analysis:
       return True
     return False
 
-  def get_result_struct_type(self, defined_structs=[]):
+  def get_result_struct_type(self, defined_structs=[], version_finder=None):
     """ Return the structure or enumeration type. """
     result = ''
+
+    name = self.result_value
+
     is_enum = self.is_result_struct_enum()
     if not is_enum:
       if self.is_const():
         result += 'const '
       if not self.result_value in defined_structs:
         result += 'struct _'
-    result += self.result_value
+      if not version_finder is None:
+        name = version_finder(name)
+
+    result += name
     if not is_enum:
       result += '*'
     return result
@@ -1973,7 +2382,7 @@ class obj_analysis:
     """ Return the vector structure or basic type name. """
     return self.result_value[0]['result_value']
 
-  def get_result_vector_type(self, defined_structs=[]):
+  def get_result_vector_type(self, defined_structs=[], version_finder=None):
     """ Return the vector type. """
     if not self.has_name():
       raise Exception('Cannot use vector as a return type')
@@ -1995,9 +2404,15 @@ class obj_analysis:
       result['value'] = str
     elif type == 'refptr' or type == 'ownptr' or type == 'rawptr':
       str = ''
-      if not value[:-1] in defined_structs:
+
+      # remove the * suffix
+      name = value[:-1]
+      if not version_finder is None:
+        name = version_finder(name)
+
+      if not name in defined_structs:
         str += 'struct _'
-      str += value
+      str += name + value[-1]
       if self.is_const():
         str += ' const'
       str += '*'
@@ -2034,16 +2449,16 @@ class obj_analysis:
         return {'value': 'cef_string_multimap_t', 'format': 'multi'}
     raise Exception('Only mappings of strings to strings are supported')
 
-  def get_capi(self, defined_structs=[]):
+  def get_capi(self, defined_structs=[], version_finder=None):
     """ Format the value for the C API. """
     result = ''
     format = 'single'
     if self.is_result_simple():
       result += self.get_result_simple_type()
     elif self.is_result_ptr():
-      result += self.get_result_ptr_type(defined_structs)
+      result += self.get_result_ptr_type(defined_structs, version_finder)
     elif self.is_result_struct():
-      result += self.get_result_struct_type(defined_structs)
+      result += self.get_result_struct_type(defined_structs, version_finder)
     elif self.is_result_string():
       result += self.get_result_string_type()
     elif self.is_result_map():
@@ -2053,7 +2468,7 @@ class obj_analysis:
       else:
         raise Exception('Unsupported map type')
     elif self.is_result_vector():
-      resdict = self.get_result_vector_type(defined_structs)
+      resdict = self.get_result_vector_type(defined_structs, version_finder)
       if resdict['format'] != 'single':
         format = resdict['format']
       result += resdict['value']
@@ -2097,7 +2512,7 @@ if __name__ == "__main__":
   funcs = header.get_funcs()
   if len(funcs) > 0:
     for func in funcs:
-      result += func.get_capi_proto(defined_names) + ';\n'
+      result += func.get_capi_proto(defined_names, True) + ';\n'
     result += '\n'
 
   classes = header.get_classes()
@@ -2107,7 +2522,7 @@ if __name__ == "__main__":
     funcs = cls.get_virtual_funcs()
     if len(funcs) > 0:
       for func in funcs:
-        result += '\t' + func.get_capi_proto(defined_names) + ';\n'
+        result += '\t' + func.get_capi_proto(defined_names, True) + ';\n'
     result += '}\n\n'
 
     defined_names.append(cls.get_capi_name())
@@ -2116,6 +2531,6 @@ if __name__ == "__main__":
     funcs = cls.get_static_funcs()
     if len(funcs) > 0:
       for func in funcs:
-        result += func.get_capi_proto(defined_names) + ';\n'
+        result += func.get_capi_proto(defined_names, True) + ';\n'
       result += '\n'
   sys.stdout.write(result)

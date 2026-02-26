@@ -5,11 +5,15 @@
 #include "tests/cefclient/browser/osr_window_win.h"
 
 #include <windowsx.h>
+
 #if defined(CEF_USE_ATL)
 #include <oleacc.h>
 #endif
 
+#include <memory>
+
 #include "include/base/cef_build.h"
+#include "include/views/cef_display.h"
 #include "tests/cefclient/browser/main_context.h"
 #include "tests/cefclient/browser/osr_accessibility_helper.h"
 #include "tests/cefclient/browser/osr_accessibility_node.h"
@@ -26,20 +30,6 @@ namespace client {
 namespace {
 
 const wchar_t kWndClass[] = L"Client_OsrWindow";
-
-// Helper funtion to check if it is Windows8 or greater.
-// https://msdn.microsoft.com/en-us/library/ms724833(v=vs.85).aspx
-inline BOOL IsWindows_8_Or_Newer() {
-  OSVERSIONINFOEX osvi = {0};
-  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  osvi.dwMajorVersion = 6;
-  osvi.dwMinorVersion = 2;
-  DWORDLONG dwlConditionMask = 0;
-  VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-  VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
-  return ::VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION,
-                             dwlConditionMask);
-}
 
 // Helper function to detect mouse messages coming from emulation of touch
 // events. These should be ignored.
@@ -85,21 +75,11 @@ OsrWindowWin::OsrWindowWin(Delegate* delegate,
                            const OsrRendererSettings& settings)
     : delegate_(delegate),
       settings_(settings),
-      hwnd_(nullptr),
-      device_scale_factor_(0),
-      hidden_(false),
+
       last_mouse_pos_(),
-      current_mouse_pos_(),
-      mouse_rotation_(false),
-      mouse_tracking_(false),
-      last_click_x_(0),
-      last_click_y_(0),
-      last_click_button_(MBT_LEFT),
-      last_click_count_(1),
-      last_click_time_(0),
-      last_mouse_down_on_view_(false) {
+      current_mouse_pos_() {
   DCHECK(delegate_);
-  client_rect_ = {0};
+  client_rect_ = {};
 }
 
 OsrWindowWin::~OsrWindowWin() {
@@ -188,12 +168,14 @@ void OsrWindowWin::Show() {
     return;
   }
 
-  if (!browser_)
+  if (!browser_) {
     return;
+  }
 
   // Show the native window if not currently visible.
-  if (hwnd_ && !::IsWindowVisible(hwnd_))
+  if (hwnd_ && !::IsWindowVisible(hwnd_)) {
     ShowWindow(hwnd_, SW_SHOW);
+  }
 
   if (hidden_) {
     // Set the browser as visible.
@@ -212,8 +194,9 @@ void OsrWindowWin::Hide() {
     return;
   }
 
-  if (!browser_)
+  if (!browser_) {
     return;
+  }
 
   // Remove focus from the browser.
   browser_->GetHost()->SetFocus(false);
@@ -261,8 +244,9 @@ void OsrWindowWin::SetDeviceScaleFactor(float device_scale_factor) {
     return;
   }
 
-  if (device_scale_factor == device_scale_factor_)
+  if (device_scale_factor == device_scale_factor_) {
     return;
+  }
 
   device_scale_factor_ = device_scale_factor;
   if (browser_) {
@@ -277,7 +261,7 @@ void OsrWindowWin::Create(HWND parent_hwnd, const RECT& rect) {
   DCHECK(parent_hwnd);
   DCHECK(!::IsRectEmpty(&rect));
 
-  HINSTANCE hInst = ::GetModuleHandle(nullptr);
+  HINSTANCE hInst = GetCodeModuleHandle();
 
   const cef_color_t background_color = MainContext::Get()->GetBackgroundColor();
   const HBRUSH background_brush = CreateSolidBrush(
@@ -295,10 +279,10 @@ void OsrWindowWin::Create(HWND parent_hwnd, const RECT& rect) {
   // Create the native window with a border so it's easier to visually identify
   // OSR windows.
   hwnd_ = ::CreateWindowEx(
-      ex_style, kWndClass, 0,
+      ex_style, kWndClass, nullptr,
       WS_BORDER | WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
       rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-      parent_hwnd, 0, hInst, 0);
+      parent_hwnd, nullptr, hInst, nullptr);
   CHECK(hwnd_);
 
   client_rect_ = rect;
@@ -315,11 +299,12 @@ void OsrWindowWin::Create(HWND parent_hwnd, const RECT& rect) {
   DCHECK_EQ(register_res, S_OK);
 #endif
 
-  ime_handler_.reset(new OsrImeHandlerWin(hwnd_));
+  ime_handler_ = std::make_unique<OsrImeHandlerWin>(hwnd_);
 
   // Enable Touch Events if requested
-  if (client::MainContext::Get()->TouchEventsEnabled())
+  if (client::MainContext::Get()->TouchEventsEnabled()) {
     RegisterTouchWindow(hwnd_, 0);
+  }
 
   // Notify the window owner.
   NotifyNativeWindowCreated(hwnd_);
@@ -359,8 +344,9 @@ void OsrWindowWin::RegisterOsrClass(HINSTANCE hInstance,
                                     HBRUSH background_brush) {
   // Only register the class one time.
   static bool class_registered = false;
-  if (class_registered)
+  if (class_registered) {
     return;
+  }
   class_registered = true;
 
   WNDCLASSEX wcex;
@@ -412,8 +398,7 @@ void OsrWindowWin::OnIMEComposition(UINT message,
       // Send the text to the browser. The |replacement_range| and
       // |relative_cursor_pos| params are not used on Windows, so provide
       // default invalid values.
-      browser_->GetHost()->ImeCommitText(cTextStr,
-                                         CefRange(UINT32_MAX, UINT32_MAX), 0);
+      browser_->GetHost()->ImeCommitText(cTextStr, CefRange::InvalidRange(), 0);
       ime_handler_->ResetComposition();
       // Continue reading the composition string - Japanese IMEs send both
       // GCS_RESULTSTR and GCS_COMPSTR.
@@ -427,7 +412,7 @@ void OsrWindowWin::OnIMEComposition(UINT message,
       // Send the composition string to the browser. The |replacement_range|
       // param is not used on Windows, so provide a default invalid value.
       browser_->GetHost()->ImeSetComposition(
-          cTextStr, underlines, CefRange(UINT32_MAX, UINT32_MAX),
+          cTextStr, underlines, CefRange::InvalidRange(),
           CefRange(composition_start,
                    static_cast<int>(composition_start + cTextStr.length())));
 
@@ -458,8 +443,9 @@ LRESULT CALLBACK OsrWindowWin::OsrWndProc(HWND hWnd,
   CEF_REQUIRE_UI_THREAD();
 
   OsrWindowWin* self = GetUserDataPtr<OsrWindowWin*>(hWnd);
-  if (!self)
+  if (!self) {
     return DefWindowProc(hWnd, message, wParam, lParam);
+  }
 
   // We want to handle IME events before the OS does any default handling.
   switch (message) {
@@ -490,8 +476,9 @@ LRESULT CALLBACK OsrWindowWin::OsrWndProc(HWND hWnd,
               static_cast<IAccessible*>(self->accessibility_root_));
         } else {
           // Notify the renderer to enable accessibility.
-          if (self->browser_ && self->browser_->GetHost())
+          if (self->browser_ && self->browser_->GetHost()) {
             self->browser_->GetHost()->SetAccessibilityState(STATE_ENABLED);
+          }
         }
       }
     } break;
@@ -536,8 +523,9 @@ LRESULT CALLBACK OsrWindowWin::OsrWndProc(HWND hWnd,
       return 0;
 
     case WM_ERASEBKGND:
-      if (self->OnEraseBkgnd())
+      if (self->OnEraseBkgnd()) {
         break;
+      }
       // Don't erase the background.
       return 0;
 
@@ -546,8 +534,9 @@ LRESULT CALLBACK OsrWindowWin::OsrWndProc(HWND hWnd,
     // intutive, complete and simpler to code.
     // https://msdn.microsoft.com/en-us/library/hh454903(v=vs.85).aspx
     case WM_TOUCH:
-      if (self->OnTouchEvent(message, wParam, lParam))
+      if (self->OnTouchEvent(message, wParam, lParam)) {
         return 0;
+      }
       break;
 
     case WM_NCDESTROY:
@@ -561,12 +550,14 @@ LRESULT CALLBACK OsrWindowWin::OsrWndProc(HWND hWnd,
 }
 
 void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
-  if (IsMouseEventFromTouch(message))
+  if (IsMouseEventFromTouch(message)) {
     return;
+  }
 
   CefRefPtr<CefBrowserHost> browser_host;
-  if (browser_)
+  if (browser_) {
     browser_host = browser_->GetHost();
+  }
 
   LONG currentTime = 0;
   bool cancelPreviousClick = false;
@@ -635,8 +626,9 @@ void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONUP:
     case WM_RBUTTONUP:
     case WM_MBUTTONUP:
-      if (GetCapture() == hwnd_)
+      if (GetCapture() == hwnd_) {
         ReleaseCapture();
+      }
       if (mouse_rotation_) {
         // End rotation effect.
         mouse_rotation_ = false;
@@ -732,11 +724,14 @@ void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
       if (browser_host) {
         POINT screen_point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
         HWND scrolled_wnd = ::WindowFromPoint(screen_point);
-        if (scrolled_wnd != hwnd_)
+        if (scrolled_wnd != hwnd_) {
           break;
+        }
 
         ScreenToClient(hwnd_, &screen_point);
         int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+        int deltaX = IsKeyDown(VK_SHIFT) ? delta : 0;
+        int deltaY = !IsKeyDown(VK_SHIFT) ? delta : 0;
 
         CefMouseEvent mouse_event;
         mouse_event.x = screen_point.x;
@@ -744,9 +739,17 @@ void OsrWindowWin::OnMouseEvent(UINT message, WPARAM wParam, LPARAM lParam) {
         ApplyPopupOffset(mouse_event.x, mouse_event.y);
         DeviceToLogical(mouse_event, device_scale_factor_);
         mouse_event.modifiers = GetCefMouseModifiers(wParam);
-        browser_host->SendMouseWheelEvent(mouse_event,
-                                          IsKeyDown(VK_SHIFT) ? delta : 0,
-                                          !IsKeyDown(VK_SHIFT) ? delta : 0);
+
+        UINT sys_info_lines;
+        if (SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &sys_info_lines,
+                                 0) &&
+            sys_info_lines == WHEEL_PAGESCROLL) {
+          mouse_event.modifiers |= EVENTFLAG_SCROLL_BY_PAGE;
+          deltaX = 0;
+          deltaY = (delta > 0) ? 1 : -1;
+        }
+
+        browser_host->SendMouseWheelEvent(mouse_event, deltaX, deltaY);
       }
       break;
   }
@@ -756,26 +759,31 @@ void OsrWindowWin::OnSize() {
   // Keep |client_rect_| up to date.
   ::GetClientRect(hwnd_, &client_rect_);
 
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->WasResized();
+  }
 }
 
 void OsrWindowWin::OnFocus(bool setFocus) {
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->SetFocus(setFocus);
+  }
 }
 
 void OsrWindowWin::OnCaptureLost() {
-  if (mouse_rotation_)
+  if (mouse_rotation_) {
     return;
+  }
 
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->SendCaptureLostEvent();
+  }
 }
 
 void OsrWindowWin::OnKeyEvent(UINT message, WPARAM wParam, LPARAM lParam) {
-  if (!browser_)
+  if (!browser_) {
     return;
+  }
 
   CefKeyEvent event;
   event.windows_key_code = wParam;
@@ -783,12 +791,13 @@ void OsrWindowWin::OnKeyEvent(UINT message, WPARAM wParam, LPARAM lParam) {
   event.is_system_key = message == WM_SYSCHAR || message == WM_SYSKEYDOWN ||
                         message == WM_SYSKEYUP;
 
-  if (message == WM_KEYDOWN || message == WM_SYSKEYDOWN)
+  if (message == WM_KEYDOWN || message == WM_SYSKEYDOWN) {
     event.type = KEYEVENT_RAWKEYDOWN;
-  else if (message == WM_KEYUP || message == WM_SYSKEYUP)
+  } else if (message == WM_KEYUP || message == WM_SYSKEYUP) {
     event.type = KEYEVENT_KEYUP;
-  else
+  } else {
     event.type = KEYEVENT_CHAR;
+  }
   event.modifiers = GetCefKeyboardModifiers(wParam, lParam);
 
   // mimic alt-gr check behaviour from
@@ -822,8 +831,9 @@ void OsrWindowWin::OnPaint() {
   BeginPaint(hwnd_, &ps);
   EndPaint(hwnd_, &ps);
 
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->Invalidate(PET_VIEW);
+  }
 }
 
 bool OsrWindowWin::OnEraseBkgnd() {
@@ -835,8 +845,9 @@ bool OsrWindowWin::OnTouchEvent(UINT message, WPARAM wParam, LPARAM lParam) {
   // Handle touch events on Windows.
   int num_points = LOWORD(wParam);
   // Chromium only supports upto 16 touch points.
-  if (num_points < 0 || num_points > 16)
+  if (num_points < 0 || num_points > 16) {
     return false;
+  }
   std::unique_ptr<TOUCHINPUT[]> input(new TOUCHINPUT[num_points]);
   if (GetTouchInputInfo(reinterpret_cast<HTOUCHINPUT>(lParam), num_points,
                         input.get(), sizeof(TOUCHINPUT))) {
@@ -845,16 +856,6 @@ bool OsrWindowWin::OnTouchEvent(UINT message, WPARAM wParam, LPARAM lParam) {
       POINT point;
       point.x = TOUCH_COORD_TO_PIXEL(input[i].x);
       point.y = TOUCH_COORD_TO_PIXEL(input[i].y);
-
-      if (!IsWindows_8_Or_Newer()) {
-        // Windows 7 sends touch events for touches in the non-client area,
-        // whereas Windows 8 does not. In order to unify the behaviour, always
-        // ignore touch events in the non-client area.
-        LPARAM l_param_ht = MAKELPARAM(point.x, point.y);
-        LRESULT hittest = SendMessage(hwnd_, WM_NCHITTEST, 0, l_param_ht);
-        if (hittest != HTCLIENT)
-          return false;
-      }
 
       ScreenToClient(hwnd_, &point);
       touch_event.x = DeviceToLogical(point.x, device_scale_factor_);
@@ -878,8 +879,9 @@ bool OsrWindowWin::OnTouchEvent(UINT message, WPARAM wParam, LPARAM lParam) {
       touch_event.modifiers = 0;
 
       // Notify the browser of touch event
-      if (browser_)
+      if (browser_) {
         browser_->GetHost()->SendTouchEvent(touch_event);
+      }
     }
     CloseTouchInputHandle(reinterpret_cast<HTOUCHINPUT>(lParam));
     return true;
@@ -889,8 +891,9 @@ bool OsrWindowWin::OnTouchEvent(UINT message, WPARAM wParam, LPARAM lParam) {
 }
 
 bool OsrWindowWin::IsOverPopupWidget(int x, int y) const {
-  if (!render_handler_)
+  if (!render_handler_) {
     return false;
+  }
   return render_handler_->IsOverPopupWidget(x, y);
 }
 
@@ -930,8 +933,10 @@ void OsrWindowWin::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 void OsrWindowWin::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
   // Detach |this| from the ClientHandlerOsr.
-  static_cast<ClientHandlerOsr*>(browser_->GetHost()->GetClient().get())
-      ->DetachOsrDelegate();
+  auto handler =
+      ClientHandlerOsr::GetForClient(browser_->GetHost()->GetClient());
+  CHECK(handler);
+  handler->DetachOsrDelegate();
   browser_ = nullptr;
   render_handler_->SetBrowser(nullptr);
   Destroy();
@@ -940,22 +945,52 @@ void OsrWindowWin::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 bool OsrWindowWin::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
                                      CefRect& rect) {
   CEF_REQUIRE_UI_THREAD();
-  return false;
+  DCHECK_GT(device_scale_factor_, 0);
+
+  if (!settings_.real_screen_bounds) {
+    return false;
+  }
+
+  HWND root_hwnd = ::GetAncestor(hwnd_, GA_ROOT);
+  DCHECK(root_hwnd);
+  RECT root_rect = {};
+  ::GetWindowRect(root_hwnd, &root_rect);
+
+  // Convert to DIP coordinates.
+  rect = DeviceToLogical(
+      {root_rect.left, root_rect.top, root_rect.right - root_rect.left,
+       root_rect.bottom - root_rect.top},
+      device_scale_factor_);
+  if (rect.width == 0) {
+    rect.width = 1;
+  }
+  if (rect.height == 0) {
+    rect.height = 1;
+  }
+  return true;
 }
 
 void OsrWindowWin::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
   CEF_REQUIRE_UI_THREAD();
   DCHECK_GT(device_scale_factor_, 0);
 
-  rect.x = rect.y = 0;
-  rect.width = DeviceToLogical(client_rect_.right - client_rect_.left,
-                               device_scale_factor_);
-  if (rect.width == 0)
+  RECT window_rect = {};
+  ::GetWindowRect(hwnd_, &window_rect);
+
+  // Convert to DIP coordinates.
+  rect = DeviceToLogical(
+      {window_rect.left, window_rect.top, window_rect.right - window_rect.left,
+       window_rect.bottom - window_rect.top},
+      device_scale_factor_);
+  if (rect.width == 0) {
     rect.width = 1;
-  rect.height = DeviceToLogical(client_rect_.bottom - client_rect_.top,
-                                device_scale_factor_);
-  if (rect.height == 0)
+  }
+  if (rect.height == 0) {
     rect.height = 1;
+  }
+  if (!settings_.real_screen_bounds) {
+    rect.x = rect.y = 0;
+  }
 }
 
 bool OsrWindowWin::GetScreenPoint(CefRefPtr<CefBrowser> browser,
@@ -966,10 +1001,11 @@ bool OsrWindowWin::GetScreenPoint(CefRefPtr<CefBrowser> browser,
   CEF_REQUIRE_UI_THREAD();
   DCHECK_GT(device_scale_factor_, 0);
 
-  if (!::IsWindow(hwnd_))
+  if (!::IsWindow(hwnd_)) {
     return false;
+  }
 
-  // Convert the point from view coordinates to actual screen coordinates.
+  // Convert from view DIP coordinates to screen device (pixel) coordinates.
   POINT screen_pt = {LogicalToDevice(viewX, device_scale_factor_),
                      LogicalToDevice(viewY, device_scale_factor_)};
   ClientToScreen(hwnd_, &screen_pt);
@@ -983,18 +1019,28 @@ bool OsrWindowWin::GetScreenInfo(CefRefPtr<CefBrowser> browser,
   CEF_REQUIRE_UI_THREAD();
   DCHECK_GT(device_scale_factor_, 0);
 
-  if (!::IsWindow(hwnd_))
+  if (!::IsWindow(hwnd_)) {
     return false;
-
-  CefRect view_rect;
-  GetViewRect(browser, view_rect);
+  }
 
   screen_info.device_scale_factor = device_scale_factor_;
 
-  // The screen info rectangles are used by the renderer to create and position
-  // popups. Keep popups inside the view rectangle.
-  screen_info.rect = view_rect;
-  screen_info.available_rect = view_rect;
+  if (settings_.real_screen_bounds) {
+    CefRect root_rect;
+    GetRootScreenRect(browser, root_rect);
+
+    auto display = CefDisplay::GetDisplayMatchingBounds(
+        root_rect, /*input_pixel_coords=*/false);
+    screen_info.rect = display->GetBounds();
+    screen_info.available_rect = display->GetWorkArea();
+  } else {
+    CefRect view_rect;
+    GetViewRect(browser, view_rect);
+
+    // Keep HTML select popups inside the view rectangle.
+    screen_info.rect = view_rect;
+    screen_info.available_rect = view_rect;
+  }
   return true;
 }
 
@@ -1022,9 +1068,9 @@ void OsrWindowWin::OnAcceleratedPaint(
     CefRefPtr<CefBrowser> browser,
     CefRenderHandler::PaintElementType type,
     const CefRenderHandler::RectList& dirtyRects,
-    void* share_handle) {
+    const CefAcceleratedPaintInfo& info) {
   EnsureRenderHandler();
-  render_handler_->OnAcceleratedPaint(browser, type, dirtyRects, share_handle);
+  render_handler_->OnAcceleratedPaint(browser, type, dirtyRects, info);
 }
 
 void OsrWindowWin::OnCursorChange(CefRefPtr<CefBrowser> browser,
@@ -1033,10 +1079,11 @@ void OsrWindowWin::OnCursorChange(CefRefPtr<CefBrowser> browser,
                                   const CefCursorInfo& custom_cursor_info) {
   CEF_REQUIRE_UI_THREAD();
 
-  if (!::IsWindow(hwnd_))
+  if (!::IsWindow(hwnd_)) {
     return;
+  }
 
-  // Change the plugin window's cursor.
+  // Change the window's cursor.
   SetClassLongPtr(hwnd_, GCLP_HCURSOR,
                   static_cast<LONG>(reinterpret_cast<LONG_PTR>(cursor)));
   SetCursor(cursor);
@@ -1051,8 +1098,9 @@ bool OsrWindowWin::StartDragging(
   CEF_REQUIRE_UI_THREAD();
 
 #if defined(CEF_USE_ATL)
-  if (!drop_target_)
+  if (!drop_target_) {
     return false;
+  }
 
   current_drag_op_ = DRAG_OPERATION_NONE;
   CefBrowserHost::DragOperationsMask result =
@@ -1105,7 +1153,8 @@ void OsrWindowWin::UpdateAccessibilityTree(CefRefPtr<CefValue> value) {
 
 #if defined(CEF_USE_ATL)
   if (!accessibility_handler_) {
-    accessibility_handler_.reset(new OsrAccessibilityHelper(value, browser_));
+    accessibility_handler_ =
+        std::make_unique<OsrAccessibilityHelper>(value, browser_);
   } else {
     accessibility_handler_->UpdateAccessibilityTree(value);
   }
@@ -1153,8 +1202,9 @@ CefBrowserHost::DragOperationsMask OsrWindowWin::OnDragOver(
 }
 
 void OsrWindowWin::OnDragLeave() {
-  if (browser_)
+  if (browser_) {
     browser_->GetHost()->DragTargetDragLeave();
+  }
 }
 
 CefBrowserHost::DragOperationsMask OsrWindowWin::OnDrop(

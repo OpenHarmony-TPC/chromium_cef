@@ -2,10 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_scheme.h"
-#include "libcef/browser/context.h"
-
 #include "base/logging.h"
+#include "cef/include/cef_scheme.h"
+#include "cef/libcef/browser/context.h"
 
 bool CefRegisterSchemeHandlerFactory(
     const CefString& scheme_name,
@@ -13,7 +12,7 @@ bool CefRegisterSchemeHandlerFactory(
     CefRefPtr<CefSchemeHandlerFactory> factory) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return false;
   }
 
@@ -24,7 +23,7 @@ bool CefRegisterSchemeHandlerFactory(
 bool CefClearSchemeHandlerFactories() {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
+    DCHECK(false) << "context not valid";
     return false;
   }
 

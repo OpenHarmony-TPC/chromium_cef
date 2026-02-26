@@ -6,10 +6,10 @@
 #define CEF_LIBCEF_BROWSER_MEDIA_ROUTER_MEDIA_ROUTER_MANAGER_H_
 #pragma once
 
-#include "include/cef_media_router.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
+#include "cef/include/cef_media_router.h"
 #include "chrome/browser/ui/media_router/query_result_manager.h"
 #include "components/media_router/browser/media_router.h"
 #include "components/media_router/common/mojom/media_router.mojom.h"
@@ -20,12 +20,12 @@ class BrowserContext;
 
 class CefMediaRoutesObserver;
 class CefPresentationConnection;
-class CefRouteMessageObserver;
+class CefPresentationConnectionMessageObserver;
 
 // Manages CEF usage of MediaRouter. Owned by CefBrowserContext and only
 // accessed on the UI thread.
 class CefMediaRouterManager
-    : public media_router::QueryResultManager::Observer {
+    : public media_router::MediaSinkWithCastModesObserver {
  public:
   using MediaRouteVector = std::vector<media_router::MediaRoute>;
   using MediaSinkVector = std::vector<media_router::MediaSinkWithCastModes>;
@@ -45,7 +45,7 @@ class CefMediaRouterManager
         const content::PresentationConnectionStateChangeInfo& info) = 0;
 
    protected:
-    ~Observer() override {}
+    ~Observer() override = default;
   };
 
   explicit CefMediaRouterManager(content::BrowserContext* browser_context);
@@ -74,13 +74,13 @@ class CefMediaRouterManager
                         const std::string& message);
   void TerminateRoute(const media_router::MediaRoute::Id& route_id);
 
-  // QueryResultManager::Observer methods.
-  void OnResultsUpdated(const MediaSinkVector& sinks) override;
+  // MediaSinkWithCastModesObserver methods.
+  void OnSinksUpdated(const MediaSinkVector& sinks) override;
 
  private:
   friend class CefMediaRoutesObserver;
   friend class CefPresentationConnection;
-  friend class CefRouteMessageObserver;
+  friend class CefPresentationConnectionMessageObserver;
 
   // Do not keep a reference to the object returned by this method.
   media_router::MediaRouter* GetMediaRouter() const;
@@ -99,7 +99,7 @@ class CefMediaRouterManager
     std::unique_ptr<CefPresentationConnection> presentation_connection_;
 
     // Used if there is no RoutePresentationConnectionPtr.
-    std::unique_ptr<CefRouteMessageObserver> message_observer_;
+    std::unique_ptr<CefPresentationConnectionMessageObserver> message_observer_;
     base::CallbackListSubscription state_subscription_;
   };
   void CreateRouteState(
@@ -108,7 +108,7 @@ class CefMediaRouterManager
   RouteState* GetRouteState(const media_router::MediaRoute::Id& route_id);
   void RemoveRouteState(const media_router::MediaRoute::Id& route_id);
 
-  content::BrowserContext* const browser_context_;
+  const raw_ptr<content::BrowserContext> browser_context_;
 
   base::ObserverList<Observer> observers_;
 

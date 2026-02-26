@@ -4,8 +4,10 @@
 // found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
+
 #include "include/cef_app.h"
 #import "include/cef_application_mac.h"
+#import "include/cef_id_mappers.h"
 #import "include/wrapper/cef_library_loader.h"
 #include "tests/cefclient/browser/main_context_impl.h"
 #include "tests/cefclient/browser/resource.h"
@@ -22,8 +24,9 @@ namespace {
 NSMenuItem* GetMenuBarMenuWithTag(NSInteger tag) {
   NSMenu* main_menu = [[NSApplication sharedApplication] mainMenu];
   NSInteger found_index = [main_menu indexOfItemWithTag:tag];
-  if (found_index >= 0)
+  if (found_index >= 0) {
     return [main_menu itemAtIndex:found_index];
+  }
   return nil;
 }
 
@@ -31,10 +34,18 @@ NSMenuItem* GetMenuBarMenuWithTag(NSInteger tag) {
 NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   for (NSInteger i = 0; i < menu.numberOfItems; ++i) {
     NSMenuItem* item = [menu itemAtIndex:i];
-    if (item.action == action_selector)
+    if (item.action == action_selector) {
       return item;
+    }
   }
   return nil;
+}
+
+void RemoveMenuItem(NSMenu* menu, SEL action_selector) {
+  NSMenuItem* item = GetMenuItemWithAction(menu, action_selector);
+  if (item) {
+    [menu removeItem:item];
+  }
 }
 
 }  // namespace
@@ -42,11 +53,10 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject <NSApplicationDelegate> {
  @private
-  bool with_controls_;
   bool with_osr_;
 }
 
-- (id)initWithControls:(bool)with_controls andOsr:(bool)with_osr;
+- (id)initWithOsr:(bool)with_osr;
 - (void)createApplication:(id)object;
 - (void)tryToTerminateApplication:(NSApplication*)app;
 - (void)testsItemSelected:(int)command_id;
@@ -54,8 +64,8 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 - (IBAction)menuTestsGetSource:(id)sender;
 - (IBAction)menuTestsWindowNew:(id)sender;
 - (IBAction)menuTestsWindowPopup:(id)sender;
+- (IBAction)menuTestsWindowDialog:(id)sender;
 - (IBAction)menuTestsRequest:(id)sender;
-- (IBAction)menuTestsPluginInfo:(id)sender;
 - (IBAction)menuTestsZoomIn:(id)sender;
 - (IBAction)menuTestsZoomOut:(id)sender;
 - (IBAction)menuTestsZoomReset:(id)sender;
@@ -68,6 +78,7 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 - (IBAction)menuTestsMuteAudio:(id)sender;
 - (IBAction)menuTestsUnmuteAudio:(id)sender;
 - (IBAction)menuTestsOtherTests:(id)sender;
+- (IBAction)menuTestsDumpWithoutCrashing:(id)sender;
 - (void)enableAccessibility:(bool)bEnable;
 @end
 
@@ -152,9 +163,8 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 
 @implementation ClientAppDelegate
 
-- (id)initWithControls:(bool)with_controls andOsr:(bool)with_osr {
+- (id)initWithOsr:(bool)with_osr {
   if (self = [super init]) {
-    with_controls_ = with_controls;
     with_osr_ = with_osr;
   }
   return self;
@@ -204,27 +214,26 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   // Set the delegate for application events.
   [application setDelegate:self];
 
-  if (!with_osr_) {
-    // Remove the OSR-related menu items when OSR is disabled.
-    NSMenuItem* tests_menu = GetMenuBarMenuWithTag(8);
-    if (tests_menu) {
-      NSMenuItem* set_fps_item = GetMenuItemWithAction(
-          tests_menu.submenu, @selector(menuTestsSetFPS:));
-      if (set_fps_item)
-        [tests_menu.submenu removeItem:set_fps_item];
-      NSMenuItem* set_scale_factor_item = GetMenuItemWithAction(
-          tests_menu.submenu, @selector(menuTestsSetScaleFactor:));
-      if (set_scale_factor_item)
-        [tests_menu.submenu removeItem:set_scale_factor_item];
+  auto* main_context = client::MainContext::Get();
+
+  NSMenuItem* tests_menu = GetMenuBarMenuWithTag(8);
+  if (tests_menu) {
+    if (!with_osr_) {
+      // Remove the OSR-related menu items when not using OSR.
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsSetFPS:));
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsSetScaleFactor:));
+    }
+    if (!main_context->UseViewsGlobal()) {
+      // Remove the Views-related menu items when not using Views.
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsWindowDialog:));
     }
   }
 
   auto window_config = std::make_unique<client::RootWindowConfig>();
-  window_config->with_controls = with_controls_;
   window_config->with_osr = with_osr_;
 
   // Create the first window.
-  client::MainContext::Get()->GetRootWindowManager()->CreateRootWindow(
+  main_context->GetRootWindowManager()->CreateRootWindow(
       std::move(window_config));
 }
 
@@ -237,17 +246,9 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 }
 
 - (void)testsItemSelected:(int)command_id {
-  // Retrieve the active RootWindow.
-  NSWindow* key_window = [[NSApplication sharedApplication] keyWindow];
-  if (!key_window)
-    return;
-
-  scoped_refptr<client::RootWindow> root_window =
-      client::RootWindow::GetForNSWindow(key_window);
-
-  CefRefPtr<CefBrowser> browser = root_window->GetBrowser();
-  if (browser.get())
+  if (auto browser = [self getActiveBrowser]) {
     client::test_runner::RunTest(browser, command_id);
+  }
 }
 
 - (IBAction)menuTestsGetText:(id)sender {
@@ -266,12 +267,12 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   [self testsItemSelected:ID_TESTS_WINDOW_POPUP];
 }
 
-- (IBAction)menuTestsRequest:(id)sender {
-  [self testsItemSelected:ID_TESTS_REQUEST];
+- (IBAction)menuTestsWindowDialog:(id)sender {
+  [self testsItemSelected:ID_TESTS_WINDOW_DIALOG];
 }
 
-- (IBAction)menuTestsPluginInfo:(id)sender {
-  [self testsItemSelected:ID_TESTS_PLUGIN_INFO];
+- (IBAction)menuTestsRequest:(id)sender {
+  [self testsItemSelected:ID_TESTS_REQUEST];
 }
 
 - (IBAction)menuTestsZoomIn:(id)sender {
@@ -322,17 +323,35 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   [self testsItemSelected:ID_TESTS_OTHER_TESTS];
 }
 
+- (IBAction)menuTestsDumpWithoutCrashing:(id)sender {
+  [self testsItemSelected:ID_TESTS_DUMP_WITHOUT_CRASHING];
+}
+
+- (scoped_refptr<client::RootWindow>)getActiveRootWindow {
+  return client::MainContext::Get()
+      ->GetRootWindowManager()
+      ->GetActiveRootWindow();
+}
+
+- (CefRefPtr<CefBrowser>)getActiveBrowser {
+  if (auto root_window = [self getActiveRootWindow]) {
+    return root_window->GetBrowser();
+  }
+  return nullptr;
+}
+
+- (NSWindow*)getActiveBrowserNSWindow {
+  if (auto browser = [self getActiveBrowser]) {
+    if (auto view = CAST_CEF_WINDOW_HANDLE_TO_NSVIEW(
+            browser->GetHost()->GetWindowHandle())) {
+      return [view window];
+    }
+  }
+  return nil;
+}
+
 - (void)enableAccessibility:(bool)bEnable {
-  // Retrieve the active RootWindow.
-  NSWindow* key_window = [[NSApplication sharedApplication] keyWindow];
-  if (!key_window)
-    return;
-
-  scoped_refptr<client::RootWindow> root_window =
-      client::RootWindow::GetForNSWindow(key_window);
-
-  CefRefPtr<CefBrowser> browser = root_window->GetBrowser();
-  if (browser.get()) {
+  if (auto browser = [self getActiveBrowser]) {
     browser->GetHost()->SetAccessibilityState(bEnable ? STATE_ENABLED
                                                       : STATE_DISABLED);
   }
@@ -343,6 +362,182 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   return NSTerminateNow;
 }
 
+// Returns true if there is a modal window (either window- or application-
+// modal) blocking the active browser. Note that tab modal dialogs (HTTP auth
+// sheets) will not count as blocking the browser. But things like open/save
+// dialogs that are window modal will block the browser.
+- (BOOL)keyWindowIsModal {
+  if ([NSApp modalWindow]) {
+    return YES;
+  }
+
+  if (auto window = [self getActiveBrowserNSWindow]) {
+    return [[window attachedSheet] isKindOfClass:[NSWindow class]];
+  }
+
+  return NO;
+}
+
+// AppKit will call -[NSUserInterfaceValidations validateUserInterfaceItem:] to
+// validate UI items. Any item whose target is FirstResponder, or nil, will
+// traverse the responder chain looking for a responder that implements the
+// item's selector. The top menu (configured in MainMenu.xib) can contain menu
+// items with selectors that are implemented by Chromium's
+// RenderWidgetHostViewCocoa or NativeWidgetMacNSWindow classes. These classes
+// live in the Cocoa view hierarchy and will be triggered only if the browser
+// window is focused. When the browser window is not focused these selectors
+// will be forwarded (by Chromium's CommandDispatcher class) to `[NSApp
+// delegate]` (this class). The particular selectors of interest here are
+// |-commandDispatch:| and |-commandDispatchUsingKeyModifiers:| which will have
+// a tag value from include/cef_command_ids.h. For example, 37000 is IDC_FIND
+// and can be triggered via the "Find..." menu item or the Cmd+g keyboard
+// shortcut:
+//
+//   <menuItem title="Find..." tag="37000" keyEquivalent="g" id="209">
+//        <connections>
+//            <action selector="commandDispatch:" target="-1" id="241"/>
+//        </connections>
+//   </menuItem>
+//
+// If |-validateUserInterfaceItem:| returns YES then the menu item will be
+// enabled and execution will trigger the associated selector.
+//
+// This implementation is based on Chromium's AppController class.
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
+  // Version-safe static declarations of IDC variables using names from
+  // cef_command_ids.h.
+  CEF_DECLARE_COMMAND_ID(IDC_OPEN_FILE);
+  CEF_DECLARE_COMMAND_ID(IDC_NEW_TAB);
+  CEF_DECLARE_COMMAND_ID(IDC_FOCUS_LOCATION);
+  CEF_DECLARE_COMMAND_ID(IDC_FOCUS_SEARCH);
+  CEF_DECLARE_COMMAND_ID(IDC_SHOW_HISTORY);
+  CEF_DECLARE_COMMAND_ID(IDC_SHOW_BOOKMARK_MANAGER);
+  CEF_DECLARE_COMMAND_ID(IDC_CLEAR_BROWSING_DATA);
+  CEF_DECLARE_COMMAND_ID(IDC_SHOW_DOWNLOADS);
+  CEF_DECLARE_COMMAND_ID(IDC_IMPORT_SETTINGS);
+  CEF_DECLARE_COMMAND_ID(IDC_MANAGE_EXTENSIONS);
+  CEF_DECLARE_COMMAND_ID(IDC_HELP_PAGE_VIA_MENU);
+  CEF_DECLARE_COMMAND_ID(IDC_OPTIONS);
+  CEF_DECLARE_COMMAND_ID(IDC_NEW_WINDOW);
+  CEF_DECLARE_COMMAND_ID(IDC_TASK_MANAGER);
+  CEF_DECLARE_COMMAND_ID(IDC_NEW_INCOGNITO_WINDOW);
+
+  SEL action = [item action];
+  BOOL enable = NO;
+  // Whether opening a new browser window is allowed.
+  BOOL canOpenNewBrowser = YES;
+
+  // Commands from the menu bar are only handled by commandDispatch: if there is
+  // no key window.
+  if (action == @selector(commandDispatch:) ||
+      action == @selector(commandDispatchUsingKeyModifiers:)) {
+    const auto tag = [item tag];
+    if (tag == IDC_OPEN_FILE || tag == IDC_NEW_TAB ||
+        tag == IDC_FOCUS_LOCATION || tag == IDC_FOCUS_SEARCH ||
+        tag == IDC_SHOW_HISTORY || tag == IDC_SHOW_BOOKMARK_MANAGER ||
+        tag == IDC_CLEAR_BROWSING_DATA || tag == IDC_SHOW_DOWNLOADS ||
+        tag == IDC_IMPORT_SETTINGS || tag == IDC_MANAGE_EXTENSIONS ||
+        tag == IDC_HELP_PAGE_VIA_MENU || tag == IDC_OPTIONS) {
+      // Browser-level items that open in new tabs or perform an action in a
+      // current tab should not open if there's a window- or app-modal dialog.
+      enable = canOpenNewBrowser && ![self keyWindowIsModal];
+    } else if (tag == IDC_NEW_WINDOW) {
+      // Browser-level items that open in new windows: allow the user to open
+      // a new window even if there's a window-modal dialog.
+      enable = canOpenNewBrowser;
+    } else if (tag == IDC_TASK_MANAGER) {
+      enable = YES;
+    } else if (tag == IDC_NEW_INCOGNITO_WINDOW) {
+      enable = canOpenNewBrowser;
+    } else {
+      enable = ![self keyWindowIsModal];
+    }
+  } else if ([self respondsToSelector:action]) {
+    // All other selectors that this class implements.
+    enable = YES;
+  }
+
+  return enable;
+}
+
+// This will get called in the case where the frontmost window is not a browser
+// window, and the user has command-clicked a button in a background browser
+// window whose action is |-commandDispatch:|
+- (void)commandDispatch:(id)sender {
+  // Handle the case where we're dispatching a command from a sender that's in a
+  // browser window. This means that the command came from a background window
+  // and is getting here because the foreground window is not a browser window.
+  DCHECK(sender);
+  if ([sender respondsToSelector:@selector(window)]) {
+    id delegate = [[sender window] windowController];
+    if ([delegate respondsToSelector:@selector(commandDispatch:)]) {
+      [delegate commandDispatch:sender];
+      return;
+    }
+  }
+
+  // Version-safe static declarations of IDC variables using names from
+  // cef_command_ids.h.
+  CEF_DECLARE_COMMAND_ID(IDC_FIND);
+  CEF_DECLARE_COMMAND_ID(IDC_FIND_NEXT);
+  CEF_DECLARE_COMMAND_ID(IDC_FIND_PREVIOUS);
+
+  // Handle specific commands where we want to make the last active browser
+  // frontmost and then re-execute the command.
+  const auto tag = [sender tag];
+  if (tag == IDC_FIND || tag == IDC_FIND_NEXT || tag == IDC_FIND_PREVIOUS) {
+    if (id window = [self getActiveBrowserNSWindow]) {
+      [window makeKeyAndOrderFront:nil];
+      if ([window respondsToSelector:@selector(commandDispatch:)]) {
+        [window commandDispatch:sender];
+        return;
+      }
+    }
+  }
+
+  LOG(INFO) << "Unhandled commandDispatch: for tag " << [sender tag];
+}
+
+// Same as |-commandDispatch:|, but executes commands using a disposition
+// determined by the key flags. This will get called in the case where the
+// frontmost window is not a browser window, and the user has command-clicked
+// a button in a background browser window whose action is
+// |-commandDispatchUsingKeyModifiers:|
+- (void)commandDispatchUsingKeyModifiers:(id)sender {
+  // Handle the case where we're dispatching a command from a sender that's in a
+  // browser window. This means that the command came from a background window
+  // and is getting here because the foreground window is not a browser window.
+  DCHECK(sender);
+  if ([sender respondsToSelector:@selector(window)]) {
+    id delegate = [[sender window] windowController];
+    if ([delegate
+            respondsToSelector:@selector(commandDispatchUsingKeyModifiers:)]) {
+      [delegate commandDispatchUsingKeyModifiers:sender];
+      return;
+    }
+  }
+
+  LOG(INFO) << "Unhandled commandDispatchUsingKeyModifiers: for tag "
+            << [sender tag];
+}
+
+// Called when the user clicks the app dock icon while the application is
+// already running.
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)theApplication
+                    hasVisibleWindows:(BOOL)flag {
+  if (auto root_window = [self getActiveRootWindow]) {
+    root_window->Show(client::RootWindow::ShowNormal);
+  }
+  return NO;
+}
+
+// Requests that any state restoration archive be created with secure encoding
+// (macOS 12+ only). See https://crrev.com/c737387656 for details. This also
+// fixes an issue with macOS default behavior incorrectly restoring windows
+// after hard reset (holding down the power button).
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {
+  return YES;
+}
 @end
 
 namespace client {
@@ -352,8 +547,9 @@ int RunMain(int argc, char* argv[]) {
   // Load the CEF framework library at runtime instead of linking directly
   // as required by the macOS sandbox implementation.
   CefScopedLibraryLoader library_loader;
-  if (!library_loader.LoadInMain())
+  if (!library_loader.LoadInMain()) {
     return 1;
+  }
 
   int result = -1;
 
@@ -377,8 +573,9 @@ int RunMain(int argc, char* argv[]) {
     CefRefPtr<CefApp> app;
     ClientApp::ProcessType process_type =
         ClientApp::GetProcessType(command_line);
-    if (process_type == ClientApp::BrowserProcess)
+    if (process_type == ClientApp::BrowserProcess) {
       app = new ClientAppBrowser();
+    }
 
     // Create the main context object.
     std::unique_ptr<MainContextImpl> context(
@@ -398,21 +595,28 @@ int RunMain(int argc, char* argv[]) {
 
     // Create the main message loop object.
     std::unique_ptr<MainMessageLoop> message_loop;
-    if (settings.external_message_pump)
+    if (settings.external_message_pump) {
       message_loop = MainMessageLoopExternalPump::Create();
-    else
+    } else {
       message_loop.reset(new MainMessageLoopStd);
+    }
 
-    // Initialize CEF.
-    context->Initialize(main_args, settings, app, nullptr);
+    // Initialize the CEF browser process. May return false if initialization
+    // fails or if early exit is desired (for example, due to process singleton
+    // relaunch behavior).
+    if (!context->Initialize(main_args, settings, app, nullptr)) {
+      return CefGetExitCode();
+    }
 
     // Register scheme handlers.
     test_runner::RegisterSchemeHandlers();
 
     // Create the application delegate and window.
     ClientAppDelegate* delegate = [[ClientAppDelegate alloc]
-        initWithControls:!command_line->HasSwitch(switches::kHideControls)
-                  andOsr:settings.windowless_rendering_enabled ? true : false];
+        initWithOsr:settings.windowless_rendering_enabled ? true : false];
+    // Set as the delegate for application events.
+    NSApp.delegate = delegate;
+
     [delegate performSelectorOnMainThread:@selector(createApplication:)
                                withObject:nil
                             waitUntilDone:NO];

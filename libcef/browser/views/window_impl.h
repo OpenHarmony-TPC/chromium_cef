@@ -8,13 +8,12 @@
 
 #include <map>
 
-#include "include/views/cef_window.h"
-#include "include/views/cef_window_delegate.h"
-
-#include "libcef/browser/menu_model_impl.h"
-#include "libcef/browser/views/panel_impl.h"
-#include "libcef/browser/views/window_view.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/include/views/cef_window.h"
+#include "cef/include/views/cef_window_delegate.h"
+#include "cef/libcef/browser/menu_model_impl.h"
+#include "cef/libcef/browser/views/panel_impl.h"
+#include "cef/libcef/browser/views/window_view.h"
 #include "ui/base/accelerators/accelerator.h"
 #include "ui/views/controls/menu/menu_runner.h"
 #include "ui/views/widget/widget.h"
@@ -33,11 +32,15 @@ class CefWindowImpl
   CefWindowImpl(const CefWindowImpl&) = delete;
   CefWindowImpl& operator=(const CefWindowImpl&) = delete;
 
-  // Create a new CefWindow instance. |delegate| may be nullptr.
-  static CefRefPtr<CefWindowImpl> Create(CefRefPtr<CefWindowDelegate> delegate);
+  // Create a new CefWindow instance. |delegate| may be nullptr. |parent_widget|
+  // will be used when creating a Chrome child window.
+  static CefRefPtr<CefWindowImpl> Create(CefRefPtr<CefWindowDelegate> delegate,
+                                         gfx::AcceleratedWidget parent_widget);
 
   // CefWindow methods:
   void Show() override;
+  void ShowAsBrowserModalDialog(
+      CefRefPtr<CefBrowserView> browser_view) override;
   void Hide() override;
   void CenterWindow(const CefSize& size) override;
   void Close() override;
@@ -55,6 +58,7 @@ class CefWindowImpl
   bool IsMaximized() override;
   bool IsMinimized() override;
   bool IsFullscreen() override;
+  CefRefPtr<CefView> GetFocusedView() override;
   void SetTitle(const CefString& title) override;
   CefString GetTitle() override;
   void SetWindowIcon(CefRefPtr<CefImage> image) override;
@@ -63,7 +67,8 @@ class CefWindowImpl
   CefRefPtr<CefImage> GetWindowAppIcon() override;
   CefRefPtr<CefOverlayController> AddOverlayView(
       CefRefPtr<CefView> view,
-      cef_docking_mode_t docking_mode) override;
+      cef_docking_mode_t docking_mode,
+      bool can_activate) override;
   void ShowMenu(CefRefPtr<CefMenuModel> menu_model,
                 const CefPoint& screen_point,
                 cef_menu_anchor_position_t anchor_position) override;
@@ -73,7 +78,7 @@ class CefWindowImpl
   void SetDraggableRegions(
       const std::vector<CefDraggableRegion>& regions) override;
   CefWindowHandle GetWindowHandle() override;
-  void SendKeyPress(int key_code, uint32 event_flags) override;
+  void SendKeyPress(int key_code, uint32_t event_flags) override;
   void SendMouseMove(int screen_x, int screen_y) override;
   void SendMouseEvents(cef_mouse_button_type_t button,
                        bool mouse_down,
@@ -82,9 +87,13 @@ class CefWindowImpl
                       int key_code,
                       bool shift_pressed,
                       bool ctrl_pressed,
-                      bool alt_pressed) override;
+                      bool alt_pressed,
+                      bool high_priority) override;
   void RemoveAccelerator(int command_id) override;
   void RemoveAllAccelerators() override;
+  void SetThemeColor(int color_id, cef_color_t color) override;
+  void ThemeChanged() override;
+  cef_runtime_style_t GetRuntimeStyle() override;
 
   // CefViewAdapter methods:
   void Detach() override;
@@ -111,8 +120,7 @@ class CefWindowImpl
 
   // CefViewAdapter methods:
   std::string GetDebugType() override { return "Window"; }
-  void GetDebugInfo(base::DictionaryValue* info,
-                    bool include_children) override;
+  void GetDebugInfo(base::Value::Dict* info, bool include_children) override;
 
   // ui::AcceleratorTarget methods:
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
@@ -128,7 +136,10 @@ class CefWindowImpl
                 cef_menu_anchor_position_t anchor_position);
   void MenuClosed();
 
+  CefWindowView* cef_window_view() const;
+
   views::Widget* widget() const { return widget_; }
+  bool initialized() const { return initialized_; }
 
  private:
   // Create a new implementation object.
@@ -141,12 +152,15 @@ class CefWindowImpl
   void InitializeRootView() override;
 
   // Initialize the Widget.
-  void CreateWidget();
+  void CreateWidget(gfx::AcceleratedWidget parent_widget);
 
-  views::Widget* widget_;
+  raw_ptr<views::Widget> widget_ = nullptr;
+
+  // True if the window has been initialized.
+  bool initialized_ = false;
 
   // True if the window has been destroyed.
-  bool destroyed_;
+  bool destroyed_ = false;
 
   // The currently active menu model and runner.
   CefRefPtr<CefMenuModelImpl> menu_model_;
@@ -160,6 +174,9 @@ class CefWindowImpl
   // Native widget's handler to receive events after the event target.
   std::unique_ptr<ui::EventHandler> unhandled_key_event_handler_;
 #endif
+
+  // True if this window was shown using ShowAsBrowserModalDialog().
+  bool shown_as_browser_modal_ = false;
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(CefWindowImpl);
 };

@@ -3,25 +3,26 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/browser/net_service/browser_urlrequest_impl.h"
+#include "cef/libcef/browser/net_service/browser_urlrequest_impl.h"
 
+#include <memory>
 #include <string>
 #include <utility>
-
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/net_service/url_loader_factory_getter.h"
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
-#include "libcef/common/response_impl.h"
-#include "libcef/common/task_runner_impl.h"
 
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/memory/weak_ptr.h"
+#include "base/notimplemented.h"
 #include "base/strings/string_util.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/net_service/url_loader_factory_getter.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
+#include "cef/libcef/common/request_impl.h"
+#include "cef/libcef/common/response_impl.h"
+#include "cef/libcef/common/task_runner_impl.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/storage_partition_impl.h"
 #include "content/public/browser/browser_context.h"
@@ -59,7 +60,7 @@ bool IsValidRequestID(int32_t request_id) {
 // Manages the mapping of request IDs to request objects.
 class RequestManager {
  public:
-  RequestManager() {}
+  RequestManager() = default;
 
   RequestManager(const RequestManager&) = delete;
   RequestManager& operator=(const RequestManager&) = delete;
@@ -77,8 +78,9 @@ class RequestManager {
   }
 
   void Remove(int32_t request_id) {
-    if (request_id > kInitialRequestID)
+    if (request_id > kInitialRequestID) {
       return;
+    }
 
     base::AutoLock lock_scope(lock_);
     RequestMap::iterator it = map_.find(request_id);
@@ -86,16 +88,17 @@ class RequestManager {
     map_.erase(it);
   }
 
-  absl::optional<CefBrowserURLRequest::RequestInfo> Get(int32_t request_id) {
-    if (request_id > kInitialRequestID)
-      return absl::nullopt;
+  std::optional<CefBrowserURLRequest::RequestInfo> Get(int32_t request_id) {
+    if (request_id > kInitialRequestID) {
+      return std::nullopt;
+    }
 
     base::AutoLock lock_scope(lock_);
     RequestMap::const_iterator it = map_.find(request_id);
     if (it != map_.end()) {
       return it->second;
     }
-    return absl::nullopt;
+    return std::nullopt;
   }
 
  private:
@@ -143,8 +146,9 @@ class CefBrowserURLRequest::Context
     DCHECK(CalledOnValidThread());
 
     const GURL& url = GURL(request_->GetURL().ToString());
-    if (!url.is_valid())
+    if (!url.is_valid()) {
       return false;
+    }
 
     if (!request_context_) {
       request_context_ = CefRequestContext::GetGlobalContext();
@@ -166,8 +170,9 @@ class CefBrowserURLRequest::Context
     DCHECK(CalledOnValidThread());
 
     // The request may already be complete or canceled.
-    if (!url_request_)
+    if (!url_request_) {
       return;
+    }
 
     DCHECK_EQ(status_, UR_IO_PENDING);
     status_ = UR_CANCELED;
@@ -198,14 +203,8 @@ class CefBrowserURLRequest::Context
       scoped_refptr<base::SequencedTaskRunner> task_runner) {
     CEF_REQUIRE_UIT();
 
-    // Get or create the request context and browser context.
-    CefRefPtr<CefRequestContextImpl> request_context_impl =
-        CefRequestContextImpl::GetOrCreateForRequestContext(request_context);
-    CHECK(request_context_impl);
-    CefBrowserContext* cef_browser_context =
-        request_context_impl->GetBrowserContext();
-    CHECK(cef_browser_context);
-    auto browser_context = cef_browser_context->AsBrowserContext();
+    auto* browser_context =
+        CefRequestContextImpl::GetBrowserContext(request_context);
     CHECK(browser_context);
 
     scoped_refptr<net_service::URLLoaderFactoryGetter> loader_factory_getter;
@@ -233,7 +232,8 @@ class CefBrowserURLRequest::Context
       url_loader_network_observer =
           static_cast<content::StoragePartitionImpl*>(
               browser_context->GetDefaultStoragePartition())
-              ->CreateAuthCertObserverForServiceWorker();
+              ->CreateURLLoaderNetworkObserverForServiceOrSharedWorker(
+                  content::ChildProcessHost::kInvalidUniqueID, url::Origin());
     }
 
     task_runner->PostTask(
@@ -252,8 +252,9 @@ class CefBrowserURLRequest::Context
     DCHECK(CalledOnValidThread());
 
     // The request may have been canceled.
-    if (!url_request_)
+    if (!url_request_) {
       return;
+    }
 
     if (!loader_factory_getter) {
       // Cancel the request immediately.
@@ -300,7 +301,7 @@ class CefBrowserURLRequest::Context
     auto request_body = resource_request->request_body;
     resource_request->request_body = nullptr;
 
-    std::string content_type;
+    std::optional<std::string> content_type;
     std::string method = resource_request->method;
     if (request_body) {
       if (method == "GET" || method == "HEAD") {
@@ -312,8 +313,8 @@ class CefBrowserURLRequest::Context
         request_->SetMethod(method);
         request_->SetReadOnly(true);
       }
-      resource_request->headers.GetHeader(net::HttpRequestHeaders::kContentType,
-                                          &content_type);
+      content_type = resource_request->headers.GetHeader(
+          net::HttpRequestHeaders::kContentType);
     }
 
     loader_ = network::SimpleURLLoader::Create(std::move(resource_request),
@@ -329,25 +330,30 @@ class CefBrowserURLRequest::Context
         const auto& element = (*request_body->elements())[0];
         if (element.type() == network::DataElement::Tag::kFile) {
           const auto& file_element = element.As<network::DataElementFile>();
-          if (content_type.empty()) {
+          if (!content_type.has_value() || content_type->empty()) {
             const auto& extension = file_element.path().Extension();
             if (!extension.empty()) {
               // Requests should not block on the disk! On POSIX this goes to
               // disk. http://code.google.com/p/chromium/issues/detail?id=59849
-              base::ThreadRestrictions::ScopedAllowIO allow_io;
+              base::ScopedAllowBlockingForTesting allow_blocking;
               // Also remove the leading period.
-              net::GetMimeTypeFromExtension(extension.substr(1), &content_type);
+              std::string extension_content_type;
+              if (net::GetMimeTypeFromExtension(extension.substr(1),
+                                                &extension_content_type)) {
+                content_type = extension_content_type;
+              }
             }
           }
-          loader_->AttachFileForUpload(file_element.path(), content_type);
+          loader_->AttachFileForUpload(file_element.path(),
+                                       content_type.value_or(std::string()));
         } else if (element.type() == network::DataElement::Tag::kBytes) {
           const auto& bytes_element = element.As<network::DataElementBytes>();
           const auto& bytes = bytes_element.bytes();
-          if (content_type.empty()) {
+          if (!content_type.has_value() || content_type->empty()) {
             content_type = net_service::kContentTypeApplicationFormURLEncoded;
           }
           loader_->AttachStringForUpload(
-              std::string(bytes_element.AsStringPiece()), content_type);
+              std::string(bytes_element.AsStringPiece()), *content_type);
 
           if (request_flags & UR_FLAG_REPORT_UPLOAD_PROGRESS) {
             // Report the expected upload data size.
@@ -418,7 +424,8 @@ class CefBrowserURLRequest::Context
       // Match the previous behavior of sending download progress notifications
       // for UR_FLAG_NO_DOWNLOAD_DATA requests but not HEAD requests.
       if (request_->GetMethod().ToString() != "HEAD") {
-        download_data_size_ = headers->GetContentLength();
+        download_data_size_ =
+            headers->GetContentLength().value_or(base::ByteCount(-1)).InBytes();
         OnDownloadProgress(0);
       }
 
@@ -428,7 +435,8 @@ class CefBrowserURLRequest::Context
     }
   }
 
-  void OnRedirect(const net::RedirectInfo& redirect_info,
+  void OnRedirect(const GURL& url_before_redirect,
+                  const net::RedirectInfo& redirect_info,
                   const network::mojom::URLResponseHead& response_head,
                   std::vector<std::string>* removed_headers) {
     DCHECK(CalledOnValidThread());
@@ -463,8 +471,9 @@ class CefBrowserURLRequest::Context
     DCHECK_EQ(status_, UR_IO_PENDING);
 
     upload_data_size_ = total;
-    if (position == total)
+    if (position == total) {
       got_upload_progress_complete_ = true;
+    }
 
     client_->OnUploadProgress(url_request_.get(), position, total);
   }
@@ -497,7 +506,7 @@ class CefBrowserURLRequest::Context
   }
 
   // SimpleURLLoaderStreamConsumer methods:
-  void OnDataReceived(base::StringPiece string_piece,
+  void OnDataReceived(std::string_view string_piece,
                       base::OnceClosure resume) override {
     DCHECK(CalledOnValidThread());
     DCHECK_EQ(status_, UR_IO_PENDING);
@@ -511,8 +520,9 @@ class CefBrowserURLRequest::Context
     DCHECK(CalledOnValidThread());
 
     // The request may already be complete or canceled.
-    if (!url_request_)
+    if (!url_request_) {
       return;
+    }
 
     // Status will be UR_IO_PENDING if we're called when the request is complete
     // (via SimpleURLLoaderStreamConsumer or OnHeadersOnly). We can only call
@@ -528,8 +538,9 @@ class CefBrowserURLRequest::Context
       response_was_cached_ = loader_->LoadedFromCache();
     }
 
-    if (success)
+    if (success) {
       NotifyUploadProgressIfNecessary();
+    }
 
     client_->OnRequestComplete(url_request_.get());
 
@@ -591,8 +602,8 @@ class CefBrowserURLRequest::Context
   CefURLRequest::Status status_ = UR_IO_PENDING;
   CefRefPtr<CefResponseImpl> response_;
   bool response_was_cached_ = false;
-  int64 upload_data_size_ = 0;
-  int64 download_data_size_ = -1;
+  int64_t upload_data_size_ = 0;
+  int64_t download_data_size_ = -1;
   bool got_upload_progress_complete_ = false;
   bool cleanup_immediately_ = false;
 
@@ -603,16 +614,16 @@ class CefBrowserURLRequest::Context
 // CefBrowserURLRequest -------------------------------------------------------
 
 // static
-absl::optional<CefBrowserURLRequest::RequestInfo>
+std::optional<CefBrowserURLRequest::RequestInfo>
 CefBrowserURLRequest::FromRequestID(int32_t request_id) {
   if (IsValidRequestID(request_id)) {
     return g_manager.Get().Get(request_id);
   }
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 // static
-absl::optional<CefBrowserURLRequest::RequestInfo>
+std::optional<CefBrowserURLRequest::RequestInfo>
 CefBrowserURLRequest::FromRequestID(
     const content::GlobalRequestID& request_id) {
   return FromRequestID(request_id.request_id);
@@ -623,62 +634,71 @@ CefBrowserURLRequest::CefBrowserURLRequest(
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefURLRequestClient> client,
     CefRefPtr<CefRequestContext> request_context) {
-  context_.reset(new Context(this, frame, request, client, request_context));
+  context_ =
+      std::make_unique<Context>(this, frame, request, client, request_context);
 }
 
-CefBrowserURLRequest::~CefBrowserURLRequest() {}
+CefBrowserURLRequest::~CefBrowserURLRequest() = default;
 
 bool CefBrowserURLRequest::Start() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
   return context_->Start();
 }
 
 CefRefPtr<CefRequest> CefBrowserURLRequest::GetRequest() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return nullptr;
+  }
   return context_->request();
 }
 
 CefRefPtr<CefURLRequestClient> CefBrowserURLRequest::GetClient() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return nullptr;
+  }
   return context_->client();
 }
 
 CefURLRequest::Status CefBrowserURLRequest::GetRequestStatus() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return UR_UNKNOWN;
+  }
   return context_->status();
 }
 
 CefURLRequest::ErrorCode CefBrowserURLRequest::GetRequestError() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return ERR_NONE;
+  }
   return context_->response()->GetError();
 }
 
 CefRefPtr<CefResponse> CefBrowserURLRequest::GetResponse() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return nullptr;
+  }
   return context_->response();
 }
 
 bool CefBrowserURLRequest::ResponseWasCached() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return false;
+  }
   return context_->response_was_cached();
 }
 
 void CefBrowserURLRequest::Cancel() {
-  if (!VerifyContext())
+  if (!VerifyContext()) {
     return;
+  }
   return context_->Cancel();
 }
 
 bool CefBrowserURLRequest::VerifyContext() {
   if (!context_->CalledOnValidThread()) {
-    NOTREACHED() << "called on invalid thread";
+    DCHECK(false) << "called on invalid thread";
     return false;
   }
 

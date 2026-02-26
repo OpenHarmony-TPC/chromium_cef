@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
 #include "base/timer/timer.h"
@@ -41,7 +42,6 @@ class CefTouchSelectionControllerClientOSR
   ~CefTouchSelectionControllerClientOSR() override;
 
   void CloseQuickMenuAndHideHandles();
-  void SetTemporarilyHidden(bool hidden);
 
   void OnWindowMoved();
 
@@ -70,6 +70,10 @@ class CefTouchSelectionControllerClientOSR
 
   // TouchSelectionControllerClientManager.
   void DidStopFlinging() override;
+  void OnSwipeToMoveCursorBegin() override;
+  void OnSwipeToMoveCursorEnd() override;
+  void OnClientHitTestRegionUpdated(
+      ui::TouchSelectionControllerClient* client) override;
   void UpdateClientSelectionBounds(
       const gfx::SelectionBound& start,
       const gfx::SelectionBound& end,
@@ -81,8 +85,6 @@ class CefTouchSelectionControllerClientOSR
       TouchSelectionControllerClientManager::Observer* observer) override;
   void RemoveObserver(
       TouchSelectionControllerClientManager::Observer* observer) override;
-
-  bool NeedPopupInsertTouchHandleQuickMenu();
 
  private:
   class EnvEventObserver;
@@ -111,18 +113,14 @@ class CefTouchSelectionControllerClientOSR
   void RunContextMenu() override;
   bool ShouldShowQuickMenu() override;
   std::u16string GetSelectedText() override;
-#if defined(OHOS_NWEB_EX)
-  void SelectionTextNotEmpty(bool has_selection);
-#endif
-  void NotifyTouchSelectionChanged(bool need_report);
-  void RunQuickMenu();
+
   // Not owned, non-null for the lifetime of this object.
-  CefRenderWidgetHostViewOSR* rwhv_;
+  raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
 
   class InternalClient final : public ui::TouchSelectionControllerClient {
    public:
     explicit InternalClient(CefRenderWidgetHostViewOSR* rwhv) : rwhv_(rwhv) {}
-    ~InternalClient() final {}
+    ~InternalClient() final = default;
 
     bool SupportsAnimation() const final;
     void SetNeedsAnimate() final;
@@ -137,12 +135,12 @@ class CefTouchSelectionControllerClientOSR
     void DidScroll() override;
 
    private:
-    CefRenderWidgetHostViewOSR* rwhv_;
+    raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
   } internal_client_;
 
   // Keep track of which client interface to use.
-  TouchSelectionControllerClient* active_client_;
-  TouchSelectionMenuClient* active_menu_client_;
+  raw_ptr<TouchSelectionControllerClient> active_client_;
+  raw_ptr<TouchSelectionMenuClient> active_menu_client_;
   gfx::SelectionBound manager_selection_start_;
   gfx::SelectionBound manager_selection_end_;
 
@@ -155,9 +153,6 @@ class CefTouchSelectionControllerClientOSR
   bool touch_down_ = false;
   bool scroll_in_progress_ = false;
   bool handle_drag_in_progress_ = false;
-#if defined(OHOS_NWEB_EX)
-  bool isSelectionTextNotEmpty_ = false;
-#endif
 
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;
 };

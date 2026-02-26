@@ -2,9 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/renderer/frame_impl.h"
+#include "cef/libcef/renderer/frame_impl.h"
 
-#include "base/compiler_specific.h"
+#include "build/build_config.h"
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
@@ -17,150 +17,69 @@
 #endif
 #endif
 
-#include "libcef/common/app_manager.h"
-#include "libcef/common/frame_util.h"
-#include "libcef/common/net/http_header_utils.h"
-#include "libcef/common/process_message_impl.h"
-#include "libcef/common/request_impl.h"
-#include "libcef/common/string_util.h"
-#include "libcef/renderer/blink_glue.h"
-#include "libcef/renderer/browser_impl.h"
-#include "libcef/renderer/dom_document_impl.h"
-#include "libcef/renderer/render_frame_util.h"
-#include "libcef/renderer/render_urlrequest_impl.h"
-#include "libcef/renderer/thread_util.h"
-#include "libcef/renderer/v8_impl.h"
-
+#include "base/strings/string_number_conversions.h"
+#include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/process/process_metrics.h"
-#include "content/public/renderer/render_view.h"
+#include "cef/include/cef_urlrequest.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/frame_util.h"
+#include "cef/libcef/common/net/http_header_utils.h"
+#include "cef/libcef/common/process_message_impl.h"
+#include "cef/libcef/common/process_message_smr_impl.h"
+#include "cef/libcef/common/request_impl.h"
+#include "cef/libcef/common/string_util.h"
+#include "cef/libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/browser_impl.h"
+#include "cef/libcef/renderer/dom_document_impl.h"
+#include "cef/libcef/renderer/render_frame_util.h"
+#include "cef/libcef/renderer/thread_util.h"
+#include "cef/libcef/renderer/v8_impl.h"
 #include "content/renderer/render_frame_impl.h"
-#include "skia/ext/image_operations.h"
-#include "third_party/blink/public/mojom/frame/frame.mojom-blink.h"
-#include "third_party/blink/public/platform/web_back_forward_cache_loader_helper.h"
-#include "third_party/blink/public/platform/web_cache.h"
+#include "third_party/blink/public/platform/scheduler/web_agent_group_scheduler.h"
 #include "third_party/blink/public/platform/web_data.h"
-#include "third_party/blink/public/platform/web_network_state_notifier.h"
 #include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/platform/web_url.h"
 #include "third_party/blink/public/web/blink.h"
 #include "third_party/blink/public/web/web_document.h"
 #include "third_party/blink/public/web/web_document_loader.h"
-#include "third_party/blink/public/web/web_element_collection.h"
 #include "third_party/blink/public/web/web_frame_content_dumper.h"
-#include "third_party/blink/public/web/web_frame_widget.h"
-#include "third_party/blink/public/web/web_hit_test_result.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_navigation_control.h"
 #include "third_party/blink/public/web/web_script_source.h"
 #include "third_party/blink/public/web/web_view.h"
-#include "third_party/skia/include/core/SkBitmap.h"
-#include "ui/base/resource/resource_bundle.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 namespace {
 
 // Maximum number of times to retry the browser connection.
 constexpr size_t kConnectionRetryMaxCt = 3U;
 
-// Length of time to wait before initiating a browser connection retry.
-constexpr auto kConnectionRetryDelay = base::Seconds(1);
+// Length of time to wait before initiating a browser connection retry. The
+// short value is optimized for navigation-related disconnects (time delta
+// between CefFrameImpl::OnDisconnect and CefFrameHostImpl::MaybeReAttach) which
+// should take << 10ms in normal circumstances (reasonably fast machine, limited
+// redirects). The long value is optimized for slower machines or navigations
+// with many redirects to reduce overall failure rates. See related comments in
+// CefFrameImpl::OnDisconnect.
+constexpr auto kConnectionRetryDelayShort = base::Milliseconds(25);
+constexpr auto kConnectionRetryDelayLong = base::Seconds(3);
 
-// Length of time to wait for the browser connection ACK before timing out.
-constexpr auto kConnectionTimeout = base::Seconds(4);
-
-#if BUILDFLAG(IS_OHOS)
-const std::string kAddressPrefix = "geo:0,0?q=";
-const std::string kEmailPrefix = "mailto:";
-const std::string kPhoneNumberPrefix = "tel:";
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
-// 2GB
-const int kNeedImageDownScaleSysMemKB = 2097152;
-
-// The amount of content to overlap between two screens when using
-// pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
-// animated scroll speed.
-static int STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC = 480;
-// Time for the longest scroll animation.
-static int MAX_SCROLL_ANIMATION_DURATION_MILLISEC = 750;
-
-static int DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC = 600;
-
-static double POSITION_RATIO = 138.9;
-
-enum HitTestDataType {
-  kUnknown = 0,
-  kPhone = 2,
-  kGeo = 3,
-  kEmail = 4,
-  kImage = 5,
-  kSrcLink = 7,
-  kSrcImageLink = 8,
-  kEditText = 9,
-};
-
-int computeDurationInMilliSec(int dx, int dy) {
-  int distance = std::max(std::abs(dx), std::abs(dy));
-  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
-  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
+std::string GetDebugString(blink::WebLocalFrame* frame) {
+  return "frame " + render_frame_util::GetIdentifier(frame);
 }
 
-float computeSlidePosition(float v) {
-    return (v * POSITION_RATIO / 1000);
+v8::Isolate* GetFrameIsolate(blink::WebLocalFrame* frame) {
+  return frame->GetAgentGroupScheduler()->Isolate();
 }
-
-int GetSystemTotalMem() {
-  base::SystemMemoryInfoKB meminfo;
-  if (base::GetSystemMemoryInfo(&meminfo)) {
-    return meminfo.total;
-  }
-  LOG(WARNING) << "Get sys meminfo failed";
-  return -1;
-}
-
-bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem) {
-  if (total_mem > kNeedImageDownScaleSysMemKB) {
-    return false;
-  }
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale)
-    return false;
-  return true;
-}
-
-SkBitmap Downscale(const SkBitmap& image, int total_mem) {
-  if (image.isNull())
-    return SkBitmap();
-
-  gfx::Size image_size(image.width(), image.height());
-  if (!NeedsDownscale(image_size, total_mem))
-    return image;
-
-  gfx::SizeF scaled_size = gfx::SizeF(image_size);
-
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale / scaled_size.width());
-  }
-
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale / scaled_size.height());
-  }
-
-  return skia::ImageOperations::Resize(image,
-                                       skia::ImageOperations::RESIZE_GOOD,
-                                       static_cast<int>(scaled_size.width()),
-                                       static_cast<int>(scaled_size.height()));
-}
-
-#endif  // BUILDFLAG(IS_OHOS)
 
 }  // namespace
 
-CefFrameImpl::CefFrameImpl(CefBrowserImpl* browser,
-                           blink::WebLocalFrame* frame,
-                           int64_t frame_id)
-    : browser_(browser), frame_(frame), frame_id_(frame_id) {}
+CefFrameImpl::CefFrameImpl(CefBrowserImpl* browser, blink::WebLocalFrame* frame)
+    : browser_(browser),
+      frame_(frame),
+      frame_debug_str_(GetDebugString(frame)) {}
 
-CefFrameImpl::~CefFrameImpl() {}
+CefFrameImpl::~CefFrameImpl() = default;
 
 bool CefFrameImpl::IsValid() {
   CEF_REQUIRE_RT_RETURN(false);
@@ -188,6 +107,10 @@ void CefFrameImpl::Paste() {
   SendCommand("Paste");
 }
 
+void CefFrameImpl::PasteAndMatchStyle() {
+  SendCommand("PasteAndMatchStyle");
+}
+
 void CefFrameImpl::Delete() {
   SendCommand("Delete");
 }
@@ -197,11 +120,7 @@ void CefFrameImpl::SelectAll() {
 }
 
 void CefFrameImpl::ViewSource() {
-  NOTREACHED() << "ViewSource cannot be called from the renderer process";
-}
-
-void CefFrameImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
-  NOTREACHED() << "GetImages cannot be called from the renderer process";
+  DCHECK(false) << "ViewSource cannot be called from the renderer process";
 }
 
 void CefFrameImpl::GetSource(CefRefPtr<CefStringVisitor> visitor) {
@@ -225,8 +144,9 @@ void CefFrameImpl::GetText(CefRefPtr<CefStringVisitor> visitor) {
 void CefFrameImpl::LoadRequest(CefRefPtr<CefRequest> request) {
   CEF_REQUIRE_RT_RETURN_VOID();
 
-  if (!frame_)
+  if (!frame_) {
     return;
+  }
 
   auto params = cef::mojom::RequestParams::New();
   static_cast<CefRequestImpl*>(request.get())->Get(params);
@@ -236,8 +156,9 @@ void CefFrameImpl::LoadRequest(CefRefPtr<CefRequest> request) {
 void CefFrameImpl::LoadURL(const CefString& url) {
   CEF_REQUIRE_RT_RETURN_VOID();
 
-  if (!frame_)
+  if (!frame_) {
     return;
+  }
 
   auto params = cef::mojom::RequestParams::New();
   params->url = GURL(url.ToString());
@@ -254,16 +175,18 @@ void CefFrameImpl::ExecuteJavaScript(const CefString& jsCode,
 bool CefFrameImpl::IsMain() {
   CEF_REQUIRE_RT_RETURN(false);
 
-  if (frame_)
+  if (frame_) {
     return (frame_->Parent() == nullptr);
+  }
   return false;
 }
 
 bool CefFrameImpl::IsFocused() {
   CEF_REQUIRE_RT_RETURN(false);
 
-  if (frame_ && frame_->View())
+  if (frame_ && frame_->View()) {
     return (frame_->View()->FocusedFrame() == frame_);
+  }
   return false;
 }
 
@@ -271,15 +194,20 @@ CefString CefFrameImpl::GetName() {
   CefString name;
   CEF_REQUIRE_RT_RETURN(name);
 
-  if (frame_)
+  if (frame_) {
     name = render_frame_util::GetName(frame_);
+  }
   return name;
 }
 
-int64 CefFrameImpl::GetIdentifier() {
-  CEF_REQUIRE_RT_RETURN(0);
+CefString CefFrameImpl::GetIdentifier() {
+  CefString identifier;
+  CEF_REQUIRE_RT_RETURN(identifier);
 
-  return frame_id_;
+  if (frame_) {
+    identifier = render_frame_util::GetIdentifier(frame_);
+  }
+  return identifier;
 }
 
 CefRefPtr<CefFrame> CefFrameImpl::GetParent() {
@@ -287,8 +215,9 @@ CefRefPtr<CefFrame> CefFrameImpl::GetParent() {
 
   if (frame_) {
     blink::WebFrame* parent = frame_->Parent();
-    if (parent && parent->IsWebLocalFrame())
+    if (parent && parent->IsWebLocalFrame()) {
       return browser_->GetWebFrameImpl(parent->ToWebLocalFrame()).get();
+    }
   }
 
   return nullptr;
@@ -315,7 +244,7 @@ CefRefPtr<CefV8Context> CefFrameImpl::GetV8Context() {
   CEF_REQUIRE_RT_RETURN(nullptr);
 
   if (frame_) {
-    v8::Isolate* isolate = blink::MainThreadIsolate();
+    v8::Isolate* isolate = GetFrameIsolate(frame_);
     v8::HandleScope handle_scope(isolate);
     return new CefV8ContextImpl(isolate, frame_->MainWorldScriptContext());
   } else {
@@ -326,34 +255,29 @@ CefRefPtr<CefV8Context> CefFrameImpl::GetV8Context() {
 void CefFrameImpl::VisitDOM(CefRefPtr<CefDOMVisitor> visitor) {
   CEF_REQUIRE_RT_RETURN_VOID();
 
-  if (!frame_)
+  if (!frame_) {
     return;
+  }
 
   // Create a CefDOMDocumentImpl object that is valid only for the scope of this
   // method.
   CefRefPtr<CefDOMDocumentImpl> documentImpl;
   const blink::WebDocument& document = frame_->GetDocument();
-  if (!document.IsNull())
+  if (!document.IsNull()) {
     documentImpl = new CefDOMDocumentImpl(browser_, frame_);
+  }
 
   visitor->Visit(documentImpl.get());
 
-  if (documentImpl.get())
+  if (documentImpl.get()) {
     documentImpl->Detach();
+  }
 }
 
 CefRefPtr<CefURLRequest> CefFrameImpl::CreateURLRequest(
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefURLRequestClient> client) {
-  CEF_REQUIRE_RT_RETURN(nullptr);
-
-  if (!request || !client || !frame_)
-    return nullptr;
-
-  CefRefPtr<CefRenderURLRequest> impl =
-      new CefRenderURLRequest(this, request, client);
-  if (impl->Start())
-    return impl.get();
+  DCHECK(false) << "CreateURLRequest cannot be called from the render process";
   return nullptr;
 }
 
@@ -362,83 +286,73 @@ void CefFrameImpl::SendProcessMessage(CefProcessId target_process,
   CEF_REQUIRE_RT_RETURN_VOID();
   DCHECK_EQ(PID_BROWSER, target_process);
   DCHECK(message && message->IsValid());
-  if (!message || !message->IsValid())
+  if (!message || !message->IsValid()) {
     return;
-
-  SendToBrowserFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](CefRefPtr<CefProcessMessage> message,
-             const BrowserFrameType& browser_frame) {
-            auto impl = static_cast<CefProcessMessageImpl*>(message.get());
-            browser_frame->SendMessage(impl->GetName(),
-                                       impl->TakeArgumentList());
-          },
-          message));
-}
-
-std::unique_ptr<blink::WebURLLoader> CefFrameImpl::CreateURLLoader() {
-  CEF_REQUIRE_RT();
-  if (!frame_)
-    return nullptr;
-
-  if (!url_loader_factory_) {
-    auto render_frame = content::RenderFrameImpl::FromWebFrame(frame_);
-    if (render_frame) {
-      url_loader_factory_ = render_frame->CreateURLLoaderFactory();
-    }
   }
-  if (!url_loader_factory_)
-    return nullptr;
 
-  return url_loader_factory_->CreateURLLoader(
-      blink::WebURLRequest(),
-      blink_glue::CreateResourceLoadingTaskRunnerHandle(frame_),
-      blink_glue::CreateResourceLoadingMaybeUnfreezableTaskRunnerHandle(frame_),
-      /*keep_alive_handle=*/mojo::NullRemote(),
-      blink::WebBackForwardCacheLoaderHelper());
-}
-
-std::unique_ptr<blink::ResourceLoadInfoNotifierWrapper>
-CefFrameImpl::CreateResourceLoadInfoNotifierWrapper() {
-  CEF_REQUIRE_RT();
-  if (frame_) {
-    auto render_frame = content::RenderFrameImpl::FromWebFrame(frame_);
-    if (render_frame)
-      return render_frame->CreateResourceLoadInfoNotifierWrapper();
+  if (message->GetArgumentList() != nullptr) {
+    // Invalidate the message object immediately by taking the argument list.
+    auto argument_list =
+        static_cast<CefProcessMessageImpl*>(message.get())->TakeArgumentList();
+    SendToBrowserFrame(
+        __FUNCTION__,
+        base::BindOnce(
+            [](const CefString& name, base::Value::List argument_list,
+               const BrowserFrameType& render_frame) {
+              render_frame->SendMessage(name, std::move(argument_list));
+            },
+            message->GetName(), std::move(argument_list)));
+  } else {
+    auto region =
+        static_cast<CefProcessMessageSMRImpl*>(message.get())->TakeRegion();
+    SendToBrowserFrame(
+        __FUNCTION__,
+        base::BindOnce(
+            [](const CefString& name, base::WritableSharedMemoryRegion region,
+               const BrowserFrameType& render_frame) {
+              render_frame->SendSharedMemoryRegion(name, std::move(region));
+            },
+            message->GetName(), std::move(region)));
   }
-  return nullptr;
-}
-
-void CefFrameImpl::OnAttached() {
-  // Called indirectly from RenderFrameCreated.
-  ConnectBrowserFrame();
 }
 
 void CefFrameImpl::OnWasShown() {
-  if (browser_connection_state_ == ConnectionState::DISCONNECTED) {
-    // Reconnect a frame that has exited the bfcache.
-    ConnectBrowserFrame();
+  if (browser_connection_state_ == ConnectionState::DISCONNECTED &&
+      did_commit_provisional_load_) {
+    // Reconnect a frame that has exited the bfcache. We ignore temporary
+    // frames that have never called DidCommitProvisionalLoad.
+    ConnectBrowserFrame(ConnectReason::WAS_SHOWN);
   }
+}
+
+void CefFrameImpl::OnDidCommitProvisionalLoad() {
+  did_commit_provisional_load_ = true;
+  if (browser_connection_state_ == ConnectionState::DISCONNECTED) {
+    // Connect after RenderFrameImpl::DidCommitNavigation has potentially
+    // reset the BrowserInterfaceBroker in the browser process. See related
+    // comments in OnDisconnect.
+    ConnectBrowserFrame(ConnectReason::DID_COMMIT);
+  }
+  MaybeInitializeScriptContext();
 }
 
 void CefFrameImpl::OnDidFinishLoad() {
   // Ignore notifications from the embedded frame hosting a mime-type plugin.
   // We'll eventually receive a notification from the owner frame.
-  if (blink_glue::HasPluginFrameOwner(frame_))
+  if (blink_glue::HasPluginFrameOwner(frame_)) {
     return;
+  }
+
+  if (!blink::RuntimeEnabledFeatures::BackForwardCacheEnabled() && IsMain()) {
+    // Refresh draggable regions. Otherwise, we may not receive updated regions
+    // after navigation because LocalFrameView::UpdateDocumentAnnotatedRegion
+    // lacks sufficient context. When bfcache is disabled we use this method
+    // instead of DidStopLoading() because it provides more accurate timing.
+    OnDraggableRegionsChanged();
+  }
 
   blink::WebDocumentLoader* dl = frame_->GetDocumentLoader();
-  const int http_status_code = dl->GetResponse().HttpStatusCode();
-
-  SendToBrowserFrame(__FUNCTION__,
-                     base::BindOnce(
-                         [](const GURL& url, int http_status_code,
-                            const BrowserFrameType& browser_frame) {
-                           browser_frame->DidFinishFrameLoad(url,
-                                                             http_status_code);
-                         },
-                         dl->GetUrl(), http_status_code));
+  const int http_status_code = dl->GetWebResponse().HttpStatusCode();
 
   CefRefPtr<CefApp> app = CefAppManager::Get()->GetApplication();
   if (app) {
@@ -453,31 +367,30 @@ void CefFrameImpl::OnDidFinishLoad() {
 }
 
 void CefFrameImpl::OnDraggableRegionsChanged() {
-  // Match the behavior in ChromeRenderFrameObserver::DraggableRegionsChanged.
   // Only the main frame is allowed to control draggable regions, to avoid other
-  // frames manipulate the regions in the browser process.
-  if (frame_->Parent() != nullptr)
+  // frames trying to manipulate the regions in the browser process.
+  if (frame_->Parent() != nullptr) {
     return;
+  }
 
-  blink::WebVector<blink::WebDraggableRegion> webregions =
-      frame_->GetDocument().DraggableRegions();
+  auto webregions = frame_->GetDocument().DraggableRegions();
   std::vector<cef::mojom::DraggableRegionEntryPtr> regions;
   if (!webregions.empty()) {
     auto render_frame = content::RenderFrameImpl::FromWebFrame(frame_);
 
     regions.reserve(webregions.size());
     for (const auto& webregion : webregions) {
-      auto region = cef::mojom::DraggableRegionEntry::New(webregion.bounds,
-                                                          webregion.draggable);
-      render_frame->ConvertViewportToWindow(&region->bounds);
-      regions.push_back(std::move(region));
+      auto region = cef::mojom::DraggableRegionEntry::New(
+          render_frame->ConvertViewportToWindow(webregion.bounds),
+          webregion.draggable);
+      regions.emplace_back(std::move(region));
     }
   }
 
   using RegionsArg =
-      absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>>;
+      std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>>;
   RegionsArg regions_arg =
-      regions.empty() ? absl::nullopt : absl::make_optional(std::move(regions));
+      regions.empty() ? std::nullopt : std::make_optional(std::move(regions));
 
   SendToBrowserFrame(
       __FUNCTION__,
@@ -488,7 +401,7 @@ void CefFrameImpl::OnDraggableRegionsChanged() {
           std::move(regions_arg)));
 }
 
-void CefFrameImpl::OnContextCreated() {
+void CefFrameImpl::OnContextCreated(v8::Local<v8::Context> context) {
   context_created_ = true;
 
   CHECK(frame_);
@@ -497,6 +410,13 @@ void CefFrameImpl::OnContextCreated() {
     std::move(action.second).Run(frame_);
     queued_context_actions_.pop();
   }
+
+  execution_context_lifecycle_state_observer_ =
+      blink_glue::RegisterExecutionContextLifecycleStateObserver(context, this);
+}
+
+void CefFrameImpl::OnContextReleased() {
+  execution_context_lifecycle_state_observer_.reset();
 }
 
 void CefFrameImpl::OnDetached() {
@@ -506,20 +426,17 @@ void CefFrameImpl::OnDetached() {
   // keep |this| alive until after this method returns.
   CefRefPtr<CefFrameImpl> self = this;
 
+  browser_->FrameDetached(frame_);
   frame_ = nullptr;
 
-  browser_->FrameDetached(frame_id_);
-
-  OnBrowserFrameDisconnect();
+  OnDisconnect(DisconnectReason::DETACHED, 0, std::string(), MOJO_RESULT_OK);
 
   browser_ = nullptr;
-  url_loader_factory_.reset();
 
   // In case we never attached.
   while (!queued_browser_actions_.empty()) {
     auto& action = queued_browser_actions_.front();
-    LOG(WARNING) << action.first << " sent to detached frame "
-                 << frame_util::GetFrameDebugString(frame_id_)
+    LOG(WARNING) << action.first << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     queued_browser_actions_.pop();
   }
@@ -527,8 +444,7 @@ void CefFrameImpl::OnDetached() {
   // In case we're destroyed without the context being created.
   while (!queued_context_actions_.empty()) {
     auto& action = queued_context_actions_.front();
-    LOG(WARNING) << action.first << " sent to detached frame "
-                 << frame_util::GetFrameDebugString(frame_id_)
+    LOG(WARNING) << action.first << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     queued_context_actions_.pop();
   }
@@ -539,55 +455,73 @@ void CefFrameImpl::ExecuteOnLocalFrame(const std::string& function_name,
   CEF_REQUIRE_RT_RETURN_VOID();
 
   if (!context_created_) {
-    queued_context_actions_.push(
-        std::make_pair(function_name, std::move(action)));
+    queued_context_actions_.emplace(function_name, std::move(action));
+    MaybeInitializeScriptContext();
     return;
   }
 
   if (frame_) {
     std::move(action).Run(frame_);
   } else {
-    LOG(WARNING) << function_name << " sent to detached frame "
-                 << frame_util::GetFrameDebugString(frame_id_)
+    LOG(WARNING) << function_name << " sent to detached " << frame_debug_str_
                  << " will be ignored";
   }
 }
 
-void CefFrameImpl::ConnectBrowserFrame() {
+void CefFrameImpl::ConnectBrowserFrame(ConnectReason reason) {
   DCHECK(browser_connection_state_ == ConnectionState::DISCONNECTED ||
          browser_connection_state_ == ConnectionState::RECONNECT_PENDING);
+
+  if (VLOG_IS_ON(1)) {
+    std::string reason_str;
+    switch (reason) {
+      case ConnectReason::DID_COMMIT:
+        reason_str = "DID_COMMIT";
+        break;
+      case ConnectReason::WAS_SHOWN:
+        reason_str = "WAS_SHOWN";
+        break;
+      case ConnectReason::RETRY:
+        reason_str = base::StringPrintf(
+            "RETRY %zu/%zu", browser_connect_retry_ct_, kConnectionRetryMaxCt);
+        break;
+    }
+    DVLOG(1) << __func__ << ": " << frame_debug_str_
+             << " connection request (reason=" << reason_str << ")";
+  }
+
+  browser_connect_timer_.Stop();
 
   // Don't attempt to connect an invalid or bfcache'd frame. If a bfcache'd
   // frame returns to active status a reconnect will be triggered via
   // OnWasShown().
-  if (!frame_ || blink_glue::IsInBackForwardCache(frame_)) {
+  if (!frame_ || attach_denied_ || blink_glue::IsInBackForwardCache(frame_)) {
     browser_connection_state_ = ConnectionState::DISCONNECTED;
-    browser_connect_timer_.Stop();
-    LOG(INFO) << "Connection retry canceled for frame "
-              << frame_util::GetFrameDebugString(frame_id_);
+    DVLOG(1) << __func__ << ": " << frame_debug_str_
+             << " connection retry canceled (reason="
+             << (frame_ ? (attach_denied_ ? "ATTACH_DENIED" : "BFCACHED")
+                        : "INVALID")
+             << ")";
     return;
   }
 
-  if (browser_connect_retry_ct_ > 0) {
-    LOG(INFO) << "Connection retry " << browser_connect_retry_ct_ << "/"
-              << kConnectionRetryMaxCt << " for frame "
-              << frame_util::GetFrameDebugString(frame_id_);
-  }
-
   browser_connection_state_ = ConnectionState::CONNECTION_PENDING;
-  browser_connect_timer_.Start(FROM_HERE, kConnectionTimeout, this,
-                               &CefFrameImpl::OnBrowserFrameTimeout);
 
   auto& browser_frame = GetBrowserFrame(/*expect_acked=*/false);
   CHECK(browser_frame);
 
+  // True if this connection is a retry or if the frame just exited the
+  // BackForwardCache.
+  const bool reattached =
+      browser_connect_retry_ct_ > 0 || reason == ConnectReason::WAS_SHOWN;
+
   // If the channel is working we should get a call to FrameAttachedAck().
-  // Otherwise, OnBrowserFrameDisconnect() should be called to retry the
+  // Otherwise, OnDisconnect() should be called to retry the
   // connection.
   browser_frame->FrameAttached(receiver_.BindNewPipeAndPassRemote(),
-                               browser_connect_retry_ct_ > 0);
-  receiver_.set_disconnect_handler(
-      base::BindOnce(&CefFrameImpl::OnBrowserFrameDisconnect, this));
+                               reattached);
+  receiver_.set_disconnect_with_reason_and_result_handler(
+      base::BindOnce(&CefFrameImpl::OnRenderFrameDisconnect, this));
 }
 
 const mojo::Remote<cef::mojom::BrowserFrame>& CefFrameImpl::GetBrowserFrame(
@@ -599,22 +533,95 @@ const mojo::Remote<cef::mojom::BrowserFrame>& CefFrameImpl::GetBrowserFrame(
     auto render_frame = content::RenderFrameImpl::FromWebFrame(frame_);
     if (render_frame) {
       // Triggers creation of a CefBrowserFrame in the browser process.
-      render_frame->GetBrowserInterfaceBroker()->GetInterface(
+      render_frame->GetBrowserInterfaceBroker().GetInterface(
           browser_frame_.BindNewPipeAndPassReceiver());
-      browser_frame_.set_disconnect_handler(
+      browser_frame_.set_disconnect_with_reason_and_result_handler(
           base::BindOnce(&CefFrameImpl::OnBrowserFrameDisconnect, this));
     }
   }
   return browser_frame_;
 }
 
-void CefFrameImpl::OnBrowserFrameTimeout() {
-  LOG(ERROR) << "Connection timeout for frame "
-             << frame_util::GetFrameDebugString(frame_id_);
-  OnBrowserFrameDisconnect();
+void CefFrameImpl::OnBrowserFrameDisconnect(uint32_t custom_reason,
+                                            const std::string& description,
+                                            MojoResult error_result) {
+  OnDisconnect(DisconnectReason::BROWSER_FRAME_DISCONNECT, custom_reason,
+               description, error_result);
 }
 
-void CefFrameImpl::OnBrowserFrameDisconnect() {
+void CefFrameImpl::OnRenderFrameDisconnect(uint32_t custom_reason,
+                                           const std::string& description,
+                                           MojoResult error_result) {
+  OnDisconnect(DisconnectReason::RENDER_FRAME_DISCONNECT, custom_reason,
+               description, error_result);
+}
+
+// static
+std::string CefFrameImpl::GetDisconnectDebugString(
+    ConnectionState connection_state,
+    bool frame_is_valid,
+    bool frame_is_main,
+    DisconnectReason reason,
+    uint32_t custom_reason,
+    const std::string& description,
+    MojoResult error_result) {
+  std::string reason_str;
+  switch (reason) {
+    case DisconnectReason::DETACHED:
+      reason_str = "DETACHED";
+      break;
+    case DisconnectReason::RENDER_FRAME_DISCONNECT:
+      reason_str = "RENDER_FRAME_DISCONNECT";
+      break;
+    case DisconnectReason::BROWSER_FRAME_DISCONNECT:
+      reason_str = "BROWSER_FRAME_DISCONNECT";
+      break;
+  };
+
+  std::string state_str;
+  switch (connection_state) {
+    case ConnectionState::DISCONNECTED:
+      state_str = "DISCONNECTED";
+      break;
+    case ConnectionState::CONNECTION_PENDING:
+      state_str = "CONNECTION_PENDING";
+      break;
+    case ConnectionState::CONNECTION_ACKED:
+      state_str = "CONNECTION_ACKED";
+      break;
+    case ConnectionState::RECONNECT_PENDING:
+      state_str = "RECONNECT_PENDING";
+      break;
+  }
+
+  if (!frame_is_valid) {
+    state_str += ", FRAME_INVALID";
+  } else if (frame_is_main) {
+    state_str += ", MAIN_FRAME";
+  } else {
+    state_str += ", SUB_FRAME";
+  }
+
+  if (custom_reason !=
+      static_cast<uint32_t>(frame_util::ResetReason::kNoReason)) {
+    state_str += ", custom_reason=" + base::NumberToString(custom_reason);
+  }
+
+  if (!description.empty()) {
+    state_str += ", description=" + description;
+  }
+
+  if (error_result != MOJO_RESULT_OK) {
+    state_str += ", error_result=" + base::NumberToString(error_result);
+  }
+
+  return "(reason=" + reason_str + ", current_state=" + state_str + ")";
+}
+
+void CefFrameImpl::OnDisconnect(DisconnectReason reason,
+                                uint32_t custom_reason,
+                                const std::string& description,
+                                MojoResult error_result) {
   // Ignore multiple calls in close proximity (which may occur if both
   // |browser_frame_| and |receiver_| disconnect). |frame_| will be nullptr
   // when called from/after OnDetached().
@@ -623,37 +630,115 @@ void CefFrameImpl::OnBrowserFrameDisconnect() {
     return;
   }
 
+  // Ignore additional calls if we're already disconnected. DETACHED,
+  // RENDER_FRAME_DISCONNECT and/or BROWSER_FRAME_DISCONNECT may arrive in any
+  // order.
+  if (browser_connection_state_ == ConnectionState::DISCONNECTED) {
+    return;
+  }
+
+  const auto connection_state = browser_connection_state_;
+  const bool frame_is_valid = !!frame_;
+  const bool frame_is_main = frame_ && frame_->IsOutermostMainFrame();
+  DVLOG(1) << __func__ << ": " << frame_debug_str_ << " disconnected "
+           << GetDisconnectDebugString(connection_state, frame_is_valid,
+                                       frame_is_main, reason, custom_reason,
+                                       description, error_result);
+
   browser_frame_.reset();
   receiver_.reset();
   browser_connection_state_ = ConnectionState::DISCONNECTED;
-  browser_connect_timer_.Stop();
 
-  // Only retry if the frame is still valid.
-  if (frame_) {
-    if (browser_connect_retry_ct_++ < kConnectionRetryMaxCt) {
-      // Retry after a delay in case the frame is currently navigating, being
-      // destroyed, or entering the bfcache. In the navigation case the retry
-      // will likely succeed. In the destruction case the retry will be
-      // ignored/canceled due to OnDetached(). In the bfcache case the status
-      // may not be updated immediately, so we allow the reconnect timer to
-      // trigger and check the status in ConnectBrowserFrame() instead.
-      browser_connection_state_ = ConnectionState::RECONNECT_PENDING;
-      browser_connect_timer_.Start(FROM_HERE, kConnectionRetryDelay, this,
-                                   &CefFrameImpl::ConnectBrowserFrame);
-    } else {
-      // Trigger a crash in official builds.
-      LOG(FATAL) << "Connection retry failure for frame "
-                 << frame_util::GetFrameDebugString(frame_id_);
-    }
+  // True if the frame was previously bound/connected and then intentionally
+  // detached (Receiver::ResetWithReason called) from the browser process side.
+  const bool connected_and_intentionally_detached =
+      (reason == DisconnectReason::BROWSER_FRAME_DISCONNECT ||
+       reason == DisconnectReason::RENDER_FRAME_DISCONNECT) &&
+      custom_reason !=
+          static_cast<uint32_t>(frame_util::ResetReason::kNoReason);
+
+  // Don't retry if the frame is invalid or if the browser process has
+  // intentionally detached.
+  if (!frame_ || attach_denied_ || connected_and_intentionally_detached) {
+    return;
   }
+
+  // True if the connection was closed (binding declined) from the browser
+  // process side. This can occur during navigation or if a matching
+  // RenderFrameHost is not currently available (like for bfcache'd frames).
+  // When navigating there is a race in the browser process between
+  // BrowserInterfaceBrokerImpl::GetInterface and RenderFrameHostImpl::
+  // DidCommitNavigation. The connection will be closed if the GetInterface call
+  // from the renderer is still in-flight when DidCommitNavigation calls
+  // |broker_receiver_.reset()|. If, however, the GetInterface call arrives
+  // first (BrowserInterfaceBrokerImpl::GetInterface called and the
+  // PendingReceiver bound) then the binding will be successful and remain
+  // connected until the connection is closed for some other reason (like the
+  // Receiver being reset or the renderer process terminating).
+  const bool connection_binding_declined =
+      (reason == DisconnectReason::BROWSER_FRAME_DISCONNECT ||
+       reason == DisconnectReason::RENDER_FRAME_DISCONNECT) &&
+      error_result == MOJO_RESULT_FAILED_PRECONDITION;
+
+  if (browser_connect_retry_ct_++ < kConnectionRetryMaxCt) {
+    DVLOG(1) << __func__ << ": " << frame_debug_str_
+             << " connection retry scheduled (" << browser_connect_retry_ct_
+             << "/" << kConnectionRetryMaxCt << ")";
+    if (!browser_connect_retry_log_.empty()) {
+      browser_connect_retry_log_ += "; ";
+    }
+    browser_connect_retry_log_ += GetDisconnectDebugString(
+        connection_state, frame_is_valid, frame_is_main, reason, custom_reason,
+        description, error_result);
+
+    // Use a shorter delay for the first retry attempt after the browser process
+    // intentionally declines the connection. This will improve load performance
+    // in normal circumstances (reasonably fast machine and navigations with
+    // limited redirects).
+    const auto retry_delay =
+        connection_binding_declined && browser_connect_retry_ct_ == 1
+            ? kConnectionRetryDelayShort
+            : kConnectionRetryDelayLong;
+
+    // Retry after a delay in case the frame is currently navigating or entering
+    // the bfcache. In the navigation case the retry will likely succeed. In the
+    // bfcache case the status may not be updated immediately, so we allow the
+    // reconnect timer to trigger and then check the status in
+    // ConnectBrowserFrame() instead.
+    browser_connection_state_ = ConnectionState::RECONNECT_PENDING;
+    browser_connect_timer_.Start(
+        FROM_HERE, retry_delay,
+        base::BindOnce(&CefFrameImpl::ConnectBrowserFrame, this,
+                       ConnectReason::RETRY));
+    return;
+  }
+
+  DVLOG(1) << __func__ << ": " << frame_debug_str_
+           << " connection retry limit exceeded";
+
+  // Don't crash on retry failures in cases where the browser process has
+  // intentionally declined the connection and we have never been previously
+  // connected. Also don't crash for sub-frame connection failures as those are
+  // less likely to be important functionally. We still crash for other main
+  // frame connection errors or in cases where a previously connected main frame
+  // was disconnected without first being intentionally deleted or detached.
+  const bool ignore_retry_failure =
+      (connection_binding_declined && !ever_connected_) || !frame_is_main;
+
+  // Trigger a crash in official builds.
+  LOG_IF(FATAL, !ignore_retry_failure)
+      << frame_debug_str_ << " connection retry failed "
+      << GetDisconnectDebugString(connection_state, frame_is_valid,
+                                  frame_is_main, reason, custom_reason,
+                                  description, error_result)
+      << ", prior disconnects: " << browser_connect_retry_log_;
 }
 
 void CefFrameImpl::SendToBrowserFrame(const std::string& function_name,
                                       BrowserFrameAction action) {
-  if (!frame_) {
-    // We've been detached.
-    LOG(WARNING) << function_name << " sent to detached frame "
-                 << frame_util::GetFrameDebugString(frame_id_)
+  if (!frame_ || attach_denied_) {
+    // We're detached.
+    LOG(WARNING) << function_name << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     return;
   }
@@ -661,8 +746,7 @@ void CefFrameImpl::SendToBrowserFrame(const std::string& function_name,
   if (browser_connection_state_ != ConnectionState::CONNECTION_ACKED) {
     // Queue actions until we're notified by the browser that it's ready to
     // handle them.
-    queued_browser_actions_.push(
-        std::make_pair(function_name, std::move(action)));
+    queued_browser_actions_.emplace(function_name, std::move(action));
     return;
   }
 
@@ -672,13 +756,53 @@ void CefFrameImpl::SendToBrowserFrame(const std::string& function_name,
   std::move(action).Run(browser_frame);
 }
 
-void CefFrameImpl::FrameAttachedAck() {
+void CefFrameImpl::MaybeInitializeScriptContext() {
+  if (did_initialize_script_context_) {
+    return;
+  }
+
+  if (!did_commit_provisional_load_) {
+    // Too soon for context initialization.
+    return;
+  }
+
+  if (queued_context_actions_.empty()) {
+    // Don't need early context initialization. Avoid it due to performance
+    // consequences.
+    return;
+  }
+
+  did_initialize_script_context_ = true;
+
+  // Explicitly force creation of the script context. This occurred implicitly
+  // via DidCommitProvisionalLoad prior to https://crrev.com/5150754880a.
+  // Otherwise, a script context may never be created for a frame that doesn't
+  // contain JS code.
+  v8::HandleScope handle_scope(GetFrameIsolate(frame_));
+  frame_->MainWorldScriptContext();
+}
+
+void CefFrameImpl::FrameAttachedAck(bool allow) {
   // Sent from the browser process in response to ConnectBrowserFrame() sending
   // FrameAttached().
   CHECK_EQ(ConnectionState::CONNECTION_PENDING, browser_connection_state_);
   browser_connection_state_ = ConnectionState::CONNECTION_ACKED;
   browser_connect_retry_ct_ = 0;
-  browser_connect_timer_.Stop();
+  browser_connect_retry_log_.clear();
+
+  DVLOG(1) << __func__ << ": " << frame_debug_str_
+           << " connection acked allow=" << allow;
+
+  if (!allow) {
+    // This will be followed by a connection disconnect from the browser side.
+    attach_denied_ = true;
+    while (!queued_browser_actions_.empty()) {
+      queued_browser_actions_.pop();
+    }
+    return;
+  }
+
+  ever_connected_ = true;
 
   auto& browser_frame = GetBrowserFrame();
   CHECK(browser_frame);
@@ -689,15 +813,27 @@ void CefFrameImpl::FrameAttachedAck() {
   }
 }
 
-void CefFrameImpl::SendMessage(const std::string& name, base::Value arguments) {
+void CefFrameImpl::SendMessage(const std::string& name,
+                               base::Value::List arguments) {
   if (auto app = CefAppManager::Get()->GetApplication()) {
     if (auto handler = app->GetRenderProcessHandler()) {
-      auto& list_value = base::Value::AsListValue(arguments);
-      CefRefPtr<CefProcessMessageImpl> message(new CefProcessMessageImpl(
-          name, std::move(const_cast<base::ListValue&>(list_value)),
-          /*read_only=*/true));
+      CefRefPtr<CefProcessMessageImpl> message(
+          new CefProcessMessageImpl(name, std::move(arguments),
+                                    /*read_only=*/true));
       handler->OnProcessMessageReceived(browser_, this, PID_BROWSER,
                                         message.get());
+    }
+  }
+}
+
+void CefFrameImpl::SendSharedMemoryRegion(
+    const std::string& name,
+    base::WritableSharedMemoryRegion region) {
+  if (auto app = CefAppManager::Get()->GetApplication()) {
+    if (auto handler = app->GetRenderProcessHandler()) {
+      CefRefPtr<CefProcessMessage> message(
+          new CefProcessMessageSMRImpl(name, std::move(region)));
+      handler->OnProcessMessageReceived(browser_, this, PID_BROWSER, message);
     }
   }
 }
@@ -723,9 +859,9 @@ void CefFrameImpl::SendCommandWithResponse(
              blink::WebLocalFrame* frame) {
             blink::WebString response;
 
-            if (base::LowerCaseEqualsASCII(command, "getsource")) {
+            if (base::EqualsCaseInsensitiveASCII(command, "getsource")) {
               response = blink_glue::DumpDocumentMarkup(frame);
-            } else if (base::LowerCaseEqualsASCII(command, "gettext")) {
+            } else if (base::EqualsCaseInsensitiveASCII(command, "gettext")) {
               response = blink_glue::DumpDocumentText(frame);
             }
 
@@ -768,372 +904,31 @@ void CefFrameImpl::DidStopLoading() {
   // OnLoadingStateChange.
   browser_->OnLoadingStateChange(false);
 
-  // Refresh draggable regions. Otherwise, we may not receive updated regions
-  // after navigation because LocalFrameView::UpdateDocumentAnnotatedRegion
-  // lacks sufficient context.
-  OnDraggableRegionsChanged();
+  if (blink::RuntimeEnabledFeatures::BackForwardCacheEnabled()) {
+    // Refresh draggable regions. Otherwise, we may not receive updated regions
+    // after navigation because LocalFrameView::UpdateDocumentAnnotatedRegion
+    // lacks sufficient context. When bfcache is enabled we can't rely on
+    // OnDidFinishLoad() as the frame may not actually be reloaded.
+    OnDraggableRegionsChanged();
+  }
 }
 
 void CefFrameImpl::MoveOrResizeStarted() {
   if (frame_) {
     auto web_view = frame_->View();
-    if (web_view)
+    if (web_view) {
       web_view->CancelPagePopup();
-  }
-}
-
-#if BUILDFLAG(IS_OHOS)
-void CefFrameImpl::LoadHeaderUrl(const CefString& url,
-                                 const CefString& additionalHttpHeaders) {
-  CEF_REQUIRE_RT_RETURN_VOID();
-
-  if (!frame_)
-    return;
-
-  auto params = cef::mojom::RequestParams::New();
-  params->url = GURL(url.ToString());
-  params->method = "GET";
-  params->headers = additionalHttpHeaders;
-  LoadRequest(std::move(params));
-}
-
-void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
-  if (element.IsNull() || is_update_) {
-    LOG(INFO) << "FocusedHitDataChange element is NULL or no need to report.";
-    is_update_ = false;
-    return;
-  }
-
-  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
-  data->href = element.GetAttribute("href").Utf16();
-  data->anchor_text = element.TextContent().Utf16();
-  GURL absolute_link_url;
-  if (element.IsLink())
-    absolute_link_url = GetAbsoluteUrl(element, data->href);
-  GURL absolute_image_url = GetChildImageUrlFromElement(element);
-  PopulateHitTestData(absolute_link_url, absolute_image_url,
-                      element.IsEditable(), data);
-  cef_hit_data_.type = data->type;
-  cef_hit_data_.extra_data = data->extra_data_for_type;
-}
-
-void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SendHitEvent webview is NULL";
-    return;
-  }
-  const blink::WebHitTestResult result =
-      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
-                                   gfx::Size(params->width, params->height));
-  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
-  GURL absolute_image_url = result.AbsoluteImageURL();
-  if (!result.UrlElement().IsNull()) {
-    data->anchor_text = result.UrlElement().TextContent().Utf16();
-    data->href = result.UrlElement().GetAttribute("href").Utf16();
-    if (absolute_image_url.is_empty())
-      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
-  }
-
-  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
-                      result.IsContentEditable(), data);
-  cef_hit_data_.type = data->type;
-  cef_hit_data_.extra_data = data->extra_data_for_type;
-  is_update_ = true;
-}
-
-void CefFrameImpl::RemoveCache() {
-  blink::WebCache::Clear();
-}
-
-void CefFrameImpl::SetInitialScale(float initialScale) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SetInitialScale webview is NULL";
-    return;
-  }
-  webview->SetInitialPageScaleOverride(initialScale);
-}
-
-void CefFrameImpl::SetJsOnlineProperty(bool network_up) {
-  LOG(INFO) << "SetJsOnlineProperty:" << network_up;
-  blink::WebNetworkStateNotifier::SetOnLine(network_up);
-}
-
-void CefFrameImpl::PutZoomingForTextFactor(float factor) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-
-  if (!webview)
-    return;
-  // Hide selection and autofill popups.
-  webview->CancelPagePopup();
-
-  render_frame->GetWebFrame()->FrameWidget()->SetTextZoomFactor(factor);
-}
-
-void CefFrameImpl::GetImageForContextNode() {
-  if (!frame_) {
-    LOG(ERROR) << "GetImageForContextNode frame is nullptr";
-    return;
-  }
-  if (total_mem_ == -1) {
-    total_mem_ = GetSystemTotalMem();
-  }
-
-  cef::mojom::GetImageForContextNodeParamsPtr params =
-      cef::mojom::GetImageForContextNodeParams::New();
-  blink::WebNode context_node = frame_->ContextMenuImageNode();
-  std::vector<uint8_t> image_data;
-  gfx::Size original_size;
-  std::string image_extension;
-
-  if (context_node.IsNull() || !context_node.IsElementNode()) {
-    SendToBrowserFrame(__FUNCTION__,
-                       base::BindOnce(
-                           [](cef::mojom::GetImageForContextNodeParamsPtr data,
-                              const BrowserFrameType& browser_frame) {
-                             browser_frame->OnGetImageForContextNodeNull();
-                           },
-                           std::move(params)));
-    return;
-  }
-
-  blink::WebElement web_element = context_node.To<blink::WebElement>();
-  original_size = web_element.GetImageSize();
-
-  SkBitmap image = web_element.ImageContents();
-  SkBitmap resize_image = Downscale(image, total_mem_);
-  image_extension = "." + web_element.ImageExtension();
-  params->width = resize_image.width();
-  params->height = resize_image.height();
-  params->image = resize_image;
-  params->image_extension = image_extension;
-  SendToBrowserFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](cef::mojom::GetImageForContextNodeParamsPtr data,
-             const BrowserFrameType& browser_frame) {
-            browser_frame->OnGetImageForContextNode(std::move(data));
-          },
-          std::move(params)));
-}
-
-GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
-                                  const std::u16string& url_fragment) {
-  return GURL(node.GetDocument().CompleteURL(
-      blink::WebString::FromUTF16(url_fragment)));
-}
-
-GURL CefFrameImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
-  if (element.IsNull())
-    return GURL();
-  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
-}
-
-blink::WebElement CefFrameImpl::GetImgChild(const blink::WebNode& node) {
-  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
-  DCHECK(!collection.IsNull());
-  return collection.FirstItem();
-}
-
-GURL CefFrameImpl::GetChildImageUrlFromElement(
-    const blink::WebElement& element) {
-  const blink::WebElement child_img = GetImgChild(element);
-  if (child_img.IsNull())
-    return GURL();
-  return GetAbsoluteSrcUrl(child_img);
-}
-
-bool CefFrameImpl::RemovePrefixAndAssignIfMatches(const std::string prefix,
-                                                  const GURL& url,
-                                                  std::string* dest) {
-  const base::StringPiece spec(url.possibly_invalid_spec());
-
-  if (base::StartsWith(spec, prefix)) {
-    url::RawCanonOutputW<1024> output;
-    url::DecodeURLEscapeSequences(
-        spec.data() + prefix.length(), spec.length() - prefix.length(),
-        url::DecodeURLMode::kUTF8OrIsomorphic, &output);
-    *dest =
-        base::UTF16ToUTF8(base::StringPiece16(output.data(), output.length()));
-    return true;
-  }
-  return false;
-}
-
-void CefFrameImpl::DistinguishAndAssignSrcLinkType(
-    const GURL& url,
-    cef::mojom::HitDataParamsPtr& data) {
-  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
-                                     &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kGeo;
-  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kPhone;
-  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kEmail;
-  } else {
-    data->type = HitTestDataType::kSrcLink;
-    data->extra_data_for_type = url.possibly_invalid_spec();
-    if (!data->extra_data_for_type.empty())
-      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
-  }
-}
-
-void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
-                                       const GURL& absolute_image_url,
-                                       bool is_editable,
-                                       cef::mojom::HitDataParamsPtr& data) {
-  if (!absolute_image_url.is_empty())
-    data->img_src = absolute_image_url;
-
-  const bool is_javascript_scheme =
-      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
-  const bool has_link_url = !absolute_link_url.is_empty();
-  const bool has_image_url = !absolute_image_url.is_empty();
-  if (has_link_url && !has_image_url && !is_javascript_scheme) {
-    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
-  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
-    data->type = HitTestDataType::kSrcImageLink;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-    if (absolute_link_url.is_valid())
-      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
-  } else if (!has_link_url && has_image_url) {
-    data->type = HitTestDataType::kImage;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-  } else if (is_editable) {
-    data->type = HitTestDataType::kEditText;
-    DCHECK_EQ(0u, data->extra_data_for_type.length());
-  }
-}
-
-void CefFrameImpl::UpdateLocale(const std::string& locale) {
-  if (!ui::ResourceBundle::HasSharedInstance() ||
-      !ui::ResourceBundle::LocaleDataPakExists(locale)) {
-    LOG(ERROR) << "CefFrameImpl update locale failed";
-    return;
-  }
-  std::string origin_locale =
-      ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
-  if (origin_locale == locale) {
-    LOG(ERROR) << "CefFrameImpl UpdateLocale no need to update locale";
-    return;
-  }
-  std::string result =
-      ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(locale);
-  if (result.empty()) {
-    LOG(ERROR) << "CefFrameImpl update locale failed";
-  }
-}
-
-void CefFrameImpl::GetImagesWithResponse(
-    cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) {
-  ExecuteOnLocalFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](cef::mojom::RenderFrame::GetImagesWithResponseCallback callback,
-             blink::WebLocalFrame* frame) {
-            blink::WebElementCollection collection =
-                frame->GetDocument().GetElementsByHTMLTagName("img");
-            DCHECK(!collection.IsNull());
-            bool response = !(collection.FirstItem()).IsNull();
-            std::move(callback).Run(response);
-          },
-          std::move(callback)));
-}
-
-void CefFrameImpl::ScrollPageUpDown(bool is_up,
-                                    bool is_half,
-                                    float view_height) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scorll page up down get webview failed";
-    return;
-  }
-  auto scroll_offset = webview->GetScrollOffset();
-  float dy;
-  if (is_up) {
-    dy = is_half ? (-view_height / 2) : -scroll_offset.y();
-  } else {
-    if (!is_half) {
-      float bottom_y = webview->GetScrollBottom();
-      if (bottom_y <= 0) {
-        LOG(ERROR) << "get scroll bottom offset failed.";
-        return;
-      }
-      dy = bottom_y - scroll_offset.y();
-    } else {
-      dy = view_height / 2;
     }
   }
-  webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
-                        base::Milliseconds(computeDurationInMilliSec(0, dy)));
 }
 
-void CefFrameImpl::ScrollTo(float x, float y) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollto get webview failed";
-    return;
+void CefFrameImpl::ContextLifecycleStateChanged(
+    blink::mojom::blink::FrameLifecycleState state) {
+  if (state == blink::mojom::FrameLifecycleState::kFrozen && IsMain() &&
+      blink_glue::IsInBackForwardCache(frame_)) {
+    browser_->OnEnterBFCache();
   }
-  webview->SetScrollOffset(gfx::PointF(x, y));
 }
-
-void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollby get webview failed";
-    return;
-  }
-  auto scroll_offset = webview->GetScrollOffset();
-  webview->SetScrollOffset(gfx::PointF(delta_x + scroll_offset.x(),
-                           delta_y + scroll_offset.y()));
-}
-
-void CefFrameImpl::SlideScroll(float vx, float vy) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollby get webview failed";
-    return;
-  }
-  float dx = vx == 0 ? 0 : computeSlidePosition(vx);
-  float dy = vy == 0 ? 0 : computeSlidePosition(vy);
-  auto scroll_offset = webview->GetScrollOffset();
-  webview->SmoothScroll(dx + scroll_offset.x(), dy + scroll_offset.y(),
-                        base::Milliseconds(DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC));
-}
-
-void CefFrameImpl::ZoomBy(float delta, float width, float height) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  render_frame->SetZoomLevel(delta, gfx::Point(width / 2, height / 2));
-}
-
-void CefFrameImpl::GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) {
-  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
-}
-
-void CefFrameImpl::SetOverscrollMode(int mode) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  render_frame->SetOverscrollMode(mode);
-}
-#endif  // BUILDFLAG(IS_OHOS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)

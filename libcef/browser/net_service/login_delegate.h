@@ -5,9 +5,8 @@
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_LOGIN_DELEGATE_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_LOGIN_DELEGATE_H_
 
-#include "include/cef_base.h"
-
 #include "base/memory/weak_ptr.h"
+#include "cef/include/cef_base.h"
 #include "content/public/browser/content_browser_client.h"
 #include "content/public/browser/login_delegate.h"
 #include "net/base/auth.h"
@@ -30,7 +29,7 @@ class LoginDelegate : public content::LoginDelegate {
                 content::WebContents* web_contents,
                 const content::GlobalRequestID& request_id,
                 const GURL& origin_url,
-                LoginAuthRequiredCallback callback);
+                content::LoginDelegate::LoginAuthRequiredCallback callback);
 
   void Continue(const CefString& username, const CefString& password);
   void Cancel();
@@ -41,7 +40,7 @@ class LoginDelegate : public content::LoginDelegate {
              const content::GlobalRequestID& request_id,
              const GURL& origin_url);
 
-  LoginAuthRequiredCallback callback_;
+  content::LoginDelegate::LoginAuthRequiredCallback callback_;
   base::WeakPtrFactory<LoginDelegate> weak_ptr_factory_;
 };
 

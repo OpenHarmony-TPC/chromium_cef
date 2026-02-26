@@ -6,26 +6,25 @@
 #define CEF_LIBCEF_RENDERER_THREAD_UTIL_H_
 #pragma once
 
-#include "libcef/common/task_runner_manager.h"
-
 #include "base/location.h"
 #include "base/logging.h"
+#include "cef/libcef/common/task_runner_manager.h"
 #include "content/public/renderer/render_thread.h"
 
 #define CEF_CURRENTLY_ON_RT() (!!content::RenderThread::Get())
 
 #define CEF_REQUIRE_RT() DCHECK(CEF_CURRENTLY_ON_RT())
 
-#define CEF_REQUIRE_RT_RETURN(var)              \
-  if (!CEF_CURRENTLY_ON_RT()) {                 \
-    NOTREACHED() << "called on invalid thread"; \
-    return var;                                 \
+#define CEF_REQUIRE_RT_RETURN(var)               \
+  if (!CEF_CURRENTLY_ON_RT()) {                  \
+    DCHECK(false) << "called on invalid thread"; \
+    return var;                                  \
   }
 
-#define CEF_REQUIRE_RT_RETURN_VOID()            \
-  if (!CEF_CURRENTLY_ON_RT()) {                 \
-    NOTREACHED() << "called on invalid thread"; \
-    return;                                     \
+#define CEF_REQUIRE_RT_RETURN_VOID()             \
+  if (!CEF_CURRENTLY_ON_RT()) {                  \
+    DCHECK(false) << "called on invalid thread"; \
+    return;                                      \
   }
 
 #define CEF_RENDER_TASK_RUNNER() \

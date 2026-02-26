@@ -9,19 +9,15 @@
 #include <queue>
 #include <string>
 
-#include "include/cef_frame.h"
-#include "include/cef_v8.h"
-
 #include "base/memory/weak_ptr.h"
 #include "base/timer/timer.h"
+#include "cef/include/cef_frame.h"
+#include "cef/include/cef_v8.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
+#include "cef/libcef/renderer/blink_glue.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "third_party/blink/public/web/web_element.h"
-#endif  // BUILDFLAG(IS_OHOS)
 
 namespace base {
 class ListValue;
@@ -30,8 +26,6 @@ class ListValue;
 namespace blink {
 class ResourceLoadInfoNotifierWrapper;
 class WebLocalFrame;
-class WebURLLoader;
-class WebURLLoaderFactory;
 }  // namespace blink
 
 class GURL;
@@ -41,11 +35,12 @@ class CefBrowserImpl;
 // Implementation of CefFrame. CefFrameImpl objects are owned by the
 // CefBrowerImpl and will be detached when the browser is notified that the
 // associated renderer WebFrame will close.
-class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
+class CefFrameImpl
+    : public CefFrame,
+      public cef::mojom::RenderFrame,
+      public blink_glue::CefExecutionContextLifecycleStateObserver {
  public:
-  CefFrameImpl(CefBrowserImpl* browser,
-               blink::WebLocalFrame* frame,
-               int64_t frame_id);
+  CefFrameImpl(CefBrowserImpl* browser, blink::WebLocalFrame* frame);
 
   CefFrameImpl(const CefFrameImpl&) = delete;
   CefFrameImpl& operator=(const CefFrameImpl&) = delete;
@@ -59,6 +54,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void Cut() override;
   void Copy() override;
   void Paste() override;
+  void PasteAndMatchStyle() override;
   void Delete() override;
   void SelectAll() override;
   void ViewSource() override;
@@ -72,7 +68,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   bool IsMain() override;
   bool IsFocused() override;
   CefString GetName() override;
-  int64 GetIdentifier() override;
+  CefString GetIdentifier() override;
   CefRefPtr<CefFrame> GetParent() override;
   CefString GetURL() override;
   CefRefPtr<CefBrowser> GetBrowser() override;
@@ -83,31 +79,23 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
       CefRefPtr<CefURLRequestClient> client) override;
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
-  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
-  void PostURL(const CefString& url, const std::vector<char>& post_data) override {};
-
-  // Used by CefRenderURLRequest.
-  std::unique_ptr<blink::WebURLLoader> CreateURLLoader();
-  std::unique_ptr<blink::ResourceLoadInfoNotifierWrapper>
-  CreateResourceLoadInfoNotifierWrapper();
 
   // Forwarded from CefRenderFrameObserver.
-  void OnAttached();
   void OnWasShown();
+  void OnDidCommitProvisionalLoad();
   void OnDidFinishLoad();
-  void OnDraggableRegionsChanged();
-  void OnContextCreated();
+  void OnContextCreated(v8::Local<v8::Context> context);
+  void OnContextReleased();
   void OnDetached();
 
   blink::WebLocalFrame* web_frame() const { return frame_; }
 
-#if BUILDFLAG(IS_OHOS)
-  void LoadHeaderUrl(const CefString& url,
-                     const CefString& additionalHttpHeaders) override;
-  void OnFocusedNodeChanged(const blink::WebElement& element);
-#endif  // BUILDFLAG(IS_OHOS)
-
  private:
+  // Called for draggable region changes due to navigation. This is in addition
+  // to the standard notifications delivered via
+  // WebContentsDelegate::DraggableRegionsChanged.
+  void OnDraggableRegionsChanged();
+
   // Execute an action on the associated WebLocalFrame. This will queue the
   // action if the JavaScript context is not yet created.
   using LocalFrameAction =
@@ -115,20 +103,41 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void ExecuteOnLocalFrame(const std::string& function_name,
                            LocalFrameAction action);
 
+  enum class ConnectReason {
+    DID_COMMIT,
+    WAS_SHOWN,
+    RETRY,
+  };
+
   // Initiate the connection to the BrowserFrame channel.
-  void ConnectBrowserFrame();
+  void ConnectBrowserFrame(ConnectReason reason);
 
   // Returns the remote BrowserFrame object.
   using BrowserFrameType = mojo::Remote<cef::mojom::BrowserFrame>;
   const BrowserFrameType& GetBrowserFrame(bool expect_acked = true);
 
-  // Called if the BrowserFrame connection attempt times out.
-  void OnBrowserFrameTimeout();
+  // Called if the BrowserFrame connection is disconnected.
+  void OnBrowserFrameDisconnect(uint32_t custom_reason,
+                                const std::string& description,
+                                MojoResult error_result);
+  // Called if the RenderFrame connection is disconnected.
+  void OnRenderFrameDisconnect(uint32_t custom_reason,
+                               const std::string& description,
+                               MojoResult error_result);
 
-  // Called if/when the BrowserFrame channel is disconnected. This may occur due
-  // to frame navigation, destruction, or insertion into the bfcache (when the
-  // browser-side frame representation is destroyed and closes the connection).
-  void OnBrowserFrameDisconnect();
+  enum class DisconnectReason {
+    DETACHED,
+    RENDER_FRAME_DISCONNECT,
+    BROWSER_FRAME_DISCONNECT,
+  };
+
+  // Called if/when a disconnect occurs. This may occur due to frame navigation,
+  // destruction, or insertion into the bfcache (when the browser-side frame
+  // representation is destroyed and closes the connection).
+  void OnDisconnect(DisconnectReason reason,
+                    uint32_t custom_reason,
+                    const std::string& description,
+                    MojoResult error_result);
 
   // Send an action to the remote BrowserFrame. This will queue the action if
   // the remote frame is not yet attached.
@@ -136,9 +145,14 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void SendToBrowserFrame(const std::string& function_name,
                           BrowserFrameAction action);
 
+  void MaybeInitializeScriptContext();
+
   // cef::mojom::RenderFrame methods:
-  void FrameAttachedAck() override;
-  void SendMessage(const std::string& name, base::Value arguments) override;
+  void FrameAttachedAck(bool allow) override;
+  void SendMessage(const std::string& name,
+                   base::Value::List arguments) override;
+  void SendSharedMemoryRegion(const std::string& name,
+                              base::WritableSharedMemoryRegion region) override;
   void SendCommand(const std::string& command) override;
   void SendCommandWithResponse(
       const std::string& command,
@@ -150,55 +164,29 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void LoadRequest(cef::mojom::RequestParamsPtr params) override;
   void DidStopLoading() override;
   void MoveOrResizeStarted() override;
-#if BUILDFLAG(IS_OHOS)
-  struct CefHitData {
-    int type;
-    CefString extra_data;
-  };
-  void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
-  void SetInitialScale(float initialScale) override;
-  void SetJsOnlineProperty(bool network_up) override;
-  void PutZoomingForTextFactor(float factor) override;
-  void GetImageForContextNode() override;
-  void UpdateLocale(const std::string& locale) override;
-  void GetImagesWithResponse(
-    cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) override;
-  void RemoveCache() override;
-  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
-  void ScrollTo(float x, float y) override;
-  void ScrollBy(float delta_x, float delta_y) override;
-  void SlideScroll(float vx, float vy) override;
-  void ZoomBy(float delta, float width, float height) override;
-  void GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) override;
-  void SetOverscrollMode(int mode) override;
-  GURL GetAbsoluteUrl(const blink::WebNode& node,
-                      const std::u16string& url_fragment);
-  GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
-  blink::WebElement GetImgChild(const blink::WebNode& node);
-  GURL GetChildImageUrlFromElement(const blink::WebElement& element);
-  bool RemovePrefixAndAssignIfMatches(const std::string prefix,
-                                      const GURL& url,
-                                      std::string* dest);
-  void DistinguishAndAssignSrcLinkType(const GURL& url,
-                                       cef::mojom::HitDataParamsPtr& data);
-  void PopulateHitTestData(const GURL& absolute_link_url,
-                           const GURL& absolute_image_url,
-                           bool is_editable,
-                           cef::mojom::HitDataParamsPtr& data);
-  bool is_update_ = false;
-  CefHitData cef_hit_data_;
-  int total_mem_ = -1;
-#endif  // BUILDFLAG(IS_OHOS)
+
+  // blink_glue::CefExecutionContextLifecycleStateObserver methods:
+  void ContextLifecycleStateChanged(
+      blink::mojom::blink::FrameLifecycleState state) override;
 
   CefBrowserImpl* browser_;
   blink::WebLocalFrame* frame_;
-  const int64 frame_id_;
+  const std::string frame_debug_str_;
+
+  bool did_commit_provisional_load_ = false;
+  bool did_initialize_script_context_ = false;
 
   bool context_created_ = false;
   std::queue<std::pair<std::string, LocalFrameAction>> queued_context_actions_;
 
+  bool attach_denied_ = false;
+
   // Number of times that browser reconnect has been attempted.
   size_t browser_connect_retry_ct_ = 0;
+  // Log of reasons why the reconnect failed.
+  std::string browser_connect_retry_log_;
+
+  bool ever_connected_ = false;
 
   // Current browser connection state.
   enum class ConnectionState {
@@ -208,18 +196,28 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
     RECONNECT_PENDING,
   } browser_connection_state_ = ConnectionState::DISCONNECTED;
 
+  static std::string GetDisconnectDebugString(ConnectionState connection_state,
+                                              bool frame_is_valid,
+                                              bool frame_is_main,
+                                              DisconnectReason reason,
+                                              uint32_t custom_reason,
+                                              const std::string& description,
+                                              MojoResult error_result);
+
   base::OneShotTimer browser_connect_timer_;
 
   std::queue<std::pair<std::string, BrowserFrameAction>>
       queued_browser_actions_;
 
-  std::unique_ptr<blink::WebURLLoaderFactory> url_loader_factory_;
-
   mojo::Receiver<cef::mojom::RenderFrame> receiver_{this};
 
   mojo::Remote<cef::mojom::BrowserFrame> browser_frame_;
 
+  std::unique_ptr<blink_glue::CefObserverRegistration>
+      execution_context_lifecycle_state_observer_;
+
   base::WeakPtrFactory<CefFrameImpl> weak_ptr_factory_{this};
+
   IMPLEMENT_REFCOUNTING(CefFrameImpl);
 };
 

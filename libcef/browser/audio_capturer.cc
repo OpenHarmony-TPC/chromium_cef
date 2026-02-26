@@ -3,26 +3,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/audio_capturer.h"
+#include "cef/libcef/browser/audio_capturer.h"
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/audio_loopback_stream_creator.h"
-
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/audio_loopback_stream_creator.h"
 #include "components/mirroring/service/captured_audio_input.h"
 #include "media/audio/audio_input_device.h"
+#include "media/base/audio_bus.h"
 
 namespace {
 
-media::ChannelLayout TranslateChannelLayout(
+media::ChannelLayoutConfig TranslateChannelLayout(
     cef_channel_layout_t channel_layout) {
   // Verify that our enum matches Chromium's values. The enum values match
   // between those enums and existing values don't ever change, so it's enough
   // to check that there are no new ones added.
   static_assert(
-      static_cast<int>(CEF_CHANNEL_LAYOUT_MAX) ==
+      static_cast<int>(CEF_CHANNEL_NUM_VALUES) - 1 ==
           static_cast<int>(media::CHANNEL_LAYOUT_MAX),
       "cef_channel_layout_t must match the ChannelLayout enum in Chromium");
-  return static_cast<media::ChannelLayout>(channel_layout);
+
+  const auto layout = static_cast<media::ChannelLayout>(channel_layout);
+  return {layout, media::ChannelLayoutToChannelCount(layout)};
 }
 
 void StreamCreatorHelper(
@@ -39,7 +41,7 @@ void StreamCreatorHelper(
              mojo::PendingRemote<media::mojom::AudioInputStream> stream,
              mojo::PendingReceiver<media::mojom::AudioInputStreamClient>
                  client_receiver,
-             media::mojom::ReadOnlyAudioDataPipePtr data_pipe) {
+             media::mojom::ReadWriteAudioDataPipePtr data_pipe) {
             mojo::Remote<mirroring::mojom::AudioStreamCreatorClient>
                 audio_client(std::move(client));
             audio_client->StreamCreated(std::move(stream),
@@ -73,10 +75,12 @@ CefAudioCapturer::CefAudioCapturer(const CefAudioParameters& params,
   DCHECK(browser_->web_contents());
 
   channels_ = audio_params.channels();
-  audio_input_device_ = new media::AudioInputDevice(
-      std::make_unique<mirroring::CapturedAudioInput>(base::BindRepeating(
-          &StreamCreatorHelper, base::Unretained(browser_->web_contents()),
-          base::Unretained(audio_stream_creator_.get()))),
+  audio_input_device_ = base::MakeRefCounted<media::AudioInputDevice>(
+      std::make_unique<mirroring::CapturedAudioInput>(
+          base::BindRepeating(&StreamCreatorHelper,
+                              base::Unretained(browser_->web_contents()),
+                              base::Unretained(audio_stream_creator_.get())),
+          observer_),
       media::AudioInputDevice::kLoopback,
       media::AudioInputDevice::DeadStreamDetection::kEnabled);
 
@@ -96,14 +100,14 @@ void CefAudioCapturer::OnCaptureStarted() {
 
 void CefAudioCapturer::Capture(const media::AudioBus* source,
                                base::TimeTicks audio_capture_time,
-                               double /*volume*/,
-                               bool /*key_pressed*/) {
+                               const media::AudioGlitchInfo& /*glitch_info*/,
+                               double /*volume*/) {
   const int channels = source->channels();
   std::array<const float*, media::CHANNELS_MAX> data;
   DCHECK(channels == channels_);
   DCHECK(channels <= static_cast<int>(data.size()));
   for (int c = 0; c < channels; ++c) {
-    data[c] = source->channel(c);
+    data[c] = source->channel_span(c).data();
   }
   base::TimeDelta pts = audio_capture_time - base::TimeTicks::UnixEpoch();
   audio_handler_->OnAudioStreamPacket(browser_, data.data(), source->frames(),
@@ -114,14 +118,19 @@ void CefAudioCapturer::OnCaptureError(
     media::AudioCapturerSource::ErrorCode code,
     const std::string& message) {
   audio_handler_->OnAudioStreamError(browser_, message);
-  StopStream();
+
+  if (code != media::AudioCapturerSource::ErrorCode::kSocketError) {
+    StopStream();
+  }
 }
 
 void CefAudioCapturer::StopStream() {
-  if (audio_input_device_)
+  if (audio_input_device_) {
     audio_input_device_->Stop();
-  if (capturing_)
+  }
+  if (capturing_) {
     audio_handler_->OnAudioStreamStopped(browser_);
+  }
 
   audio_input_device_ = nullptr;
   capturing_ = false;

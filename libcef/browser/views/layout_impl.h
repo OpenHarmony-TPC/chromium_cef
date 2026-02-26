@@ -6,15 +6,14 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_LAYOUT_IMPL_H_
 #pragma once
 
-#include "include/views/cef_box_layout.h"
-#include "include/views/cef_fill_layout.h"
-#include "include/views/cef_layout.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/views/layout_adapter.h"
-#include "libcef/browser/views/layout_util.h"
-
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/include/views/cef_box_layout.h"
+#include "cef/include/views/cef_fill_layout.h"
+#include "cef/include/views/cef_layout.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/layout_adapter.h"
+#include "cef/libcef/browser/views/layout_util.h"
 #include "ui/views/layout/layout_manager.h"
 #include "ui/views/view.h"
 
@@ -49,7 +48,7 @@ class CefLayoutImpl : public CefLayoutAdapter, public CefLayoutClass {
  protected:
   // Create a new implementation object.
   // Always call Initialize() after creation.
-  CefLayoutImpl() : layout_ref_(nullptr), owner_view_(nullptr) {}
+  CefLayoutImpl() = default;
 
   // Initialize this object and assign ownership to |owner_view|.
   void Initialize(views::View* owner_view) {
@@ -57,8 +56,8 @@ class CefLayoutImpl : public CefLayoutAdapter, public CefLayoutClass {
     owner_view_ = owner_view;
     layout_ref_ = CreateLayout();
     DCHECK(layout_ref_);
-    owner_view->SetLayoutManager(base::WrapUnique(layout_ref_));
     layout_util::Assign(this, owner_view);
+    owner_view->SetLayoutManager(base::WrapUnique(layout_ref_.get()));
   }
 
   // Create the views::LayoutManager object.
@@ -67,11 +66,11 @@ class CefLayoutImpl : public CefLayoutAdapter, public CefLayoutClass {
  private:
   // Unowned reference to the views::LayoutManager wrapped by this object. Will
   // be nullptr after the views::LayoutManager is destroyed.
-  ViewsLayoutClass* layout_ref_;
+  raw_ptr<ViewsLayoutClass> layout_ref_ = nullptr;
 
   // Unowned reference to the views::View that owns this object. Will be nullptr
   // after the views::LayoutManager is destroyed.
-  views::View* owner_view_;
+  raw_ptr<views::View> owner_view_ = nullptr;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_VIEWS_LAYOUT_IMPL_H_

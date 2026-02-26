@@ -2,15 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/image_impl.h"
+#include "cef/libcef/browser/image_impl.h"
 
 #include <algorithm>
 
 #include "skia/ext/skia_utils_base.h"
 #include "ui/gfx/codec/jpeg_codec.h"
 #include "ui/gfx/codec/png_codec.h"
+#include "ui/gfx/geometry/size.h"
 #include "ui/gfx/image/image_png_rep.h"
 #include "ui/gfx/image/image_skia.h"
+#include "ui/gfx/image/image_skia_rep.h"
 
 namespace {
 
@@ -24,7 +26,7 @@ SkColorType GetSkColorType(cef_color_type_t color_type) {
       break;
   }
 
-  NOTREACHED();
+  DCHECK(false);
   return kUnknown_SkColorType;
 }
 
@@ -40,14 +42,13 @@ SkAlphaType GetSkAlphaType(cef_alpha_type_t alpha_type) {
       break;
   }
 
-  NOTREACHED();
+  DCHECK(false);
   return kUnknown_SkAlphaType;
 }
 
 // Compress as PNG. Requires post-multiplied alpha.
-bool PNGMethod(bool with_transparency,
-               const SkBitmap& bitmap,
-               std::vector<unsigned char>* compressed) {
+std::optional<std::vector<uint8_t>> PNGMethod(bool with_transparency,
+                                              const SkBitmap& bitmap) {
   return gfx::PNGCodec::Encode(
       reinterpret_cast<unsigned char*>(bitmap.getPixels()),
       bitmap.colorType() == kBGRA_8888_SkColorType ? gfx::PNGCodec::FORMAT_BGRA
@@ -55,15 +56,14 @@ bool PNGMethod(bool with_transparency,
       gfx::Size(bitmap.width(), bitmap.height()),
       static_cast<int>(bitmap.rowBytes()),
       bitmap.alphaType() == kOpaque_SkAlphaType || !with_transparency,
-      std::vector<gfx::PNGCodec::Comment>(), compressed);
+      std::vector<gfx::PNGCodec::Comment>());
 }
 
 // Compress as JPEG. This internally uses JCS_EXT_RGBX or JCS_EXT_BGRX which
 // causes the alpha channel to be ignored. Requires post-multiplied alpha.
-bool JPEGMethod(int quality,
-                const SkBitmap& bitmap,
-                std::vector<unsigned char>* compressed) {
-  return gfx::JPEGCodec::Encode(bitmap, quality, compressed);
+std::optional<std::vector<uint8_t>> JPEGMethod(int quality,
+                                               const SkBitmap& bitmap) {
+  return gfx::JPEGCodec::Encode(bitmap, quality);
 }
 
 }  // namespace
@@ -83,12 +83,14 @@ bool CefImageImpl::IsEmpty() {
 
 bool CefImageImpl::IsSame(CefRefPtr<CefImage> that) {
   CefImageImpl* that_impl = static_cast<CefImageImpl*>(that.get());
-  if (!that_impl)
+  if (!that_impl) {
     return false;
+  }
 
   // Quick check for the same object.
-  if (this == that_impl)
+  if (this == that_impl) {
     return true;
+  }
 
   base::AutoLock lock_scope(lock_);
   return image_.AsImageSkia().BackedBySameObjectAs(
@@ -106,10 +108,12 @@ bool CefImageImpl::AddBitmap(float scale_factor,
   const SkAlphaType at = GetSkAlphaType(alpha_type);
 
   // Make sure the client passed in the expected values.
-  if (ct != kBGRA_8888_SkColorType && ct != kRGBA_8888_SkColorType)
+  if (ct != kBGRA_8888_SkColorType && ct != kRGBA_8888_SkColorType) {
     return false;
-  if (pixel_data_size != pixel_width * pixel_height * 4U)
+  }
+  if (pixel_data_size != pixel_width * pixel_height * 4U) {
     return false;
+  }
 
   SkBitmap bitmap;
   if (!bitmap.tryAllocPixels(
@@ -126,9 +130,9 @@ bool CefImageImpl::AddBitmap(float scale_factor,
 bool CefImageImpl::AddPNG(float scale_factor,
                           const void* png_data,
                           size_t png_data_size) {
-  SkBitmap bitmap;
-  if (!gfx::PNGCodec::Decode(static_cast<const unsigned char*>(png_data),
-                             png_data_size, &bitmap)) {
+  const SkBitmap& bitmap = gfx::PNGCodec::Decode(
+      base::span(static_cast<const unsigned char*>(png_data), png_data_size));
+  if (bitmap.isNull()) {
     return false;
   }
 
@@ -138,12 +142,13 @@ bool CefImageImpl::AddPNG(float scale_factor,
 bool CefImageImpl::AddJPEG(float scale_factor,
                            const void* jpeg_data,
                            size_t jpeg_data_size) {
-  std::unique_ptr<SkBitmap> bitmap(gfx::JPEGCodec::Decode(
-      static_cast<const unsigned char*>(jpeg_data), jpeg_data_size));
-  if (!bitmap.get())
+  const SkBitmap& bitmap = gfx::JPEGCodec::Decode(
+      base::span(static_cast<const unsigned char*>(jpeg_data), jpeg_data_size));
+  if (bitmap.isNull()) {
     return false;
+  }
 
-  return AddBitmap(scale_factor, *bitmap);
+  return AddBitmap(scale_factor, bitmap);
 }
 
 size_t CefImageImpl::GetWidth() {
@@ -177,12 +182,14 @@ bool CefImageImpl::GetRepresentationInfo(float scale_factor,
                                          int& pixel_height) {
   base::AutoLock lock_scope(lock_);
   gfx::ImageSkia image_skia = image_.AsImageSkia();
-  if (image_skia.isNull())
+  if (image_skia.isNull()) {
     return false;
+  }
 
   const gfx::ImageSkiaRep& rep = image_skia.GetRepresentation(scale_factor);
-  if (rep.is_null())
+  if (rep.is_null()) {
     return false;
+  }
 
   actual_scale_factor = rep.scale();
   pixel_width = rep.GetBitmap().width();
@@ -200,8 +207,9 @@ CefRefPtr<CefBinaryValue> CefImageImpl::GetAsBitmap(float scale_factor,
 
   base::AutoLock lock_scope(lock_);
   const SkBitmap* bitmap = GetBitmap(scale_factor);
-  if (!bitmap)
+  if (!bitmap) {
     return nullptr;
+  }
 
   DCHECK(bitmap->readyToDraw());
 
@@ -214,8 +222,9 @@ CefRefPtr<CefBinaryValue> CefImageImpl::GetAsBitmap(float scale_factor,
                                   bitmap->computeByteSize());
   } else {
     SkBitmap desired_bitmap;
-    if (!ConvertBitmap(*bitmap, &desired_bitmap, desired_ct, desired_at))
+    if (!ConvertBitmap(*bitmap, &desired_bitmap, desired_ct, desired_at)) {
       return nullptr;
+    }
     DCHECK(desired_bitmap.readyToDraw());
     return CefBinaryValue::Create(desired_bitmap.getPixels(),
                                   desired_bitmap.computeByteSize());
@@ -228,12 +237,15 @@ CefRefPtr<CefBinaryValue> CefImageImpl::GetAsPNG(float scale_factor,
                                                  int& pixel_height) {
   base::AutoLock lock_scope(lock_);
   const SkBitmap* bitmap = GetBitmap(scale_factor);
-  if (!bitmap)
+  if (!bitmap) {
     return nullptr;
+  }
 
-  std::vector<unsigned char> compressed;
-  if (!WritePNG(*bitmap, &compressed, with_transparency))
+  const auto& result = WritePNG(*bitmap, with_transparency);
+  if (!result.has_value()) {
     return nullptr;
+  }
+  const auto& compressed = *result;
 
   pixel_width = bitmap->width();
   pixel_height = bitmap->height();
@@ -247,12 +259,15 @@ CefRefPtr<CefBinaryValue> CefImageImpl::GetAsJPEG(float scale_factor,
                                                   int& pixel_height) {
   base::AutoLock lock_scope(lock_);
   const SkBitmap* bitmap = GetBitmap(scale_factor);
-  if (!bitmap)
+  if (!bitmap) {
     return nullptr;
+  }
 
-  std::vector<unsigned char> compressed;
-  if (!WriteJPEG(*bitmap, &compressed, quality))
+  const auto& result = WriteJPEG(*bitmap, quality);
+  if (!result.has_value()) {
     return nullptr;
+  }
+  const auto& compressed = *result;
 
   pixel_width = bitmap->width();
   pixel_height = bitmap->height();
@@ -267,8 +282,9 @@ void CefImageImpl::AddBitmaps(int32_t scale_1x_size,
     int32_t min_size = std::numeric_limits<int32_t>::max();
     for (const SkBitmap& bitmap : bitmaps) {
       const int32_t size = std::max(bitmap.width(), bitmap.height());
-      if (size < min_size)
+      if (size < min_size) {
         min_size = size;
+      }
     }
     scale_1x_size = min_size;
   }
@@ -291,8 +307,9 @@ gfx::ImageSkia CefImageImpl::GetForced1xScaleRepresentation(
 
   const SkBitmap* bitmap = GetBitmap(scale_factor);
   gfx::ImageSkia image_skia;
-  if (bitmap)
+  if (bitmap) {
     image_skia.AddRepresentation(gfx::ImageSkiaRep(*bitmap, 1.0f));
+  }
   return image_skia;
 }
 
@@ -313,8 +330,9 @@ bool CefImageImpl::AddBitmap(float scale_factor, const SkBitmap& bitmap) {
   // CHECKs in ImageSkiaRep and eventual conversion to N32 at some later point
   // in the compositing pipeline.
   SkBitmap n32_bitmap;
-  if (!skia::SkBitmapToN32OpaqueOrPremul(bitmap, &n32_bitmap))
+  if (!skia::SkBitmapToN32OpaqueOrPremul(bitmap, &n32_bitmap)) {
     return false;
+  }
 
   gfx::ImageSkiaRep skia_rep(n32_bitmap, scale_factor);
   base::AutoLock lock_scope(lock_);
@@ -329,12 +347,14 @@ bool CefImageImpl::AddBitmap(float scale_factor, const SkBitmap& bitmap) {
 const SkBitmap* CefImageImpl::GetBitmap(float scale_factor) const {
   lock_.AssertAcquired();
   gfx::ImageSkia image_skia = image_.AsImageSkia();
-  if (image_skia.isNull())
+  if (image_skia.isNull()) {
     return nullptr;
+  }
 
   const gfx::ImageSkiaRep& rep = image_skia.GetRepresentation(scale_factor);
-  if (rep.is_null())
+  if (rep.is_null()) {
     return nullptr;
+  }
 
   return &rep.GetBitmap();
 }
@@ -351,8 +371,9 @@ bool CefImageImpl::ConvertBitmap(const SkBitmap& src_bitmap,
 
   SkImageInfo target_info = SkImageInfo::Make(
       src_bitmap.width(), src_bitmap.height(), target_ct, target_at);
-  if (!target_bitmap->tryAllocPixels(target_info))
+  if (!target_bitmap->tryAllocPixels(target_info)) {
     return false;
+  }
 
   if (!src_bitmap.readPixels(target_info, target_bitmap->getPixels(),
                              target_bitmap->rowBytes(), 0, 0)) {
@@ -364,16 +385,16 @@ bool CefImageImpl::ConvertBitmap(const SkBitmap& src_bitmap,
 }
 
 // static
-bool CefImageImpl::WriteCompressedFormat(const SkBitmap& bitmap,
-                                         std::vector<unsigned char>* compressed,
-                                         CompressionMethod method) {
+std::optional<std::vector<uint8_t>> CefImageImpl::WriteCompressedFormat(
+    const SkBitmap& bitmap,
+    CompressionMethod method) {
   const SkBitmap* bitmap_ptr = nullptr;
   SkBitmap bitmap_postalpha;
   if (bitmap.alphaType() == kPremul_SkAlphaType) {
     // Compression methods require post-multiplied alpha values.
     if (!ConvertBitmap(bitmap, &bitmap_postalpha, bitmap.colorType(),
                        kUnpremul_SkAlphaType)) {
-      return false;
+      return std::nullopt;
     }
     bitmap_ptr = &bitmap_postalpha;
   } else {
@@ -386,21 +407,20 @@ bool CefImageImpl::WriteCompressedFormat(const SkBitmap& bitmap,
   DCHECK(bitmap_ptr->alphaType() == kOpaque_SkAlphaType ||
          bitmap_ptr->alphaType() == kUnpremul_SkAlphaType);
 
-  return std::move(method).Run(*bitmap_ptr, compressed);
+  return std::move(method).Run(*bitmap_ptr);
 }
 
 // static
-bool CefImageImpl::WritePNG(const SkBitmap& bitmap,
-                            std::vector<unsigned char>* compressed,
-                            bool with_transparency) {
-  return WriteCompressedFormat(bitmap, compressed,
+std::optional<std::vector<uint8_t>> CefImageImpl::WritePNG(
+    const SkBitmap& bitmap,
+    bool with_transparency) {
+  return WriteCompressedFormat(bitmap,
                                base::BindOnce(PNGMethod, with_transparency));
 }
 
 // static
-bool CefImageImpl::WriteJPEG(const SkBitmap& bitmap,
-                             std::vector<unsigned char>* compressed,
-                             int quality) {
-  return WriteCompressedFormat(bitmap, compressed,
-                               base::BindOnce(JPEGMethod, quality));
+std::optional<std::vector<uint8_t>> CefImageImpl::WriteJPEG(
+    const SkBitmap& bitmap,
+    int quality) {
+  return WriteCompressedFormat(bitmap, base::BindOnce(JPEGMethod, quality));
 }

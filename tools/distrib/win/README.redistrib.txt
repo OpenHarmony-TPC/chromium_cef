@@ -17,7 +17,6 @@ The following components are required. CEF will not function without them.
   * icudtl.dat
 
 * V8 snapshot data.
-  * snapshot_blob.bin
   * v8_context_snapshot.bin
 
 Optional components:
@@ -56,6 +55,12 @@ run but any related functionality may become broken or disabled.
   is recommended instead of relying on the possibly old and untested system
   installed version.
 
+* DirectX compiler support (x64 only).
+  * dxil.dll
+  * dxcompiler.dll
+  Support for DirectX rendering of WebGPU. Without these files the
+  aforementioned capabilities may fail.
+
 * ANGLE support.
   * libEGL.dll
   * libGLESv2.dll
@@ -70,10 +75,3 @@ run but any related functionality may become broken or disabled.
   WebGL using SwiftShader's Vulkan library as ANGLE's Vulkan backend. Without
   these files the aforementioned capabilities may fail when GPU acceleration is
   disabled or unavailable.
-
-* SwiftShader support
-  * swiftshader/libEGL.dll
-  * swiftshader/libGLESv2.dll
-  Deprecated support for software rendering using SwiftShader's GL libraries.
-  Used as an alternative to SwANGLE when the `--use-gl=swiftshader-webgl`
-  command-line flag is specified.

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/osr_util.h"
+#include "cef/libcef/browser/osr/osr_util.h"
 
 namespace osr_util {
 
@@ -14,8 +14,9 @@ const int kDefaultFrameRate = 30;
 }  // namespace
 
 int ClampFrameRate(int frame_rate) {
-  if (frame_rate < 1)
+  if (frame_rate < 1) {
     return kDefaultFrameRate;
+  }
 
   return frame_rate;
 }

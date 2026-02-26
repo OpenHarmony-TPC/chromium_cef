@@ -24,11 +24,24 @@ class ClientAppBrowser : public ClientApp, public CefBrowserProcessHandler {
         CefRefPtr<ClientAppBrowser> app,
         CefRefPtr<CefCommandLine> command_line) {}
 
+    virtual void OnRegisterCustomPreferences(
+        CefRefPtr<ClientAppBrowser> app,
+        cef_preferences_type_t type,
+        CefRawPtr<CefPreferenceRegistrar> registrar) {}
+
     virtual void OnContextInitialized(CefRefPtr<ClientAppBrowser> app) {}
 
-    virtual void OnBeforeChildProcessLaunch(
+    virtual bool OnAlreadyRunningAppRelaunch(
         CefRefPtr<ClientAppBrowser> app,
-        CefRefPtr<CefCommandLine> command_line) {}
+        CefRefPtr<CefCommandLine> command_line,
+        const CefString& current_directory) {
+      return false;
+    }
+
+    virtual CefRefPtr<CefClient> GetDefaultClient(
+        CefRefPtr<ClientAppBrowser> app) {
+      return nullptr;
+    }
   };
 
   typedef std::set<CefRefPtr<Delegate>> DelegateSet;
@@ -59,10 +72,14 @@ class ClientAppBrowser : public ClientApp, public CefBrowserProcessHandler {
   }
 
   // CefBrowserProcessHandler methods.
+  void OnRegisterCustomPreferences(
+      cef_preferences_type_t type,
+      CefRawPtr<CefPreferenceRegistrar> registrar) override;
   void OnContextInitialized() override;
-  void OnBeforeChildProcessLaunch(
-      CefRefPtr<CefCommandLine> command_line) override;
-  void OnScheduleMessagePumpWork(int64 delay) override;
+  bool OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line,
+                                   const CefString& current_directory) override;
+  void OnScheduleMessagePumpWork(int64_t delay) override;
+  CefRefPtr<CefClient> GetDefaultClient() override;
 
   // Set of supported Delegates.
   DelegateSet delegates_;

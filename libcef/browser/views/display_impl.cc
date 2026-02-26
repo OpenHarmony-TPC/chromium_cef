@@ -2,16 +2,15 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/views/display_impl.h"
+#include "cef/libcef/browser/views/display_impl.h"
 
-#include "libcef/browser/views/view_util.h"
-
+#include "cef/libcef/browser/views/view_util.h"
 #include "ui/display/screen.h"
 
 // static
 CefRefPtr<CefDisplay> CefDisplay::GetPrimaryDisplay() {
   CEF_REQUIRE_UIT_RETURN(nullptr);
-  return new CefDisplayImpl(display::Screen::GetScreen()->GetPrimaryDisplay());
+  return new CefDisplayImpl(display::Screen::Get()->GetPrimaryDisplay());
 }
 
 // static
@@ -36,7 +35,7 @@ CefRefPtr<CefDisplay> CefDisplay::GetDisplayMatchingBounds(
 // static
 size_t CefDisplay::GetDisplayCount() {
   CEF_REQUIRE_UIT_RETURN(0U);
-  return static_cast<size_t>(display::Screen::GetScreen()->GetNumDisplays());
+  return static_cast<size_t>(display::Screen::Get()->GetNumDisplays());
 }
 
 // static
@@ -46,9 +45,60 @@ void CefDisplay::GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays) {
   displays.clear();
 
   using DisplayVector = std::vector<display::Display>;
-  DisplayVector vec = display::Screen::GetScreen()->GetAllDisplays();
-  for (size_t i = 0; i < vec.size(); ++i)
-    displays.push_back(new CefDisplayImpl(vec[i]));
+  DisplayVector vec = display::Screen::Get()->GetAllDisplays();
+  for (const auto& i : vec) {
+    displays.push_back(new CefDisplayImpl(i));
+  }
+}
+
+// static
+CefPoint CefDisplay::ConvertScreenPointToPixels(const CefPoint& point) {
+  CEF_REQUIRE_UIT_RETURN(CefPoint());
+#if BUILDFLAG(IS_WIN)
+  const gfx::Point pix_point =
+      view_util::ConvertPointToPixels(gfx::Point(point.x, point.y));
+  return CefPoint(pix_point.x(), pix_point.y());
+#else
+  return point;
+#endif
+}
+
+// static
+CefPoint CefDisplay::ConvertScreenPointFromPixels(const CefPoint& point) {
+  CEF_REQUIRE_UIT_RETURN(CefPoint());
+#if BUILDFLAG(IS_WIN)
+  const gfx::Point dip_point =
+      view_util::ConvertPointFromPixels(gfx::Point(point.x, point.y));
+  return CefPoint(dip_point.x(), dip_point.y());
+#else
+  return point;
+#endif
+}
+
+// static
+CefRect CefDisplay::ConvertScreenRectToPixels(const CefRect& rect) {
+  CEF_REQUIRE_UIT_RETURN(CefRect());
+#if BUILDFLAG(IS_WIN)
+  const gfx::Rect pix_rect = view_util::ConvertRectToPixels(
+      gfx::Rect(rect.x, rect.y, rect.width, rect.height));
+  return CefRect(pix_rect.x(), pix_rect.y(), pix_rect.width(),
+                 pix_rect.height());
+#else
+  return rect;
+#endif
+}
+
+// static
+CefRect CefDisplay::ConvertScreenRectFromPixels(const CefRect& rect) {
+  CEF_REQUIRE_UIT_RETURN(CefRect());
+#if BUILDFLAG(IS_WIN)
+  const gfx::Rect dip_rect = view_util::ConvertRectFromPixels(
+      gfx::Rect(rect.x, rect.y, rect.width, rect.height));
+  return CefRect(dip_rect.x(), dip_rect.y(), dip_rect.width(),
+                 dip_rect.height());
+#else
+  return rect;
+#endif
 }
 
 CefDisplayImpl::CefDisplayImpl(const display::Display& display)
@@ -60,7 +110,7 @@ CefDisplayImpl::~CefDisplayImpl() {
   CEF_REQUIRE_UIT();
 }
 
-int64 CefDisplayImpl::GetID() {
+int64_t CefDisplayImpl::GetID() {
   CEF_REQUIRE_UIT_RETURN(-1);
   return display_.id();
 }

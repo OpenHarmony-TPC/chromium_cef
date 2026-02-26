@@ -2,30 +2,25 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/net_service/login_delegate.h"
-
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/net_database/cef_data_base_impl.h"
-#include "libcef/browser/net_service/browser_urlrequest_impl.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/net_service/login_delegate.h"
 
 #include "base/memory/scoped_refptr.h"
-#include "base/threading/sequenced_task_runner_handle.h"
+#include "base/task/sequenced_task_runner.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/net_service/browser_urlrequest_impl.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "content/public/browser/global_request_id.h"
 #include "content/public/browser/web_contents.h"
 
 namespace net_service {
 
 namespace {
+
 class AuthCallbackImpl : public CefAuthCallback {
  public:
-  explicit AuthCallbackImpl(base::WeakPtr<LoginDelegate> delegate,
-                            const CefString& host,
-                            const CefString& realm)
+  explicit AuthCallbackImpl(base::WeakPtr<LoginDelegate> delegate)
       : delegate_(delegate),
-        host_(host),
-        realm_(realm),
-        task_runner_(base::SequencedTaskRunnerHandle::Get()) {}
+        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {}
 
   AuthCallbackImpl(const AuthCallbackImpl&) = delete;
   AuthCallbackImpl& operator=(const AuthCallbackImpl&) = delete;
@@ -65,45 +60,8 @@ class AuthCallbackImpl : public CefAuthCallback {
     }
   }
 
-  bool IsHttpAuthInfoSaved() override {
-    constexpr int32_t MAX_PWD_LENGTH = 256;
-    auto dataBase = CefDataBase::GetGlobalDataBase();
-    if (dataBase == nullptr) {
-      return false;
-    }
-    if (!dataBase->ExistHttpAuthCredentials()) {
-      return false;
-    }
-    CefString username;
-    char password[MAX_PWD_LENGTH + 1] = {0};
-    dataBase->GetHttpAuthCredentials(host_, realm_, username, password, MAX_PWD_LENGTH + 1);
-    if (username.empty() || strlen(password) == 0) {
-      memset(password, 0, MAX_PWD_LENGTH + 1);
-      return false;
-    }
-    CefString passwordCef(password, strlen(password));
-    memset(password, 0, MAX_PWD_LENGTH + 1);
-    if (!task_runner_->RunsTasksInCurrentSequence()) {
-      task_runner_->PostTask(
-          FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
-                                    passwordCef));
-      passwordCef.MemsetToZero();
-      return true;
-    }
-    if (delegate_) {
-      delegate_->Continue(username, passwordCef);
-      delegate_ = nullptr;
-      passwordCef.MemsetToZero();
-      return true;
-    }
-    passwordCef.MemsetToZero();
-    return false;
-  }
-
  private:
   base::WeakPtr<LoginDelegate> delegate_;
-  CefString host_;
-  CefString realm_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
 
   IMPLEMENT_REFCOUNTING(AuthCallbackImpl);
@@ -111,7 +69,7 @@ class AuthCallbackImpl : public CefAuthCallback {
 
 void RunCallbackOnIOThread(
     CefRefPtr<CefBrowserHostBase> browser,
-    absl::optional<CefBrowserURLRequest::RequestInfo> url_request_info,
+    std::optional<CefBrowserURLRequest::RequestInfo> url_request_info,
     const net::AuthChallengeInfo& auth_info,
     const GURL& origin_url,
     CefRefPtr<AuthCallbackImpl> callback_impl) {
@@ -153,11 +111,12 @@ void RunCallbackOnIOThread(
 }
 }  // namespace
 
-LoginDelegate::LoginDelegate(const net::AuthChallengeInfo& auth_info,
-                             content::WebContents* web_contents,
-                             const content::GlobalRequestID& request_id,
-                             const GURL& origin_url,
-                             LoginAuthRequiredCallback callback)
+LoginDelegate::LoginDelegate(
+    const net::AuthChallengeInfo& auth_info,
+    content::WebContents* web_contents,
+    const content::GlobalRequestID& request_id,
+    const GURL& origin_url,
+    content::LoginDelegate::LoginAuthRequiredCallback callback)
     : callback_(std::move(callback)), weak_ptr_factory_(this) {
   CEF_REQUIRE_UIT();
 
@@ -185,7 +144,7 @@ void LoginDelegate::Continue(const CefString& username,
 void LoginDelegate::Cancel() {
   CEF_REQUIRE_UIT();
   if (!callback_.is_null()) {
-    std::move(callback_).Run(absl::nullopt);
+    std::move(callback_).Run(std::nullopt);
   }
 }
 
@@ -200,8 +159,7 @@ void LoginDelegate::Start(CefRefPtr<CefBrowserHostBase> browser,
   if (browser || url_request_info) {
     // AuthCallbackImpl is bound to the current thread.
     CefRefPtr<AuthCallbackImpl> callbackImpl =
-        new AuthCallbackImpl(weak_ptr_factory_.GetWeakPtr(),
-                             auth_info.challenger.host(), auth_info.realm);
+        new AuthCallbackImpl(weak_ptr_factory_.GetWeakPtr());
 
     // Execute callbacks on the IO thread to maintain the "old"
     // network_delegate callback behaviour.

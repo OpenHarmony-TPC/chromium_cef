@@ -166,6 +166,14 @@ for patch in patches:
     msg('Reading patch file %s' % patch_file)
     if 'path' in patch:
       patch_root_abs = os.path.abspath(os.path.join(src_dir, patch['path']))
+      if not os.path.isdir(patch_root_abs):
+        line = 'Target directory does not exist: %s' % patch_root_abs
+        msg(line)
+        if options.resave:
+          # Report as a fatal error for manual resave only, as the missing
+          # directory may be platform-specific.
+          failed_patches[patch['name']] = [line]
+        continue
     else:
       patch_root_abs = src_dir
 
@@ -229,7 +237,7 @@ for patch in patches:
         # Apply the patch file.
         msg('Applying patch to %s' % patch_root_abs)
         patch_string = open(patch_file, 'rb').read()
-        result = exec_cmd('patch -p0', patch_root_abs, patch_string)
+        result = exec_cmd('patch -p0 --batch --forward', patch_root_abs, patch_string)
 
         if len(converted_files) > 0:
           # Restore Windows line endings in converted files so that the diff is
@@ -245,11 +253,15 @@ for patch in patches:
         if result['err'] != '':
           raise Exception('Failed to apply patch file: %s' % result['err'])
         sys.stdout.write(result['out'])
-        if result['out'].find('FAILED') != -1:
+        # Check both exit code and output for failures
+        if result['ret'] != 0 or result['out'].lower().find('failed') != -1:
           failed_lines = []
           for line in result['out'].split('\n'):
-            if line.find('FAILED') != -1:
+            if line.lower().find('failed') != -1:
               failed_lines.append(line.strip())
+          if not failed_lines:
+            # Exit code indicates failure but no FAILED lines found
+            failed_lines.append('Patch command exited with code %d' % result['ret'])
           warn('Failed to apply %s, fix manually and run with --resave' % \
                patch['name'])
           failed_patches[patch['name']] = failed_lines
@@ -291,11 +303,12 @@ for patch in patches:
         cmd = 'git add -N %s' % ' '.join(added_paths)
         result = exec_cmd(cmd, patch_root_abs)
         if result['err'] != '' and result['err'].find('warning:') != 0:
-          raise Exception('Failed to add paths: %s' % result['err'])
+          msg('Failed to add paths: %s' % result['err'])
+          continue
 
       # Re-create the patch file.
       patch_paths_str = ' '.join(patch_paths)
-      cmd = 'git diff --no-prefix --relative %s' % patch_paths_str
+      cmd = 'git diff --no-prefix --relative --full-index %s' % patch_paths_str
       result = exec_cmd(cmd, patch_root_abs)
       if result['err'] != '' and result['err'].find('warning:') != 0:
         raise Exception('Failed to create patch file: %s' % result['err'])

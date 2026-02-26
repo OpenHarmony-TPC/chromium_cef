@@ -1,7 +1,7 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
-// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that can
-// be found in the LICENSE file.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_RENDERER_BROWSER_IMPL_H_
 #define CEF_LIBCEF_RENDERER_BROWSER_IMPL_H_
@@ -14,21 +14,18 @@
 #include <string>
 #include <vector>
 
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "libcef/common/tracker.h"
-#include "libcef/renderer/frame_impl.h"
-
+#include "cef/include/cef_browser.h"
+#include "cef/include/cef_client.h"
+#include "cef/libcef/renderer/browser_config.h"
+#include "cef/libcef/renderer/frame_impl.h"
+#include "third_party/blink/public/common/tokens/tokens.h"
 #include "third_party/blink/public/web/web_view_observer.h"
 
 namespace blink {
 class WebFrame;
 class WebNode;
+class WebView;
 }  // namespace blink
-
-namespace content {
-class RenderView;
-}
 
 // Renderer plumbing for CEF features. There is a one-to-one relationship
 // between RenderView on the renderer side and RenderViewHost on the browser
@@ -38,7 +35,7 @@ class RenderView;
 class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
  public:
   // Returns the browser associated with the specified RenderView.
-  static CefRefPtr<CefBrowserImpl> GetBrowserForView(content::RenderView* view);
+  static CefRefPtr<CefBrowserImpl> GetBrowserForView(blink::WebView* view);
   // Returns the browser associated with the specified main WebFrame.
   static CefRefPtr<CefBrowserImpl> GetBrowserForMainFrame(
       blink::WebFrame* frame);
@@ -50,16 +47,9 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void GoBack() override;
   bool CanGoForward() override;
   void GoForward() override;
-  bool CanGoBackOrForward(int num_steps) override;
-  void GoBackOrForward(int num_steps) override;
-  void DeleteHistory() override;
   bool IsLoading() override;
   void Reload() override;
   void ReloadIgnoreCache() override;
-#if BUILDFLAG(IS_OHOS)
-  void ReloadOriginalUrl() override;
-  void SetBrowserUserAgentString(const CefString& user_agent) override {}
-#endif
   void StopLoad() override;
   int GetIdentifier() override;
   bool IsSame(CefRefPtr<CefBrowser> that) override;
@@ -67,19 +57,17 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool HasDocument() override;
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
-  CefRefPtr<CefFrame> GetFrame(int64 identifier) override;
-  CefRefPtr<CefFrame> GetFrame(const CefString& name) override;
+  CefRefPtr<CefFrame> GetFrameByIdentifier(
+      const CefString& identifier) override;
+  CefRefPtr<CefFrame> GetFrameByName(const CefString& name) override;
   size_t GetFrameCount() override;
-  void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
+  void GetFrameIdentifiers(std::vector<CefString>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
-  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
-      override;
-  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
 
-  CefBrowserImpl(content::RenderView* render_view,
+  CefBrowserImpl(blink::WebView* web_view,
                  int browser_id,
                  bool is_popup,
-                 bool is_windowless);
+                 const cef::BrowserConfig& config);
 
   CefBrowserImpl(const CefBrowserImpl&) = delete;
   CefBrowserImpl& operator=(const CefBrowserImpl&) = delete;
@@ -88,61 +76,33 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 
   // Returns the matching CefFrameImpl reference or creates a new one.
   CefRefPtr<CefFrameImpl> GetWebFrameImpl(blink::WebLocalFrame* frame);
-  CefRefPtr<CefFrameImpl> GetWebFrameImpl(int64_t frame_id);
-
-  // Frame objects will be deleted immediately before the frame is closed.
-  void AddFrameObject(int64_t frame_id, CefTrackNode* tracked_object);
+  CefRefPtr<CefFrameImpl> GetWebFrameImpl(const std::string& identifier);
 
   int browser_id() const { return browser_id_; }
   bool is_popup() const { return is_popup_; }
-  bool is_windowless() const { return is_windowless_; }
+  const cef::BrowserConfig& config() const { return config_; }
 
   // blink::WebViewObserver methods.
   void OnDestruct() override;
-  void FrameDetached(int64_t frame_id);
+  void FrameDetached(blink::WebLocalFrame* frame);
 
   void OnLoadingStateChange(bool isLoading);
-  void PrefetchPage(CefString& url,
-                    CefString& additionalHttpHeaders) override{};
-#if BUILDFLAG(IS_OHOS)
-  bool ShouldShowLoadingUI() override;
-  void SetForceEnableZoom(bool forceEnableZoom) override {};
-  bool GetForceEnableZoom() override {
-    return false;
-  }
-
-  void SetSavePasswordAutomatically(bool enable) override{};
-  bool GetSavePasswordAutomatically() override { return false; }
-  void SetSavePassword(bool enable) override{};
-  bool GetSavePassword() override { return false; }
-  void SaveOrUpdatePassword(bool is_update) override{};
-  void PasswordSuggestionSelected(int list_index) override{};
-  void SelectAndCopy() override{};
-  bool ShouldShowFreeCopy() override { return false; };
-  int GetNWebId() override { return -1; };
-  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override {};
-  void UpdateBrowserControlsState(int constraints,
-                                  int current,
-                                  bool animate) override {}
-  void UpdateBrowserControlsHeight(int height, bool animate) override {}
-#endif
+  void OnEnterBFCache();
 
  private:
   // ID of the browser that this RenderView is associated with. During loading
   // of cross-origin requests multiple RenderViews may be associated with the
   // same browser ID.
-  int browser_id_;
-  bool is_popup_;
-  bool is_windowless_;
+  const int browser_id_;
+  const bool is_popup_;
+  const cef::BrowserConfig config_;
 
-  // Map of unique frame ids to CefFrameImpl references.
-  using FrameMap = std::map<int64, CefRefPtr<CefFrameImpl>>;
+  // Map of unique frame tokens to CefFrameImpl references.
+  using FrameMap = std::map<blink::LocalFrameToken, CefRefPtr<CefFrameImpl>>;
   FrameMap frames_;
 
-  // Map of unique frame ids to CefTrackManager objects that need to be cleaned
-  // up when the frame is deleted.
-  using FrameObjectMap = std::map<int64, CefRefPtr<CefTrackManager>>;
-  FrameObjectMap frame_objects_;
+  // True if the browser was in the BFCache.
+  bool was_in_bfcache_ = false;
 
   struct LoadingState {
     LoadingState(bool is_loading, bool can_go_back, bool can_go_forward)

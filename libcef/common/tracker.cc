@@ -2,42 +2,46 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/tracker.h"
+#include "cef/libcef/common/tracker.h"
 
 // CefTrackNode implementation.
 
-CefTrackNode::CefTrackNode() : track_next_(nullptr), track_prev_(nullptr) {}
+CefTrackNode::CefTrackNode() = default;
 
-CefTrackNode::~CefTrackNode() {}
+CefTrackNode::~CefTrackNode() = default;
 
 void CefTrackNode::InsertTrackPrev(CefTrackNode* object) {
-  if (track_prev_)
+  if (track_prev_) {
     track_prev_->SetTrackNext(object);
+  }
   object->SetTrackNext(this);
   object->SetTrackPrev(track_prev_);
   track_prev_ = object;
 }
 
 void CefTrackNode::InsertTrackNext(CefTrackNode* object) {
-  if (track_next_)
+  if (track_next_) {
     track_next_->SetTrackPrev(object);
+  }
   object->SetTrackPrev(this);
   object->SetTrackNext(track_next_);
   track_next_ = object;
 }
 
 void CefTrackNode::RemoveTracking() {
-  if (track_next_)
+  if (track_next_) {
     track_next_->SetTrackPrev(track_prev_);
-  if (track_prev_)
+  }
+  if (track_prev_) {
     track_prev_->SetTrackNext(track_next_);
+  }
   track_next_ = nullptr;
   track_prev_ = nullptr;
 }
 
 // CefTrackManager implementation.
 
-CefTrackManager::CefTrackManager() : object_count_(0) {}
+CefTrackManager::CefTrackManager() = default;
 
 CefTrackManager::~CefTrackManager() {
   DeleteAll();

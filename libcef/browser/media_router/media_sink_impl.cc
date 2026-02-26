@@ -2,11 +2,10 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/media_router/media_sink_impl.h"
-
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/media_router/media_sink_impl.h"
 
 #include "base/strings/string_number_conversions.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "chrome/browser/media/router/discovery/dial/dial_media_sink_service_impl.h"
 #include "chrome/browser/media/router/discovery/mdns/cast_media_sink_service_impl.h"
 #include "chrome/browser/media/router/providers/cast/dual_media_sink_service.h"
@@ -35,8 +34,9 @@ void GetSinkInternalAndContinue(
 
   for (auto service : services) {
     sink_internal = service->GetSinkById(sink_id);
-    if (sink_internal)
+    if (sink_internal) {
       break;
+    }
   }
 
   if (sink_internal) {
@@ -50,7 +50,7 @@ void GetSinkInternalAndContinue(
       const auto& dial_data = sink_internal->dial_data();
       CefString(&device_info.ip_address) = dial_data.ip_address.ToString();
       if (dial_data.app_url.is_valid() && dial_data.app_url.has_port()) {
-        base::StringToInt(dial_data.app_url.port_piece(), &device_info.port);
+        base::StringToInt(dial_data.app_url.port(), &device_info.port);
       }
       CefString(&device_info.model_name) = dial_data.model_name;
     }
@@ -103,15 +103,12 @@ CefString CefMediaSinkImpl::GetName() {
   return sink_.name();
 }
 
-CefString CefMediaSinkImpl::GetDescription() {
-  return sink_.description().value_or("");
-}
-
 CefMediaSink::IconType CefMediaSinkImpl::GetIconType() {
   // Verify that our enum matches Chromium's values.
-  static_assert(static_cast<int>(CEF_MSIT_TOTAL_COUNT) ==
+  static_assert(static_cast<int>(CEF_MSIT_NUM_VALUES) ==
                     static_cast<int>(media_router::SinkIconType::TOTAL_COUNT),
-                "enum mismatch");
+                "Enum values in cef_media_sink_icon_type_t must match "
+                "media_router::SinkIconType");
 
   return static_cast<CefMediaSink::IconType>(sink_.icon_type());
 }
@@ -131,10 +128,12 @@ bool CefMediaSinkImpl::IsDialSink() {
 
 bool CefMediaSinkImpl::IsCompatibleWith(CefRefPtr<CefMediaSource> source) {
   if (source) {
-    if (IsCastSink())
+    if (IsCastSink()) {
       return source->IsCastSource();
-    if (IsDialSink())
+    }
+    if (IsDialSink()) {
       return source->IsDialSource();
+    }
   }
   return false;
 }
