@@ -414,6 +414,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void OnBrowserDestroyed();
 
   void EnableVideoAssistant(bool enable) override;
+  void EnableVideoAssistantAVCast(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
   void CustomWebMediaPlayer(bool enable) override;
   void SetMediaResumeFromBFCachePage(bool resume) override;

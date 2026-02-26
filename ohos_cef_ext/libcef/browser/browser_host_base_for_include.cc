@@ -131,6 +131,17 @@ void CefBrowserHostBase::EnableVideoAssistant(bool enable) {
 #endif  // ARKWEB_VIDEO_ASSISTANT
 }
 
+void CefBrowserHostBase::EnableVideoAssistantAVCast(bool enable) {
+#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when enable video assistant avcast";
+    return;
+  }
+
+  GetWebContents()->EnableVideoAssistantAVCast(enable);
+#endif  // ARKWEB_VIDEO_ASSISTANT
+}
+
 void CefBrowserHostBase::ExecuteVideoAssistantFunction(const CefString& cmdId) {
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
   if (!GetWebContents()) {

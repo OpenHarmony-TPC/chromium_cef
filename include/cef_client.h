@@ -232,6 +232,13 @@ class CefClient : public virtual CefBaseRefCounted {
       CefOwnPtr<CefMediaPlayerController> media_player_controller,
       const std::string& extra_info) { return nullptr; }
 
+  ///
+  /// Return the interface for listening to the avcast video.
+  ///
+  virtual CefOwnPtr<CefMediaPlayerListenerForVAST> OnAVCastStarted(
+      CefOwnPtr<CefMediaPlayerController> media_player_controller,
+      const std::string& extra_info) { return nullptr; }
+
 #endif // ARKWEB_VIDEO_ASSISTANT
 
   ///
