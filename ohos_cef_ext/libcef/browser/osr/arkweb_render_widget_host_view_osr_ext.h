@@ -429,6 +429,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool is_event_from_touch_ = false;
   bool is_tap_down_twice_ = false;
   bool is_editable_node_ = false;
+  float previous_accumulated_overscroll_x = 0.0f;
+  float previous_accumulated_overscroll_y = 0.0f;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_AI)
