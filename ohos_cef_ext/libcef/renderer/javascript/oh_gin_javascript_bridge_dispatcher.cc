@@ -640,7 +640,7 @@ void OhGinJavascriptBridgeDispatcher::OnDoCallH5Function(
 
   if (method_name
           .empty()) {  // IF h5_method_name empty, call anonymous function
-    OnDoCallAnonymousH5Function(h5_object_id, args);
+    return OnDoCallAnonymousH5Function(h5_object_id, args);
   }
 
   if (!render_frame() || !render_frame()->GetWebFrame()) {
