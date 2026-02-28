@@ -7,6 +7,7 @@
 #define CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_OH_PAGE_LOAD_METRICS_OBSERVER_H_
 
 #include "base/memory/raw_ptr.h"
+#include <atomic>
 #include "components/page_load_metrics/browser/page_load_metrics_observer.h"
 #include "net/nqe/effective_connection_type.h"
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
@@ -121,8 +122,8 @@ class OhPageLoadMetricsObserver
   bool reported_buffered_metrics_ = false;
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;
-  static int64_t navigation_start_timestamp_;
-  static int64_t render_init_block_;
+  static std::atomic<int64_t> navigation_start_timestamp_;
+  static std::atomic<int64_t> render_init_block_;
 #endif
 
 #if BUILDFLAG(ARKWEB_BFCACHE)

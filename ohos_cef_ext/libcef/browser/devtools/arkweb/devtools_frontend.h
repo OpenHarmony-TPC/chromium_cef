@@ -161,7 +161,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
   CefRefPtr<AlloyBrowserHostImpl> frontend_browser_;
-  raw_ptr<content::WebContents> inspected_contents_;
+  base::WeakPtr<content::WebContents> inspected_contents_;
   scoped_refptr<content::DevToolsAgentHost> agent_host_;
   CefPoint inspect_element_at_;
   base::OnceClosure frontend_destroyed_callback_;

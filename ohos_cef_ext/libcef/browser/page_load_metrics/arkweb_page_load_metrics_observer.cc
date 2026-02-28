@@ -30,8 +30,8 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
-int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
-int64_t OhPageLoadMetricsObserver::render_init_block_ = -1;
+std::atomic<int64_t> OhPageLoadMetricsObserver::navigation_start_timestamp_(-1);
+std::atomic<int64_t> OhPageLoadMetricsObserver::render_init_block_(-1);
 #endif
 
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
@@ -481,10 +481,10 @@ void OhPageLoadMetricsObserver::OnFirstPaintInPage(
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
-  web_performance_timing_.render_init_block = render_init_block_;
+  web_performance_timing_.render_init_block = render_init_block_.load(std::memory_order_relaxed);
   ReportPageLoadTimeStats(web_performance_timing_);
   web_performance_timing_.Reset();
-  render_init_block_ = -1;
+  render_init_block_.store(-1, std::memory_order_relaxed);
 }
 
 void OhPageLoadMetricsObserver::ReportBufferedMetrics(
@@ -495,7 +495,7 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
 
   reported_buffered_metrics_ = true;
 
-  web_performance_timing_.navigation_start = navigation_start_timestamp_;
+  web_performance_timing_.navigation_start = navigation_start_timestamp_.load(std::memory_order_relaxed);
   web_performance_timing_.redirect_count = main_frame_request_redirect_count_;
   const page_load_metrics::ContentfulPaintTimingInfo& largest_contentful_paint =
       GetDelegate()
@@ -511,11 +511,11 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
 }
 
 void OhPageLoadMetricsObserver::OnNavigationStart() {
-  navigation_start_timestamp_ = GetCurrentTimestampMS();
+  navigation_start_timestamp_.store(GetCurrentTimestampMS(), std::memory_order_relaxed);
 }
 
 void OhPageLoadMetricsObserver::RenderInitBlock(int64_t block_time) {
-  render_init_block_ = block_time;
+  render_init_block_.store(block_time, std::memory_order_relaxed);
 }
 #endif
 
