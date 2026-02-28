@@ -217,6 +217,10 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchpadFlingEvent(
 void CefBrowserPlatformDelegateOsrExt::SendCancelFlingEvent(
     const CefMouseEvent& event)
 {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
   cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 }
 #endif
