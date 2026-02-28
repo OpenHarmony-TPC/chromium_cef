@@ -136,7 +136,8 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
         if (!compositor->IsVisible() && compositor->local_surface_id_from_parent().is_valid()) {
           LOG(INFO) << "Collect ui surface with frame_sink_id: " << compositor->frame_sink_id()
             << " local_surface_id: " << compositor->local_surface_id_from_parent();
-          ids.embedded_ids.emplace_back(compositor->frame_sink_id(), compositor->local_surface_id_from_parent());
+          ids.ui_compositor_id = viz::SurfaceId(
+            compositor->frame_sink_id(), compositor->local_surface_id_from_parent());
         }
       }
     }
