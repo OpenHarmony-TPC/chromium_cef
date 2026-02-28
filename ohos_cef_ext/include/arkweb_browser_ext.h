@@ -55,6 +55,11 @@
 #if BUILDFLAG(ARKWEB_USERAGENT)
 #include "third_party/blink/public/common/user_agent/user_agent_metadata.h"
 #endif
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#include "ohos_nweb/src/capi/browser_service/nweb_extension_downloader_types.h"
+#endif
+
 class CefClient;
 
 ///
@@ -1563,6 +1568,18 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get the window id of the UI framework
   ///
   virtual int32_t GetWindowId() { return -1; }
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+  ///
+  /// Download the file with user's input_params at |url| using
+  /// CefDownloadHandler.
+  ///
+  /*--cef()--*/
+  virtual void StartDownloadWithParams(
+      const CefString& url,
+      const DownloadUrlParameters& input_params) {}
+#endif
+
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

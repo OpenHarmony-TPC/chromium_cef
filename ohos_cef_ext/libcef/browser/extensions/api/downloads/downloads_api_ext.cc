@@ -36,6 +36,10 @@
 #include "third_party/bounds_checking_function/include/securec.h"
 #include "ui/base/webui/web_ui_util.h"
 
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#include "components/download/internal/common/arkweb_download_item_impl_ext.h"
+#endif
+
 using content::BrowserContext;
 using download::DownloadItem;
 using extensions::mojom::APIPermissionID;
@@ -971,6 +975,19 @@ void DownloadsDownloadFunction::OnStarted(
   }
 
   DCHECK_EQ(download::DOWNLOAD_INTERRUPT_REASON_NONE, interrupt_reason);
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+  auto arkWebItem = base::raw_ptr<download::ArkWebDownloadItemImplExt>(
+      static_cast<download::ArkWebDownloadItemImplExt*>(item));
+  auto weak_pointer = weak_ptr_factory_.GetWeakPtr();
+  if (arkWebItem && weak_pointer &&
+      weak_pointer->extension()) {
+    arkWebItem->SetByExtensionId(
+        weak_pointer->extension()->id());
+    arkWebItem->SetByExtensionName(
+        weak_pointer->extension()->name());
+    arkWebItem->SetConflictAction(static_cast<int>(creator_conflict_action));
+  }
+#endif
   call_downloads_download_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().GetDownloadId(
