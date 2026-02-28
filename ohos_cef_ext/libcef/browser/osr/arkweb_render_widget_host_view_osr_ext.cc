@@ -2262,21 +2262,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SendTouchpadFlingEvent(
   }
 }
 
-void ArkWebRenderWidgetHostViewOSRExt::SendCancelFlingEvent(blink::WebGestureEvent event) {
-  TRACE_EVENT0("input", "ArkWebRenderWidgetHostViewOSRExt::SendCancelFlingEvent");
-
-  blink::WebGestureEvent fling_cancel = event;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  fling_cancel.SetSourceDevice(blink::WebGestureDevice::kTouchpad);
-  fling_cancel.data.fling_cancel.prevent_boosting = false;
-  fling_cancel.data.fling_cancel.target_viewport = false;
-  if (ShouldRouteEvents()) {
-    render_widget_host_->delegate()->GetInputEventRouter()->RouteGestureEvent(
-        this, &fling_cancel, ui::LatencyInfo());
-  } else {
-    render_widget_host_->ForwardGestureEvent(fling_cancel);
-  }
-}
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)

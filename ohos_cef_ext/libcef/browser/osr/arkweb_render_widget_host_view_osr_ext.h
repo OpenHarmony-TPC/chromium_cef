@@ -278,7 +278,6 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
   void SendTouchpadFlingEvent(blink::WebGestureEvent event);
-  void SendCancelFlingEvent(blink::WebGestureEvent event);
 #endif
 #if BUILDFLAG(ARKWEB_MENU)
   void MouseSelectMenuShow(bool show);
