@@ -676,10 +676,12 @@ void AlloyBrowserHostImpl::CancelContextMenu() {
   }
 }
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
 CefMenuManager* AlloyBrowserHostImpl::GetMenuManager() {
   CEF_REQUIRE_UIT();
   return menu_manager_.get();
 }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     content::RenderFrameHost* opener,
