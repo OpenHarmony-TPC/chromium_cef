@@ -318,6 +318,13 @@ void CefMenuManager::ExecuteCommandCallback(int command_id,
                                             cef_event_flags_t event_flags) {
   DCHECK(IsShowingContextMenu());
   DCHECK(custom_menu_callback_);
+#if BUILDFLAG(ARKWEB_MENU)
+  if (command_id == MENU_ID_IMAGE_COPY &&
+      params_.media_type == ContextMenuDataMediaType::kCanvas) {
+    LOG(INFO) << "Handling canvas image copy command";
+    command_id = MENU_ID_IMAGE_COPY_AT;
+  }
+#endif
   if (command_id != kInvalidCommandId) {
     ExecuteCommand(model_, command_id, event_flags);
   }
@@ -506,6 +513,15 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
     case MENU_ID_ADD_TO_DICTIONARY:
       browser_->GetHost()->AddWordToDictionary(params_.misspelled_word);
       break;
+
+#if BUILDFLAG(ARKWEB_MENU)
+    case MENU_ID_IMAGE_SAVE:
+      ExecuteSaveImage();
+      break;
+    case MENU_ID_IMAGE_COPY_AT:
+      ExecuteCopyImageAt();
+      break;
+#endif
 
     default:
       break;
