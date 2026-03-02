@@ -125,7 +125,8 @@ class CefDevToolsMessageHandler final {
   bool dock_mode_changed_;
   CefResizingStrategy resizing_strategy_;
   base::raw_ptr<CefDevToolsFrontend> devtools_frontend_;
-  
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   base::WeakPtrFactory<CefDevToolsMessageHandler> weak_factory_;
+#endif
 };
 #endif // CEF_LIBCEF_BROWSER_DEVTOOLS_ARKWEB_DEVTOOLS_MESSAGE_HANDLER_H_

@@ -137,6 +137,7 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
       settings_(profile),
       can_dock_(extOpt.canDock),
       is_docked_(false),
+#if BUILDFLAG(ARKWEB_CRASHPAD)
       dock_mode_changed_(false),
       weak_factory_(this) {
   LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
@@ -232,6 +233,38 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
         }
         return Result{false, {}};
       }, weak_factory_.GetWeakPtr());
+#else
+dock_mode_changed_(false) {
+  LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
+  method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::HandleProtocolMessage, base::Unretained(this));
+  method_handlers_["bringToFront"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::BringToFront, base::Unretained(this));
+  method_handlers_["closeWindow"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::CloseWindow, base::Unretained(this));
+  method_handlers_["inspectedURLChanged"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::InspectedURLChanged, base::Unretained(this));
+  method_handlers_["registerPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::RegisterPreference, base::Unretained(this));
+  method_handlers_["getPreferences"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::GetPreferences, base::Unretained(this));
+  method_handlers_["getPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::GetPreference, base::Unretained(this));
+  method_handlers_["setPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::SetPreference, base::Unretained(this));
+  method_handlers_["removePreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::RemovePreference, base::Unretained(this));
+  method_handlers_["clearPreferences"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::ClearPreferences, base::Unretained(this));
+  method_handlers_["setInspectedPageBounds"] =
+      base::BindRepeating(&CefDevToolsMessageHandler::SetInspectedPageBounds,
+                          base::Unretained(this));
+  method_handlers_["setIsDocked"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::SetDockMode, base::Unretained(this));
+
+  protocol_message_handlers_["Page.bringToFront"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::PageBringToFront, base::Unretained(this));
+#endif
 }
 
 CefDevToolsMessageHandler::~CefDevToolsMessageHandler() {}
@@ -446,7 +479,9 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
         << "CefDevToolsMessageHandler::SetInspectedPageBounds params is empty.";
     return {false, {}};
   }
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   const auto& dict = params[0].GetDict();
  
   int left = dict.FindInt("x").value_or(0);
@@ -475,7 +510,9 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
  
 void CefDevToolsMessageHandler::UpdateDockMode() {
   dock_mode_changed_ = false;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   gfx::Rect inspected_page_bounds = resizing_strategy_.bounds();
  
   gfx::Rect devtools_bounds = devtools_frontend_->web_contents()
