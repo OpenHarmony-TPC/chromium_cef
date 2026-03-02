@@ -554,6 +554,9 @@ CefRefPtr<CefRequestContext> ChromeMainDelegateCef::GetGlobalRequestContext() {
   if (browser_client) {
     return browser_client->request_context();
   }
+#if BUILDFLAG(IS_ARKWEB)
+  LOG(ERROR) << "browser_client is nullptr";
+#endif
   return nullptr;
 }
 
