@@ -280,6 +280,9 @@ public:
   std::unique_ptr<content::MediaPlayerListener> OnFullScreenOverlayEnter(
       media::mojom::MediaInfoForVASTPtr media_info_ptr,
       const content::MediaPlayerId& media_player_id) override;
+  std::unique_ptr<content::MediaPlayerListener> OnAVCastStarted(
+      media::mojom::MediaInfoForVASTPtr media_info_ptr,
+      const content::MediaPlayerId& media_player_id) override;
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
 #if BUILDFLAG(ARKWEB_READER_MODE)

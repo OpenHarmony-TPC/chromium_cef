@@ -310,6 +310,9 @@ std::string BuildMediaInfo(
   root.Set("policy", std::move(policy));
 
   root.Set("fullscreenoverlay", media_info->fullscreen_overlay);
+  root.Set("videourl", media_info->video_url);
+  root.Set("iconurl", media_info->icon_url);
+  root.Set("posterurl", media_info->poster_url);
 
   auto json = base::WriteJson(root);
   return json ? json.value() : std::string();
@@ -1564,10 +1567,12 @@ void AlloyBrowserHostImplExt::PopluateVideoAssistantConfig(
     config->playback_rate = true;
     config->download_button =
         media::mojom::VideoAssistantDownloadButton::kDownloadPerPage;
+    config->avcast_button = true;
     return;
   }
   config->video_assistant = cloud_config.videoAssistant;
   config->playback_rate = cloud_config.playbackRate;
+  config->avcast_button = cloud_config.avcastBtn;
   switch (cloud_config.downloadBtn) {
     case nweb_ex::DownloadBtn::kDownloadPerPage:
       config->download_button =
@@ -1944,7 +1949,7 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
 
   std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
 #if BUILDFLAG(ARKWEB_NWEB_EX)
-  auto config = media::mojom::VideoAssistantConfig::New(true, true,
+  auto config = media::mojom::VideoAssistantConfig::New(true, true, true,
       media::mojom::VideoAssistantDownloadButton::kDownloadPerPage);
   auto url =
       GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
@@ -1956,6 +1961,44 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
           this, media_player_id, std::move(media_info_ptr), std::move(config));
 
   listener = client_->OnFullScreenOverlayEnter(
+      std::make_unique<CefMediaPlayerControllerImpl>(
+          std::move(media_player_controller)),
+      media_info);
+#endif // ARKWEB_NWEB_EX
+  if (!listener) {
+    return nullptr;
+  }
+  return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
+}
+
+std::unique_ptr<content::MediaPlayerListener>
+AlloyBrowserHostImplExt::OnAVCastStarted(
+    media::mojom::MediaInfoForVASTPtr media_info_ptr,
+    const content::MediaPlayerId& media_player_id) {
+  if (!client_) {
+    LOG(WARNING) << "client is null, OnAVCastStarted failed";
+    return nullptr;
+  }
+
+  if (!GetWebContents()) {
+    LOG(ERROR) << "OnAVCastStarted GetWebContents failed";
+    return nullptr;
+  }
+
+  std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  auto config = media::mojom::VideoAssistantConfig::New(true, true, true,
+      media::mojom::VideoAssistantDownloadButton::kDownloadPerPage);
+  auto url =
+      GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
+  PopluateVideoAssistantConfig(url, config);
+
+  auto media_info = BuildMediaInfo(media_info_ptr, config);
+  auto media_player_controller =
+      std::make_unique<nweb_ex::MediaPlayerControllerImpl>(
+          this, media_player_id, std::move(media_info_ptr), std::move(config));
+
+  listener = client_->OnAVCastStarted(
       std::make_unique<CefMediaPlayerControllerImpl>(
           std::move(media_player_controller)),
       media_info);
