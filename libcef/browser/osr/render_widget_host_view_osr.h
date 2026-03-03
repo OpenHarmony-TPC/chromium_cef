@@ -359,6 +359,13 @@ class CefRenderWidgetHostViewOSR
   gfx::Rect GetPhysicalViewBounds();
 #endif
 
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  ArkWebRenderWidgetHostViewOSRUtils* GetUtils() const;
+  void OnDisplayFirstRealSwap();
+  void SetUseSpecifiedDeadlinePolicy(bool shouldUse);
+  bool evictUnlockFrameEnabled_ = false;
+#endif
+
  protected:
 #if BUILDFLAG(ARKWEB_FLING)
   void IgnorePendingWheelEndEvent();
@@ -536,6 +543,10 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   float top_controls_offset_ = 0.f;
   float top_content_offset_ = 0.f;
+#endif
+
+#if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
+  base::OneShotTimer timer_;
 #endif
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
