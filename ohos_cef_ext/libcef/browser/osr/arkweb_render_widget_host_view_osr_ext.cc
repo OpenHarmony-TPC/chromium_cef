@@ -519,23 +519,6 @@ void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_CLEAN_BUFFERS_WHEN_INVISIBLE)
-void ArkWebRenderWidgetHostViewOSRExt::SetIfNeedCleanBuffers(bool need_clean_buffers)
-{
-  TRACE_EVENT1("base", "ArkWebRenderWidgetHostViewOSRExt::SetIfNeedCleanBuffers ",
-               "need_clean_buffers:", need_clean_buffers);
-  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
-    ui::Compositor* compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
-      browser_impl_->GetAcceleratedWidget(is_popup_));
-    if (compositor && compositor->Utils()) {
-      compositor->Utils()->SetIfNeedCleanBuffers(need_clean_buffers);
-    } else {
-      LOG(ERROR) << "SetIfNeedCleanBuffers failed for compositor is nullptr";
-    }
-  }
-}
-#endif
-
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
 void ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive(bool is_inactive) {
   TRACE_EVENT0("base", "ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive");
