@@ -411,7 +411,10 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   policy::RegisterBrowserPolicyProfilePrefs(registry);
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  predictor::PredictorDatabase::RegisterPrefs(registry);
+  if (!registry->defaults()->GetValue(
+          predictor::kVisitedUrls, nullptr)) {
+    predictor::PredictorDatabase::RegisterPrefs(registry);
+  }
 #endif  // IS_OHOS
 }
 
