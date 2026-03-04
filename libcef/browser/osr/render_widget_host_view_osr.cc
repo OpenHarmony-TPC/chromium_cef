@@ -258,7 +258,9 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       weak_ptr_factory_(this) {
 #if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
   evictUnlockFrameEnabled_ = OHOS::NWeb::OhosAdapterHelper::GetInstance().GetSystemPropertiesInstance()
-    .GetBoolParameter("const.web.frame_evictor.enabled", false);
+    .GetBoolParameter("const.web.frame_evictor.enabled", false) && features::IsEvictUnlockFrameEnabled();
+  LOG(INFO) << "evictUnlockFrameEnabled: " <<evictUnlockFrameEnabled_ <<
+    " featureSwitch:" << features::IsEvictUnlockFrameEnabled();
 #endif
   arkweb_rwhv_osr_utils_ = std::make_unique<ArkWebRenderWidgetHostViewOSRUtils>(this);
   DCHECK(render_widget_host_);
