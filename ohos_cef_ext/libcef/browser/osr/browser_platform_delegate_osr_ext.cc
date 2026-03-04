@@ -221,9 +221,7 @@ void CefBrowserPlatformDelegateOsrExt::SendCancelFlingEvent(
   if (!view) {
     return;
   }
- blink::WebGestureEvent fling_cancel =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendCancelFlingEvent(fling_cancel);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 }
 #endif
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
