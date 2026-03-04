@@ -1560,6 +1560,13 @@ void ArkWebRenderWidgetHostViewOSRExt::DidOverscroll(
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
+    if (params.accumulated_overscroll.x() ==
+            params.latest_overscroll_delta.x() &&
+        params.accumulated_overscroll.y() ==
+            params.latest_overscroll_delta.y()) {
+      previous_accumulated_overscroll_x = 0.0f;
+      previous_accumulated_overscroll_y = 0.0f;
+    }
     float x =
         params.accumulated_overscroll.x() - previous_accumulated_overscroll_x;
     float y =
