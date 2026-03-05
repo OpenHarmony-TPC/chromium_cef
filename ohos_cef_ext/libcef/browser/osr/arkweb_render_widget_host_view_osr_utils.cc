@@ -166,6 +166,11 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
               << static_cast<uint32_t>(
                      view_->browser_impl_->GetAcceleratedWidget(
                          view_->is_popup_));
+    content::RenderWidgetHostImpl* render_widget_host_impl =
+        content::RenderWidgetHostImpl::From(view_->render_widget_host_);
+    if (render_widget_host_impl) {
+      render_widget_host_impl->SetCompositorForFlingScheduler(nullptr);
+    }
     if (com != compositor_map_.end()) {
 #if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
       if (com->second.first) {
