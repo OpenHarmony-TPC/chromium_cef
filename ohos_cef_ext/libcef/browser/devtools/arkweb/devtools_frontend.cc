@@ -641,7 +641,9 @@ void CefDevToolsFrontend::WebContentsDestroyed() {
 
 void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     base::Value::Dict message) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   const std::string* method = message.FindString("method");
   if (!method) {
     return;
@@ -699,9 +701,6 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     AddDevToolsExtensionsToClient();
 #endif
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#if BUILDFLAG(ARKWEB_CRASHPAD)
-    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-#endif
     auto* rfh = web_contents()->GetPrimaryMainFrame();
     if (rfh == nullptr) {
       return;
@@ -838,9 +837,6 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
     RequestFileSystems();
 #else
-#if BUILDFLAG(ARKWEB_CRASHPAD)
-    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-#endif
     web_contents()->GetPrimaryMainFrame()->ExecuteJavaScriptForTests(
         u"DevToolsAPI.fileSystemsLoaded([]);", base::NullCallback(), 0);
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -923,9 +919,6 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     if (!url) {
       return;
     }
-#if BUILDFLAG(ARKWEB_CRASHPAD)
-    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-#endif
     content::NavigationController& controller = web_contents()->GetController();
     content::NavigationEntry* entry = controller.GetActiveEntry();
     const std::string kHttpPrefix = "http://";
