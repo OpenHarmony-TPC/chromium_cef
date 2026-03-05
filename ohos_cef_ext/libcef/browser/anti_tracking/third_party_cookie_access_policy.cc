@@ -79,7 +79,7 @@ std::unique_ptr<autofill::Trie<std::string>> ParsingTBWOnFileThread(
   std::string filename = tbw_path.value();
   is.open(filename, std::ios::binary);
   if (reader.parse(is, root)) {
-    if (root.isMember("body")) {
+    if (root.isObject() && root.isMember("body")) {
       Json::Value body = root["body"];
       if (!body.isNull() && body.isMember(TBW_DOMAIN_KEY)) {
         if (!body[TBW_DOMAIN_KEY].isNull() && body[TBW_DOMAIN_KEY].isArray()) {
@@ -103,6 +103,8 @@ std::unique_ptr<autofill::Trie<std::string>> ParsingTBWOnFileThread(
           LOG(INFO) << "parsing tbw on file thread done, root is null";
         }
       }
+    } else {
+      LOG(ERROR) << "parsing tbw on file thread done, json error";
     }
   } else {
     LOG(INFO) << "parsing tbw on file thread done, parse error";
