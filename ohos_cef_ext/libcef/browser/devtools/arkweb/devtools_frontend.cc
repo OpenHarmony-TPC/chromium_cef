@@ -788,7 +788,6 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
       return;
     } else {
 #if BUILDFLAG(ARKWEB_CRASHPAD)
-      DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
       if (!inspected_contents_) {
         return;
       }
