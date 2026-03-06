@@ -1280,7 +1280,6 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
   }
   header_client_redirect_url_ = redirect_url_;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-
   if (extensions_header_client_) {
     extensions_header_client_->OnHeadersReceived(headers ? headers.value() : origin_headers_,
                                                    remote_endpoint_, std::move(on_headers_received_callback_));
