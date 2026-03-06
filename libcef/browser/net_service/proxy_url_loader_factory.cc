@@ -1293,7 +1293,7 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
 
   override_headers_ = nullptr;
   redirect_url_ = GURL();
- 
+
   // Resume handling of client messages after continuing from an async callback.
   if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
