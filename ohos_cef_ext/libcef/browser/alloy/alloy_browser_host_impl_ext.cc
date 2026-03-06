@@ -2087,3 +2087,12 @@ void AlloyBrowserHostImplExt::OnSafeBrowsingCheckDetail(int code,
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void AlloyBrowserHostImplExt::OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {
+  LOG(INFO) << "AlloyBrowserHostImplExt::OnRequestOpenDevTools";
+  if (contents_delegate()) {
+    contents_delegate()->OnRequestOpenDevTools(params);
+  }
+}
+#endif // ARKWEB_DEVTOOLS

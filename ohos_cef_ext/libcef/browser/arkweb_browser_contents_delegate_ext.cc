@@ -455,3 +455,16 @@ void ArkWebBrowserContentsDelegateExt::NotifyPageChanged(const std::string url) 
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void ArkWebBrowserContentsDelegateExt::OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {
+  LOG(INFO) << "ArkWebBrowserContentsDelegateExt::OnRequestOpenDevTools";
+  if (auto c = client()) {
+    if (auto handler = c->GetRequestHandler()) {
+      if (handler->AsCefRequestHandlerExt()) {
+        handler->AsCefRequestHandlerExt()->OnRequestOpenDevTools(*params);
+      }
+    }
+  }
+}
+#endif // ARKWEB_DEVTOOLS

@@ -47,6 +47,13 @@ class CefDevToolsWindowRunner final {
   void ShowDevTools(CefBrowserHostBase* opener,
                     std::unique_ptr<CefShowDevToolsParams> params);
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+  static void StaticShowDevToolsWith(
+      const CefString& source_id,
+      const CefString& target_id,
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      const CefPoint& inspect_element_at,
+      const CefOpenDevToolsExtOpt& ext_opt);
   void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefBrowserHostBase* inspected_browser,
@@ -71,6 +78,7 @@ class CefDevToolsWindowRunner final {
  private:
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   void OnFrontEndDestroyed();
+  static void OnStaticFrontEndDestroyed();
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   std::unique_ptr<CefShowDevToolsParams> pending_params_;
@@ -79,6 +87,7 @@ class CefDevToolsWindowRunner final {
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   raw_ptr<CefDevToolsFrontend> devtools_frontend_ = nullptr;
+  static raw_ptr<CefDevToolsFrontend> static_devtools_frontend_;
   base::WeakPtrFactory<CefDevToolsWindowRunner> weak_ptr_factory_{this};
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 };

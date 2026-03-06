@@ -1187,6 +1187,8 @@ source_set("libcef_static") {
     sources += [
       "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
       "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
+      "ohos_cef_ext/libcef/browser/devtools/arkweb/request_open_devtools_handler.cc",
+      "ohos_cef_ext/libcef/browser/devtools/arkweb/request_open_devtools_handler.h",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
