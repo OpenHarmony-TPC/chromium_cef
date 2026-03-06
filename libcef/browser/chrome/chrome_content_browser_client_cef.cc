@@ -612,7 +612,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
         factory_override, navigation_response_task_runner);
     return;
   }
- 
+
   // Based on content/browser/devtools/devtools_instrumentation.cc
   // WillCreateURLLoaderFactoryParams::Run.
   network::mojom::URLLoaderFactoryOverridePtr cef_override(
@@ -624,7 +624,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
       factory_override && *factory_override ? factory_override : &cef_override;
   network::mojom::URLLoaderFactoryOverride* intercepting_factory =
       handler_override->get();
- 
+
   // If we're the first interceptor to install an override, make a
   // remote/receiver pair, then handle this similarly to appending
   // a proxy to existing override.
@@ -634,7 +634,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
         intercepting_factory->overriding_factory
             .InitWithNewPipeAndPassReceiver();
   }
- 
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote;
 #endif
@@ -649,7 +649,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
       /*header_client=*/nullptr, bypass_redirect_checks, disable_secure_dns,
 #endif
       handler_override, navigation_response_task_runner);
- 
+
   DCHECK(intercepting_factory->overriding_factory);
   DCHECK(intercepting_factory->overridden_factory_receiver);
   if (!factory_override) {
@@ -669,7 +669,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
   // pointing to factory override and we've done all magic in-place.
   DCHECK(!cef_override->overriding_factory);
   DCHECK(!cef_override->overridden_factory_receiver);
- 
+
   auto request_handler = net_service::CreateInterceptedRequestHandler(
       browser_context, frame, render_process_id,
       type == URLLoaderFactoryType::kNavigation,
