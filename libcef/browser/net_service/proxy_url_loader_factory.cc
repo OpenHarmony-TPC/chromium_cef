@@ -218,15 +218,27 @@ class CorsPreflightRequest : public network::mojom::TrustedHeaderClient {
   // mojom::TrustedHeaderClient methods:
   void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
                            OnBeforeSendHeadersCallback callback) override {
-    std::move(callback).Run(net::OK, headers);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_header_client_) {
+      extensions_header_client_->OnBeforeSendHeaders(headers, std::move(callback));
+    }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
   }
 
   void OnHeadersReceived(const std::string& headers,
                          const net::IPEndPoint& remote_endpoint,
                          OnHeadersReceivedCallback callback) override {
-    std::move(callback).Run(net::OK, headers, /*redirect_url=*/GURL());
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_header_client_) {
+      extensions_header_client_->OnHeadersReceived(headers, remote_endpoint, std::move(callback));
+    }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
     OnDestroy();
   }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  mojo::Remote<network::mojom::TrustedHeaderClient> extensions_header_client_;
+#endif
 
  private:
   void OnDestroy() { delete this; }
@@ -320,6 +332,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
   }
 #endif
   int32_t id() const { return id_; }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  mojo::Remote<network::mojom::TrustedHeaderClient> extensions_header_client_;
+#endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void OnHttpErrorForUIThread(int32_t,
@@ -457,6 +473,11 @@ class InterceptedRequest : public network::mojom::URLLoader,
   OnHeadersReceivedCallback on_headers_received_callback_;
   mojo::Receiver<network::mojom::TrustedHeaderClient> header_client_receiver_{
       this};
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  std::string origin_headers_;
+  net::IPEndPoint remote_endpoint_;
+#endif
 
   std::unique_ptr<StreamReaderURLLoader> stream_loader_;
 
@@ -753,13 +774,21 @@ void InterceptedRequest::OnBeforeSendHeaders(
     const net::HttpRequestHeaders& headers,
     OnBeforeSendHeadersCallback callback) {
   if (!current_request_uses_header_client_) {
-    std::move(callback).Run(net::OK, std::nullopt);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_header_client_) {
+      extensions_header_client_->OnBeforeSendHeaders(headers, std::move(callback));
+    }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
     return;
   }
-
+ 
   request_.headers = headers;
-  std::move(callback).Run(net::OK, std::nullopt);
-
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_header_client_) {
+      extensions_header_client_->OnBeforeSendHeaders(headers, std::move(callback));
+    }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
+ 
   // Resume handling of client messages after continuing from an async callback.
   if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
@@ -771,13 +800,25 @@ void InterceptedRequest::OnHeadersReceived(
     const net::IPEndPoint& remote_endpoint,
     OnHeadersReceivedCallback callback) {
   if (!current_request_uses_header_client_) {
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_header_client_) {
+      extensions_header_client_->OnHeadersReceived(headers, remote_endpoint, std::move(callback));
+    } else {
+      std::move(callback).Run(net::OK, std::nullopt, GURL());
+    }
+#else
     std::move(callback).Run(net::OK, std::nullopt, GURL());
+#endif // ARKWEB_ARKWEB_EXTENSIONS
     return;
   }
-
+ 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  remote_endpoint_ = remote_endpoint;
+  origin_headers_ = headers;
+#endif // ARKWEB_ARKWEB_EXTENSIONS
   current_headers_ = base::MakeRefCounted<net::HttpResponseHeaders>(headers);
   on_headers_received_callback_ = std::move(callback);
-
+ 
   std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
@@ -789,7 +830,7 @@ void InterceptedRequest::OnHeadersReceived(
         MakeRedirectInfo(request_, current_headers_.get(), new_url, 0);
 #endif
   }
-
+ 
   HandleResponseOrRedirectHeaders(
       redirect_info,
       base::BindOnce(&InterceptedRequest::ContinueToHandleOverrideHeaders,
@@ -1215,18 +1256,28 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
     SendErrorAndCompleteImmediately(error_code);
     return;
   }
-
+ 
   DCHECK(on_headers_received_callback_);
   std::optional<std::string> headers;
   if (override_headers_) {
     headers = override_headers_->raw_headers();
   }
   header_client_redirect_url_ = redirect_url_;
-  std::move(on_headers_received_callback_).Run(net::OK, headers, redirect_url_);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
+  if (extensions_header_client_) {
+    extensions_header_client_->OnHeadersReceived(headers ? headers.value() : origin_headers_,
+                                                   remote_endpoint_, std::move(on_headers_received_callback_));
+  } else {
+    std::move(on_headers_received_callback_).Run(net::OK, headers, redirect_url_);
+  }
+#else
+  std::move(on_headers_received_callback_).Run(net::OK, headers, redirect_url_);
+#endif // ARKWEB_ARKWEB_EXTENSIONS
+ 
   override_headers_ = nullptr;
   redirect_url_ = GURL();
-
+ 
   // Resume handling of client messages after continuing from an async callback.
   if (proxied_client_receiver_.is_bound()) {
     proxied_client_receiver_.Resume();
@@ -1660,17 +1711,20 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
     mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote,
     mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
         header_client_receiver,
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
+#endif
     std::unique_ptr<InterceptedRequestHandler> request_handler)
     : request_handler_(std::move(request_handler)), weak_factory_(this) {
   CEF_REQUIRE_IOT();
   DCHECK(request_handler_);
-
+ 
 #if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   std::vector<int> tids;
   tids.push_back(gettid());
   ResReporter::GetInstance().AddRtg(tids);
 #endif
-
+ 
   // Actual creation of the factory.
   if (target_factory_remote) {
     target_factory_.Bind(std::move(target_factory_remote));
@@ -1680,10 +1734,15 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
   proxy_receivers_.Add(this, std::move(factory_receiver));
   proxy_receivers_.set_disconnect_handler(base::BindRepeating(
       &ProxyURLLoaderFactory::OnProxyBindingError, base::Unretained(this)));
-
+ 
   if (header_client_receiver) {
     url_loader_header_client_receiver_.Bind(std::move(header_client_receiver));
   }
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (extensions_url_loader_header_client_remote) {
+    extensions_url_loader_header_client_.Bind(std::move(extensions_url_loader_header_client_remote));
+  }
+#endif
 }
 
 ProxyURLLoaderFactory::~ProxyURLLoaderFactory() {
@@ -1696,12 +1755,22 @@ void ProxyURLLoaderFactory::CreateOnIOThread(
     mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory,
     mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
         header_client_receiver,
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
+#endif
     content::ResourceContext* resource_context,
     std::unique_ptr<InterceptedRequestHandler> request_handler) {
   CEF_REQUIRE_IOT();
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  auto proxy = new ProxyURLLoaderFactory(
+      std::move(factory_receiver), std::move(target_factory),
+      std::move(header_client_receiver), std::move(extensions_url_loader_header_client_remote),
+      std::move(request_handler));
+#else
   auto proxy = new ProxyURLLoaderFactory(
       std::move(factory_receiver), std::move(target_factory),
       std::move(header_client_receiver), std::move(request_handler));
+#endif
   ResourceContextData::AddProxy(proxy, resource_context);
 }
 
@@ -1764,6 +1833,9 @@ void ProxyURLLoaderFactory::CreateProxy(
       std::move(loader_receiver),
       mojo::PendingRemote<network::mojom::URLLoaderFactory>(),
       mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>(),
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+      mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>(),
+#endif
       std::move(request_handler));
   CEF_POST_TASK(CEF_UIT,
                 base::BindOnce(ResourceContextData::AddProxyOnUIThread,
@@ -1849,18 +1921,33 @@ void ProxyURLLoaderFactory::OnLoaderCreated(
   auto request_it = requests_.find(request_id);
   if (request_it != requests_.end()) {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-    request_it->second.first->OnLoaderCreated(std::move(receiver));
+    InterceptedRequest* request = request_it->second.first.get();
 #else
-    request_it->second->OnLoaderCreated(std::move(receiver));
+    InterceptedRequest* request = request_it->second.get();
 #endif
+ 
+    request->OnLoaderCreated(std::move(receiver));
+ 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    if (extensions_url_loader_header_client_) {
+      extensions_url_loader_header_client_->OnLoaderCreated(
+          request_id, request->extensions_header_client_.BindNewPipeAndPassReceiver());
+    }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
   }
 }
-
+  
 void ProxyURLLoaderFactory::OnLoaderForCorsPreflightCreated(
     const network::ResourceRequest& request,
     mojo::PendingReceiver<network::mojom::TrustedHeaderClient> receiver) {
   CEF_REQUIRE_IOT();
-  new CorsPreflightRequest(std::move(receiver));
+  CorsPreflightRequest* cors_preflight_request = new CorsPreflightRequest(std::move(receiver));
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (extensions_url_loader_header_client_) {
+    extensions_url_loader_header_client_->OnLoaderForCorsPreflightCreated(
+        request, cors_preflight_request->extensions_header_client_.BindNewPipeAndPassReceiver());
+  }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
 }
 
 void ProxyURLLoaderFactory::OnTargetFactoryError() {
