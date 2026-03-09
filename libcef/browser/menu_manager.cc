@@ -546,19 +546,3 @@ bool CefMenuManager::IsCustomContextMenuCommand(int command_id) {
   }
   return false;
 }
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-CefRefPtr<CefMenuModelImpl> CefMenuManager::GetContextMenuModel() {
-  LOG(INFO) << "CefMenuManager::GetContextMenuModel model size: " << model_->GetCount();
-  return model_;
-}
- 
-void CefMenuManager::onConTextMenuSelected(int command_id) {
-  ExecuteDefaultCommand(command_id);
-  MenuClosed(model_);
-}
- 
-void CefMenuManager::onContextMenuClosed() {
-  MenuClosed(model_);
-}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
