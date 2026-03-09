@@ -19,6 +19,7 @@
 #include "base/values.h"
 #include "base/functional/bind.h"
 #include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 #include "chrome/browser/devtools/devtools_settings.h"
 #include "libcef/browser/file_dialog_manager.h"
@@ -120,8 +121,12 @@ class CefDevToolsMessageHandler final {
   DevToolsSettings settings_;
   bool can_dock_;
   bool is_docked_;
+  DockMode dock_mode_;
   bool dock_mode_changed_;
   CefResizingStrategy resizing_strategy_;
   base::raw_ptr<CefDevToolsFrontend> devtools_frontend_;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  base::WeakPtrFactory<CefDevToolsMessageHandler> weak_factory_;
+#endif
 };
 #endif // CEF_LIBCEF_BROWSER_DEVTOOLS_ARKWEB_DEVTOOLS_MESSAGE_HANDLER_H_

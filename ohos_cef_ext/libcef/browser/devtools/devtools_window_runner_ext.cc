@@ -21,9 +21,51 @@
 
 #include "cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_frontend.h"
 
+raw_ptr<CefDevToolsFrontend> CefDevToolsWindowRunner::static_devtools_frontend_ = nullptr;
 void CefDevToolsWindowRunner::OnFrontEndDestroyed() {
   LOG(INFO) << "OnFrontEndDestroyed";
   devtools_frontend_ = nullptr;
+}
+
+void CefDevToolsWindowRunner::OnStaticFrontEndDestroyed() {
+  LOG(INFO) << "OnStaticFrontEndDestroyed";
+  static_devtools_frontend_ = nullptr;
+}
+
+void CefDevToolsWindowRunner::StaticShowDevToolsWith(
+    const CefString& source_id,
+    const CefString& target_id,
+    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+    const CefPoint& inspect_element_at,
+    const CefOpenDevToolsExtOpt& ext_opt) {
+  LOG(INFO) << "CefDevToolsWindowRunner::StaticShowDevToolsWith";
+  CEF_REQUIRE_UIT();
+  auto* arkweb_host_ext = static_cast<ArkWebBrowserHostExtImpl*>(frontend_browser.get());
+  auto alloy_frontend_browser = arkweb_host_ext->AsAlloyBrowserHostImpl();
+  if (static_devtools_frontend_ &&
+      static_devtools_frontend_->GetFrontendBrowser() == alloy_frontend_browser.get()) {
+    LOG(INFO) << "ShowDevToolsWith, reuse devtools_frontend";
+    if (!inspect_element_at.IsEmpty()) {
+      static_devtools_frontend_->InspectElementAt(inspect_element_at.x,
+                                           inspect_element_at.y);
+    }
+    static_devtools_frontend_->Focus();
+    return;
+  }
+
+  if (!alloy_frontend_browser) {
+    NOTIMPLEMENTED();
+  } else {
+    static_devtools_frontend_ = CefDevToolsFrontend::StaticShowWith(
+        source_id,
+        target_id,
+        alloy_frontend_browser.get(), std::move(devtools_message_handler),
+        nullptr, inspect_element_at,
+        base::BindOnce(&CefDevToolsWindowRunner::OnStaticFrontEndDestroyed),
+        ext_opt);
+  }
+
 }
 
 void CefDevToolsWindowRunner::ShowDevToolsWith(

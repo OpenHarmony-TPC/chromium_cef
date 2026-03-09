@@ -162,11 +162,24 @@ class InterceptedRequestHandler {
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  virtual std::string OnRewriteUrlForNavigation(
+  virtual void OnRewriteUrlForNavigation(
       const std::string& original_url,
       const std::string& referrer,
       int transition_type,
-      bool is_key_request) { return ""; }
+      bool is_key_request,
+      int32_t request_id,
+      base::OnceCallback<void(std::string)>) {}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  virtual void OnReceiveResponse(CefRefPtr<CefRequest> request,
+                                 bool is_request_gesture,
+                                 int transition_type,
+                                 bool is_main_frame,
+                                 bool is_redirect,
+                                 int resource_type,
+                                 CefRefPtr<CefResponse> response_info,
+                                 bool is_from_network) {}
 #endif
 };
 

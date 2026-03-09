@@ -52,6 +52,14 @@
 #include "arkweb/ohos_nweb/include/nweb_vault_plain_text_callback.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+#include "third_party/blink/public/common/user_agent/user_agent_metadata.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#include "ohos_nweb/src/capi/browser_service/nweb_extension_downloader_types.h"
+#endif
+
 class CefClient;
 
 ///
@@ -68,6 +76,20 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
 
   virtual void SetErrorDescription(const std::string& description) {}
 };
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+class CefFrameInfosCallback : public CefBaseRefCounted {
+ public:
+  virtual void OnFrameInfosCallback(GetFrameInfosParam value) = 0;
+
+};
+
+class CefLastJavaScriptProxyCallingFrameInfoCallback : public CefBaseRefCounted {
+ public:
+  virtual void OnLastFrameInfoCallback(FrameInfos value) = 0;
+
+};
+#endif
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 class CefDistillCallback : public virtual CefBaseRefCounted {
@@ -222,6 +244,10 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Update browser controls height.
   ///
   virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
+
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+  virtual bool SavePage(int32_t type, CefString& filePath) { return false; }
+#endif // ARKWEB_SAVE_PAGE
   ///
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
@@ -356,7 +382,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Set url trust list.
   ///
   virtual int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                        CefString& detailErrMsg) = 0;
+    bool allowOpaqueOrigin, bool supportWildcard, CefString& detailErrMsg) = 0;
 
   ///
   /// Set tabId.
@@ -1128,6 +1154,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void SendTouchpadFlingEvent(const CefMouseEvent& event,
                                       double vx,
                                       double vy) = 0;
+  
+  ///
+  /// SendCancelFlingEvent
+  ///
+  virtual void SendCancelFlingEvent(const CefMouseEvent& event) = 0;
 
   ///
   /// Set the fit content mode
@@ -1425,7 +1456,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                                      bool recursive, IsolatedWorld world,
                                      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
-
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  virtual void GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) = 0;
+  virtual void GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) = 0;
+#endif
 #if BUILDFLAG(ARKWEB_BGTASK)
   ///
   /// Notify browser is foreground.
@@ -1465,6 +1500,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void HandleInputMethodExtendAction(int32_t action) {}
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  ///
+  /// get last committed entry's page transition
+  ///
+  virtual int32_t GetLastCommittedEntryPageTransition() {}
+#endif
+
 #if BUILDFLAG(ARKWEB_AUTOFILL)
   ///
   /// Fill autofill data.
@@ -1503,7 +1545,44 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Evict frame back buffers when nweb was hidden
   ///
   virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+
+  ///
+  /// Set is offline web Component.
+  ///
+  virtual void SetIsOfflineWebComponent() {}
 #endif
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  ///
+  /// Set metaData by userAgent.
+  ///
+  virtual void SetUserAgentMetadata(const std::string& user_agent,
+                                    const blink::UserAgentMetadata& metadata){};
+
+  ///
+  /// Get userAgent by metaData.
+  ///
+  virtual const blink::UserAgentMetadata GetUserAgentMetadata(
+      const std::string& user_agent) {
+    return blink::UserAgentMetadata();
+  };
+#endif
+
+  ///
+  /// Get the window id of the UI framework
+  ///
+  virtual int32_t GetWindowId() { return -1; }
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+  ///
+  /// Download the file with user's input_params at |url| using
+  /// CefDownloadHandler.
+  ///
+  /*--cef()--*/
+  virtual void StartDownloadWithParams(
+      const CefString& url,
+      const DownloadUrlParameters& input_params) {}
+#endif
+
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

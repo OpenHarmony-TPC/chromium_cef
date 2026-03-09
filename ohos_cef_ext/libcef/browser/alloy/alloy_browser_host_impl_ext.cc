@@ -310,6 +310,9 @@ std::string BuildMediaInfo(
   root.Set("policy", std::move(policy));
 
   root.Set("fullscreenoverlay", media_info->fullscreen_overlay);
+  root.Set("videourl", media_info->video_url);
+  root.Set("iconurl", media_info->icon_url);
+  root.Set("posterurl", media_info->poster_url);
 
   auto json = base::WriteJson(root);
   return json ? json.value() : std::string();
@@ -372,7 +375,9 @@ AlloyBrowserHostImplExt::AlloyBrowserHostImplExt(
                             opener,
                             request_context,
                             std::move(platform_delegate)) {
+#if !DCHECK_IS_ON()
   platform_delegate_->BrowserCreated(this);
+#endif // !DCHECK_IS_ON()
 }
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
@@ -1562,10 +1567,12 @@ void AlloyBrowserHostImplExt::PopluateVideoAssistantConfig(
     config->playback_rate = true;
     config->download_button =
         media::mojom::VideoAssistantDownloadButton::kDownloadPerPage;
+    config->avcast_button = true;
     return;
   }
   config->video_assistant = cloud_config.videoAssistant;
   config->playback_rate = cloud_config.playbackRate;
+  config->avcast_button = cloud_config.avcastBtn;
   switch (cloud_config.downloadBtn) {
     case nweb_ex::DownloadBtn::kDownloadPerPage:
       config->download_button =
@@ -1619,6 +1626,7 @@ void AlloyBrowserHostImplExt::SetWindowId(int window_id, int nweb_id) {
 }
 
 void AlloyBrowserHostImplExt::RenderViewReady() {
+  LOG(INFO) << "AlloyBrowserHostImplExt::RenderViewReady:nweb_id: " << nweb_id_;
   RenderProcessStateHandler::GetInstance()->InitRenderProcessState(implUtils->GetRenderProcessId(), nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
@@ -1656,14 +1664,28 @@ void AlloyBrowserHostImplExt::ReportWindowStatus(bool first_view_ready) {
     ResSchedStatusAdapter status = is_hidden_
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
 
+    const base::Process& process = render_process_host->GetProcess();
+    int rph_unique_id = render_process_host->GetID();
+    if (process.IsValid()) {
+      base::ProcessId process_id = render_process_host->GetProcess().Pid();
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-    InactiveUnloadOldProcess(process_id);
+      InactiveUnloadOldProcess(process_id);
 #endif
+      TRACE_EVENT2("base", "PopNwebForNotInitRender", "nweb_id", nweb_id_, "pid", process_id);
+      LOG(INFO) << "AlloyBrowserHostImplExt::ReportWindowStatus: Nweb: " << nweb_id_
+                 << ", window: " << window_id_ << ", pid: " << process_id << " ,rph_unique_id: " << rph_unique_id;
+      RenderProcessStateHandler::GetInstance()->PopNwebForNotInitRender(rph_unique_id, nweb_id_,
+                                                                        is_hidden_, window_id_, process_id);
+      ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                                nweb_id_);
+    } else {
+      LOG(WARNING) << "AlloyBrowserHostImplExt::ReportWindowStatus render_process is not ready yet.";
+      TRACE_EVENT1("base", "PushNwebForNotInitRender", "nweb_id", nweb_id_);
+      RenderProcessStateHandler::GetInstance()->PushNwebForNotInitRender(rph_unique_id, nweb_id_,
+                                                                         is_hidden_, window_id_, 0);
+    }
 
-    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
-                                              nweb_id_);
     if (!is_hidden_) {
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
@@ -1927,7 +1949,7 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
 
   std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
 #if BUILDFLAG(ARKWEB_NWEB_EX)
-  auto config = media::mojom::VideoAssistantConfig::New(true, true,
+  auto config = media::mojom::VideoAssistantConfig::New(true, true, true,
       media::mojom::VideoAssistantDownloadButton::kDownloadPerPage);
   auto url =
       GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
@@ -1939,6 +1961,44 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
           this, media_player_id, std::move(media_info_ptr), std::move(config));
 
   listener = client_->OnFullScreenOverlayEnter(
+      std::make_unique<CefMediaPlayerControllerImpl>(
+          std::move(media_player_controller)),
+      media_info);
+#endif // ARKWEB_NWEB_EX
+  if (!listener) {
+    return nullptr;
+  }
+  return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
+}
+
+std::unique_ptr<content::MediaPlayerListener>
+AlloyBrowserHostImplExt::OnAVCastStarted(
+    media::mojom::MediaInfoForVASTPtr media_info_ptr,
+    const content::MediaPlayerId& media_player_id) {
+  if (!client_) {
+    LOG(WARNING) << "client is null, OnAVCastStarted failed";
+    return nullptr;
+  }
+
+  if (!GetWebContents()) {
+    LOG(ERROR) << "OnAVCastStarted GetWebContents failed";
+    return nullptr;
+  }
+
+  std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  auto config = media::mojom::VideoAssistantConfig::New(true, true, true,
+      media::mojom::VideoAssistantDownloadButton::kDownloadPerPage);
+  auto url =
+      GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
+  PopluateVideoAssistantConfig(url, config);
+
+  auto media_info = BuildMediaInfo(media_info_ptr, config);
+  auto media_player_controller =
+      std::make_unique<nweb_ex::MediaPlayerControllerImpl>(
+          this, media_player_id, std::move(media_info_ptr), std::move(config));
+
+  listener = client_->OnAVCastStarted(
       std::make_unique<CefMediaPlayerControllerImpl>(
           std::move(media_player_controller)),
       media_info);
@@ -2010,3 +2070,29 @@ void AlloyBrowserHostImplExt::OnDocumentEndReady(const FrameInfos& frameInfo) {
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+int32_t AlloyBrowserHostImplExt::GetWindowId() {
+  return window_id_;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+void AlloyBrowserHostImplExt::OnSafeBrowsingCheckDetail(int code,
+                                                        int policy,
+                                                        int threat) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnSafeBrowsingCheckDetail(code, policy, threat);
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void AlloyBrowserHostImplExt::OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {
+  LOG(INFO) << "AlloyBrowserHostImplExt::OnRequestOpenDevTools";
+  if (contents_delegate()) {
+    contents_delegate()->OnRequestOpenDevTools(params);
+  }
+}
+#endif // ARKWEB_DEVTOOLS

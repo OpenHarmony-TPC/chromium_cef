@@ -313,7 +313,7 @@ void BookmarksGetFunction::GetCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -375,7 +375,7 @@ void BookmarksGetChildrenFunction::GetChildrenCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -431,7 +431,7 @@ void BookmarksGetRecentFunction::GetRecentCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -477,7 +477,7 @@ void BookmarksGetTreeFunction::GetTreeCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -538,7 +538,7 @@ void BookmarksGetSubTreeFunction::GetSubTreeCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -613,7 +613,7 @@ void BookmarksSearchFunction::SearchCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -670,7 +670,7 @@ void BookmarksRemoveFunction::RemoveCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->NoArguments());
@@ -728,7 +728,7 @@ void BookmarksRemoveTreeFunction::RemoveTreeCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->NoArguments());
@@ -805,7 +805,7 @@ void BookmarksCreateFunction::CreateCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(
@@ -864,7 +864,7 @@ void BookmarksMoveFunction::MoveCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(
@@ -942,7 +942,7 @@ void BookmarksUpdateFunction::UpdateCallback(
     return;
   }
 
-  if (error) {
+  if (error && (strlen(error) > 0)) {
     function->Respond(function->Error(std::string(error)));
   } else {
     function->Respond(function->ArgumentList(

@@ -160,6 +160,15 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     return handled;
   }
 
+  // Validate attachment type before casting to prevent undefined behavior
+  auto* msg_attachment = static_cast<IPC::MessageAttachment*>(attachment.get());
+  if (msg_attachment->GetType() != IPC::MessageAttachment::Type::PLATFORM_FILE) {
+    LOG(ERROR) << "OnMessageThreadFlowbuf Invalid attachment type: " 
+               << static_cast<int>(msg_attachment->GetType())
+               << ", expected PLATFORM_FILE";
+    return handled; 
+  }
+
   int fd = static_cast<IPC::internal::PlatformFileAttachment*>(attachment.get())
                ->file();
   IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(OhGinJavascriptBridgeMessageFilter, message,
@@ -413,7 +422,9 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
 
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
+  // native object no need to call webview side impl
+  if (host && object_id < OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
+    LOG(INFO) << "OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted object_id: " << object_id;
     host->OnObjectWrapperDeleted(current_routing_id, object_id);
   }
 }

@@ -186,6 +186,12 @@ base::ProcessId AlloyBrowserHostImplUtils::GetRenderProcessId() {
       LOG(ERROR) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_process_host is null";
       return 0;
     }
+    const base::Process& process = render_process_host->GetProcess();
+
+    if (!process.IsValid()) {
+      LOG(WARNING) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_process is not ready yet.";
+      return 0;
+    }
     return render_process_host->GetProcess().Pid();
   } else {
     LOG(ERROR) << "AlloyBrowserHostImplUtils::GetRenderProcessId render_view_host is null";
@@ -378,6 +384,24 @@ void AlloyBrowserHostImplUtils::EvictFrameBackBuffersWhenNWebWasHidden() {
   }
   if (alloyBrowserHostImpl->platform_delegate_) {
     alloyBrowserHostImpl->platform_delegate_->EvictFrameBackBuffersWhenNWebWasHidden();
+  }
+}
+
+void AlloyBrowserHostImplUtils::SetIsOfflineWebComponent() {
+  if (alloyBrowserHostImpl == nullptr) {
+    LOG(INFO) << "alloyBrowserHostImpl is nullptr";
+    return;
+  }
+  if (!alloyBrowserHostImpl->IsWindowless()) {
+    return;
+  }
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetIsOfflineWebComponent,
+                                          alloyBrowserHostImpl->AsAlloyBrowserHostImpl()));
+    return;
+  }
+  if (alloyBrowserHostImpl->platform_delegate_) {
+    alloyBrowserHostImpl->platform_delegate_->SetIsOfflineWebComponent();
   }
 }
 #endif

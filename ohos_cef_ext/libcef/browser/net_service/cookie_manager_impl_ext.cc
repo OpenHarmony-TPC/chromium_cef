@@ -294,6 +294,16 @@ int CefCookieManagerImplExt::StartCookieTaskSync() {
   return OH_QoS_SetThreadQoS(QoS_Level::QOS_USER_INTERACTIVE);
 }
 
+int CefCookieManagerImplExt::StartCookieTaskSyncForLazyInit() {
+  if (set_qos_times_ > 0) {
+    set_qos_times_++;
+    return -1;
+  }
+  set_qos_times_++;
+  TRACE_EVENT0("cef", "CefCookieManagerImplExt::StartCookieTaskSync");
+  return OH_QoS_SetThreadQoS(QoS_Level::QOS_USER_INTERACTIVE);
+}
+
 void CefCookieManagerImplExt::FinishCookieTaskSync() {
   set_qos_times_--;
   if (set_qos_times_ <= 0) {
@@ -311,28 +321,51 @@ void CefCookieManagerImplExt::FinishCookieTaskSync() {
   }
 }
 
+void CefCookieManagerImplExt::FinishCookieTaskSyncForLazyInit() {
+  set_qos_times_--;
+  if (set_qos_times_ <= 0) {
+    TRACE_EVENT0("cef", "CefCookieManagerImplExt::FinishCookieTaskSync");
+    set_qos_times_ = 0;
+    OH_QoS_ResetThreadQoS();
+  }
+}
+
 void CefCookieManagerImplExt::StartSetQos() {
-  if (set_qos_times_ > 0) {
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine()) {
+    if (set_qos_times_ > 0) {
+      set_qos_times_++;
+      network_set_times_++;
+      return;
+    }
     set_qos_times_++;
+    cookie_store_task_runner_->PostTask(FROM_HERE,
+        base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync),
+        weak_ptr_factory_.GetWeakPtr()));
+    if (network_set_times_ > 0) {
+      network_set_times_++;
+      return;
+    }
     network_set_times_++;
-    return;
+    content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
+        base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync),
+        weak_ptr_factory_.GetWeakPtr()));
+  } else {
+    cookie_store_task_runner_->PostTask(FROM_HERE,
+        base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSyncForLazyInit),
+        weak_ptr_factory_.GetWeakPtr()));
   }
-  set_qos_times_++;
-  cookie_store_task_runner_->PostTask(FROM_HERE,
-      base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
-  if (network_set_times_ > 0) {
-    network_set_times_++;
-    return;
-  }
-  network_set_times_++;
-  content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
-      base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
 }
 
 void CefCookieManagerImplExt::FinishSetQos() {
-  content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE,
-    base::BindOnce(&CefCookieManagerImplExt::FinishCookieTaskSync, weak_ptr_factory_.GetWeakPtr()),
-    base::Milliseconds(sync_close_delay_time));
+  if (!OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine()) {
+    content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE,
+      base::BindOnce(&CefCookieManagerImplExt::FinishCookieTaskSync, weak_ptr_factory_.GetWeakPtr()),
+      base::Milliseconds(sync_close_delay_time));
+  } else {
+    cookie_store_task_runner_->PostDelayedTask(FROM_HERE,
+      base::BindOnce(&CefCookieManagerImplExt::FinishCookieTaskSyncForLazyInit, weak_ptr_factory_.GetWeakPtr()),
+      base::Milliseconds(sync_close_delay_time));  
+  }
 }
 #endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 
@@ -956,11 +989,16 @@ void CefCookieManagerImplExt::FlushStoreInternalCookieTask(
   CookieManager* cookie_manager = GetNetworkCookieManager();
   if (!cookie_manager) {
     GetCookieStore()->FlushStore(std::move(complete));
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+    if (cmd_value_) {
+      FinishSetQos();
+    }
+#endif
     return;
   }
   cookie_manager->FlushCookieStore(std::move(complete));
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
-  if (cmd_value_) {
+  if (cmd_value_ && !OHOS::NWeb::NWebImpl::ShouldLazyInitWebEngine()) {
     content::GetUIThreadTaskRunner({})->PostTask(FROM_HERE,
       base::BindOnce(&CefCookieManagerImplExt::FinishSetQos, weak_ptr_factory_.GetWeakPtr()));
   }

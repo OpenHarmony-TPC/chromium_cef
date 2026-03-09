@@ -18,7 +18,7 @@
 
 #include "base/memory/singleton.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
-#include "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer.h"
+#include "cef/ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer.h"
 
 class KeyedService;
 

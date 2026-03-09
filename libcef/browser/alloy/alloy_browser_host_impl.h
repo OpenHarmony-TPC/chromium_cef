@@ -112,6 +112,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
 
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
   void EvictFrameBackBuffersWhenNWebWasHidden() override;
+  void SetIsOfflineWebComponent() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
@@ -174,6 +175,9 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
 
   // Cancel display of the context menu, if any.
   void CancelContextMenu();
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  CefMenuManager* GetMenuManager();
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   bool MaybeAllowNavigation(content::RenderFrameHost* opener,
                             const content::OpenURLParams& params) override;

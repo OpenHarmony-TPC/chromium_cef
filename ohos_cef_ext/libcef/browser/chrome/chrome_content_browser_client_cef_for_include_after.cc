@@ -52,6 +52,14 @@
 #include "extensions/browser/view_type_utils.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "ohos_cef_ext/libcef/browser/web_navigation_info_impl.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -223,8 +231,10 @@ void ArkWebInnerConfigureNetworkContextParamsAfter(
   network_context_params->file_paths =
       ::network::mojom::NetworkContextFilePaths::New();
   base::FilePath cache_path;
-  if (context->IsOffTheRecord() || context->GetPath().empty()) {
+  if (context->GetPath().empty()) {
     network_context_params->http_cache_enabled = false;
+  } else if(context->IsOffTheRecord()) {
+    network_context_params->http_cache_enabled = true;
   } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
     base::FilePath data_path;
     if (base::PathService::Get(chrome::DIR_USER_DATA, &data_path)) {
@@ -371,5 +381,40 @@ bool ChromeContentBrowserClientCef::ShouldLockProcessToSite(
     content::BrowserContext* browser_context,
     const GURL& effective_url) {
   return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+void ChromeContentBrowserClientCef::OnReportNewNavigationInfo(
+    content::WebContents* web_contents,
+    const net::WebNavigationInfo& navigation_info) {
+  CefRefPtr<CefBrowserHostBase> browser =
+      CefBrowserHostBase::GetBrowserForContents(web_contents);
+  if (!browser) {
+    return;
+  }
+
+  CefRefPtr<CefClient> client = browser->GetClient();
+  if (!client) {
+    return;
+  }
+
+  CefRefPtr<CefRequestHandler> handler = client->GetRequestHandler();
+  if (!handler) {
+    return;
+  }
+
+  CefRefPtr<CefWebNavigationInfo> cef_info =
+      new CefWebNavigationInfoImpl(navigation_info);
+  handler->AsCefRequestHandlerExt()->OnReportNewNavigationInfo(cef_info);
+}
+
+bool ChromeContentBrowserClientCef::ShouldReportNewNavigationInfo() {
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+  return nweb_ex::AlloyArkWebGlobalConfig::GetInstance()
+      ->ShouldReportNewNavigationInfo();
+#else
+  return false;
+#endif
 }
 #endif

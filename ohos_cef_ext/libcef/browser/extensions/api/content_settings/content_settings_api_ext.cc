@@ -504,8 +504,8 @@ void ContentSettingsContentSettingGetFunction::GetCallback(
         return;
     }
 
-    if (!detailParam || error || !detailParam->contentSetting) {
-        std::string errorMessage = error ? error : "get error";
+    if (!detailParam || (error && (strlen(error) > 0)) || !detailParam->contentSetting) {
+        std::string errorMessage = (error && (strlen(error) > 0)) ? error : "get error";
         LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param " << errorMessage;
         function->Respond(function->Error(errorMessage));
     } else {
@@ -700,7 +700,7 @@ void ContentSettingsContentSettingSetFunction::SetCallback(
         return;
     }
 
-    if (error) {
+    if ((error && (strlen(error) > 0))) {
         LOG(INFO) << "ContentSettingsContentSetting SetCallback error " << error;
         std::string errorMessage = error ? error : "get error";
         function->Respond(function->Error(errorMessage));
@@ -807,7 +807,7 @@ void ContentSettingsContentSettingClearFunction::ClearCallback(
         return;
     }
 
-    if (error) {
+    if ((error && (strlen(error) > 0))) {
         std::string errorMessage = error ? error : "get error";
         LOG(INFO) << "ContentSettingsContentSetting ClearCallback error" << errorMessage;
         function->Respond(function->Error(errorMessage));

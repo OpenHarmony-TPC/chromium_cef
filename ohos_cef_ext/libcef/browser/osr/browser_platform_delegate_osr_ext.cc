@@ -213,6 +213,16 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchpadFlingEvent(
   view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
       fling_start);
 }
+
+void CefBrowserPlatformDelegateOsrExt::SendCancelFlingEvent(
+    const CefMouseEvent& event)
+{
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
+}
 #endif
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
 void CefBrowserPlatformDelegateOsrExt::NotifyScreenInfoChangedV2()
@@ -716,6 +726,11 @@ void CefBrowserPlatformDelegateOsrExt::OnPip(int status,
   if (handler.get()) {
     handler->OnPip(browser_->GetBrowser(), status, delegate_id, child_id,
                    frame_routing_id, width, height);
+    if (status == content::PIP_STATE_ENTER) {
+      delegate_id_enter_ = delegate_id;
+      child_id_enter_ = child_id;
+      frame_routing_id_enter_ = frame_routing_id;
+    }
   }
 }
 
@@ -808,6 +823,10 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
       observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
       break;
     case content::PIP_STATE_EXIT: {
+      if (delegate_id_enter_ != delegate_id || child_id_enter_ != child_id ||
+          frame_routing_id_enter_ != frame_routing_id) {
+        break;
+      }
       PipExit(delegate_id, child_id, frame_routing_id, observer, web_contents_impl, it);
       web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
       break;
@@ -1023,6 +1042,21 @@ void CefBrowserPlatformDelegateOsrExt::OnDocumentEndReady(const FrameInfos& fram
   if (handler.get()) {
     handler->AsArkDialogHandler()->OnDocumentEndReady(
         CefString(frameInfo.id), CefString(frameInfo.parentId));
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+void CefBrowserPlatformDelegateOsrExt::OnSafeBrowsingCheckDetail(
+    int code,
+    int policy,
+    int threat) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnSafeBrowsingCheckDetail(code, policy, threat);
   }
 }
 #endif

@@ -146,6 +146,12 @@ CefRefPtr<CefBrowser> CefBrowserHost::CreateBrowserSync(
   // Verify that the browser context is valid.
   auto request_context_impl =
       static_cast<CefRequestContextImpl*>(request_context.get());
+#if BUILDFLAG(IS_ARKWEB)
+  if (!request_context_impl) {
+    LOG(ERROR) << "request_context_impl is nullptr";
+    return nullptr;
+  }
+#endif
   if (!request_context_impl->VerifyBrowserContext()) {
     return nullptr;
   }

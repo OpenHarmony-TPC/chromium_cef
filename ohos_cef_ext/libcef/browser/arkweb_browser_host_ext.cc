@@ -299,6 +299,7 @@ void ArkWebBrowserHostExtImpl::ExitFullScreen() {
       "{if(document.fullscreenElement){document.exitFullscreen()}}");
   wc->GetPrimaryMainFrame()->ExecuteJavaScript(base::UTF8ToUTF16(jscode),
                                                base::NullCallback());
+  wc->NotifyRemoteExitFullScreen();
 }
 #endif  // BUILDFLAG(ARKWEB_FULLSCREEN)
 
@@ -602,6 +603,11 @@ void ArkWebBrowserHostExtImpl::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  if (!GetWebContents()) {
+    LOG(ERROR)
+        << "ArkWebBrowserHostExtImpl::SetWebPreferences WebContents is nullptr";
+    return;
+  }
   GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
 #else
   GetWebContents()->OnWebPreferencesChanged();
@@ -1121,7 +1127,9 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
       network::mojom::ReferrerPolicy::kDefault);
 
   loadUrlParams.extra_headers = headers;
-  ArkWebDealWithPostData(post_data, &loadUrlParams);
+  if (loadUrlParams.load_type == content::NavigationController::LOAD_TYPE_HTTP_POST) {
+      ArkWebDealWithPostData(post_data, &loadUrlParams);
+  }
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
 
   loadUrlParams.transition_type = static_cast<ui::PageTransition>(
@@ -1553,6 +1561,13 @@ void ArkWebBrowserHostExtImpl::SetScrollable(bool enable, int scrollType) {
       static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(true);
     }
   }
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(
+      rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetScrollable(enable);
+  }
+#endif
 }
 
 bool ArkWebBrowserHostExtImpl::IsElementExist(CefString& xPath) {
@@ -2720,7 +2735,7 @@ bool ArkWebBrowserHostExtImpl::NeedsReload() {
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
 int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList,
+    const CefString& urlTrustList, bool allowOpaqueOrigin, bool supportWildcard,
     CefString& detailErrMsg) {
   std::string urlTrustListUpdated = urlTrustList.ToString();
   content::WebContents* webContents = GetWebContents();
@@ -2753,7 +2768,7 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
         std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
   int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
-      urlTrustListUpdated, detailErrMsgUpdated));
+      urlTrustListUpdated, allowOpaqueOrigin, supportWildcard, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
 }
@@ -3061,13 +3076,27 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
-        base::BindOnce(&ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent, this,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent, weak_ptr_factory_.GetWeakPtr(),
                        event, vx, vy));
     return;
   }
 
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SendTouchpadFlingEvent(event, vx, vy);
+  }
+}
+
+void ArkWebBrowserHostExtImpl::SendCancelFlingEvent(const CefMouseEvent& event) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::SendCancelFlingEvent, weak_ptr_factory_.GetWeakPtr(),
+                       event));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SendCancelFlingEvent(event);
   }
 }
 #endif
@@ -3755,6 +3784,35 @@ CefString ArkWebBrowserHostExtImpl::DefaultUserAgent() {
 CefString ArkWebBrowserHostExtImpl::GetCustomUserAgent() {
   return custom_user_agent_;
 }
+
+void ArkWebBrowserHostExtImpl::SetUserAgentMetadata(
+    const std::string& user_agent,
+    const blink::UserAgentMetadata& metadata) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return;
+  }
+  web_contents->AsWebContentsImplExt()->SetUserAgentMetadata(user_agent,
+                                                             metadata);
+}
+
+const blink::UserAgentMetadata ArkWebBrowserHostExtImpl::GetUserAgentMetadata(
+    const std::string& user_agent) {
+  LOG(DEBUG) << kUserAgentMetadataTag << " user_agent " << user_agent
+             << ", nweb_id" << GetNWebId();
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(DEBUG) << kUserAgentMetadataTag << " web_contents is nullptr, nweb_id "
+               << GetNWebId();
+    return embedder_support::GetUserAgentMetadata();
+  }
+  return web_contents->AsWebContentsImplExt()->GetUserAgentMetadata(user_agent);
+}
+
 #endif  // BUILDFLAG(ARKWEB_USERAGENT)
 
 #if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
@@ -4061,6 +4119,54 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
                                    this, callback));
 }
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+void ArkWebBrowserHostExtImpl::GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) {
+  LOG(DEBUG) << "GetAllFrameInfos enter";
+  GetFrameInfosParam value;
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    callback->OnFrameInfosCallback(value);
+    return;
+  }
+
+  std::map<std::string, std::string> frameinfos;
+  frameinfos.clear();
+
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  if (web_contents_ex) {
+    LOG(DEBUG) << "GetAllFrameInfos be called.";
+    web_contents_ex->GetAllFrameInfos(frameinfos);
+  }
+
+  for (const auto& pair : frameinfos) {
+    FrameInfos item;
+    item.id = pair.first;
+    item.parentId = pair.second;
+    value.frameinfoList.push_back(item);
+  }
+
+  callback->OnFrameInfosCallback(value);
+}
+
+void ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) {
+  LOG(DEBUG) << "GetLastJavaScriptProxyCallingFrameInfo enter";
+  NWEB::OhJavascriptInjector* javascriptInjector =
+    NWEB::OhJavascriptInjector::FromWebContents(GetWebContents());
+  if (!javascriptInjector) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastJavaScriptProxyCallingFrameInfo "
+                  "javascriptInjector is null";
+    FrameInfos value;
+    callback->OnLastFrameInfoCallback(value);
+    return;
+  }
+  
+  FrameInfos value = javascriptInjector->GetLastCallingFrameInfo();
+  callback->OnLastFrameInfoCallback(value);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_BGTASK)
 void ArkWebBrowserHostExtImpl::OnBrowserForeground() {
   auto web_contents = GetWebContents();
@@ -4115,6 +4221,22 @@ void ArkWebBrowserHostExtImpl::AbortDistill() {
 }
 #endif // ARKWEB_READER_MODE
 
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+bool ArkWebBrowserHostExtImpl::SavePage(int32_t type, CefString& filePath) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents is null";
+    return false;
+  }
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  if (!web_contents_ex) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents_ex is null";
+    return false;
+  }
+  return web_contents_ex->SavePageEx(filePath, static_cast<content::SavePageType>(type));
+}
+#endif // ARKWEB_SAVE_PAGE
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
                                                    CefString& frame_url) {
@@ -4157,6 +4279,25 @@ void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
   } else {
     LOG(ERROR, kHttpsUpgrades) << "EnableHttpsUpgrades message:helperIsNull";
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, web_contents is null";
+    return -1;
+  }
+  content::NavigationEntry* entry =
+      web_contents->GetController().GetActiveEntry();
+
+  if (!entry) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetLastCommittedEntryPageTransition, entry is null";
+    return -1;
+  }
+  ui::PageTransition transition = entry->GetTransitionType();
+  return static_cast<int32_t>(transition);
 }
 #endif
 
@@ -4251,5 +4392,156 @@ void ArkWebBrowserHostExtImpl::StopMicrophone() {
     return;
   }
   web_contents->StopMicrophone(web_contents->GetNWebId());
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+void ArkWebBrowserHostExtImpl::StartDownloadWithParams(
+    const CefString& url,
+    const DownloadUrlParameters& input_params) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&ArkWebBrowserHostExtImpl::StartDownloadWithParams,
+                       weak_ptr_factory_.GetWeakPtr(),
+                       url, input_params));
+    return;
+  }
+
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid()) {
+    return;
+  }
+
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    return;
+  }
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    return;
+  }
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager) {
+    return;
+  }
+
+  std::unique_ptr<download::DownloadUrlParameters> params(
+      content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
+          web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
+
+  ParseDownloadUrlParamsIntoClass(input_params, params);
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  content::Referrer referrer = content::Referrer::SanitizeForRequest(
+      gurl, content::Referrer(web_contents->GetLastCommittedURL(),
+                              network::mojom::ReferrerPolicy::kDefault));
+  params->set_referrer(referrer.url);
+  CefString custom_user_agent;
+  if (this->AsAlloyBrowserHostImpl()) {
+    custom_user_agent = this->AsAlloyBrowserHostImpl()->GetCustomUserAgent();
+  }
+  if (!custom_user_agent.empty()) {
+    params->add_request_header(net::HttpRequestHeaders::kUserAgent,
+                               custom_user_agent);
+  }
+#endif
+
+  manager->DownloadUrl(std::move(params));
+}
+
+void ArkWebBrowserHostExtImpl::ParseDownloadUrlParamsIntoClass(
+    const DownloadUrlParameters& input_params,
+    std::unique_ptr<download::DownloadUrlParameters>& params) {
+  if (params != nullptr) {
+    // method
+    params->set_method(input_params.method);
+
+    // postBody
+    auto postBody = network::ResourceRequestBody::CreateFromBytes(
+        input_params.postBody.c_str(),
+        static_cast<size_t>(input_params.postBody.length()));
+    params->set_post_body(postBody);
+
+    // headers
+    std::string header_str = input_params.headers;
+    size_t colon_pos = header_str.find(':');
+    if (colon_pos != std::string::npos && colon_pos > 0 &&
+        colon_pos < header_str.size() - 1) {
+      std::string header_name = header_str.substr(0, colon_pos);
+      std::string header_value = header_str.substr(colon_pos + 1);
+      base::TrimWhitespaceASCII(header_name, base::TRIM_ALL, &header_name);
+      base::TrimWhitespaceASCII(header_value, base::TRIM_ALL, &header_value);
+      if (!header_name.empty() && !header_value.empty()) {
+        params->add_request_header(header_name, header_value);
+      }
+    }
+
+    // referrer
+    params->set_referrer(GURL(input_params.referrer));
+
+    // referrerPolicy
+    params->set_referrer_policy(
+        static_cast<net::ReferrerPolicy>(input_params.referrerPolicy));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set referrerPolicy = "
+               << static_cast<int>(params->referrer_policy());
+
+    // referrerEncoding
+    params->set_referrer_encoding(input_params.referrerEncoding);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set referrerEncoding = "
+               << params->referrer_encoding();
+
+    // initiator
+    GURL initiator_gurl(input_params.initiator);
+    auto initiator_org = url::Origin::Create(initiator_gurl);
+    params->set_initiator(std::make_optional(initiator_org));
+
+    // preferCache
+    params->set_prefer_cache(input_params.preferCache);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set preferCache = "
+               << params->prefer_cache();
+
+    // filePath
+    params->set_file_path(base::FilePath(input_params.filePath));
+    auto file_path_str = params->file_path().value();
+    if (file_path_str.length() <= 2) {
+      file_path_str = "**";
+    } else {
+      file_path_str = file_path_str.substr(0, 2) + "**";
+    }
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set filePath = "
+               << file_path_str;
+
+    // suggestedName
+    std::string utf8_name = std::string(input_params.suggestedName);
+    std::u16string utf16_name = base::UTF8ToUTF16(utf8_name);
+    params->set_suggested_name(utf16_name);
+
+    // offset
+    params->set_offset(static_cast<int64_t>(input_params.offset));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set offset = " << params->offset();
+
+    // crossOriginRedirects
+    params->set_cross_origin_redirects(
+        static_cast<network::mojom::RedirectMode>(
+            input_params.crossOriginRedirects));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] crossOriginRedirects = "
+               << params->cross_origin_redirects();
+
+    // transient
+    params->set_transient(input_params.transient);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set transient = "
+               << params->is_transient();
+
+    // guid
+    params->set_guid(input_params.guid);
+
+    // hasUserGesture
+    params->set_has_user_gesture(input_params.hasUserGesture);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set hasUserGesture = "
+               << params->has_user_gesture();
+  }
 }
 #endif

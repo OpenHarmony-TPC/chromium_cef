@@ -72,6 +72,10 @@ class ArkWebRequestContextImplExt : public CefRequestContextImpl {
                                     CefRefPtr<CefCompletionCallback> callback);
 #endif
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+  bool cookiemanager_initialized_flag_ = false;
+#endif
+
   void InitializeAdsBlockManagerInternal(
       CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
       CefRefPtr<CefCompletionCallback> callback);

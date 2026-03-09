@@ -30,8 +30,13 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+std::atomic<int64_t> OhPageLoadMetricsObserver::navigation_start_timestamp_(-1);
+std::atomic<int64_t> OhPageLoadMetricsObserver::render_init_block_(-1);
+#else
 int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
 int64_t OhPageLoadMetricsObserver::render_init_block_ = -1;
+#endif
 #endif
 
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
@@ -418,7 +423,6 @@ void OhPageLoadMetricsObserver::OnLoadedResource(
     const page_load_metrics::ExtraRequestCompleteInfo&
         extra_request_complete_info) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  OnLoadedResourceLoggerReport(extra_request_complete_info);
   if (extra_request_complete_info.request_destination ==
       network::mojom::RequestDestination::kDocument) {
     if (did_dispatch_on_main_resource_) {
@@ -482,10 +486,17 @@ void OhPageLoadMetricsObserver::OnFirstPaintInPage(
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
-  web_performance_timing_.render_init_block = render_init_block_;
-  ReportPageLoadTimeStats(web_performance_timing_);
-  web_performance_timing_.Reset();
-  render_init_block_ = -1;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    web_performance_timing_.render_init_block = render_init_block_.load(std::memory_order_relaxed);
+    ReportPageLoadTimeStats(web_performance_timing_);
+    web_performance_timing_.Reset();
+    render_init_block_.store(-1, std::memory_order_relaxed);
+#else
+    web_performance_timing_.render_init_block = render_init_block_;
+    ReportPageLoadTimeStats(web_performance_timing_);
+    web_performance_timing_.Reset();
+    render_init_block_ = -1;
+#endif
 }
 
 void OhPageLoadMetricsObserver::ReportBufferedMetrics(
@@ -495,9 +506,12 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
   }
 
   reported_buffered_metrics_ = true;
-
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  web_performance_timing_.navigation_start = navigation_start_timestamp_.load(std::memory_order_relaxed);
+#else
   web_performance_timing_.navigation_start = navigation_start_timestamp_;
-  web_performance_timing_.redirect_count = main_frame_request_redirect_count_;
+#endif
+    web_performance_timing_.redirect_count = main_frame_request_redirect_count_;
   const page_load_metrics::ContentfulPaintTimingInfo& largest_contentful_paint =
       GetDelegate()
           .GetLargestContentfulPaintHandler()
@@ -512,11 +526,19 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
 }
 
 void OhPageLoadMetricsObserver::OnNavigationStart() {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  navigation_start_timestamp_.store(GetCurrentTimestampMS(), std::memory_order_relaxed);
+#else
   navigation_start_timestamp_ = GetCurrentTimestampMS();
+#endif
 }
 
 void OhPageLoadMetricsObserver::RenderInitBlock(int64_t block_time) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  render_init_block_.store(block_time, std::memory_order_relaxed);
+#else
   render_init_block_ = block_time;
+#endif
 }
 #endif
 
@@ -560,33 +582,6 @@ void OhPageLoadMetricsObserver::
   int64_t navigation_start_time = GetNavigationStartTime();
   ReportFirstContentfulPaint(navigation_start_time, first_contentful_paint_ms);
 }
-
-void OhPageLoadMetricsObserver::OnLoadedResourceLoggerReport(
-    const page_load_metrics::ExtraRequestCompleteInfo&
-        extra_request_complete_info) {
-  if (extra_request_complete_info.net_error == net::OK) {
-    return;
-  }
-
-  std::ostringstream timing_info_stream;
-  if (extra_request_complete_info.load_timing_info) {
-    const auto& timing = *extra_request_complete_info.load_timing_info;
-    timing_info_stream << timing;
-  }
-
-  LOG_FEEDBACK(INFO, kLoadTracker)
-      << "PageResourceLoadFailed navigationId:" << navigation_id_ << " netCode:"
-      << net::ErrorToDebugString(extra_request_complete_info.net_error)
-      << " requestDestination:"
-      << static_cast<int>(extra_request_complete_info.request_destination)
-      << " wasCached:" << extra_request_complete_info.was_cached
-      << " rawBodyBytes:" << extra_request_complete_info.raw_body_bytes
-      << " contentLength:"
-      << extra_request_complete_info.original_network_content_length
-      << timing_info_stream.str() << " finalUrl:"
-      << url::LogUtils::ConvertUrlWithMask(
-             extra_request_complete_info.final_url.GetURL().spec());
-}
 #endif
 
 page_load_metrics::PageLoadMetricsObserver::ObservePolicy
@@ -612,64 +607,12 @@ void OhPageLoadMetricsObserver::OnDidInternalNavigationAbort(
 #endif
 }
 
-void OhPageLoadMetricsObserver::ReadyToCommitNextNavigation(
-    content::NavigationHandle* navigation_handle) {
-#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-  LOG_FEEDBACK(INFO, kLoadTracker)
-      << "PageReadyToCommitNextNavigation navigationId:" << navigation_id_
-      << " currentNavigationId:" << navigation_handle->GetNavigationId();
-#endif
-}
-
-void OhPageLoadMetricsObserver::OnDidFinishSubFrameNavigation(
-    content::NavigationHandle* navigation_handle) {
-#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-  LOG_FEEDBACK(INFO, kLoadTracker)
-      << "PageDidFinishSubFrameNavigation navigationId:" << navigation_id_
-      << " currentNavigationId:" << navigation_handle->GetNavigationId();
-#endif
-}
-
 void OhPageLoadMetricsObserver::OnCommitSameDocumentNavigation(
     content::NavigationHandle* navigation_handle) {
 #if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO, kLoadTracker)
       << "PageCommitSameDocumentNavigation navigationId:" << navigation_id_
       << " currentNavigationId:" << navigation_handle->GetNavigationId();
-#endif
-}
-
-void OhPageLoadMetricsObserver::OnConnectEnd(
-    const page_load_metrics::mojom::PageLoadTiming& timing) {
-#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-  int64_t connect_start =
-      timing.connect_start ? timing.connect_start->InMilliseconds() : -1;
-  int64_t connect_end =
-      timing.connect_end ? timing.connect_end->InMilliseconds() : -1;
-
-  LOG_FEEDBACK(INFO, kLoadTracker)
-      << "PageConnectEnd navigationId:" << navigation_id_
-      << " connect:" << connect_start << "-" << connect_end;
-#endif
-}
-
-void OhPageLoadMetricsObserver::OnDomainLookupEnd(
-    const page_load_metrics::mojom::PageLoadTiming& timing) {
-#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
-  int64_t domain_lookup_start =
-      timing.domain_lookup_timing &&
-              timing.domain_lookup_timing->domain_lookup_start
-          ? timing.domain_lookup_timing->domain_lookup_start->InMilliseconds()
-          : -1;
-  int64_t domain_lookup_end =
-      timing.domain_lookup_timing &&
-              timing.domain_lookup_timing->domain_lookup_end
-          ? timing.domain_lookup_timing->domain_lookup_end->InMilliseconds()
-          : -1;
-
-  LOG_FEEDBACK(INFO, kLoadTracker)
-      << "PageDomainLookupEnd navigationId:" << navigation_id_
-      << " domainLookup:" << domain_lookup_start << "-" << domain_lookup_end;
 #endif
 }
 

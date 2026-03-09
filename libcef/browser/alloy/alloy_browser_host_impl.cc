@@ -116,6 +116,9 @@ const char* kAllowedWebUIHosts[] = {
     chrome::kChromeUIVersionHost,
     content::kChromeUIWebRTCInternalsHost,
 #endif
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+    chrome::kChromeUIInspectHost,
+#endif // ARKWEB_DEVTOOLS
 };
 
 bool IsAllowedWebUIHost(const std::string_view& host) {
@@ -466,6 +469,10 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
 void AlloyBrowserHostImpl::EvictFrameBackBuffersWhenNWebWasHidden() {
   implUtils->EvictFrameBackBuffersWhenNWebWasHidden();
 }
+
+void AlloyBrowserHostImpl::SetIsOfflineWebComponent() {
+  implUtils->SetIsOfflineWebComponent();
+}
 #endif
 
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_for_include.cc"
@@ -671,6 +678,13 @@ void AlloyBrowserHostImpl::CancelContextMenu() {
     menu_manager_->CancelContextMenu();
   }
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+CefMenuManager* AlloyBrowserHostImpl::GetMenuManager() {
+  CEF_REQUIRE_UIT();
+  return menu_manager_.get();
+}
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     content::RenderFrameHost* opener,

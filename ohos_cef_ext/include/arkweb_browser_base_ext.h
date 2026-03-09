@@ -84,6 +84,12 @@ public:
   virtual void EnableVideoAssistant(bool enable) = 0;
 
   ///
+  /// set video assistant avcast enable.
+  ///
+  /*--cef()--*/
+  virtual void EnableVideoAssistantAVCast(bool enable) = 0;
+
+  ///
   /// execute video assistant function.
   ///
   /*--cef()--*/

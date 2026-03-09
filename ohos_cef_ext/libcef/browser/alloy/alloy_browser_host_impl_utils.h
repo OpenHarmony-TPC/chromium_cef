@@ -61,6 +61,7 @@ public:
 
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
   void EvictFrameBackBuffersWhenNWebWasHidden();
+  void SetIsOfflineWebComponent();
 #endif
 };
 

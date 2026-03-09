@@ -15,11 +15,20 @@
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_RENDER_PROCESS_STATE_HANDLER_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_RENDER_PROCESS_STATE_HANDLER_H_
 
+#include <mutex>
 #include <vector>
 
 struct WebComponentState {
   int nweb_id;
   bool state;
+};
+
+struct WebComponentWithRenderState {
+  int nweb_id;
+  bool state;
+  uint32_t windowId;
+  int rph_unique_id;
+  uint32_t render_process_id;
 };
 
 struct RenderProcessStateMap {
@@ -40,6 +49,10 @@ class RenderProcessStateHandler {
 
   std::vector<WebComponentState> initial_web_component_list_;
 
+  std::vector<WebComponentWithRenderState> initial_web_component_with_render_list_;
+
+  std::mutex list_mutex_;
+
   static RenderProcessStateHandler* instance;
 
  public:
@@ -50,6 +63,18 @@ class RenderProcessStateHandler {
                                 bool is_to_background);
 
   void InitRenderProcessState(uint32_t render_process_id, int nweb_id);
+
+  void PushNwebForNotInitRender(int rph_unique_id,
+                                int nweb_id,
+                                bool is_to_background,
+                                uint32_t windowId,
+                                uint32_t render_process_id);
+  
+  void PopNwebForNotInitRender(int rph_unique_id,
+                               int nweb_id,
+                               bool is_to_background,
+                               uint32_t windowId,
+                               uint32_t render_process_id);
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_RENDER_PROCESS_STATE_HANDLER_H_

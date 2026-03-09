@@ -98,12 +98,15 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
-static std::string GetFrontendURL(bool can_dock) {
-  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock;
-  return base::StringPrintf("%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked",
-                          content::kChromeDevToolsScheme,
-                          scheme::kChromeDevToolsHost,
-                          can_dock ? "true" : "false");
+static std::string GetFrontendURL(bool can_dock, bool is_tab_target) {
+  LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
+             << ", is_tab_target: " << is_tab_target;
+  return base::StringPrintf(
+      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
+      content::kChromeDevToolsScheme,
+      scheme::kChromeDevToolsHost,
+      can_dock ? "true" : "false",
+      is_tab_target ? "&targetType=tab" : "");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -229,7 +232,11 @@ class CefDevToolsFrontend::NetworkResourceLoader
                         network::mojom::URLLoaderFactory* url_loader_factory,
                         int request_id)
       : stream_id_(stream_id),
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+        bindings_(bindings->weak_factory_.GetWeakPtr()),
+#else
         bindings_(bindings),
+#endif
         loader_(std::move(loader)),
         request_id_(request_id) {
     loader_->SetOnResponseStartedCallback(base::BindOnce(
@@ -248,6 +255,12 @@ class CefDevToolsFrontend::NetworkResourceLoader
 
   void OnDataReceived(std::string_view chunk,
                       base::OnceClosure resume) override {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    if (!bindings_) {
+      std::move(resume).Run();
+      return;
+    }
+#endif
     base::Value chunkValue;
 
     bool encoded = !base::IsStringUTF8(chunk);
@@ -258,7 +271,9 @@ class CefDevToolsFrontend::NetworkResourceLoader
     }
     base::Value id(stream_id_);
     base::Value encodedValue(encoded);
-
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
     bindings_->CallClientFunction("DevToolsAPI", "streamWrite", std::move(id),
                                   std::move(chunkValue),
                                   std::move(encodedValue));
@@ -266,17 +281,33 @@ class CefDevToolsFrontend::NetworkResourceLoader
   }
 
   void OnComplete(bool success) override {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    if (!bindings_) {
+      return;
+    }
+    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+    auto response = BuildObjectForResponse(response_headers_.get(), success,
+                                           loader_->NetError());
+    auto it = bindings_->loaders_.find(this);
+    bindings_->SendMessageAck(request_id_, std::move(response));
+    bindings_->loaders_.erase(it);
+#else
     auto response = BuildObjectForResponse(response_headers_.get(), success,
                                            loader_->NetError());
     bindings_->SendMessageAck(request_id_, std::move(response));
 
     bindings_->loaders_.erase(bindings_->loaders_.find(this));
+#endif
   }
 
   void OnRetry(base::OnceClosure start_retry) override { DCHECK(false); }
 
   const int stream_id_;
-  CefDevToolsFrontend* const bindings_;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  base::WeakPtr<CefDevToolsFrontend> bindings_;
+#else
+  raw_ptr<CefDevToolsFrontend> const bindings_;
+#endif
   std::unique_ptr<network::SimpleURLLoader> loader_;
   int request_id_;
   scoped_refptr<net::HttpResponseHeaders> response_headers_;
@@ -297,7 +328,12 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
     // of the CefSettings.background_color value.
     new_settings.background_color = SK_ColorWHITE;
   }
-
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (!inspected_browser) {
+    LOG(ERROR) << " func:" << __func__ << " inspected_browser is null.";
+    return nullptr;
+  }
+#endif // ARKWEB_DEVTOOLS
   CefBrowserCreateParams create_params;
   if (inspected_browser->is_views_hosted()) {
     create_params.popup_with_views_hosted_opener = true;
@@ -330,6 +366,40 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 // static
+CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
+      const CefString& source_id,
+      const CefString& target_id,
+      AlloyBrowserHostImpl* frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      content::WebContents* inspected_contents,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback,
+      const CefOpenDevToolsExtOpt& ext_opt) {
+  LOG(INFO) << "CefDevToolsFrontend::StaticShowWith";
+  auto handler = std::make_unique<CefDevToolsMessageHandler>(
+      std::move(devtools_message_handler),
+      Profile::FromBrowserContext(
+          frontend_browser->web_contents()->GetBrowserContext()),
+      ext_opt);
+
+  // CefDevToolsFrontend will delete itself when the frontend WebContents is
+  // destroyed.
+  CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
+      frontend_browser,
+      std::move(handler),
+      inspected_contents, inspect_element_at,
+      std::move(frontend_destroyed_callback));
+
+  if (devtools_frontend) {
+    devtools_frontend->SetSourceTargetId(source_id, target_id);
+
+    // Need to load the URL after creating the DevTools objects.
+    frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
+  }
+  return devtools_frontend;
+}
+
+// static
 CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
@@ -350,9 +420,11 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       frontend_browser, std::move(handler),
       inspected_contents, inspect_element_at,
       std::move(frontend_destroyed_callback));
-
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
@@ -367,7 +439,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       const CefOpenDevToolsExtOpt& ext_opt) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWithByPb({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})"
-            << ", canDock: " << ext_opt.canDock;
+            << ", canDock: " << ext_opt.canDock << ", useNativeMenu: " << ext_opt.useNativeMenu;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
@@ -379,19 +451,26 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       frontend_browser, std::move(handler),
       inspected_contents, inspect_element_at,
       std::move(frontend_destroyed_callback));
+  devtools_frontend->useNativeMenu_ = ext_opt.useNativeMenu;
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_));
 
   return devtools_frontend;
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 void CefDevToolsFrontend::Activate() {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   frontend_browser_->ActivateContents(web_contents());
 }
 
 void CefDevToolsFrontend::Focus() {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   frontend_browser_->SetFocus(true);
 }
 
@@ -399,14 +478,28 @@ void CefDevToolsFrontend::InspectElementAt(int x, int y) {
   if (inspect_element_at_.x != x || inspect_element_at_.y != y) {
     inspect_element_at_.Set(x, y);
   }
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (agent_host_ && inspected_contents_) {
+    agent_host_->InspectElement(inspected_contents_->GetFocusedFrame(), x, y);
+  }
+#else
   if (agent_host_) {
     agent_host_->InspectElement(inspected_contents_->GetFocusedFrame(), x, y);
   }
+#endif
+
 }
 
 void CefDevToolsFrontend::Close() {
-  CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::CloseBrowser,
-                                        frontend_browser_.get(), true));
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
+  // Check if frontend_browser_ is valid to avoid calling CloseBrowser on an uninitialized or destroyed object
+  if (frontend_browser_) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::CloseBrowser,
+                                          frontend_browser_.get(), true));
+  }
 }
 
 CefDevToolsFrontend::CefDevToolsFrontend(
@@ -416,7 +509,12 @@ CefDevToolsFrontend::CefDevToolsFrontend(
     base::OnceClosure frontend_destroyed_callback)
     : content::WebContentsObserver(frontend_browser->web_contents()),
       frontend_browser_(frontend_browser),
-      inspected_contents_(inspected_contents),
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  inspected_contents_(inspected_contents->GetWeakPtr()),
+#else
+  inspected_contents_(inspected_contents),
+#endif
+
       inspect_element_at_(inspect_element_at),
       frontend_destroyed_callback_(std::move(frontend_destroyed_callback)),
       file_manager_(frontend_browser, GetPrefs()),
@@ -436,7 +534,11 @@ CefDevToolsFrontend::CefDevToolsFrontend(
     base::OnceClosure frontend_destroyed_callback)
     : content::WebContentsObserver(frontend_browser->web_contents()),
       frontend_browser_(frontend_browser),
-      inspected_contents_(inspected_contents),
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  inspected_contents_(inspected_contents->GetWeakPtr()),
+#else
+  inspected_contents_(inspected_contents),
+#endif
       inspect_element_at_(inspect_element_at),
       frontend_destroyed_callback_(std::move(frontend_destroyed_callback)),
       file_manager_(frontend_browser, this, GetPrefs()),
@@ -448,6 +550,7 @@ CefDevToolsFrontend::CefDevToolsFrontend(
   DCHECK(!frontend_destroyed_callback_.is_null());
   file_manager_.SetDevToolsMessageHandler(devtools_message_handler_.get());
   devtools_message_handler_->SetDevToolsFrontend(this);
+  isTabTarget_ = ShouldUseTabTarget();
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -455,6 +558,9 @@ CefDevToolsFrontend::~CefDevToolsFrontend() {}
 
 void CefDevToolsFrontend::ReadyToCommitNavigation(
     content::NavigationHandle* navigation_handle) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   content::RenderFrameHost* frame = navigation_handle->GetRenderFrameHost();
   if (navigation_handle->IsInMainFrame()) {
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -466,10 +572,21 @@ void CefDevToolsFrontend::ReadyToCommitNavigation(
       return;
     }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    frontend_host_ = content::DevToolsFrontendHost::Create(
+            frame, base::BindRepeating(
+                       [](base::WeakPtr<CefDevToolsFrontend> self, base::Value::Dict message) {
+                         if (self) {
+                           self->HandleMessageFromDevToolsFrontend(std::move(message));
+                         }
+                       },
+                       weak_factory_.GetWeakPtr()));
+#else
     frontend_host_ = content::DevToolsFrontendHost::Create(
         frame, base::BindRepeating(
                    &CefDevToolsFrontend::HandleMessageFromDevToolsFrontend,
                    base::Unretained(this)));
+#endif
     return;
   }
 
@@ -488,8 +605,54 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
   // Don't call AttachClient multiple times for the same DevToolsAgentHost.
   // Otherwise it will call AgentHostClosed which closes the DevTools window.
   // This may happen in cases where the DevTools content fails to load.
-  scoped_refptr<content::DevToolsAgentHost> agent_host =
-      content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  if (!inspected_contents_) {
+    return;
+  }
+#endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  isTabTarget_ = ShouldUseTabTarget();
+  scoped_refptr<content::DevToolsAgentHost> agent_host;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  if (!inspected_contents_) {
+      content::DevToolsAgentHost::List targets = content::DevToolsAgentHost::GetOrCreateAll();
+      for (const scoped_refptr<content::DevToolsAgentHost>& host : targets) {
+        if (CefString(host->GetId()) == target_id_) {
+          agent_host = host;
+          LOG(INFO) << " func:" << __func__;
+          break;
+        }
+      }
+  } else if (isTabTarget_) {
+    agent_host = content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_.get());
+  } else {
+    agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_.get());
+  }
+#else
+  if (!inspected_contents_) {
+      content::DevToolsAgentHost::List targets = content::DevToolsAgentHost::GetOrCreateAll();
+      for (const scoped_refptr<content::DevToolsAgentHost>& host : targets) {
+        if (CefString(host->GetId()) == target_id_) {
+          agent_host = host;
+          LOG(INFO) << " func:" << __func__;
+          break;
+        }
+      }
+  } else if (isTabTarget_) {
+    agent_host = content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_);
+  } else {
+    agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+  }
+#endif
+#else
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_.get());
+#else
+  agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
+#endif
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
   if (agent_host != agent_host_) {
     if (agent_host_) {
       agent_host_->DetachClient(this);
@@ -520,12 +683,24 @@ void CefDevToolsFrontend::WebContentsDestroyed() {
     agent_host_->DetachClient(this);
     agent_host_ = nullptr;
   }
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  // Call the callback if it's not null
+  // Note: The caller should use weak pointers when binding the callback
+  // to avoid UAF issues
+  if (frontend_destroyed_callback_) {
+    std::move(frontend_destroyed_callback_).Run();
+  }
+#else
   std::move(frontend_destroyed_callback_).Run();
+#endif
   delete this;
 }
 
 void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     base::Value::Dict message) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   const std::string* method = message.FindString("method");
   if (!method) {
     return;
@@ -568,18 +743,35 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
         this, base::as_bytes(base::make_span(*protocol_message)));
   } else if (*method == "loadCompleted") {
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    if (inspected_contents_) {
+      int tab_id = cef::GetTabIdForWebContents(inspected_contents_.get());
+      CallClientFunction("DevToolsAPI", "setInspectedTabId", base::Value(tab_id));
+
+      AddDevToolsExtensionsToClient();
+    }
+#else
     int tab_id = cef::GetTabIdForWebContents(inspected_contents_);
     CallClientFunction("DevToolsAPI", "setInspectedTabId", base::Value(tab_id));
 
     AddDevToolsExtensionsToClient();
+#endif
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-
     auto* rfh = web_contents()->GetPrimaryMainFrame();
     if (rfh == nullptr) {
       return;
     }
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+    LOG(INFO) << "CefDevToolsFrontend::HandleMessageFromDevToolsFrontend useNativeMenu_: " << useNativeMenu_;
+    if (!useNativeMenu_) {
+      rfh->ExecuteJavaScriptForTests(
+          u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
+    }
+#else
     rfh->ExecuteJavaScriptForTests(
         u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   } else if (*method == "loadNetworkResource") {
     if (params.size() < 3) {
       return;
@@ -652,6 +844,11 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
       SendMessageAck(request_id, std::move(response));
       return;
     } else {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+      if (!inspected_contents_) {
+        return;
+      }
+#endif
       auto* rfh = inspected_contents_->GetPrimaryMainFrame();
       if (rfh == nullptr) {
         return;
@@ -852,8 +1049,16 @@ void CefDevToolsFrontend::CallClientFunction(
     base::Value arg3,
     base::OnceCallback<void(base::Value)> cb) {
   std::string javascript;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   auto* rfh = web_contents()->GetPrimaryMainFrame();
   if (rfh == nullptr) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    if (cb) {
+      std::move(cb).Run(base::Value());
+    }
+#endif
     return;
   }
 
@@ -892,9 +1097,17 @@ void CefDevToolsFrontend::LogProtocolMessage(ProtocolMessageType type,
 
   // Execute in an ordered context that allows blocking.
   auto task_runner = CefTaskRunnerManager::Get()->GetBackgroundTaskRunner();
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  base::FilePath log_file = protocol_log_file_;
   task_runner->PostTask(
-      FROM_HERE, base::BindOnce(::LogProtocolMessage, protocol_log_file_, type,
+      FROM_HERE, base::BindOnce(::LogProtocolMessage, std::move(log_file), type,
                                 std::move(to_log)));
+#else
+  task_runner->PostTask(
+    FROM_HERE, base::BindOnce(::LogProtocolMessage, protocol_log_file_, type,
+                              std::move(to_log)));
+#endif
+
 }
 
 void CefDevToolsFrontend::AgentHostClosed(
@@ -905,6 +1118,9 @@ void CefDevToolsFrontend::AgentHostClosed(
 }
 
 PrefService* CefDevToolsFrontend::GetPrefs() const {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   auto* web_contents = frontend_browser_->web_contents();
   if (web_contents == nullptr) {
     return nullptr;
@@ -917,6 +1133,12 @@ PrefService* CefDevToolsFrontend::GetPrefs() const {
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+void CefDevToolsFrontend::SetSourceTargetId(const CefString& source_id,
+                                            const CefString& target_id) {
+  source_id_ = source_id;
+  target_id_ = target_id;
+}
+
 AlloyBrowserHostImpl* CefDevToolsFrontend::GetFrontendBrowser() {
   return frontend_browser_.get();
 }
@@ -987,6 +1209,32 @@ void CefDevToolsFrontend::RequestFileSystems() {
   CallClientFunction("DevToolsAPI", "fileSystemsLoaded",
       base::Value(std::move(file_systems_value)));
 }
+
+bool CefDevToolsFrontend::ShouldUseTabTarget() {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  if (!inspected_contents_) {
+    LOG(ERROR) << " func:" << __func__ << " inspected_contents_ is null.";
+    return false;
+  }
+#endif
+
+  if (inspected_contents_->GetURL().SchemeIs("chrome-extension")) {
+    return false;
+  }
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  scoped_refptr<content::DevToolsAgentHost> host = content::DevToolsAgentHost::GetForTab(inspected_contents_.get());
+#else
+  scoped_refptr<content::DevToolsAgentHost> host = content::DevToolsAgentHost::GetForTab(inspected_contents_);
+#endif
+  if (host && host->GetType() == content::DevToolsAgentHost::kTypeTab) {
+    return true;
+  }
+
+  if (!inspected_contents_->GetOuterWebContents() && inspected_contents_->GetPrimaryMainFrame()) {
+    return true;
+  }
+  return false;
+}
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
@@ -999,7 +1247,9 @@ base::Value::Dict CefDevToolsFrontend::BuildExtensionInfo(
        || url.SchemeIs(extensions::kArkwebExtensionScheme)) &&
       url.host_piece() == extension->id();
   DCHECK(is_extension_url || url.SchemeIsHTTPOrHTTPS());
-
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   // Each devtools extension will need to be able to run in the devtools
   // process. Grant the devtools process the ability to request URLs from the
   // extension.
@@ -1042,6 +1292,9 @@ base::Value::Dict CefDevToolsFrontend::BuildExtensionInfo(
 
 void CefDevToolsFrontend::AddDevToolsExtensionsToClient() {
   // See DevToolsUIBindings::AddDevToolsExtensionsToClient.
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   const extensions::ExtensionRegistry* registry =
       extensions::ExtensionRegistry::Get(web_contents()->GetBrowserContext());
   if (!registry) {

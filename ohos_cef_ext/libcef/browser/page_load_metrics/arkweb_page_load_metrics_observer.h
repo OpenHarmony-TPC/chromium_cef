@@ -7,6 +7,7 @@
 #define CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_OH_PAGE_LOAD_METRICS_OBSERVER_H_
 
 #include "base/memory/raw_ptr.h"
+#include <atomic>
 #include "components/page_load_metrics/browser/page_load_metrics_observer.h"
 #include "net/nqe/effective_connection_type.h"
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
@@ -55,16 +56,8 @@ class OhPageLoadMetricsObserver
                                const GURL& currently_committed_url) override;
   void OnDidInternalNavigationAbort(
       content::NavigationHandle* navigation_handle) override;
-  void ReadyToCommitNextNavigation(
-      content::NavigationHandle* navigation_handle) override;
-  void OnDidFinishSubFrameNavigation(
-      content::NavigationHandle* navigation_handle) override;
   void OnCommitSameDocumentNavigation(
       content::NavigationHandle* navigation_handle) override;
-  void OnConnectEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnDomainLookupEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnFirstPaintAfterBackForwardCacheRestoreInPage(
       const page_load_metrics::mojom::BackForwardCacheTiming& timing,
       size_t index) override;
@@ -117,9 +110,6 @@ class OhPageLoadMetricsObserver
   void ReportBufferedMetrics(
       const page_load_metrics::mojom::PageLoadTiming& timing);
   void ReportPerformanceTiming();
-  void OnLoadedResourceLoggerReport(
-      const page_load_metrics::ExtraRequestCompleteInfo&
-          extra_request_complete_info);
 #endif
 
  private:
@@ -132,8 +122,13 @@ class OhPageLoadMetricsObserver
   bool reported_buffered_metrics_ = false;
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  static std::atomic<int64_t> navigation_start_timestamp_;
+  static std::atomic<int64_t> render_init_block_;
+#else
   static int64_t navigation_start_timestamp_;
   static int64_t render_init_block_;
+#endif
 #endif
 
 #if BUILDFLAG(ARKWEB_BFCACHE)

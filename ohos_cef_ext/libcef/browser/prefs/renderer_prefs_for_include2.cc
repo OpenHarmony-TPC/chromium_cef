@@ -95,9 +95,6 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_MEDIA_CAST)
   SET_STATE(cef.cast_enabled, web.cast_enabled);
 #endif
-  if (cef.viewport_meta_enabled.has_value()) {
-    web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
-  }
   SET_STATE(cef.text_autosizing_enabled, web.text_autosizing_enabled);
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_ARKWEB)
@@ -131,7 +128,7 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   web.contextmenu_customization_enabled = cef.contextmenu_customization_enabled;
 #endif
 #if BUILDFLAG(ARKWEB_MEDIA)
-  if (!(base::ohos::IsPcDevice() || base::ohos::IsPcMode()) &&
+  if ((!(base::ohos::IsPcDevice() || base::ohos::IsPcMode()) || base::ohos::IsCompatibleMode()) &&
       cef.viewport_meta_enabled.has_value()) {
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   }

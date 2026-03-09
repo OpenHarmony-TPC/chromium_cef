@@ -453,7 +453,9 @@ test("libcef_static_unittests") {
       "ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_data_base_impl_unittest.cc",
+      "ohos_cef_ext/libcef/browser/javascript/oh_gin_javascript_bridge_message_filter_unittest.cc",
       "ohos_cef_ext/libcef/common/resource_util_for_include_unittest.cc",
+
     ]
     deps += [
       ":libcef_static",
@@ -1185,6 +1187,8 @@ source_set("libcef_static") {
     sources += [
       "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
       "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
+      "ohos_cef_ext/libcef/browser/devtools/arkweb/request_open_devtools_handler.cc",
+      "ohos_cef_ext/libcef/browser/devtools/arkweb/request_open_devtools_handler.h",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",

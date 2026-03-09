@@ -333,6 +333,9 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void GoForward() override;
   bool IsLoading() override;
   void Reload() override;
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  void ReloadEx(int transition_type);
+#endif
   void ReloadIgnoreCache() override;
   void StopLoad() override;
   int GetIdentifier() override;
@@ -411,6 +414,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void OnBrowserDestroyed();
 
   void EnableVideoAssistant(bool enable) override;
+  void EnableVideoAssistantAVCast(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
   void CustomWebMediaPlayer(bool enable) override;
   void SetMediaResumeFromBFCachePage(bool resume) override;

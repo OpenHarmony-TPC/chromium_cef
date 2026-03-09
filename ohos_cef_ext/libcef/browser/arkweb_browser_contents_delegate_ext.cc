@@ -55,6 +55,11 @@
 #include "ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
+#include "arkweb/ohos_adapter_ndk/ohos_adapter_helper_ext.h"
+#endif
+
 namespace {
   
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -192,6 +197,10 @@ void ArkWebBrowserContentsDelegateExt::NavigationEntryCommitted(
       handler->OnNavigationEntryCommitted(details);
     }
   }
+
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+    NotifyPageChanged(load_details.current_commit_entry_url.spec());
+#endif
 }
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
@@ -424,3 +433,38 @@ void ArkWebBrowserContentsDelegateExt::NavigationStateChanged(
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+void ArkWebBrowserContentsDelegateExt::NotifyPageChanged(const std::string url) {
+  if (!browser() || !browser()->GetHost()) {
+    LOG(ERROR) << "NotifyPageChanged error, cannot get browserHost.";
+    return;
+  }
+  int32_t window_id = browser()->GetHost()->GetWindowId();
+  if (window_id < 0) {
+    LOG(ERROR) << "NotifyPageChanged error, window_id invalid.";
+    return;
+  }
+
+  int32_t url_length = static_cast<int32_t>(url.size());
+  if (OHOS::NWeb::OhosAdapterHelperExt::CreateAbilityRuntimeAdapter()->NotifyPageChanged(
+        url.c_str(), url_length, window_id)) {
+    LOG(DEBUG) << "NotifyPageChanged success. url: " << url::LogUtils::ConvertUrlWithMask(url)
+               << " length: " << url_length
+               << " window_id: " << window_id;
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void ArkWebBrowserContentsDelegateExt::OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {
+  LOG(INFO) << "ArkWebBrowserContentsDelegateExt::OnRequestOpenDevTools";
+  if (auto c = client()) {
+    if (auto handler = c->GetRequestHandler()) {
+      if (handler->AsCefRequestHandlerExt()) {
+        handler->AsCefRequestHandlerExt()->OnRequestOpenDevTools(*params);
+      }
+    }
+  }
+}
+#endif // ARKWEB_DEVTOOLS

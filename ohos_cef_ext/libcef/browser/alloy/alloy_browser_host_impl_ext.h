@@ -11,6 +11,9 @@
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #include "chrome/browser/extensions/extension_keybinding_registry.h"
 #endif
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+struct RequestOpenDevToolsParams;
+#endif // ARKWEB_DEVTOOLS
 class AlloyBrowserHostImplExt : public AlloyBrowserHostImpl
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
                                 , public extensions::ExtensionKeybindingRegistry::Delegate
@@ -280,6 +283,9 @@ public:
   std::unique_ptr<content::MediaPlayerListener> OnFullScreenOverlayEnter(
       media::mojom::MediaInfoForVASTPtr media_info_ptr,
       const content::MediaPlayerId& media_player_id) override;
+  std::unique_ptr<content::MediaPlayerListener> OnAVCastStarted(
+      media::mojom::MediaInfoForVASTPtr media_info_ptr,
+      const content::MediaPlayerId& media_player_id) override;
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
@@ -304,6 +310,19 @@ public:
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   void OnDocumentEndReady(const FrameInfos& frameInfo) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_AUTOLAYOUT)
+  int32_t GetWindowId() override;
+#endif
+
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  void OnSafeBrowsingCheckDetail(int code, int policy, int threat) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void OnRequestOpenDevTools(RequestOpenDevToolsParams* params) override;
+#endif // ARKWEB_DEVTOOLS
+
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;

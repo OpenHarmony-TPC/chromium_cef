@@ -110,6 +110,10 @@ class SbClient : public content::WebContentsObserver {
                            const std::string& app_locale);
 
   void NotifySafeBrowsingCheckResult(OHSBThreatType threat_type);
+  
+  void NotifySafeBrowsingCheckDetail(int code,
+                                     int policy,
+                                     OHSBThreatType threat_type);
 
   raw_ptr<PrefService> prefs_;
   bool incognito_mode_{false};

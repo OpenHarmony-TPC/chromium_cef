@@ -151,6 +151,10 @@ std::string OverrideErrorPage(const CefString& url,
   void SetOverscrollMode(int mode) override;
   void SetFocusByPosition(float x, float y, cef::mojom::RenderFrame::SetFocusByPositionCallback callback) override;
   void IsElementExist(const std::string& xPath, cef::mojom::RenderFrame::IsElementExistCallback callback) override;
+  void Clone(mojo::PendingReceiver<cef::mojom::RenderFrame> receiver) override {
+    receivers_.Add(this, std::move(receiver));
+  }
+  mojo::ReceiverSet<cef::mojom::RenderFrame> receivers_;
   void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
   GURL GetChildImageUrlFromElement(const blink::WebElement& element);
   blink::WebElement GetImgChild(const blink::WebNode& node);

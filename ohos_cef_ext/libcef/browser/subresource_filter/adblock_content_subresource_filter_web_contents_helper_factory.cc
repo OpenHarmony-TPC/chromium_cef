@@ -15,11 +15,9 @@
 
 #include "libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h"
 
-#include "arkweb/chromium_ext/chrome/browser/browser_process_impl_ext.h"
 #include "chrome/browser/browser_process.h"
 #include "components/subresource_filter/content/browser/content_subresource_filter_web_contents_helper.h"
 #include "components/subresource_filter/content/shared/browser/ruleset_service.h"
-#include "components/subresource_filter/content/shared/browser/user_ruleset_service.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
@@ -33,11 +31,6 @@ void CreateSubresourceFilterWebContentsHelper(
     subresource_filter::VerifiedRulesetDealer::Handle* dealer =
         ruleset_service ? ruleset_service->GetRulesetDealer() : nullptr;
 
-    subresource_filter::UserRulesetService* user_ruleset_service =
-        g_browser_process->AsBrowserProcessImplExt()->subresource_filter_user_ruleset_service();
-    subresource_filter::VerifiedRulesetDealer::Handle* user_dealer =
-        user_ruleset_service ? user_ruleset_service->GetRulesetDealer() : nullptr;
-
     scoped_refptr<safe_browsing::SafeBrowsingDatabaseManagerImpl>
         database_manager = base::MakeRefCounted<
             safe_browsing::SafeBrowsingDatabaseManagerImpl>(
@@ -45,7 +38,7 @@ void CreateSubresourceFilterWebContentsHelper(
 
     subresource_filter::ContentSubresourceFilterWebContentsHelper::
         CreateForWebContents(navigation_handle->GetWebContents(), nullptr,
-                             std::move(database_manager), dealer, user_dealer);
+                             std::move(database_manager), dealer);
     if (auto* help =
             subresource_filter::ContentSubresourceFilterWebContentsHelper::
                 FromWebContents(navigation_handle->GetWebContents())) {

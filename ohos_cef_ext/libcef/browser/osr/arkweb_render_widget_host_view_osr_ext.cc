@@ -132,6 +132,10 @@ const size_t kMaxDataDetectorTextLength = 1000;
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+#include "ui/base/page_transition_types.h"
+#endif
+
 #include "arkweb/chromium_ext/ui/compositor/compositor_utils.h"
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -510,6 +514,20 @@ void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
       browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->Utils()->EvictFrameBackBuffers();
+    }
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+void ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive(bool is_inactive) {
+  TRACE_EVENT0("base", "ArkWebRenderWidgetHostViewOSRExt::SetIsOfflineWebComponentInactive");
+
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
+    ui::Compositor* compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
+      browser_impl_->GetAcceleratedWidget(is_popup_));
+    if (compositor) {
+      compositor->Utils()->SetIsOfflineWebComponentInactive(is_inactive);
     }
   }
 }
@@ -1542,9 +1560,20 @@ void ArkWebRenderWidgetHostViewOSRExt::DidOverscroll(
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-    float x = params.latest_overscroll_delta.x();
-    float y = params.latest_overscroll_delta.y();
-    handler->AsArkWebRenderHandler()->OnOverscroll(browser_impl_.get(), x, y);
+    if (params.accumulated_overscroll.x() ==
+            params.latest_overscroll_delta.x() &&
+        params.accumulated_overscroll.y() ==
+            params.latest_overscroll_delta.y()) {
+      previous_accumulated_overscroll_x = 0.0f;
+      previous_accumulated_overscroll_y = 0.0f;
+    }
+    float x =
+        params.accumulated_overscroll.x() - previous_accumulated_overscroll_x;
+    float y =
+        params.accumulated_overscroll.y() - previous_accumulated_overscroll_y;
+    if (x != 0 || y != 0) {
+      handler->AsArkWebRenderHandler()->OnOverscroll(browser_impl_.get(), x, y);
+    }
 
     float fling_velocity_x = params.current_fling_velocity.x();
     float fling_velocity_y = params.current_fling_velocity.y();
@@ -1558,9 +1587,12 @@ void ArkWebRenderWidgetHostViewOSRExt::DidOverscroll(
         params.accumulated_overscroll.x() == 0 ? 0 : fling_velocity_x;
     fling_velocity_y =
         params.accumulated_overscroll.y() == 0 ? 0 : fling_velocity_y;
-    handler->AsArkWebRenderHandler()->OnOverScrollFlingVelocity(
-        browser_impl_.get(), fling_velocity_x, fling_velocity_y, is_fling);
-
+    if (fling_velocity_x != 0 || fling_velocity_y != 0) {
+      handler->AsArkWebRenderHandler()->OnOverScrollFlingVelocity(
+          browser_impl_.get(), fling_velocity_x, fling_velocity_y, is_fling);
+    }
+    previous_accumulated_overscroll_x = params.accumulated_overscroll.x();
+    previous_accumulated_overscroll_y = params.accumulated_overscroll.y();
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
     if (overscroll_controller_) {
       overscroll_controller_->OnOverscrolled(params);
@@ -1680,6 +1712,8 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
       handler->AsArkWebRenderHandler()->OnScrollStart(
           browser_impl_.get(), gesture_event.data.scroll_begin.delta_x_hint,
           gesture_event.data.scroll_begin.delta_y_hint);
+      previous_accumulated_overscroll_x = 0.0f;
+      previous_accumulated_overscroll_y = 0.0f;
 
 #if BUILDFLAG(ARKWEB_AI)
       ReportAIGestureEvent(gesture_event);
@@ -2226,6 +2260,7 @@ void ArkWebRenderWidgetHostViewOSRExt::SendTouchpadFlingEvent(
     }
   }
 }
+
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -2601,7 +2636,11 @@ bool ArkWebRenderWidgetHostViewOSRExt::PullToRefreshAction(
     }
     case ui::PullToRefreshAction::PULL_REFRESH: {
       if (browser_impl_ && result) {
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+        browser_impl_->ReloadEx(static_cast<int32_t>(ui::PAGE_TRANSITION_FROM_PULL_DOWN));
+#else
         browser_impl_->Reload();
+#endif
       }
       break;
     }

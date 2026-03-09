@@ -313,7 +313,7 @@ content::RenderFrameHost* OhosPrintManager::GetRenderFrameHostToUse(
 OhosPrintManager* OhosPrintManager::GetOhosPrintManagerToUse(
     content::GlobalRenderFrameHostId rfhId) {
   auto* rfh = content::RenderFrameHost::FromID(rfhId);
-  if (!rfh) {
+  if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "failed to get rfh from id";
     return nullptr;
   }
@@ -426,7 +426,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
 
   if (is_pdf_print_) {
     auto pdf_rfh = content::RenderFrameHost::FromID(pdf_rfh_id_);
-    if (pdf_rfh) {
+    if (pdf_rfh && pdf_rfh->IsRenderFrameLive()) {
       GetPrintRenderFrame(pdf_rfh)->ApplicationPrintRequestedPages();
     } else {
       LOG(ERROR) << "failed to get rfh from id for pdf print";
@@ -437,7 +437,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
 
   if (isApplication) {
     auto* app_rfh = GetRenderFrameHostToUse(web_contents.get());
-    if (app_rfh) {
+    if (app_rfh && app_rfh->IsRenderFrameLive()) {
       GetPrintRenderFrame(app_rfh)->ApplicationPrintRequestedPages();
     }
   } else {

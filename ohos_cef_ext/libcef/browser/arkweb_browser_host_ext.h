@@ -78,6 +78,11 @@
 #include "ohos_cef_ext/libcef/common/cef_open_devtools_ext_opt.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#include "ohos_nweb/src/capi/browser_service/nweb_extension_downloader_types.h"
+#endif
+
+
 #if BUILDFLAG(ARKWEB_MSGPORT)
 class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
  public:
@@ -165,6 +170,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SendTouchpadFlingEvent(const CefMouseEvent& event,
                               double vx,
                               double vy) override;
+  void SendCancelFlingEvent(const CefMouseEvent& event) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_PDF)
@@ -634,7 +640,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
   int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                CefString& detailErrMsg) override;
+      bool allowOpaqueOrigin, bool supportWildcard, CefString& detailErrMsg) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
@@ -725,6 +731,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void PutUserAgent(const CefString& ua, bool from_app) override;
   CefString GetCustomUserAgent() override;
   CefString DefaultUserAgent() override;
+  void SetUserAgentMetadata(const std::string& user_agent,
+                            const blink::UserAgentMetadata& metadata) override;
+  const blink::UserAgentMetadata GetUserAgentMetadata(
+      const std::string& user_agent) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
@@ -764,7 +774,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                              bool recursive, IsolatedWorld world,
                              CefRefPtr<CefJavaScriptResultCallback> callback) override;
-
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  void GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) override;
+  void GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) override;
+#endif
 #if BUILDFLAG(ARKWEB_BGTASK)
   void OnBrowserForeground() override;
   void OnBrowserBackground() override;
@@ -775,6 +789,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
     CefRefPtr<CefDistillCallback> callback) override;
   void AbortDistill() override;
 #endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+  bool SavePage(int32_t type, CefString& filePath) override;
+#endif // ARKWEB_SAVE_PAGE
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) override;
 #endif
@@ -802,6 +821,20 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       const CefPoint& inspect_element_at,
       const CefOpenDevToolsExtOpt& ext_opt) override;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+int32_t GetLastCommittedEntryPageTransition() override;
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+void StartDownloadWithParams(
+    const CefString& url,
+    const DownloadUrlParameters& input_params) override;
+
+void ParseDownloadUrlParamsIntoClass(
+    const DownloadUrlParameters& input_params,
+    std::unique_ptr<download::DownloadUrlParameters>& params);
+#endif
 
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)

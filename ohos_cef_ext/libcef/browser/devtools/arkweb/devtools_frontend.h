@@ -70,6 +70,15 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       base::OnceClosure frontend_destroyed_callback);
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+  static CefDevToolsFrontend* StaticShowWith(
+    const CefString& source_id,
+    const CefString& target_id,
+    AlloyBrowserHostImpl* frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+    content::WebContents* inspected_contents,
+    const CefPoint& inspect_element_at,
+    base::OnceClosure frontend_destroyed_callback,
+    const CefOpenDevToolsExtOpt& ext_opt);
   static CefDevToolsFrontend* ShowWith(
       AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
@@ -153,14 +162,20 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   void SendMessageAck(int request_id, base::Value arg);
   void RequestFileSystems();
+  bool ShouldUseTabTarget();
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   base::Value::Dict BuildExtensionInfo(const extensions::Extension*);
   void AddDevToolsExtensionsToClient();
+  void SetSourceTargetId(const CefString& source_id, const CefString& target_id);
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
   CefRefPtr<AlloyBrowserHostImpl> frontend_browser_;
-  content::WebContents* inspected_contents_;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  base::WeakPtr<content::WebContents> inspected_contents_;
+#else
+  raw_ptr<content::WebContents> inspected_contents_;
+#endif
   scoped_refptr<content::DevToolsAgentHost> agent_host_;
   CefPoint inspect_element_at_;
   base::OnceClosure frontend_destroyed_callback_;
@@ -178,6 +193,10 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler_;
+  bool isTabTarget_;
+  bool useNativeMenu_;
+  CefString source_id_;
+  CefString target_id_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   base::WeakPtrFactory<CefDevToolsFrontend> weak_factory_;

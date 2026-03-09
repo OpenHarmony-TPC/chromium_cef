@@ -136,6 +136,10 @@ bool CefMenuManager::CreateContextMenu(
     return true;
   }
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  params_.custom_items.clear();
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
   params_ = params;
   model_->Clear();
 
@@ -314,6 +318,13 @@ void CefMenuManager::ExecuteCommandCallback(int command_id,
                                             cef_event_flags_t event_flags) {
   DCHECK(IsShowingContextMenu());
   DCHECK(custom_menu_callback_);
+#if BUILDFLAG(ARKWEB_MENU)
+  if (command_id == MENU_ID_IMAGE_COPY &&
+      params_.media_type == ContextMenuDataMediaType::kCanvas) {
+    LOG(INFO) << "Handling canvas image copy command";
+    command_id = MENU_ID_IMAGE_COPY_AT;
+  }
+#endif
   if (command_id != kInvalidCommandId) {
     ExecuteCommand(model_, command_id, event_flags);
   }
@@ -503,6 +514,15 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
       browser_->GetHost()->AddWordToDictionary(params_.misspelled_word);
       break;
 
+#if BUILDFLAG(ARKWEB_MENU)
+    case MENU_ID_IMAGE_SAVE:
+      ExecuteSaveImage();
+      break;
+    case MENU_ID_IMAGE_COPY_AT:
+      ExecuteCopyImageAt();
+      break;
+#endif
+
     default:
       break;
   }
@@ -526,3 +546,19 @@ bool CefMenuManager::IsCustomContextMenuCommand(int command_id) {
   }
   return false;
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+CefRefPtr<CefMenuModelImpl> CefMenuManager::GetContextMenuModel() {
+  LOG(INFO) << "CefMenuManager::GetContextMenuModel model size: " << model_->GetCount();
+  return model_;
+}
+ 
+void CefMenuManager::onConTextMenuSelected(int command_id) {
+  ExecuteDefaultCommand(command_id);
+  MenuClosed(model_);
+}
+ 
+void CefMenuManager::onContextMenuClosed() {
+  MenuClosed(model_);
+}
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)

@@ -28,6 +28,15 @@ class CefDownloadItemImplExt : public CefDownloadItemExt,
   int GetNWebId() override;
   CefRefPtr<CefDownloadItemExt> AsArkDownloadItem() override;
   CefRefPtr<CefValue> GetOriginContentDisposition() override;
+  bool CanResume() override;
+  bool IsTransient() override;
+  CefString GetReferrerUrl() override;
+  CefString GetRequestInitiator() override;
+  int GetDownloadSource() override;
+  int GetTargetDisposition() override;
+  CefString GetByExtensionId() override;
+  CefString GetByExtensionName() override;
+  int GetConflictAction() override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_

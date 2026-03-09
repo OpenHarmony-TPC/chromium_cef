@@ -137,7 +137,104 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
       settings_(profile),
       can_dock_(extOpt.canDock),
       is_docked_(false),
-      dock_mode_changed_(false) {
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+      dock_mode_changed_(false),
+      weak_factory_(this) {
+  LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
+  method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->HandleProtocolMessage(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["bringToFront"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->BringToFront(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["closeWindow"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->CloseWindow(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["inspectedURLChanged"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->InspectedURLChanged(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["registerPreference"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->RegisterPreference(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["getPreferences"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->GetPreferences(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["getPreference"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->GetPreference(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["setPreference"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->SetPreference(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["removePreference"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->RemovePreference(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["clearPreferences"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->ClearPreferences(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["setInspectedPageBounds"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->SetInspectedPageBounds(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+  method_handlers_["setIsDocked"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->SetDockMode(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+
+  protocol_message_handlers_["Page.bringToFront"] = base::BindRepeating(
+      [](base::WeakPtr<CefDevToolsMessageHandler> self, const base::Value::List& params) {
+        if (self) {
+          return self->PageBringToFront(params);
+        }
+        return Result{false, {}};
+      }, weak_factory_.GetWeakPtr());
+#else
+dock_mode_changed_(false) {
   LOG(INFO) << "CefDevToolsMessageHandler canDock: " << extOpt.canDock;
   method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
       &CefDevToolsMessageHandler::HandleProtocolMessage, base::Unretained(this));
@@ -167,6 +264,7 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
 
   protocol_message_handlers_["Page.bringToFront"] = base::BindRepeating(
       &CefDevToolsMessageHandler::PageBringToFront, base::Unretained(this));
+#endif
 }
 
 CefDevToolsMessageHandler::~CefDevToolsMessageHandler() {}
@@ -377,11 +475,13 @@ Result CefDevToolsMessageHandler::ClearPreferences(const base::Value::List& para
 Result CefDevToolsMessageHandler::SetInspectedPageBounds(
     const base::Value::List& params) {
   if (params.empty()) {
-    LOG(WARNING)
+    LOG(INFO)
         << "CefDevToolsMessageHandler::SetInspectedPageBounds params is empty.";
     return {false, {}};
   }
- 
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   const auto& dict = params[0].GetDict();
  
   int left = dict.FindInt("x").value_or(0);
@@ -391,9 +491,16 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
  
   const gfx::Rect rect(left, top, width, height);
   CefResizingStrategy strategy(rect);
-  if (!resizing_strategy_.Equals(strategy)) {
-    resizing_strategy_.CopyFrom(strategy);
+  if (resizing_strategy_.Equals(strategy)) {
+    LOG(INFO)
+        << "CefDevToolsMessageHandler::SetInspectedPageBounds resizing_strategy_.Equals.";
+    if (dock_mode_changed_) {
+      dock_mode_changed_ = false;
+      delegate_->SetDockMode((int)dock_mode_);
+    }
+    return {delegate_->SetInspectedPageBounds(left, top, width, height), {}};
   }
+  resizing_strategy_.CopyFrom(strategy);
   if (dock_mode_changed_ && can_dock_) {
     UpdateDockMode();
   }
@@ -403,33 +510,42 @@ Result CefDevToolsMessageHandler::SetInspectedPageBounds(
  
 void CefDevToolsMessageHandler::UpdateDockMode() {
   dock_mode_changed_ = false;
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
   gfx::Rect inspected_page_bounds = resizing_strategy_.bounds();
-  if (inspected_page_bounds.x() > 0) {
-    delegate_->SetDockMode((int)DockMode::LEFT);
-    return;
-  }
  
   gfx::Rect devtools_bounds = devtools_frontend_->web_contents()
                                   ->GetRenderWidgetHostView()
                                   ->GetViewBounds();
+  if (inspected_page_bounds.x() > 0) {
+    dock_mode_ = DockMode::LEFT;
+    delegate_->SetDockMode((int)dock_mode_);
+    return;
+  }
   if (inspected_page_bounds.width() == devtools_bounds.width()) {
-    delegate_->SetDockMode((int)DockMode::BOTTOM);
+    dock_mode_ = DockMode::BOTTOM;
+    delegate_->SetDockMode((int)dock_mode_);
   } else {
-    delegate_->SetDockMode((int)DockMode::RIGHT);
+    dock_mode_ = DockMode::RIGHT;
+    delegate_->SetDockMode((int)dock_mode_);
   }
 }
  
 Result CefDevToolsMessageHandler::SetDockMode(const base::Value::List& params) {
-  if (params.empty() || !can_dock_) {
-    LOG(WARNING) << "CefDevToolsMessageHandler::SetDockMode params is empty or "
+  if (params.empty()) {
+    LOG(INFO) << "CefDevToolsMessageHandler::SetDockMode params is empty or "
                     "not candock.";
     return {false, {}};
   }
+  LOG(INFO) << "CefDevToolsMessageHandler::SetDockMode isdocked: " << params[0].GetBool()
+            << ", can_dock_: " << can_dock_;
   bool dock_requested = params[0].is_bool() ? params[0].GetBool() : false;
 
   is_docked_ = dock_requested;
   if (!is_docked_) {
-    return {delegate_->SetDockMode((int)DockMode::UNDOCKED), {}};
+    dock_mode_ = DockMode::UNDOCKED;
+    return {delegate_->SetDockMode((int)dock_mode_), {}};
   }
   dock_mode_changed_ = true;
  

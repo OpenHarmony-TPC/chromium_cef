@@ -269,7 +269,7 @@ void OhAutofillManager::FillDataFromAutofill(
   const std::string* value = root_dict->FindString(KEY_VALUE);
   if (value) {
     driver().ApplyFieldAction(
-        mojom::FieldActionType::kReplaceSelection, mojom::ActionPersistence::kFill,
+        mojom::FieldActionType::kManualReplaceSelection, mojom::ActionPersistence::kFill,
         field_id, base::UTF8ToUTF16(*value));
   }
 }

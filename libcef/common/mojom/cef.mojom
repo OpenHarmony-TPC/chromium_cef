@@ -167,8 +167,11 @@ interface RenderFrame {
   [EnableIf=arkweb_input_events, Sync]
   GetHitData() => (int32 type, string extra_data);
 
-  [EnableIf=arkweb_input_events, Sync]
+  [EnableIf=arkweb_input_events]
   SetFocusByPosition(float x, float y) => (bool isEditable);
+
+  [EnableIf=arkweb_input_events]
+  Clone(pending_receiver<RenderFrame> receiver);
 
   [EnableIf=arkweb_clipboard]
   GetImageForContextNode(int32 command_id);

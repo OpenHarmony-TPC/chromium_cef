@@ -74,6 +74,18 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
     bool is_key_request);
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_RECEIVE_RESPONSE)
+  void OnReceiveResponse(CefRefPtr<CefBrowserHostBase> browser,
+                         CefRefPtr<CefRequest> request,
+                         bool is_request_gesture,
+                         int transition_type,
+                         bool is_main_frame,
+                         bool is_redirect,
+                         int resource_type,
+                         CefRefPtr<CefResponse> response_info,
+                         bool is_from_network);
+#endif
+
  private:
   bool IsIntelligentTrackingPreventionEnabled(
       CefRefPtr<CefBrowserHostBase> browser);

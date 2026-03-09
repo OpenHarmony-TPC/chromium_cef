@@ -54,6 +54,7 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
   if (inside_did_clear_window_object_) {
     return;
   }
+  base::WeakPtr<OhGinJavascriptBridgeDispatcher> weak_self = AsWeakPtr();
   base::AutoReset<bool> flag_entry(&inside_did_clear_window_object_, true);
   for (NamedObjectMap::const_iterator iter = named_objects_.begin();
        iter != named_objects_.end(); ++iter) {
@@ -65,6 +66,10 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
         OhGinJavascriptBridgeObject::InjectNamed(render_frame()->GetWebFrame(),
                                                  AsWeakPtr(), iter->first,
                                                  iter->second);
+    if (!weak_self) {
+      return;
+    }
+
     if (object) {
       objects_.AddWithID(object, iter->second);
     } else {
@@ -157,12 +162,10 @@ bool OhGinJavascriptBridgeDispatcher::HasJavascriptMethod(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments,
     OhGinJavascriptBridgeError* error) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
   base::Value::List result_wrapper;
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
@@ -178,11 +181,9 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodAsync(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
       routing_id(), object_id, url, method_name, arguments));
@@ -193,13 +194,11 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodAsync(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments,
     int fd,
     OhGinJavascriptBridgeError* error) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
   base::Value::List result_wrapper;
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
@@ -284,6 +283,7 @@ OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
     v8::Local<v8::Object> object,
     int h5_object_id,
     bool is_promise) {
+  base::WeakPtr<OhGinJavascriptBridgeDispatcher> weak_self = AsWeakPtr();
   if (!render_frame() || !render_frame()->GetWebFrame()) {
     LOG(ERROR)
         << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames frame null";
@@ -319,9 +319,9 @@ OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
 
   v8::TryCatch try_catch(isolate);
   v8::MaybeLocal<v8::Value> maybe_value = object->Get(context, annotate_string);
-  if (try_catch.HasCaught() || !maybe_value.ToLocal(&value)) {
+  if (try_catch.HasCaught() || !maybe_value.ToLocal(&value) || !weak_self) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                  "Getter property fail";
+                  "Getter property fail or self nullptr";
     return std::vector<std::string>();
   } else if (value->IsArray()) {
     v8::Local<v8::Array> keys = value.As<v8::Array>();
@@ -331,6 +331,9 @@ OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
         LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
                       "key error";
         continue;
+      }
+      if (!weak_self) {
+        return std::vector<std::string>();
       }
 
       int len = 0;
@@ -356,6 +359,9 @@ OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
                  << method_name;
       H5ObjectMethodsMap_[h5_object_id].push_back(method_name);
       delete[] buf;
+    }
+    if (!weak_self) {
+      return std::vector<std::string>();
     }
     return H5ObjectMethodsMap_[h5_object_id];
   }
@@ -535,6 +541,14 @@ void OhGinJavascriptBridgeDispatcher::OnDoCallAnonymousH5Function(
     v8_args[i] = v8::Undefined(isolate);
   }
 
+  if (!object->IsFunction()) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::OnDoCallAnonymousH5Function "
+                  "object is not function";
+    if (v8_args != nullptr) {
+      delete[] v8_args;
+    }
+    return;
+  }
   v8::Local<v8::Function> func = v8::Local<v8::Function>::Cast(object);
   v8::MaybeLocal<v8::Value> function_call_result =
       func->Call(context, context->Global(), size, v8_args);
@@ -626,18 +640,18 @@ void OhGinJavascriptBridgeDispatcher::OnDoCallH5Function(
 
   if (method_name
           .empty()) {  // IF h5_method_name empty, call anonymous function
-    OnDoCallAnonymousH5Function(h5_object_id, args);
+    return OnDoCallAnonymousH5Function(h5_object_id, args);
   }
-
-  v8::Isolate* isolate =
-      render_frame()->GetWebFrame()->GetAgentGroupScheduler()->Isolate();
-  v8::HandleScope handle_scope(isolate);
 
   if (!render_frame() || !render_frame()->GetWebFrame()) {
     LOG(ERROR)
         << "OhGinJavascriptBridgeDispatcher::OnDoCallH5Function frame null";
     return;
   }
+
+  v8::Isolate* isolate =
+      render_frame()->GetWebFrame()->GetAgentGroupScheduler()->Isolate();
+  v8::HandleScope handle_scope(isolate);
 
   v8::Local<v8::Context> context =
       render_frame()->GetWebFrame()->MainWorldScriptContext();
@@ -714,6 +728,14 @@ void OhGinJavascriptBridgeDispatcher::OnDoCallH5Function(
 
   if (!try_catch.HasCaught() && !result_value.IsEmpty()) {
     v8::Local<v8::Value> value = result_value.ToLocalChecked();
+    if (!value->IsFunction()) {
+      LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::OnDoCallH5Function "
+                    "value is not function";
+      if (v8_args != nullptr) {
+        delete[] v8_args;
+      }
+      return;
+    }
     v8::Local<v8::Function> func = v8::Local<v8::Function>::Cast(value);
     v8::MaybeLocal<v8::Value> function_call_result =
         func->Call(context, object, size, v8_args);

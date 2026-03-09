@@ -316,20 +316,13 @@ void ArkwebFrameExtImpl::GetImageForContextNode(int command_id) {
 
 #if BUILDFLAG(ARKWEB_TERMINATE_RENDER)
 void ArkwebFrameExtImpl::TerminateRenderProcess() {
-  base::ProcessId realPid = base::GetCurrentRealPid();
-  LOG(INFO) << "TerminateRenderProcess start in render side, pid: " << getpid()
-            << ", propid: " << realPid;
+  LOG(INFO) << "TerminateRenderProcess start in render side, pid: " << getpid();
   // try to kill render process by pid
-  if (kill(getpid(), SIGTERM) != 0) {
-    LOG(ERROR) << "Unable to terminate pid: " << getpid();
+  if (kill(getpid(), SIGTERM) == 0) {
+    LOG(INFO) << "TerminateRenderProcess end in render side by getpid: " << getpid();
     return;
   }
-  // if not, kill by procpid
-  if (kill(realPid, SIGTERM) != 0) {
-    LOG(ERROR) << "Unable to terminate getprocpid: " << realPid;
-    return;
-  }
-  LOG(INFO) << "TerminateRenderProcess end in render side";
+  LOG(ERROR) << "TerminateRenderProcess failed. Unable to terminate pid: " << getpid();
 }
 #endif
 

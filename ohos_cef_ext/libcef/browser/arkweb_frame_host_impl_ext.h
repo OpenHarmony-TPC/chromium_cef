@@ -17,6 +17,7 @@
 #define CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_EXT_H_
 #pragma once
 
+#include <future>
 #include <memory>
 #include <optional>
 #include <queue>
@@ -166,7 +167,12 @@ void SetIsFling(bool is_fling);
   void RemoveCache(bool include_disk_files);
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  bool SetFocusByPosition(float x, float y);
+  bool SetFocusByPosition(float x, float y); // only in ui thread
+  void RequirePositionEditAble(std::shared_ptr<std::promise<bool>> result_promise, float x, float y,
+      mojo::PendingRemote<cef::mojom::RenderFrame> pending_remote); // only in io thread
+  void OnIoRenderFrameDisconnect(); // only in io thread
+  mojo::Remote<cef::mojom::RenderFrame> io_thread_render_frame_; // only in io thread
+  std::atomic<bool> is_io_frame_connected_{false};
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
   virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,

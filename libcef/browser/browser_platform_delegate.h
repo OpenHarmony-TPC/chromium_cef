@@ -323,6 +323,8 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
   // Evict frame back buffers when nweb was hidden
   virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+  // Set is offline web Component.
+  virtual void SetIsOfflineWebComponent() {}
 #endif
 
   // Notify the browser that screen information has changed. Only used with
@@ -421,7 +423,9 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_MEDIA_CAST)
  virtual void OnMediaCastEnter() {}
 #endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
-
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  virtual void OnSafeBrowsingCheckDetail(int code, int policy, int threat) {}
+#endif
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
