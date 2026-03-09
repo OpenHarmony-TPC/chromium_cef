@@ -790,7 +790,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif // ARKWEB_READER_MODE
 
 #if BUILDFLAG(ARKWEB_SAVE_PAGE)
-  bool SavePage(int32_t type, CefString& filePath) override;
+  void OnDidSavePage(CefRefPtr<CefSavePageResultCallback> callback, bool result);
+  bool SavePage(int32_t type,
+                CefString& filePath,
+                CefRefPtr<CefSavePageResultCallback> callback) override;
 #endif // ARKWEB_SAVE_PAGE
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)

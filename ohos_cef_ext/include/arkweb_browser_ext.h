@@ -77,6 +77,13 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   virtual void SetErrorDescription(const std::string& description) {}
 };
 
+#if BUILDFLAG(ARKWEB_SAVE_PAGE)
+class CefSavePageResultCallback : public virtual CefBaseRefCounted {
+  public:
+   virtual void OnSavePageDone(bool result) = 0;
+};
+#endif // ARKWEB_SAVE_PAGE
+
 #if BUILDFLAG(ARKWEB_NWEB_EX)
 class CefFrameInfosCallback : public CefBaseRefCounted {
  public:
@@ -246,7 +253,11 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
 
 #if BUILDFLAG(ARKWEB_SAVE_PAGE)
-  virtual bool SavePage(int32_t type, CefString& filePath) { return false; }
+  virtual bool SavePage(int32_t type,
+                        CefString& filePath,
+                        CefRefPtr<CefSavePageResultCallback> callback) {
+    return false;
+  }
 #endif // ARKWEB_SAVE_PAGE
   ///
   /// Prefetch the resources required by the page, but will not execute js or
