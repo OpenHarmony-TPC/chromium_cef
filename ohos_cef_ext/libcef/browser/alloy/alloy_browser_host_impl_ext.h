@@ -11,6 +11,9 @@
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #include "chrome/browser/extensions/extension_keybinding_registry.h"
 #endif
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+struct RequestOpenDevToolsParams;
+#endif // ARKWEB_DEVTOOLS
 class AlloyBrowserHostImplExt : public AlloyBrowserHostImpl
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
                                 , public extensions::ExtensionKeybindingRegistry::Delegate
@@ -315,6 +318,11 @@ public:
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
   void OnSafeBrowsingCheckDetail(int code, int policy, int threat) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void OnRequestOpenDevTools(RequestOpenDevToolsParams* params) override;
+#endif // ARKWEB_DEVTOOLS
+
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;

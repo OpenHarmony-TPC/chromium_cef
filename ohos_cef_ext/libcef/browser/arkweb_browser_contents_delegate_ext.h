@@ -18,7 +18,9 @@
 #if BUILDFLAG(ARKWEB_FAVICON)
 #include "ohos_cef_ext/libcef/browser/arkweb_icon_helper_ext.h"
 #endif
-
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+struct RequestOpenDevToolsParams;
+#endif // ARKWEB_DEVTOOLS
 class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
  public:
   ArkWebBrowserContentsDelegateExt* AsArkWebBrowserContentsDelegateExt()
@@ -92,6 +94,11 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
   void LostPointerLock() override;
   bool HandleUserKeyEvent(const input::NativeWebKeyboardEvent& event) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void OnRequestOpenDevTools(RequestOpenDevToolsParams* params) override;
+#endif // ARKWEB_DEVTOOLS
+
 private:
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void UnlockPointer();

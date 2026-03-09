@@ -173,7 +173,9 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
   virtual void OnBeforeUnloadFired(bool proceed);
 #endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  virtual void OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {}
+#endif // ARKWEB_DEVTOOLS
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   virtual void OnShareFile(const std::string& filePath,
                            const std::string& utdTypeId);

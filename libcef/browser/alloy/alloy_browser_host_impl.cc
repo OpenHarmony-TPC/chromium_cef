@@ -116,6 +116,9 @@ const char* kAllowedWebUIHosts[] = {
     chrome::kChromeUIVersionHost,
     content::kChromeUIWebRTCInternalsHost,
 #endif
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+    chrome::kChromeUIInspectHost,
+#endif // ARKWEB_DEVTOOLS
 };
 
 bool IsAllowedWebUIHost(const std::string_view& host) {

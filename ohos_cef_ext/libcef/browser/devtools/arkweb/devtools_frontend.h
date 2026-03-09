@@ -70,6 +70,15 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       base::OnceClosure frontend_destroyed_callback);
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+  static CefDevToolsFrontend* StaticShowWith(
+    const CefString& source_id,
+    const CefString& target_id,
+    AlloyBrowserHostImpl* frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+    content::WebContents* inspected_contents,
+    const CefPoint& inspect_element_at,
+    base::OnceClosure frontend_destroyed_callback,
+    const CefOpenDevToolsExtOpt& ext_opt);
   static CefDevToolsFrontend* ShowWith(
       AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
@@ -158,6 +167,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   base::Value::Dict BuildExtensionInfo(const extensions::Extension*);
   void AddDevToolsExtensionsToClient();
+  void SetSourceTargetId(const CefString& source_id, const CefString& target_id);
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
   CefRefPtr<AlloyBrowserHostImpl> frontend_browser_;
@@ -185,6 +195,8 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
   std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler_;
   bool isTabTarget_;
   bool useNativeMenu_;
+  CefString source_id_;
+  CefString target_id_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   base::WeakPtrFactory<CefDevToolsFrontend> weak_factory_;

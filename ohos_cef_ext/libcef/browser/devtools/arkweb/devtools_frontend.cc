@@ -328,7 +328,12 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
     // of the CefSettings.background_color value.
     new_settings.background_color = SK_ColorWHITE;
   }
-
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (!inspected_browser) {
+    LOG(ERROR) << " func:" << __func__ << " inspected_browser is null.";
+    return nullptr;
+  }
+#endif // ARKWEB_DEVTOOLS
   CefBrowserCreateParams create_params;
   if (inspected_browser->is_views_hosted()) {
     create_params.popup_with_views_hosted_opener = true;
@@ -360,6 +365,40 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+// static
+CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
+      const CefString& source_id,
+      const CefString& target_id,
+      AlloyBrowserHostImpl* frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      content::WebContents* inspected_contents,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback,
+      const CefOpenDevToolsExtOpt& ext_opt) {
+  LOG(INFO) << "CefDevToolsFrontend::StaticShowWith";
+  auto handler = std::make_unique<CefDevToolsMessageHandler>(
+      std::move(devtools_message_handler),
+      Profile::FromBrowserContext(
+          frontend_browser->web_contents()->GetBrowserContext()),
+      ext_opt);
+
+  // CefDevToolsFrontend will delete itself when the frontend WebContents is
+  // destroyed.
+  CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
+      frontend_browser,
+      std::move(handler),
+      inspected_contents, inspect_element_at,
+      std::move(frontend_destroyed_callback));
+
+  if (devtools_frontend) {
+    devtools_frontend->SetSourceTargetId(source_id, target_id);
+
+    // Need to load the URL after creating the DevTools objects.
+    frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
+  }
+  return devtools_frontend;
+}
+
 // static
 CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
       AlloyBrowserHostImpl* frontend_browser,
@@ -576,13 +615,31 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
   isTabTarget_ = ShouldUseTabTarget();
   scoped_refptr<content::DevToolsAgentHost> agent_host;
 #if BUILDFLAG(ARKWEB_CRASHPAD)
-  if (isTabTarget_) {
+  if (!inspected_contents_) {
+      content::DevToolsAgentHost::List targets = content::DevToolsAgentHost::GetOrCreateAll();
+      for (const scoped_refptr<content::DevToolsAgentHost>& host : targets) {
+        if (CefString(host->GetId()) == target_id_) {
+          agent_host = host;
+          LOG(INFO) << " func:" << __func__;
+          break;
+        }
+      }
+  } else if (isTabTarget_) {
     agent_host = content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_.get());
   } else {
     agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_.get());
   }
 #else
-  if (isTabTarget_) {
+  if (!inspected_contents_) {
+      content::DevToolsAgentHost::List targets = content::DevToolsAgentHost::GetOrCreateAll();
+      for (const scoped_refptr<content::DevToolsAgentHost>& host : targets) {
+        if (CefString(host->GetId()) == target_id_) {
+          agent_host = host;
+          LOG(INFO) << " func:" << __func__;
+          break;
+        }
+      }
+  } else if (isTabTarget_) {
     agent_host = content::DevToolsAgentHost::GetOrCreateForTab(inspected_contents_);
   } else {
     agent_host = content::DevToolsAgentHost::GetOrCreateFor(inspected_contents_);
@@ -1076,6 +1133,12 @@ PrefService* CefDevToolsFrontend::GetPrefs() const {
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+void CefDevToolsFrontend::SetSourceTargetId(const CefString& source_id,
+                                            const CefString& target_id) {
+  source_id_ = source_id;
+  target_id_ = target_id;
+}
+
 AlloyBrowserHostImpl* CefDevToolsFrontend::GetFrontendBrowser() {
   return frontend_browser_.get();
 }
@@ -1150,6 +1213,7 @@ void CefDevToolsFrontend::RequestFileSystems() {
 bool CefDevToolsFrontend::ShouldUseTabTarget() {
 #if BUILDFLAG(ARKWEB_CRASHPAD)
   if (!inspected_contents_) {
+    LOG(ERROR) << " func:" << __func__ << " inspected_contents_ is null.";
     return false;
   }
 #endif
