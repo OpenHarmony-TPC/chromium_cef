@@ -650,7 +650,6 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
       browser_context, frame, render_process_id, type, request_initiator,
       isolation_info, navigation_id, ukm_source_id, factory_builder,
       /*header_client=*/extensions_url_loader_header_client_remote_ptr, bypass_redirect_checks, disable_secure_dns,
-#endif
       handler_override, navigation_response_task_runner);
 
   DCHECK(intercepting_factory->overriding_factory);
