@@ -717,7 +717,23 @@ void ArkwebFrameExtImpl::GetHitData(
     cef::mojom::RenderFrame::GetHitDataCallback callback) {
   std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
 }
- 
+void ArkwebFrameExtImpl::IsElementExist(
+    const std::string& xPath,
+    cef::mojom::RenderFrame::IsElementExistCallback callback) {
+       LOG(INFO) << "IsElementExist in cef frame";
+  bool isExist = false;
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "render_frame NULL";
+    std::move(callback).Run(isExist);
+    return;
+  }
+  isExist = render_frame->IsElementExist(xPath);
+  std::move(callback).Run(isExist);
+  LOG(INFO) << "IsElementExist cef frame done. isExist:"
+            << (isExist ? "true" : "false");
+}
+
 void ArkwebFrameExtImpl::SetFocusByPosition(
     float x,
     float y,

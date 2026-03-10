@@ -1068,7 +1068,10 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// set Scrollable
   ///
   virtual void SetScrollable(bool enable, int scrollType) = 0;
-
+  ///
+  /// is ElementExist by xpath.
+  ///
+  virtual bool IsElementExist(CefString& xPath) = 0;
   ///
   /// Set whether the soft keyboard is displayed.
   ///

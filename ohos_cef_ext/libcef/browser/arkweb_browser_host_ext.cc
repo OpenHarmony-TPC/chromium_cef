@@ -1570,6 +1570,15 @@ void ArkWebBrowserHostExtImpl::SetScrollable(bool enable, int scrollType) {
 #endif
 }
 
+bool ArkWebBrowserHostExtImpl::IsElementExist(CefString& xPath) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    return static_cast<ArkwebFrameHostExtImpl*>(frame.get())
+        ->IsElementExist(xPath);
+  }
+  return false;
+}
+
 void ArkWebBrowserHostExtImpl::SetOverscrollMode(int overscrollMode) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {

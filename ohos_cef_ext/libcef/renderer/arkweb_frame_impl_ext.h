@@ -150,6 +150,7 @@ std::string OverrideErrorPage(const CefString& url,
   void ZoomBy(float delta, float width, float height) override;
   void SetOverscrollMode(int mode) override;
   void SetFocusByPosition(float x, float y, cef::mojom::RenderFrame::SetFocusByPositionCallback callback) override;
+  void IsElementExist(const std::string& xPath, cef::mojom::RenderFrame::IsElementExistCallback callback) override;
   void Clone(mojo::PendingReceiver<cef::mojom::RenderFrame> receiver) override {
     receivers_.Add(this, std::move(receiver));
   }
