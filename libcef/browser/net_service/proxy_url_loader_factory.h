@@ -203,7 +203,7 @@ class ProxyURLLoaderFactory
       network::URLLoaderFactoryBuilder& factory_builder,
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
 #endif
       std::unique_ptr<InterceptedRequestHandler> request_handler,
@@ -257,7 +257,7 @@ class ProxyURLLoaderFactory
           target_factory_remote,
       mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
           header_client_receiver,
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
 #endif
       std::unique_ptr<InterceptedRequestHandler> request_handler);
@@ -268,7 +268,7 @@ class ProxyURLLoaderFactory
           target_factory_remote,
       mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
           header_client_receiver,
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
 #endif
       content::ResourceContext* resource_context,
@@ -296,10 +296,10 @@ class ProxyURLLoaderFactory
   mojo::Receiver<network::mojom::TrustedURLLoaderHeaderClient>
       url_loader_header_client_receiver_{this};
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
   mojo::Remote<network::mojom::TrustedURLLoaderHeaderClient>
       extensions_url_loader_header_client_;
-#endif // ARKWEB_ARKWEB_EXTENSIONS
+#endif // ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT
 
   std::unique_ptr<InterceptedRequestHandler> request_handler_;
 
