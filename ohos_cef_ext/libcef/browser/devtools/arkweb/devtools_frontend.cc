@@ -510,7 +510,7 @@ CefDevToolsFrontend::CefDevToolsFrontend(
     : content::WebContentsObserver(frontend_browser->web_contents()),
       frontend_browser_(frontend_browser),
 #if BUILDFLAG(ARKWEB_CRASHPAD)
-  inspected_contents_(inspected_contents->GetWeakPtr()),
+  inspected_contents_(inspected_contents ? inspected_contents->GetWeakPtr() : nullptr),
 #else
   inspected_contents_(inspected_contents),
 #endif
@@ -535,7 +535,7 @@ CefDevToolsFrontend::CefDevToolsFrontend(
     : content::WebContentsObserver(frontend_browser->web_contents()),
       frontend_browser_(frontend_browser),
 #if BUILDFLAG(ARKWEB_CRASHPAD)
-  inspected_contents_(inspected_contents->GetWeakPtr()),
+  inspected_contents_(inspected_contents ? inspected_contents->GetWeakPtr() : nullptr),
 #else
   inspected_contents_(inspected_contents),
 #endif
@@ -605,11 +605,6 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
   // Don't call AttachClient multiple times for the same DevToolsAgentHost.
   // Otherwise it will call AgentHostClosed which closes the DevTools window.
   // This may happen in cases where the DevTools content fails to load.
-#if BUILDFLAG(ARKWEB_CRASHPAD)
-  if (!inspected_contents_) {
-    return;
-  }
-#endif
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   isTabTarget_ = ShouldUseTabTarget();
@@ -661,6 +656,11 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
     agent_host_->AttachClient(this);
     if (!inspect_element_at_.IsEmpty()) {
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+      if (!inspected_contents_) {
+        return;
+      }
+#endif
       content::RenderFrameHost* rfh = inspected_contents_->GetFocusedFrame();
       if (!rfh) {
         rfh = inspected_contents_->GetPrimaryMainFrame();

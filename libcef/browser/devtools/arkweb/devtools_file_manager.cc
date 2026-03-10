@@ -181,7 +181,10 @@ CefDevToolsFileManager::CefDevToolsFileManager(
           base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()})),
       weak_factory_(this) {
   pref_change_registrar_.Init(prefs_);
-  if (!browser_impl_) return;
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser_impl_ is null.";
+    return;
+  }
   web_contents_ = browser_impl_->web_contents();
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -247,7 +250,10 @@ void CefDevToolsFileManager::Save(const std::string& url,
     fileChooserCallback = devtools_message_handler_->ShowFileChooser(
         params, std::move(fileChooserCallback));
   }
-  if (!browser_impl_) return;
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser_impl_ is null.";
+    return;
+  }
   if (fileChooserCallback) {
     auto translateFilePathCallback = base::BindOnce(
         &TranslateToRealPaths, std::move(fileChooserCallback));
@@ -342,7 +348,12 @@ void CefDevToolsFileManager::CallClientFunction(
     }
   }
   javascript.append(");");
-  if (!browser_impl_) return;
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser_impl_ is null.";
+    return;
+  }
+#endif // ARKWEB_DEVTOOLS
   auto* rfh = browser_impl_->web_contents()->GetPrimaryMainFrame();
   if (rfh != nullptr) {
     rfh->ExecuteJavaScript(
@@ -358,7 +369,10 @@ void CefDevToolsFileManager::CallClientMethod(
     base::Value arg2,
     base::Value arg3,
     base::OnceCallback<void(base::Value)> completion_callback) {
-  if (!web_contents_) return;
+  if (!web_contents_) {
+    LOG(ERROR) << "web_contents_ is null.";
+    return;
+  }
   // If the client renderer is gone (e.g., the window was closed with both the
   // inspector and client being destroyed), the message can not be sent.
   auto* rfh = web_contents_->GetPrimaryMainFrame();
