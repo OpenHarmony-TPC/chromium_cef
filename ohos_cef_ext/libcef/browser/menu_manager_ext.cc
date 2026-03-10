@@ -22,9 +22,8 @@ CefRefPtr<CefMenuModelImpl> CefMenuManager::GetContextMenuModel() {
   return model_;
 }
  
-void CefMenuManager::onConTextMenuSelected(int command_id) {
+void CefMenuManager::onContextMenuSelected(int command_id) {
   ExecuteDefaultCommand(command_id);
-  MenuClosed(model_);
 }
  
 void CefMenuManager::onContextMenuClosed() {

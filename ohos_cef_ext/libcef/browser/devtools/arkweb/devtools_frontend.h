@@ -194,7 +194,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler_;
   bool isTabTarget_;
-  bool useNativeMenu_;
+  bool show_toolbox_;
   CefString source_id_;
   CefString target_id_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
