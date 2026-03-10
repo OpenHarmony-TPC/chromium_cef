@@ -120,4 +120,18 @@ std::string OffscreenContentsDelegate::GetTitleForMediaControls(
     return "";
   }
 }
+
+bool OffscreenContentsDelegate::DidAddMessageToConsole(
+    content::WebContents* source,
+    blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
+    const std::u16string& message,
+    int32_t line_no,
+    const std::u16string& source_id) {
+  // 扩展默认关闭consolelog
+  return true;
+}
+
 }
