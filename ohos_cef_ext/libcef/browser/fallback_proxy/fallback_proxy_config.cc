@@ -153,8 +153,7 @@ const std::string& FallbackProxyConfig::GetProxyToken() const {
 void FallbackProxyConfig::UpdateProxyToken(const std::string& token,
                                            const std::string& token_info) {
   if (auth_token_ != token) {
-    LOG(INFO) << "Fallback proxy config proxy token is changed. old_token="
-              << auth_token_ << " token=" << token;
+    LOG(INFO) << "Fallback proxy config proxy token is changed.";
     auth_token_ = token;
     if (proxy_token_updated_callback_) {
       proxy_token_updated_callback_.Run();

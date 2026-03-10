@@ -37,8 +37,7 @@ constexpr int kFallbackProxyFailureLimit = 3;
 
 void FallbackProxyService_OnUpdateProxyToken(std::string old_token) {
   // Triggering Client Callback
-  LOG(DEBUG) << "Fallback FallbackProxyService_OnUpdateProxyToken old_token:"
-             << old_token;
+  LOG(DEBUG) << "Fallback FallbackProxyService_OnUpdateProxyToken oldtoken=" << old_token.empty();
   OHOS::NWeb::NwebFallbackProxy::OnUpdateProxyToken(old_token);
 }
 
