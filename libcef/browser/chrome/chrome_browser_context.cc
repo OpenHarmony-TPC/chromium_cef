@@ -219,8 +219,7 @@ void ChromeBrowserContext::ProfileCreated(CreateStatus status,
       parent_profile->NotifyOffTheRecordProfileCreated(otr_profile);
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
       if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-              switches::kEnableNwebEx) &&
-          base::ohos::IsPcDevice()) {
+              switches::kEnableNwebEx)) {
         ProfileManager* profile_manager = g_browser_process->profile_manager();
         profile_manager->OnOtrProfileAdded(otr_profile);
       }
