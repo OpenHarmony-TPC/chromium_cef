@@ -638,7 +638,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
   mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
       extensions_url_loader_header_client_remote_ptr = nullptr;
  
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
+#if BUILDFLAG(ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT)
   mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote;
   if (nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->ExtensionHeaderClientHandleEnable()) {
     extensions_url_loader_header_client_remote_ptr = &extensions_url_loader_header_client_remote;
@@ -683,7 +683,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS_HEADER_CLIENT)
+#if BUILDFLAG(ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT)
       std::move(extensions_url_loader_header_client_remote),
 #endif
       std::move(request_handler), factory_override);
