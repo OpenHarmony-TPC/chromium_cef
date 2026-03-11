@@ -25,8 +25,8 @@ namespace cef {
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 int GetTabIdForWebContents(const content::WebContents* web_contents) {
-  if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
-      switches::kEnableNwebEx) && base::ohos::IsPcDevice()) {
+  if ((*base::CommandLine::ForCurrentProcess())
+          .HasSwitch(switches::kEnableNwebEx)) {
     auto host_base = CefBrowserHostBase::GetBrowserForContents(web_contents);
     if (host_base && host_base->IsAlloyStyle()) {
       auto browser = AlloyBrowserHostImpl::GetBrowserForContents(web_contents);
@@ -93,8 +93,8 @@ content::WebContents* GetWebContentByTabIdOrSessionId(int id) {
     return nullptr;
   }
 
-  if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
-      switches::kEnableNwebEx) && base::ohos::IsPcDevice()) {
+  if ((*base::CommandLine::ForCurrentProcess())
+          .HasSwitch(switches::kEnableNwebEx)) {
     return GetWebContentByTabId(id);
   }
 
@@ -102,8 +102,8 @@ content::WebContents* GetWebContentByTabIdOrSessionId(int id) {
 }
 
 bool ArkWebExtensionIsNotTabId(content::WebContents* web_contents, int tab_id) {
-  if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
-      switches::kEnableNwebEx) && base::ohos::IsPcDevice()) {
+  if ((*base::CommandLine::ForCurrentProcess())
+          .HasSwitch(switches::kEnableNwebEx)) {
     if (web_contents->ExtensionGetTabId() != tab_id) {
       return true;
     }

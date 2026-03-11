@@ -103,8 +103,7 @@ void IconHelper::SetDisplayHandler(
 void IconHelper::SetWebContents(content::WebContents* new_contents) {
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          ::switches::kEnableNwebEx) &&
-      base::ohos::IsPcDevice()) {
+          ::switches::kEnableNwebEx)) {
     favicon_driver_observation_.Reset();
 
     if (new_contents) {

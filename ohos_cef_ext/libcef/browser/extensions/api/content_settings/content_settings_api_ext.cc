@@ -423,9 +423,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
         cookie_settings = CookieSettingsFactory::GetForProfile(profile);
     }
 
-    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            ::switches::kEnableNwebEx) ||
-        !base::ohos::IsPcDevice()) {
+    if (!OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance()
+             .HasOnGet()) {
       // TODO(crbug.com/40247160): Consider whether the following check should
       // somehow determine real CookieSettingOverrides rather than default to
       // none.
@@ -640,9 +639,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         return RespondNow(Error(extension_misc::kIncognitoSessionOnlyErrorMessage));
     }
 
-    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            ::switches::kEnableNwebEx) ||
-        !base::ohos::IsPcDevice()) {
+    if (!OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance()
+             .HasOnSet()) {
       scoped_refptr<ContentSettingsStore> store =
           ContentSettingsService::Get(browser_context())
               ->content_settings_store();
@@ -748,9 +746,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
        return RespondNow(BadMessage());
     }
 
-    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            ::switches::kEnableNwebEx) ||
-        !base::ohos::IsPcDevice()) {
+    if (!OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance()
+             .HasOnClear()) {
       scoped_refptr<ContentSettingsStore> store =
           ContentSettingsService::Get(browser_context())
               ->content_settings_store();
