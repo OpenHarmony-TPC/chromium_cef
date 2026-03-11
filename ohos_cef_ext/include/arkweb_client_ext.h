@@ -199,6 +199,12 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
+
+  ///
+  /// Notify the page is didMeaningfulLayout.
+  ///
+  /*--cef()--*/
+  virtual void OnDidMeaningfulLayout(const std::string& url) {}
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)

@@ -2020,6 +2020,14 @@ void AlloyBrowserHostImplExt::OnIsPageDistillable(int page_type,
 bool AlloyBrowserHostImplExt::IsForDistillerPage() {
   return false;
 }
+
+void AlloyBrowserHostImplExt::OnDidMeaningfulLayout(const std::string& url) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnDidMeaningfulLayout failed";
+    return nullptr;
+  }
+  client_->AsArkWebClient()->OnDidMeaningfulLayout(url);
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
