@@ -19,7 +19,10 @@
 #include <string>
 #include <utility>
 
+#include "arkweb/chromium_ext/base/arkweb_report_statistics.h"
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_reader_mode_config.h"
 #include "base/containers/lru_cache.h"
+#include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
@@ -67,6 +70,58 @@ constexpr char kTimingInfo[] = "timingInfo";
 constexpr char kCurrentPageUrl[] = "currentPageUrl";
 constexpr char kResultList[] = "resultList";
 
+// BECE field name constants
+constexpr char kBECENovelDistillResult[] = "kernel_novel_distill_result";
+constexpr char kBECEHost[] = "host";
+constexpr char kBECEResultCode[] = "result_code";
+constexpr char kBECEResultMessage[] = "result_message";
+constexpr char kBECEPageType[] = "page_type";
+constexpr char kBECELatestChaptersCount[] = "latest_chapters_count";
+constexpr char kBECEAllChaptersCount[] = "all_chapters_count";
+constexpr char kBECEHasNextUrl[] = "has_next_url";
+constexpr char kBECEHasPrevUrl[] = "has_prev_url";
+constexpr char kBECEHasCatalogUrl[] = "has_catalog_url";
+constexpr char kBECEHasWholeUrl[] = "has_whole_url";
+constexpr char kBECESelectUrlCount[] = "select_url_count";
+constexpr char kBECEHasBookName[] = "has_book_name";
+constexpr char kBECEHasBookImage[] = "has_book_image";
+constexpr char kBECEHasBookAuthor[] = "has_book_author";
+constexpr char kBECEDistillTime[] = "distill_time";
+constexpr char kBECETotalTime[] = "total_time";
+constexpr char kBECEDomDistillerJsVersion[] = "domdistillerjs_version";
+constexpr char kHasTrue[] = "1";
+
+static base::Value::Dict g_statistics_content;
+static const int kRecentlyStatisticsUrlCount = 10;
+static base::LRUCacheSet<GURL> g_recently_statistics_urls(
+    kRecentlyStatisticsUrlCount);
+
+void AddBECEContent(
+    base::Value::Dict& statistics_content,
+    std::initializer_list<std::pair<std::string, std::string>> contents,
+    std::pair<bool, GURL> statistics = {false, GURL()}) {
+  for (const auto& content : contents) {
+    statistics_content.Set(content.first, content.second);
+  }
+
+  if (statistics.first && statistics.second.is_valid()
+      && !statistics.second.is_empty()) {
+    if (g_recently_statistics_urls.Get(statistics.second) ==
+        g_recently_statistics_urls.end()) {
+      g_recently_statistics_urls.Put(GURL(statistics.second));
+      auto json = base::WriteJson(statistics_content);
+      if (json) {
+        base::ohos::OperationStatistics::Statistics(
+            base::ohos::REGION_CHINA, base::ohos::PLATFORM_OPERATION_ANALYSIS,
+            base::ohos::OperationStatistics::GROUP_BECE, kBECENovelDistillResult,
+            base::ohos::OperationStatistics::DEFAULT_DATA_VERSION, json.value(),
+            true, false, true, base::ohos::REPORT_DAILY);
+      }
+    }
+    statistics_content.clear();
+  }
+}
+
 bool FillResultFields(
     const dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
     base::Value::Dict& dict) {
@@ -75,9 +130,13 @@ bool FillResultFields(
     const auto& res = flat.distilled_result();
     if (res.has_code()) {
       dict.Set(kResultCode, res.code());
+      AddBECEContent(g_statistics_content,
+                     {{kBECEResultCode, base::NumberToString(res.code())}});
     }
     if (res.has_message()) {
       dict.Set(kResultMessage, res.message());
+      AddBECEContent(g_statistics_content,
+                     {{kBECEResultMessage, res.message()}});
     }
     return res.has_code();
   }
@@ -89,6 +148,7 @@ void FillBasicInfoFields(
     base::Value::Dict& dict) {
   if (flat.has_book_name()) {
     dict.Set(kBookName, flat.book_name());
+    AddBECEContent(g_statistics_content, {{kBECEHasBookName, "1"}});
   }
   if (flat.has_chapter_name()) {
     dict.Set(kChapterName, flat.chapter_name());
@@ -98,9 +158,11 @@ void FillBasicInfoFields(
   }
   if (flat.has_img_url()) {
     dict.Set(kCoverUrl, flat.img_url());
+    AddBECEContent(g_statistics_content, {{kBECEHasBookImage, "1"}});
   }
   if (flat.has_author()) {
     dict.Set(kAuthor, flat.author());
+    AddBECEContent(g_statistics_content, {{kBECEHasBookAuthor, "1"}});
   }
   if (flat.has_content()) {
     dict.Set(kPageContent, flat.content());
@@ -128,21 +190,28 @@ void FillContentInfoFields(
     base::Value::Dict& dict) {
   if (flat.has_content_info()) {
     dict.Set(kType, kContent);
+    AddBECEContent(g_statistics_content, {{kBECEPageType, kContent}});
     const auto& info = flat.content_info();
     if (info.has_next_page()) {
       dict.Set(kNextPageUrl, info.next_page());
+      AddBECEContent(g_statistics_content, {{kBECEHasNextUrl, "1"}});
     }
     if (info.has_prev_page()) {
       dict.Set(kPrevPageUrl, info.prev_page());
+      AddBECEContent(g_statistics_content, {{kBECEHasPrevUrl, "1"}});
     }
     if (info.has_catalog_page()) {
       dict.Set(kCatalogPageUrl, info.catalog_page());
+      AddBECEContent(g_statistics_content, {{kBECEHasCatalogUrl, "1"}});
     }
   }
   if (!has_result && ((flat.has_content_info() && !flat.has_content()) ||
                       (flat.has_content() && flat.content().empty()))) {
     dict.Set(kResultCode, kNoContentErrorCode);
     dict.Set(kResultMessage, kErrorMsgNoContent);
+    AddBECEContent(g_statistics_content,
+                   {{kBECEResultCode, base::NumberToString(kNoContentErrorCode)},
+                    {kBECEResultMessage, kErrorMsgNoContent}});
   }
 }
 
@@ -157,14 +226,17 @@ bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFiel
   const auto& p = cat.pagination_info();
   if (p.has_next_catalog_page()) {
     pag.Set(kNextPageUrl, p.next_catalog_page());
+    AddBECEContent(g_statistics_content, {{kBECEHasNextUrl, "1"}});
     has_pagination = !p.next_catalog_page().empty();
   }
   if (p.has_prev_catalog_page()) {
     pag.Set(kPrevPageUrl, p.prev_catalog_page());
+    AddBECEContent(g_statistics_content, {{kBECEHasPrevUrl, "1"}});
     has_pagination = !p.prev_catalog_page().empty();
   }
   if (p.has_whole_catalog_page()) {
     pag.Set(kMorePageUrl, p.whole_catalog_page());
+    AddBECEContent(g_statistics_content, {{kBECEHasWholeUrl, "1"}});
     has_pagination = !p.whole_catalog_page().empty();
   }
 
@@ -183,6 +255,8 @@ bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFiel
     pag.Set(kPageSelectList, std::move(pages));
   }
   dict.Set(kCatalogPagination, std::move(pag));
+  AddBECEContent(g_statistics_content,
+                 {{kBECESelectUrlCount, base::NumberToString(p.all_catalog_pages_size())}});
   return has_pagination;
 }
 
@@ -219,10 +293,18 @@ void FillCatalogInfoFields(
     dict.Set(kAllChapters, std::move(all));
   }
 
+  AddBECEContent(g_statistics_content,
+                 {{kBECEPageType, kCatalog},
+                  {kBECELatestChaptersCount, base::NumberToString(cat.latest_chapters_size())},
+                  {kBECEAllChaptersCount, base::NumberToString(cat.all_chapters_size())}});
+
   bool has_pagination = FillPaginationInfo(cat, dict);
   if (!has_result && cat.all_chapters_size() == 0 && !has_pagination) {
     dict.Set(kResultCode, kNoChaptersErrorCode);
     dict.Set(kResultMessage, kErrorMsgNoChapters);
+    AddBECEContent(g_statistics_content,
+                   {{kBECEResultCode, base::NumberToString(kNoChaptersErrorCode)},
+                    {kBECEResultMessage, kErrorMsgNoChapters}});
   }
 }
 
@@ -235,30 +317,154 @@ void FillTimingInfoFields(
     if (t.has_total_time()) {
       std::string total_time = base::StringPrintf("%.2f", t.total_time());
       timing.Set(kTotalTime, total_time);
+      AddBECEContent(g_statistics_content, {{kBECETotalTime, total_time}});
     }
     if (t.has_distill_time()) {
       std::string distill_time = base::StringPrintf("%.2f", t.distill_time());
       timing.Set(kDistillTime, distill_time);
+      AddBECEContent(g_statistics_content, {{kBECEDistillTime, distill_time}});
     }
     dict.Set(kTimingInfo, std::move(timing));
   }
 }
 
-base::Value::Dict BuildPageContent(
-    const dom_distiller::DistilledPageProto& page) {
-  base::Value::Dict dict;
-  const auto& flat = page.flat_fields();
-  bool has_result_code = FillResultFields(flat, dict);
-  FillBasicInfoFields(flat, dict);
-  FillContentInfoFields(flat, has_result_code, dict);
-  FillCatalogInfoFields(flat, has_result_code, dict);
-  FillTimingInfoFields(flat, dict);
-
-  if (page.has_title()) {
-    dict.Set(kTitle, page.title());
+bool BuildHwDistillerResultJson(const dom_distiller::DistilledPageProto& page,
+                                base::Value::Dict& result_dict) {
+  if (!page.has_hw_distiller_result_json()) {
+    return false;
   }
-  dict.Set(kCurrentPageUrl, page.url());
+  if (page.hw_distiller_result_json().empty()) {
+    return false;
+  }
 
+  auto parsed_json = base::JSONReader::ReadAndReturnValueWithError(
+                                       page.hw_distiller_result_json());
+  if (!parsed_json.has_value()) {
+    LOG(WARNING) << __func__ << " [Distiller] Error parsing hw_distiller_result_json: "
+                 << parsed_json.error().message;
+    return false;
+  }
+
+  base::Value value = std::move(*parsed_json);
+  if (!value.is_dict()) {
+    return false;
+  }
+  result_dict = std::move(value.GetDict());
+  return true;
+}
+
+bool BuildFlagInfo(base::Value::Dict& result_dict) {
+  if (const auto* book_name = result_dict.FindString(kBookName)) {
+    AddBECEContent(g_statistics_content, {{kBECEHasBookName, kHasTrue}});
+  }
+
+  if (const auto* cover_url = result_dict.FindString(kCoverUrl)) {
+    if (!cover_url->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasBookImage, kHasTrue}});
+    }
+  }
+
+  if (const auto* author = result_dict.FindString(kAuthor)) {
+    if (!author->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasBookAuthor, kHasTrue}});
+    }
+  }
+
+  if (const auto* next_page = result_dict.FindString(kNextPageUrl)) {
+    if (!next_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasNextUrl, kHasTrue}});
+    }
+  }
+
+  if (const auto* prev_page = result_dict.FindString(kPrevPageUrl)) {
+    if (!prev_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasPrevUrl, kHasTrue}});
+    }
+  }
+
+  if (const auto* catalog_page = result_dict.FindString(kCatalogPageUrl)) {
+    if (!catalog_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasCatalogUrl, kHasTrue}});
+    }
+  }
+}
+
+bool BuildChaptersInfo(base::Value::Dict& result_dict) {
+  if (const auto* latest_chapters = result_dict.FindList(kLatestChapters)) {
+    int latest_chapters_count = 0;
+    if (!latest_chapters->empty()) {
+      latest_chapters_count = latest_chapters->size();
+    }
+    AddBECEContent(g_statistics_content,
+                   {{kBECELatestChaptersCount, base::NumberToString(latest_chapters_count)}});
+  }
+
+  if (const auto* all_chapters = result_dict.FindList(kAllChapters)) {
+    if (!all_chapters->empty()) {
+      AddBECEContent(g_statistics_content,
+                     {{kBECEAllChaptersCount, base::NumberToString(all_chapters->size())}});
+    }
+  }
+}
+
+bool BuildPaginationInfo(base::Value::Dict& result_dict) {
+  if (const auto* pagination_info = result_dict.FindDict(kCatalogPagination)) {
+    auto* next_catalog_page = pagination_info->FindString(kNextPageUrl);
+    if (next_catalog_page && !next_catalog_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasNextUrl, kHasTrue}});
+    }
+
+    auto* prev_catalog_page = pagination_info->FindString(kPrevPageUrl);
+    if (prev_catalog_page && !prev_catalog_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasPrevUrl, kHasTrue}});
+    }
+
+    auto* more_catalog_page = pagination_info->FindString(kMorePageUrl);
+    if (more_catalog_page && !more_catalog_page->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEHasWholeUrl, kHasTrue}});
+    }
+
+    auto* page_select_list = pagination_info->FindList(kPageSelectList);
+    int page_select_list_count = 0;
+    if (page_select_list && page_select_list->size() != 0) {
+      page_select_list_count = page_select_list->size();
+    }
+    AddBECEContent(g_statistics_content,
+                   {{kBECESelectUrlCount, base::NumberToString(page_select_list_count)}});
+  }
+}
+
+void ReportDistilledResult(base::Value::Dict& dict,
+                           const dom_distiller::DistilledPageProto& page) {
+  AddBECEContent(g_statistics_content, {{kBECEHost, GURL(page.url()).host()}});
+  int code = 0;
+  if (std::optional<int> result_code = dict.FindInt(kResultCode)) {
+    code = *result_code;
+  } else {
+    dict.Set(kResultCode, 0);
+  }
+  if (code != 0) {
+    AddBECEContent(g_statistics_content, {{kBECEResultCode, base::NumberToString(code)}});
+    const auto* result_message = dict.FindString(kResultMessage);
+    if (result_message && !result_message->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEResultMessage, *result_message}});
+    }
+  }
+  if (const auto* page_type = dict.FindString(kType)) {
+    if (!page_type->empty()) {
+      AddBECEContent(g_statistics_content, {{kBECEPageType, *page_type}});
+    }
+  }
+  BuildFlagInfo(dict);
+  BuildChaptersInfo(dict);
+  BuildPaginationInfo(dict);
+  AddBECEContent(g_statistics_content,
+                 {{kBECEDomDistillerJsVersion, base::NumberToString(
+                        nweb_ex::AlloyBrowserReaderModeConfig::GetInstance()->GetDomDistillerJsVersion())}});
+  AddBECEContent(g_statistics_content, {}, {true, GURL(page.url())});
+}
+
+void LogDistillResult(const base::Value::Dict& dict) {
   const int result_code = dict.FindInt(kResultCode).value_or(1);
   auto* result_message = dict.FindString(kResultMessage);
   auto* next_page_url = dict.FindString(kNextPageUrl);
@@ -297,6 +503,30 @@ base::Value::Dict BuildPageContent(
             << (latest_chapters ? (int)latest_chapters->size() : -1) << " "
             << (all_chapters ? (int)all_chapters->size() : -1) << " "
             << pagination_str << " timing_info:" << json;
+}
+
+base::Value::Dict BuildPageContent(
+    const dom_distiller::DistilledPageProto& page) {
+  base::Value::Dict dict;
+  if (BuildHwDistillerResultJson(page, dict)) {
+    FillTimingInfoFields(page.flat_fields(), dict);
+    ReportDistilledResult(dict, page);
+  } else {
+    const auto& flat = page.flat_fields();
+    bool has_result_code = FillResultFields(flat, dict);
+    FillBasicInfoFields(flat, dict);
+    FillContentInfoFields(flat, has_result_code, dict);
+    FillCatalogInfoFields(flat, has_result_code, dict);
+    FillTimingInfoFields(flat, dict);
+
+    if (page.has_title()) {
+      dict.Set(kTitle, page.title());
+    }
+    dict.Set(kCurrentPageUrl, page.url());
+    AddBECEContent(g_statistics_content, {{kBECEHost, GURL(page.url()).host()}});
+    AddBECEContent(g_statistics_content, {}, {true, GURL(page.url())});
+  }
+  LogDistillResult(dict);
   return dict;
 }
 
@@ -314,6 +544,7 @@ base::Value::List BuildDistilledPageList(
 std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     const dom_distiller::DistilledArticleProto* article_proto,
     const GURL& url) {
+  AddBECEContent(g_statistics_content, {{kBECEHost, url.host()}});
 
   auto result = std::make_unique<std::string>();
   base::Value::Dict json;
@@ -322,6 +553,10 @@ std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     json.Set(kPageCount, 0);
     json.Set(kResultCode, kNoPageErrorCode);
     json.Set(kResultMessage, kErrorMsgNoPage);
+    AddBECEContent(g_statistics_content,
+                   {{kBECEResultCode, base::NumberToString(kNoPageErrorCode)},
+                    {kBECEResultMessage, kErrorMsgNoPage}},
+                   {true, url});
     base::JSONWriter::Write(std::move(json), result.get());
     LOG(INFO) << "[Distiller] DistillResult no pages";
     return result;
