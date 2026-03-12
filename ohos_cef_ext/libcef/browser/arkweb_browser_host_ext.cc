@@ -197,6 +197,7 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #endif  // ARKWEB_EX_FALLBACK_PROXY
 
 #include "arkweb/ohos_adapter_ndk/inputmethodframework_adapter/imf_adapter_impl.h"
+#include "net/http/http_util.h"
 
 const char kNWebId[] = "nweb_id";
 #endif
@@ -4435,10 +4436,6 @@ void ArkWebBrowserHostExtImpl::StartDownloadWithParams(
   ParseDownloadUrlParamsIntoClass(input_params, params);
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  content::Referrer referrer = content::Referrer::SanitizeForRequest(
-      gurl, content::Referrer(web_contents->GetLastCommittedURL(),
-                              network::mojom::ReferrerPolicy::kDefault));
-  params->set_referrer(referrer.url);
   CefString custom_user_agent;
   if (this->AsAlloyBrowserHostImpl()) {
     custom_user_agent = this->AsAlloyBrowserHostImpl()->GetCustomUserAgent();
@@ -4467,16 +4464,43 @@ void ArkWebBrowserHostExtImpl::ParseDownloadUrlParamsIntoClass(
 
     // headers
     std::string header_str = input_params.headers;
-    size_t colon_pos = header_str.find(':');
-    if (colon_pos != std::string::npos && colon_pos > 0 &&
-        colon_pos < header_str.size() - 1) {
-      std::string header_name = header_str.substr(0, colon_pos);
-      std::string header_value = header_str.substr(colon_pos + 1);
+    size_t current_pos = 0;
+    while (current_pos < header_str.size()) {
+      size_t line_end = header_str.find("\r\n", current_pos);
+      if (line_end == std::string::npos) {
+        line_end = header_str.size();
+      }
+      std::string line = header_str.substr(current_pos, line_end - current_pos);
+
+      if (line.empty()) {
+        current_pos = line_end + 2;
+        continue;
+      }
+
+      size_t colon_pos = line.find(':');
+      if (colon_pos == std::string::npos || colon_pos == 0 ||
+          colon_pos == line.size() - 1) {
+        current_pos = line_end + 2;
+        continue;
+      }
+
+      std::string header_name = line.substr(0, colon_pos);
+      std::string header_value = line.substr(colon_pos + 1);
+
       base::TrimWhitespaceASCII(header_name, base::TRIM_ALL, &header_name);
       base::TrimWhitespaceASCII(header_value, base::TRIM_ALL, &header_value);
-      if (!header_name.empty() && !header_value.empty()) {
+
+      if (!header_name.empty() && !header_value.empty() &&
+          net::HttpUtil::IsValidHeaderName(header_name)) {
         params->add_request_header(header_name, header_value);
+        LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set valid header: " << header_name
+                   << " = " << header_value;
+      } else {
+        LOG(WARNING) << "[ARKWEB_DOWNLOADER] skip invalid header - name: '"
+                     << header_name << "', value: '" << header_value << "'";
       }
+
+      current_pos = line_end + 2;
     }
 
     // referrer

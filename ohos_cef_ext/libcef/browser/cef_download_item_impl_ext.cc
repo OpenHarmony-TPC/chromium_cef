@@ -195,6 +195,14 @@ CefString CefDownloadItemImplExt::GetByExtensionName() {
   return name;
 }
 
+CefString CefDownloadItemImplExt::GetContextType() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
+  auto context_type = item_impl.GetContextType();
+  return context_type;
+}
+
 int CefDownloadItemImplExt::GetConflictAction() {
   CEF_VALUE_VERIFY_RETURN(false, -1);
   const download::ArkWebDownloadItemImplExt& item_impl =

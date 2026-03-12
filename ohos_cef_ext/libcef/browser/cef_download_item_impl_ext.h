@@ -36,6 +36,7 @@ class CefDownloadItemImplExt : public CefDownloadItemExt,
   int GetTargetDisposition() override;
   CefString GetByExtensionId() override;
   CefString GetByExtensionName() override;
+  CefString GetContextType() override;
   int GetConflictAction() override;
 };
 
