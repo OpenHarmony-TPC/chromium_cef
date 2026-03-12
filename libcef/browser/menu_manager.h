@@ -44,7 +44,7 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   CefRefPtr<CefMenuModelImpl> GetContextMenuModel();
-  void onConTextMenuSelected(int command_id);
+  void onContextMenuSelected(int command_id);
   void onContextMenuClosed();
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 

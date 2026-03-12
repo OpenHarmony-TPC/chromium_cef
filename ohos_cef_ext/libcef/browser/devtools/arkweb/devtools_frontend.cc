@@ -98,15 +98,17 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
-static std::string GetFrontendURL(bool can_dock, bool is_tab_target) {
+static std::string GetFrontendURL(bool can_dock, bool is_tab_target, bool show_toolbox) {
   LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
-             << ", is_tab_target: " << is_tab_target;
+             << ", is_tab_target: " << is_tab_target
+             << ", show_toolbox: " << show_toolbox;
   return base::StringPrintf(
-      "%s://%s/devtools_app.html?can_dock=%s&dockSide=undocked%s",
+      "%s://%s/devtools_app.html?can_dock=%s%s%s",
       content::kChromeDevToolsScheme,
       scheme::kChromeDevToolsHost,
       can_dock ? "true" : "false",
-      is_tab_target ? "&targetType=tab" : "");
+      is_tab_target ? "&targetType=tab" : "",
+      show_toolbox ? "&showToolbox=true" : "");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -394,7 +396,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
     devtools_frontend->SetSourceTargetId(source_id, target_id);
 
     // Need to load the URL after creating the DevTools objects.
-    frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
+    frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_, false));
   }
   return devtools_frontend;
 }
@@ -424,7 +426,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 #endif
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_));
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_, false));
 
   return devtools_frontend;
 }
@@ -439,7 +441,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       const CefOpenDevToolsExtOpt& ext_opt) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWithByPb({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})"
-            << ", canDock: " << ext_opt.canDock << ", useNativeMenu: " << ext_opt.useNativeMenu;
+            << ", canDock: " << ext_opt.canDock << ", showToolbox: " << ext_opt.showToolbox;
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
@@ -451,10 +453,11 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       frontend_browser, std::move(handler),
       inspected_contents, inspect_element_at,
       std::move(frontend_destroyed_callback));
-  devtools_frontend->useNativeMenu_ = ext_opt.useNativeMenu;
+  devtools_frontend->show_toolbox_ = ext_opt.showToolbox;
 
   // Need to load the URL after creating the DevTools objects.
-  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_));
+  frontend_browser->GetMainFrame()->LoadURL(
+    GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_));
 
   return devtools_frontend;
 }
@@ -763,8 +766,8 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
       return;
     }
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-    LOG(INFO) << "CefDevToolsFrontend::HandleMessageFromDevToolsFrontend useNativeMenu_: " << useNativeMenu_;
-    if (!useNativeMenu_) {
+    LOG(INFO) << "CefDevToolsFrontend::HandleMessageFromDevToolsFrontend show_toolbox_: " << show_toolbox_;
+    if (!show_toolbox_) {
       rfh->ExecuteJavaScriptForTests(
           u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
     }
