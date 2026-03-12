@@ -60,6 +60,15 @@ class OffscreenContentsDelegate : public content::WebContentsDelegate {
   void ExitPictureInPicture() override;
   std::string GetTitleForMediaControls(
       content::WebContents* web_contents) override;
+  bool DidAddMessageToConsole(
+      content::WebContents* source,
+      blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+      blink::mojom::ConsoleMessageSource log_source,
+#endif
+      const std::u16string& message,
+      int32_t line_no,
+      const std::u16string& source_id) override;
 
  private:
   base::WeakPtr<ExtensionHost> extension_host_;
