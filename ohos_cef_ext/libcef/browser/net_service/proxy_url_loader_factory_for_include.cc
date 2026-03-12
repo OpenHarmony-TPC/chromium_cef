@@ -271,6 +271,9 @@ void ProxyURLLoaderFactory::CreateProxy(
     network::URLLoaderFactoryBuilder& factory_builder,
     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
         header_client,
+#if BUILDFLAG(ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT)
+    mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient> extensions_url_loader_header_client_remote,
+#endif
     std::unique_ptr<InterceptedRequestHandler> request_handler,
     network::mojom::URLLoaderFactoryOverridePtr* factory_override) {
   CEF_REQUIRE_UIT();
@@ -311,6 +314,9 @@ void ProxyURLLoaderFactory::CreateProxy(
       base::BindOnce(
           &ProxyURLLoaderFactory::CreateOnIOThread, std::move(proxied_receiver),
           std::move(target_factory_remote), std::move(header_client_receiver),
+#if BUILDFLAG(ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT)
+          std::move(extensions_url_loader_header_client_remote),
+#endif
           base::Unretained(resource_context), std::move(request_handler)));
 }
 #endif
