@@ -32,15 +32,16 @@ OhosInterceptCallbackWrapper::~OhosInterceptCallbackWrapper() {
 
 void OhosInterceptCallbackWrapper::ContinueLoad(
     CefRefPtr<CefResourceHandler> resource_handler) {
-  if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
-    work_thread_task_runner_->PostTask(
-        FROM_HERE, base::BindOnce(&OhosInterceptCallbackWrapper::ContinueLoad,
-                                  this, resource_handler));
+  if (callback_.is_null()) {
     return;
   }
-  if (!callback_.is_null()) {
-    std::move(callback_).Run(resource_handler);
+
+  if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
+    work_thread_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(std::move(callback_), resource_handler));
+    return;
   }
+  std::move(callback_).Run(resource_handler);
 }
 
 bool ArkWebInterceptedRequestHandlerWrapperHelper::ProceedAllowCookieLoad(
@@ -131,6 +132,7 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::GetSettingOfNetHelper(
 bool ArkWebInterceptedRequestHandlerWrapperHelper::
     IsIntelligentTrackingPreventionEnabled(
         CefRefPtr<CefBrowserHostBase> browser) {
+  CEF_REQUIRE_UIT();
   if (!browser) {
     return false;
   }
@@ -156,6 +158,7 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::ReportITPResult(
 
 GURL ArkWebInterceptedRequestHandlerWrapperHelper::
     GetWebContentsLastCommittedURL(CefRefPtr<CefBrowserHostBase> browser) {
+  CEF_REQUIRE_UIT();
   if (!browser) {
     return GURL();
   }
@@ -170,6 +173,7 @@ std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigat
     const std::string& referrer,
     int transition_type,
     bool is_key_request) {
+  CEF_REQUIRE_UIT();
   if (!browser || !browser->GetHost()) {
     return "";
   }
