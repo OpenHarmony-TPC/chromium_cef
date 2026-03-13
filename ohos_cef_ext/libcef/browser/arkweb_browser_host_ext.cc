@@ -4222,20 +4222,40 @@ void ArkWebBrowserHostExtImpl::AbortDistill() {
 #endif // ARKWEB_READER_MODE
 
 #if BUILDFLAG(ARKWEB_SAVE_PAGE)
-bool ArkWebBrowserHostExtImpl::SavePage(int32_t type, CefString& filePath) {
+void ArkWebBrowserHostExtImpl::OnDidSavePage(
+    CefRefPtr<CefSavePageResultCallback> callback,
+    bool result) {
+  if (callback) {
+    callback->OnSavePageDone(result);
+  }
+}
+
+bool ArkWebBrowserHostExtImpl::SavePage(
+    int32_t type,
+    CefString& filePath,
+    CefRefPtr<CefSavePageResultCallback> callback) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents is null";
+    if (callback) {
+      callback->OnSavePageDone(false);
+    }
     return false;
   }
-  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt();
+  auto web_contents_ex = static_cast<content::WebContentsImpl*>(web_contents)
+                             ->AsWebContentsImplExt();
   if (!web_contents_ex) {
-    LOG(ERROR) << "ArkWebBrowserHostExtImpl::SavePage, web_contents_ex is null";
+    if (callback) {
+      callback->OnSavePageDone(false);
+    }
     return false;
   }
-  return web_contents_ex->SavePageEx(filePath, static_cast<content::SavePageType>(type));
+  return web_contents_ex->SavePageEx(
+      filePath, static_cast<content::SavePageType>(type),
+      base::BindOnce(&ArkWebBrowserHostExtImpl::OnDidSavePage,
+                     weak_ptr_factory_.GetWeakPtr(),
+                     std::move(callback)));
 }
-#endif // ARKWEB_SAVE_PAGE
+#endif  // ARKWEB_SAVE_PAGE
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
