@@ -238,20 +238,32 @@ void GetOhosResourceHandlerFromETS(
     const CefString& scheme,
     CefRefPtr<CefInterceptCallback> callback) {
   if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    CefRefPtr<CefBrowser> browser = init_state_->browser_;
+    CefRefPtr<CefFrame> frame = init_state_->frame_;
+
     content::GetUIThreadTaskRunner({})->PostTask(
-        FROM_HERE,
-        base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerFromETS,
-            weak_ptr_factory_.GetWeakPtr(), scheme_factory, request, scheme,
-            callback));
+        FROM_HERE, base::BindOnce(&InterceptedRequestHandlerWrapper::
+                                      GetOhosResourceHandlerFromETSImpl,
+                                  browser, frame, scheme_factory, request,
+                                  scheme, callback));
     return;
   }
 
+  GetOhosResourceHandlerFromETSImpl(init_state_->browser_, init_state_->frame_,
+                                    scheme_factory, request, scheme, callback);
+}
+
+static void GetOhosResourceHandlerFromETSImpl(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
+    CefRefPtr<CefRequest> request,
+    const CefString& scheme,
+    CefRefPtr<CefInterceptCallback> callback) {
   CefRefPtr<CefResourceHandler> resource_handler = nullptr;
   if (scheme_factory) {
     // Does the scheme factory want to handle the request?
-    resource_handler = scheme_factory->Create(
-        init_state_->browser_, init_state_->frame_, scheme, request);
+    resource_handler = scheme_factory->Create(browser, frame, scheme, request);
   }
   callback->ContinueLoad(resource_handler);
 }
