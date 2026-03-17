@@ -1104,7 +1104,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
     state->request_->site_for_cookies = redirect_info.new_site_for_cookies;
-    state->request_->method = redirect_info.new_method;
     auto exec_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::RedirectSavedCookieDone,
         weak_ptr_factory_.GetWeakPtr(), request_id, state->request_,
