@@ -568,7 +568,10 @@ ExtensionFunction::ResponseAction TabsGetCurrentFunction::Run() {
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
         ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), caller_contents);
 
-    return RespondNow(WithArguments(base::Value(GetTabValue(*tab, scrub_tab_behavior))));
+    if (tab) {
+      return RespondNow(WithArguments(base::Value(GetTabValue(*tab, scrub_tab_behavior))));
+    }
+    return RespondNow(Error("can not get the tab"));
   }
   return RespondNow(NoArguments());
 }
