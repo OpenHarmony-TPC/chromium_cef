@@ -153,6 +153,7 @@ using content::KeyboardEventProcessingResult;
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_video_hls_download_config.h"
 #endif  // ARKWEB_NWEB_EX
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
@@ -1937,6 +1938,7 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
   if (!GetWebContents()) {
     return nullptr;
   }
+  
 
   std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
 #if BUILDFLAG(ARKWEB_NWEB_EX)
@@ -1945,6 +1947,14 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
   auto url =
       GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
   PopluateVideoAssistantConfig(url, config);
+
+  if (media_info_ptr->supports_save && media_info_ptr->is_hls) {
+    bool config_support = nweb_ex::AlloyVideoHlsDownloadConfig::GetInstance()->GetVideoHlsDownloadSupport();
+    LOG(INFO) << "OhMedia, OnFullScreenOverlayEnter GetVideoHlsDownloadSupport:" << config_support;
+    if (!config_support) {
+      media_info_ptr->supports_save = false;
+    }
+  }
 
   auto media_info = BuildMediaInfo(media_info_ptr, config);
   auto media_player_controller =
