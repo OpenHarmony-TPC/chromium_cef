@@ -294,6 +294,7 @@ public:
       const std::string& distillable_page_url,
       const std::string& title) override;
   bool IsForDistillerPage() override;
+  void OnDidMeaningfulLayout(const std::string& url) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
