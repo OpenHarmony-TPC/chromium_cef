@@ -262,6 +262,12 @@ class ArkWebBeforeDownloadCallbackImpl : public CefBeforeDownloadCallback {
       return;
     }
 
+    auto item_impl = static_cast<download::ArkWebDownloadItemImplExt*>(item);
+    if (item_impl->IsFullPathOverWrite()) {
+      item_impl->UpdateFullPath(base::FilePath());
+      item_impl->UpdateFullPathOverWriteState(false);
+    }
+
     bool handled = false;
 
     if (show_dialog) {
@@ -422,6 +428,14 @@ bool ArkWebCefDownloadManagerDelegateExt::DetermineDownloadTarget(
   base::FilePath suggested_name = net::GenerateFileName(
       item->GetURL(), item->GetContentDisposition(), std::string(),
       item->GetSuggestedFilename(), item->GetMimeType(), "download");
+
+  auto forced_path = item->GetForcedFilePath();
+  if (!forced_path.empty()) {
+    auto item_impl = static_cast<download::ArkWebDownloadItemImplExt*>(item);
+    forced_path = forced_path.Append(suggested_name);
+    item_impl->UpdateFullPath(forced_path);
+    item_impl->UpdateFullPathOverWriteState(true);
+  }
 
   CefRefPtr<CefDownloadItemImpl> download_item(
       new CefDownloadItemImplExt(item, nweb_id));
