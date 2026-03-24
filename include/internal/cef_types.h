@@ -760,6 +760,11 @@ typedef struct _cef_browser_settings_t {
   double border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  int scrollbar_layout_policy;
+  bool is_system_rtl_enabled;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   bool is_autofill_enabled;
 #endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
