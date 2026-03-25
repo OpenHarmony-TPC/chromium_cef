@@ -764,6 +764,10 @@ typedef struct _cef_browser_settings_t {
   bool is_autofill_enabled;
 #endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  bool is_drag_enabled;
+#endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
+
 #if BUILDFLAG(ARKWEB_MENU)
   bool touch_handle_exist;
   bool viewport_scale;

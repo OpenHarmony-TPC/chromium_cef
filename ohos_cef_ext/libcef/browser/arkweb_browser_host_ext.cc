@@ -706,6 +706,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   settings_.is_autofill_enabled = browser_settings.is_autofill_enabled;
 #endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  settings_.is_drag_enabled = browser_settings.is_drag_enabled;
+#endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
 #if BUILDFLAG(ARKWEB_MENU)
   settings_.touch_handle_exist = browser_settings.touch_handle_exist;
   settings_.viewport_scale = browser_settings.viewport_scale;

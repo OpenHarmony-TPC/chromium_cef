@@ -158,6 +158,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   web.is_autofill_enabled = cef.is_autofill_enabled;
 #endif  // BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  web.is_drag_enabled = cef.is_drag_enabled;
+#endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
 }
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
