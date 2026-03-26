@@ -133,5 +133,11 @@ class CefDownloadItemExt : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual int GetConflictAction() = 0;
+
+  ///
+  /// Returns url chain.
+  ///
+  /*--cef()--*/
+  virtual std::vector<CefString> GetUrlChain() {return {};}
 };
 #endif
