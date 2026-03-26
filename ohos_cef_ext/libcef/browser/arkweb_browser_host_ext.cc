@@ -4486,15 +4486,7 @@ void ArkWebBrowserHostExtImpl::ParseDownloadUrlParamsIntoClass(
     std::unique_ptr<download::DownloadUrlParameters>& params) {
   if (params != nullptr) {
     // method
-    if (!input_params.method.empty()) {
-      if (input_params.method.find("GET") != std::string::npos) {
-        params->set_method("GET");
-      } else if (input_params.method.find("POST") != std::string::npos) {
-        params->set_method("POST");
-      } else {
-        params->set_method(input_params.method);
-      }
-    }
+    params->set_method(input_params.method);
 
     // postBody
     auto postBody = network::ResourceRequestBody::CreateFromBytes(
