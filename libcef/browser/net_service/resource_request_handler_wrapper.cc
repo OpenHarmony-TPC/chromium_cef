@@ -43,7 +43,6 @@
 
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -1106,8 +1105,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     std::optional<std::string> new_method = {};
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->IsTrialTestEnabled()) {
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
       LOG(DEBUG) << "Update new_method to " << redirect_info.new_method;
       new_method = redirect_info.new_method;
     }

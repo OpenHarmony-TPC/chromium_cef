@@ -56,10 +56,6 @@
 #include "extensions/common/constants.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
 #include "base/command_line.h"
@@ -886,8 +882,7 @@ void InterceptedRequest::OnHeadersReceived(
   if (current_headers_->IsRedirect(&location)) {
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     int status_code = 0;
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->IsTrialTestEnabled()) {
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
       status_code = current_headers_->response_code();
     }
 #endif
