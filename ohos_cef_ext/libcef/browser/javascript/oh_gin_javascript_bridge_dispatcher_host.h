@@ -17,6 +17,7 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "libcef/browser/browser_info.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_errors.h"
+#include "ohos_nweb/src/capi/nweb_extension_javascript_item.h"
 
 namespace content {
 class WebContentsImpl;
@@ -212,6 +213,10 @@ class OhGinJavascriptBridgeDispatcherHost
       int32_t object_id,
       base::Value::List& async_method_list,
       bool need_update);
+
+  // Run on the UI thread.
+  FrameInfos GetLastCallingFrameInfos(int32_t routing_id);
+  void SetLastCallingFrameInfosOnUIThread(int32_t routing_id, const std::string& document_url);
 
   // js property name and object id
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;

@@ -764,7 +764,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                              bool recursive, IsolatedWorld world,
                              CefRefPtr<CefJavaScriptResultCallback> callback) override;
-
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  void GetAllFrameInfos(CefRefPtr<CefFrameInfosCallback> callback) override;
+  void GetLastJavaScriptProxyCallingFrameInfo(
+    CefRefPtr<CefLastJavaScriptProxyCallingFrameInfoCallback> callback) override;
+#endif
 #if BUILDFLAG(ARKWEB_BGTASK)
   void OnBrowserForeground() override;
   void OnBrowserBackground() override;
