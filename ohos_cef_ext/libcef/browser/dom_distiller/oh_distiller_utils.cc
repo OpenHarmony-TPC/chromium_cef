@@ -336,7 +336,8 @@ bool BuildHwDistillerResultJson(const dom_distiller::DistilledPageProto& page,
   if (page.hw_distiller_result_json().empty()) {
     return false;
   }
-
+  LOG(DEBUG) << __func__ << " [Distiller] js resutl hw_distiller_result_json size: "
+             << page.hw_distiller_result_json().length();
   auto parsed_json = base::JSONReader::ReadAndReturnValueWithError(
                                        page.hw_distiller_result_json());
   if (!parsed_json.has_value()) {
@@ -353,7 +354,7 @@ bool BuildHwDistillerResultJson(const dom_distiller::DistilledPageProto& page,
   return true;
 }
 
-bool BuildFlagInfo(base::Value::Dict& result_dict) {
+void BuildFlagInfo(const base::Value::Dict& result_dict) {
   if (const auto* book_name = result_dict.FindString(kBookName)) {
     AddBECEContent(g_statistics_content, {{kBECEHasBookName, kHasTrue}});
   }
@@ -389,7 +390,7 @@ bool BuildFlagInfo(base::Value::Dict& result_dict) {
   }
 }
 
-bool BuildChaptersInfo(base::Value::Dict& result_dict) {
+void BuildChaptersInfo(const base::Value::Dict& result_dict) {
   if (const auto* latest_chapters = result_dict.FindList(kLatestChapters)) {
     int latest_chapters_count = 0;
     if (!latest_chapters->empty()) {
@@ -407,7 +408,7 @@ bool BuildChaptersInfo(base::Value::Dict& result_dict) {
   }
 }
 
-bool BuildPaginationInfo(base::Value::Dict& result_dict) {
+void BuildPaginationInfo(const base::Value::Dict& result_dict) {
   if (const auto* pagination_info = result_dict.FindDict(kCatalogPagination)) {
     auto* next_catalog_page = pagination_info->FindString(kNextPageUrl);
     if (next_catalog_page && !next_catalog_page->empty()) {
@@ -512,6 +513,8 @@ base::Value::Dict BuildPageContent(
     FillTimingInfoFields(page.flat_fields(), dict);
     ReportDistilledResult(dict, page);
   } else {
+    LOG(DEBUG) << __func__ << " [Distiller] hw_distiller_result_json empty or invalid,"
+               << " build result maintaining the previous logic.";
     const auto& flat = page.flat_fields();
     bool has_result_code = FillResultFields(flat, dict);
     FillBasicInfoFields(flat, dict);
