@@ -887,7 +887,7 @@ void InterceptedRequest::OnHeadersReceived(
 #if BUILDFLAG(IS_ARKWEB_EXT)
     int status_code = 0;
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->IsTrialTestEnabled()) {
+        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->SyncMethodOnRedirectEnable()) {
       status_code = current_headers_->response_code();
     }
 #endif
