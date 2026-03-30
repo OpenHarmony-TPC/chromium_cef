@@ -1108,7 +1108,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     std::optional<std::string> new_method = {};
 #if BUILDFLAG(IS_ARKWEB_EXT)
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->IsTrialTestEnabled()) {
+        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->SyncMethodOnRedirectEnable()) {
       LOG(DEBUG) << "Update new_method to " << redirect_info.new_method;
       new_method = redirect_info.new_method;
     }
