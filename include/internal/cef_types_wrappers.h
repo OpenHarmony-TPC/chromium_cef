@@ -600,6 +600,12 @@ struct CefBrowserSettingsTraits {
     target->touch_handle_exist = src->touch_handle_exist;
     target->viewport_scale = src->viewport_scale;
 #endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+    target->scrollbar_layout_policy =
+        src->scrollbar_layout_policy;
+    target->is_system_rtl_enabled = src->is_system_rtl_enabled;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
   }
 };
 

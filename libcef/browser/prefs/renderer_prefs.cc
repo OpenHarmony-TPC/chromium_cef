@@ -133,6 +133,13 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.touch_handle_exist = cef.touch_handle_exist;
   web.viewport_scale = cef.viewport_scale;
 #endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  web.scrollbar_layout_policy =
+      static_cast<blink::mojom::ScrollbarLayoutPolicy>(
+          cef.scrollbar_layout_policy);
+  web.is_system_rtl_enabled = cef.is_system_rtl_enabled;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #endif
 }
 

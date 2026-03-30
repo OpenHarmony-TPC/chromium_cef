@@ -694,6 +694,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
       browser_settings.hide_horizontal_scrollbars;
   settings_.scroll_enabled = browser_settings.scroll_enabled;
   settings_.blur_enabled = browser_settings.blur_enabled;
+  settings_.scrollbar_layout_policy =
+      browser_settings.scrollbar_layout_policy;
+  settings_.is_system_rtl_enabled = browser_settings.is_system_rtl_enabled;
 #endif  // defined(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
   settings_.border_radius_top_left = browser_settings.border_radius_top_left;
