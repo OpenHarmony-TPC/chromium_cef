@@ -109,7 +109,12 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
 
     browser_->RunSelectFile(listener_, std::move(select_file_policy_), type,
                             title, default_path, file_types, file_type_index,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+                            default_extension, owning_window, accept_types_,
+                            use_media_capture_);
+#else
                             default_extension, owning_window);
+#endif
   }
 
   bool IsRunning(gfx::NativeWindow owning_window) const override {
@@ -127,9 +132,19 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
     return has_multiple_file_choices_;
   }
 
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+#include "cef/ohos_cef_ext/libcef/browser/file_dialog_runner_for_include.cc"
+#endif
+
  private:
   gfx::NativeWindow owning_window_ = gfx::NativeWindow();
   bool has_multiple_file_choices_ = false;
+
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  std::vector<std::u16string> accept_types_;
+  bool use_media_capture_ = false;
+  bool open_writable_ = false;
+#endif
 
   CefRefPtr<CefBrowserHostBase> browser_;
 };

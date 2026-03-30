@@ -6,6 +6,7 @@
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "cef/libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
@@ -14,8 +15,20 @@
 #include "content/public/browser/web_contents.h"
 #include "ui/gfx/geometry/size.h"
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "ui/accessibility/platform/browser_accessibility_manager.h"
+#include "content/public/browser/browser_accessibility_state.h"
+#include "content/public/browser/scoped_accessibility_mode.h"
+#include "ui/accessibility/ax_mode.h"
+#endif
+
 // Implementation of Alloy-based browser functionality.
+#if BUILDFLAG(IS_ARKWEB)
+class ArkWebCefBrowserPlatformDelegateExt;
+class CefBrowserPlatformDelegateAlloy : public ArkWebCefBrowserPlatformDelegateExt {
+#else
 class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
+#endif
  public:
   CefBrowserPlatformDelegateAlloy(const CefBrowserPlatformDelegateAlloy&) =
       delete;
@@ -42,6 +55,49 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void NotifyMoveOrResizeStarted() override;
 #endif
   bool IsAlloyStyle() const override { return true; }
+#if BUILDFLAG(IS_ARKWEB)
+  void SetAccessibilityState(cef_state_t accessibility_state) override;
+  ui::BrowserAccessibilityManager* GetRootBrowserAccessibilityManager()
+      override;
+#endif
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void SendTouchEventToRender(const CefTouchEvent& event);
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_PRINT)
+  void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
+#endif  // BUILDFLAG(ARKWEB_PRINT)
+
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
+  void WebContentsDestroyed(content::WebContents* web_contents) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void OnShareFile(const std::string& filePath,
+                   const std::string& utdTypeId) override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+  void OnOnlineRenderToForeground() override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  void WasOccluded(bool occluded) override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type,
+                             const std::string& message) override {
+    return true;
+  }
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
  protected:
   CefBrowserPlatformDelegateAlloy();
@@ -76,6 +132,11 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   bool primary_ = true;
 
   base::WeakPtrFactory<CefBrowserPlatformDelegateAlloy> weak_ptr_factory_;
+
+#if BUILDFLAG(IS_ARKWEB)
+  bool scoped_accessibility_enabled_ = false;
+  std::unique_ptr<content::ScopedAccessibilityMode> scoped_accessibility_mode_;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_

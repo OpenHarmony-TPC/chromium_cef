@@ -1,0 +1,30 @@
+# Copyright 2021 The Chromium Embedded Framework Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/features.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojom("mojom_javascript_bridge") {
+  sources = [ "oh_gin_javascript_bridge.mojom" ]
+
+  cpp_only = true
+  disable_variants = true
+
+  public_deps = [
+    "//mojo/public/mojom/base",
+    "//content/public/common:interfaces",
+    "//third_party/blink/public/mojom:mojom_platform",
+  ]
+
+  overridden_deps = [
+    "//content/public/common:interfaces",
+    "//third_party/blink/public/mojom:mojom_platform",
+  ]
+
+  component_deps = [ "//content/public/common" ]
+  enabled_features = []
+  if (is_arkweb) {
+    enabled_features += [ "is_arkweb" ]
+  }
+}

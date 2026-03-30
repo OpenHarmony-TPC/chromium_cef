@@ -47,6 +47,12 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
                          bool query_spellcheck = true);
   void CancelContextMenu();
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  CefRefPtr<CefMenuModelImpl> GetContextMenuModel();
+  void onContextMenuSelected(int command_id);
+  void onContextMenuClosed();
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
  private:
   // CefMenuModelImpl::Delegate methods.
   void ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
@@ -66,6 +72,17 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
 
   // Returns true if the specified id is a custom context menu command.
   bool IsCustomContextMenuCommand(int command_id);
+
+#if BUILDFLAG(ARKWEB_MENU)
+  void ExecuteSaveImage();
+  void ExecuteCopyImageAt();
+#endif
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  bool IsCommandIdEnabled(int command_id,
+                          content::ContextMenuParams& params) const;
+  void UpdateMenuEditStateFlags(content::ContextMenuParams& params);
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(IS_WIN)
   void OnGetPlatformSuggestionsComplete(

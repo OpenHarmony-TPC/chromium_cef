@@ -115,12 +115,20 @@ import("//tools/grit/grit_rule.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//ui/gl/features.gni")
 import("//v8/gni/v8.gni")
+import("//cef/ohos_cef_ext/cef_arkweb_extension.gni")
+import("//arkweb/build/features/features.gni")
+if (is_arkweb_ext) {
+  import("//arkweb/ohos_nweb_ex/build/features/features.gni")
+}
 if (is_clang) {
   import("//build/config/clang/clang.gni")
 }
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")
   import("//third_party/fontconfig/fontconfig.gni")
+}
+if (is_arkweb) {
+  import("//arkweb/chromium_ext/chromium_ext.gni")
 }
 if (is_mac) {
   import("//build/apple/tweak_info_plist.gni")
@@ -396,6 +404,10 @@ if (is_win) {
       # Required by crash_keys.cc (from base/stl_util.h)
       "//third_party/abseil-cpp:absl",
     ]
+
+    if (enable_arkweb) {
+      deps += [ "//arkweb/build/features" ]
+    }
   }
 }
 
@@ -444,12 +456,38 @@ test("libcef_static_unittests") {
     ":libcef_static_unittested",
     "//base/test:run_all_unittests",
     "//testing/gtest",
+    "//testing/gmock",
+    "//base",
+    "//content/test:test_support", 
   ]
 
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
   ]
+  if (arkweb_unittests) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
+      "ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager_unittest.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_unittest.cc",
+      "ohos_cef_ext/libcef/common/resource_util_for_include_unittest.cc",
+    ]
+    deps += [
+      ":libcef_static",
+      "libcef/common/mojom",
+      "ohos_cef_ext/libcef/common/mojom:mojom_javascript_bridge",
+    ]
+    if (enable_arkweb) {
+      deps += [ "//arkweb/build/features" ]
+    }
+    include_dirs = [
+    "//third_party/skia",
+    "//third_party/boringssl/src/include"
+    ]
+    if (enable_arkweb) {
+      deps += [ "//arkweb/build/features" ]
+    }
+  }
 }
 
 # Source files that are linked into libcef and cef_framework and implement
@@ -486,6 +524,10 @@ source_set("libcef_test_support") {
 #
 
 source_set("libcef_static") {
+  defines = []
+  if (arkweb_dfx_logging) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
   sources = includes_common +
             gypi_paths.autogen_cpp_includes + [
     "libcef/browser/alloy/alloy_browser_host_impl.cc",
@@ -891,6 +933,44 @@ source_set("libcef_static") {
     "//chrome/app/chrome_main_delegate.h",
   ]
 
+#if BUILDFLAG(ARKWEB_AUTOFILL)
+    sources += [
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.h",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.h",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h",
+    ]
+#endif // BUILDFLAG(ARKWEB_AUTOFILL)
+
+#if defined(ARKWEB_DEVTOOLS)
+  if (defined(arkweb_devtools) && arkweb_devtools) {
+    sources += [
+      "include/cef_devtools_message_handler_delegate.h",
+      "libcef/browser/devtools/arkweb/devtools_file_manager.cc",
+      "libcef/browser/devtools/arkweb/devtools_file_manager.h",
+      "include/base/cef_basictypes.h",
+      "libcef/browser/net/devtools_scheme_handler.cc",
+      "libcef/browser/net/devtools_scheme_handler.h",
+      "libcef/browser/net/internal_scheme_handler.cc",
+      "libcef/browser/net/internal_scheme_handler.h",
+      "libcef/browser/net/scheme_handler.cc",
+      "libcef/browser/net/scheme_handler.h",
+    ]
+
+    sources += [
+      "ohos_cef_ext/libcef/browser/devtools/devtools_window_runner_ext.cc",
+    ]
+  }
+#endif // ARKWEB_DEVTOOLS
+
+  #if defined(ARKWEB_LOGGER_REPORT)
+  sources += [
+    "include/cef_logger_callback_api_handler.h",
+  ]
+  #endif
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
@@ -905,6 +985,34 @@ source_set("libcef_static") {
     "//third_party/crashpad/crashpad",
   ]
 
+  # OHOS Exteneded sources
+  sources += libcef_arkweb_sources
+  include_dirs += ["//cef/ohos_cef_ext" ]
+
+  deps = [
+      "//components/subresource_filter/content/browser",
+      "//components/subresource_filter/core/browser",
+      "//components/subresource_filter/tools/ruleset_converter:support",
+      "//components/url_pattern_index/proto:url_pattern_index",
+      "//third_party/protobuf:protobuf_lite",
+  ]
+
+  if (is_ohos) {
+     deps += [
+       "//ohos_nweb:cef_nweb",
+       "//ui/ozone/common",
+       "//components/viz/client",
+       "//content/public/browser",
+       "//arkweb/chromium_ext/gpu/ipc/common:ohos_nweb_native_window_tracker",
+     ]
+
+     if (is_arkweb_ext) {
+      deps += [
+        "//cef/ohos_cef_ext/tools/arkweb_install_script:arkweb_install_script"
+      ]
+     }
+  }
+
   public_deps = [
     # Bring in feature flag defines.
     "//cef/libcef/features:buildflags",
@@ -912,10 +1020,17 @@ source_set("libcef_static") {
     "//base",
     "//third_party/abseil-cpp:absl",
   ]
+  if (arkweb_unittests) {
+    public_deps += [
+      # Support ohos_nweb include paths.
+      "//ohos_nweb:nweb_sources",
+    ]
+  }
 
-  deps = [
+  deps += [
     ":cef_make_headers",
     "libcef/common/mojom",
+    "ohos_cef_ext/libcef/common/mojom:mojom_javascript_bridge",
 
     ":libcef_static_unittested",
 
@@ -1006,6 +1121,204 @@ source_set("libcef_static") {
     "//url",
     "//v8",
   ]
+  deps += [ "//components/js_injection/browser" ]
+
+#if defined(ARKWEB_CUSTOM_VIDEO_PLAYER)
+  if (defined(arkweb_custom_video_player) && arkweb_custom_video_player) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/alloy/custom_media_player_proxy.cc",
+      "ohos_cef_ext/libcef/browser/alloy/custom_media_player_proxy.h",
+    ]
+  }
+#endif // ARKWEB_CUSTOM_VIDEO_PLAYER
+
+#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+  if (defined(arkweb_video_assistant) && arkweb_video_assistant) {
+    sources += [
+      "ohos_cef_ext/include/cef_media_player_controller.h",
+      "ohos_cef_ext/include/cef_media_player_listener_for_vast.h",
+      "ohos_cef_ext/libcef/browser/alloy/cef_media_player_controller_impl.cc",
+      "ohos_cef_ext/libcef/browser/alloy/cef_media_player_controller_impl.h",
+      "ohos_cef_ext/libcef/browser/alloy/media_player_listener_proxy.cc",
+      "ohos_cef_ext/libcef/browser/alloy/media_player_listener_proxy.h",
+    ]
+  }
+#endif // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+    sources += [
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.h",
+      "ohos_cef_ext/libcef/browser/predictors/navigation_id.cc",
+      "ohos_cef_ext/libcef/browser/predictors/navigation_id.h",
+      "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.cc",
+      "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.h",
+      "ohos_cef_ext/libcef/browser/predictors/predictor_database.cc",
+      "ohos_cef_ext/libcef/browser/predictors/predictor_database.h",
+      "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.cc",
+      "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.h",
+      "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.cc",
+      "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.h",
+      "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.cc",
+      "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.h",
+    ]
+    deps += [ "//components/no_state_prefetch/renderer" ]
+#endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+
+  #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (defined(arkweb_network_load) && arkweb_network_load) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/ark_web_certificate_query.cc",
+      "ohos_cef_ext/libcef/browser/ark_web_certificate_query.h",
+      "ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.cc",
+      "ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h",
+    ]
+  }  #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
+
+  if (defined(is_arkweb) && is_arkweb) {
+    deps += [
+      "//base:base_static",
+    ]
+  }
+
+#if BUILDFLAG(ARKWEB_COOKIE)
+  if (defined(arkweb_cookie)) {
+    sources += [
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.cc",
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h",
+    ]
+  }
+#endif // BUILDFLAG(ARKWEB_COOKIE)
+
+  #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+  if (defined(arkweb_ext_exception_list) && arkweb_ext_exception_list) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer_factory.h",
+      "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer_factory.cc",
+      "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer.h",
+      "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer.cc",
+    ]
+  }
+  #endif
+
+
+  if (defined(arkweb_nweb_ex) && arkweb_nweb_ex) {
+    deps += [
+      "//ohos_nweb_ex/overrides/cef",
+      "//components/no_state_prefetch/common:mojo_bindings"
+    ]
+  }
+
+  if (use_libfuzzer) {
+    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
+    configs += [ "//build/config/gcc:symbol_visibility_default" ]
+    cflags = [ "-DOHOS_FUZZ_COMPILE_ERROR_FIX" ]
+  }
+
+#if BUILDFLAG(ARKWEB_NOTIFICATION)
+  if (defined(arkweb_notification) && arkweb_notification) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/permission/alloy_access_query.cc",
+      "ohos_cef_ext/libcef/browser/permission/alloy_access_query.h",
+    ]
+  }
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
+      "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/network_permissions_updater_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.h",
+      "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.cc",
+      "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.h",
+      "ohos_cef_ext/libcef/browser/extensions/extension_function_details.cc",
+      "ohos_cef_ext/libcef/browser/extensions/extension_function_details.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/sessions/sessions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_event_router_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_event_router_ext.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabGroups/tab_groups_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_event_router_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_windows_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/windows/windows_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/cookies/cookies_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/extension_action/extension_action_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/content_settings/content_settings_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/downloads_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/download_api_ext_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/download_api_ext_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/omnibox/omnibox_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_event_router_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_event_router_ext.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_extensions_util.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/reading_list/reading_list_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/history_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/browsing_data/browsing_data_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/search/search_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/topSites/top_sites_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.cc",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h",
+    ]
+    configs += [
+      "//ohos_nweb:nweb_config",
+    ]
+  }
+#endif
+
+  if (defined(arkweb_reader_mode) && arkweb_reader_mode) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_manager.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_service_factory.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_self_deleting_request_delegate.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_distiller_utils.cc",
+    ]
+  }
+
+  if (arkweb_itp) {
+    if (!is_arkweb_ext) {
+      sources += arkweb_anti_tracking_placeholder_source
+    }
+    sources += arkweb_anti_tracking_source
+  }
+
+  if (arkweb_safebrowsing) {
+    sources += arkweb_safebrowsing_sources
+  }
+
+  if (arkweb_adblock) {
+    if (!is_arkweb_ext) {
+      sources += arkweb_adblock_placeholder_source
+    }
+    sources += arkweb_adblock_source
+  }
 
   if (is_win) {
     sources += includes_win + [
@@ -1030,6 +1343,41 @@ source_set("libcef_static") {
     data_deps = [
       "//chrome/elevation_service",
     ]
+  }
+
+  if (is_ohos) {
+    sources +=
+        includes_linux + [
+          "libcef/browser/native/browser_platform_delegate_native_linux.cc",
+          "libcef/browser/native/browser_platform_delegate_native_linux.h",
+          "libcef/browser/osr/browser_platform_delegate_osr_linux.cc",
+          "libcef/browser/osr/browser_platform_delegate_osr_linux.h",
+          "libcef/common/util_linux.cc",
+          "libcef/common/util_linux.h",
+        ]
+  }
+
+  deps += [ "//arkweb/build/features" ]
+
+  if (is_ohos && !is_component_build) {
+    deps += [ "//ui/events/keycodes:x11" ]
+  }
+
+  if (enable_arkweb) {
+    public_deps += [ "//arkweb/build/features" ]
+  }
+
+  if (enable_arkweb_ext) {
+    deps += [ "//arkweb/ohos_nweb_ex/build/features" ]
+  }
+
+  if (enable_arkweb_ext) {
+    public_deps += [ "//arkweb/ohos_nweb_ex/build/features" ]
+  }
+
+  if (arkweb_url_trust_list) {
+    sources +=
+        includes_linux + arkweb_url_trust_list_sources
   }
 
   if (is_linux) {
@@ -1094,12 +1442,31 @@ source_set("libcef_static") {
     ]
   }
 
+  if (is_ohos) {
+    sources += [
+      "ohos_cef_ext/libcef/common/net/url_util_ex.h",
+      "ohos_cef_ext/libcef/common/net/url_util_ex.cc",
+      "ohos_cef_ext/libcef/common/net/scheme_registration_ex.cc",
+      "ohos_cef_ext/libcef/common/net/scheme_registration_ex.h",
+    ]
+  }
+
+  if ((is_arkweb_ext && arkweb_ext_pull_to_refresh) || 
+      (defined(arkweb_pull_to_refresh) && arkweb_pull_to_refresh)) {
+    sources += arkweb_content_overscroll_controller_ohos_sources
+    deps += ["//arkweb/chromium_ext/ui/ohos"]
+  }
+
   if (ozone_platform_x11) {
     deps += [ "//ui/events/devices/x11" ]
   }
 
   if (v8_use_external_startup_data && use_v8_context_snapshot) {
     deps += [ "//tools/v8_context_snapshot" ]
+  }
+
+  if (arkweb_test) {
+    sources += [ "libcef_dll/libcef_dll2.cc" ]
   }
 
   if (use_aura) {
@@ -1119,7 +1486,7 @@ source_set("libcef_static") {
     ]
   }
 
-  if (enable_cdm_host_verification) {
+  if (enable_cdm_host_verification || arkweb_enable_cdm) {
     sources += [
       "libcef/common/cdm_host_file_path.cc",
       "libcef/common/cdm_host_file_path.h",
@@ -1194,6 +1561,7 @@ config("libcef_includes_config") {
     # cef/include/ directory and CEF client-side code use #includes relative to
     # the cef/ directory.
     ".",
+    "//cef/ohos_cef_ext",
     # CEF generated header files that also need to be discoverable.
     # These #includes from client-side code will not be prefixed with cef/.
     # They will be copied to the include/ directory in the binary distribution.
@@ -1227,21 +1595,6 @@ config("libcef_dll_wrapper_config") {
     ldflags += [ "/DELAYLOAD:libcef.dll" ]
   }
 
-  # Build using the minimum C++ version supported by the CEF binary distribution.
-  # Chromium (and libcef) may build with a newer C++ version so this helps to
-  # avoid accidental usage of new/unsupported language features in sample apps.
-  # For Chromium defaults see //build/config/compiler/BUILD.gn.
-  #
-  # Mixing C++17 and C++20 leads to build errors with modules enabled. Dependent
-  # targets must therefore also set use_libcxx_modules = false (see issue #3611).
-  if (is_win) {
-    cflags_cc = [ "/std:c++17" ]
-  } else {
-    cflags_cc = [ "-std=c++17" ]
-  }
-  if (is_mac) {
-    cflags_objcc = [ "-std=c++17" ]
-  }
 
   if (cef_api_version != "") {
     defines = [ "CEF_API_VERSION=$cef_api_version" ]
@@ -1272,6 +1625,9 @@ static_library("libcef_dll_wrapper") {
   }
 
   defines = [ "WRAPPING_CEF_SHARED" ]
+  if (arkweb_dfx_logging) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
 
   configs += [ ":libcef_dll_wrapper_config" ]
   public_configs = [ ":libcef_dll_wrapper_config" ]
@@ -1410,6 +1766,12 @@ grit_strings("cef_strings") {
   source = "libcef/resources/cef_strings.grd"
   outputs = [ "grit/cef_strings.h" ]
   locales = platform_pak_locales + [ "fake-bidi" ]
+
+  #ifdef arkweb_i18n
+  if (arkweb_i18n) {
+    locales += extra_locales
+  }
+#endif
 }
 
 # Included in resources.pak via //chrome/chrome_paks.gni.
@@ -1529,7 +1891,11 @@ make_pack_header("strings") {
     "$root_gen_dir/ui/strings/grit/auto_image_annotation_strings.h",
     "$root_gen_dir/ui/strings/grit/ui_strings.h",
   ]
-
+  if (arkweb_i18n) {
+    inputs += [
+      "$root_gen_dir/ohos_resources/components/string/grit/ohos_components_strings.h",
+    ]
+  }
   deps = [
     ":cef_strings",
     "//chrome/app:branded_strings",
@@ -1549,6 +1915,12 @@ make_pack_header("strings") {
     "//ui/strings:auto_image_annotation_strings",
     "//ui/strings:ui_strings",
   ]
+
+  if(arkweb_i18n) {
+    deps += [
+      "//ohos_resources/components/string:ohos_components_strings",
+    ]
+  }
 }
 
 # Generate cef_command_ids.h.
@@ -1815,18 +2187,28 @@ if (is_mac) {
     info_plist_target = ":cef_framework_plist"
   }
 } else {
-  shared_library("libcef") {
-    # Necessary because the libcef_test_support target is testonly.
-    testonly = true
+    shared_library("libarkweb_engine") {
+      configs += [ "//arkweb/build/config/sanitizers:cfi_config" ]
+      defines = [ "LOGGING_TAG=\"cef#\"" ]
 
     sources = libcef_sources_common
 
+    sources += [ "libcef/browser/test/test_helpers_impl.cc" ]
+
     deps = libcef_deps_common
+    deps -= [":libcef_test_support"]
+
 
     configs += [
       ":libcef_autogen_config",
       ":libcef_includes_config",
     ]
+
+    deps += [ "//ohos_nweb:nweb_sources" ]
+    if (is_arkweb_ext) {
+      deps += [ "//ohos_nweb_ex:nweb_ex" ]
+    }
+
 
     if (is_win) {
       sources += includes_win + [
@@ -1866,8 +2248,21 @@ if (is_mac) {
                      rebase_path("//cef/libcef_dll/libcef.lst") ]
       }
     }
+
+      if (is_ohos) {
+        configs += [ "//build/config/ohos:lld_pack_relocations" ]
+        if (!(defined(testonly) && testonly)) {
+          configs -= [ "//build/config/compiler:thinlto_optimize_default" ]
+          configs += [ "//build/config/compiler:thinlto_optimize_max" ]
+        }
+      }
+
+      if (is_arkweb) {
+        deps += ["//arkweb/ohos_adapter_ndk:adapter_ndk_wrapper", "//ohos/adapter:adapter"]
+        libs = ["hitrace_ndk.z"]
+      }
+    }
   }
-}
 
 
 #
@@ -2421,7 +2816,7 @@ if (is_mac) {
               gypi_paths2.cefclient_sources_renderer
 
     deps = [
-      ":libcef",
+      ":libarkweb_engine",
       ":libcef_dll_wrapper",
     ]
 
@@ -2593,7 +2988,7 @@ if (is_mac) {
               gypi_paths2.cefsimple_sources_common
 
     deps = [
-      ":libcef",
+      ":libarkweb_engine",
       ":libcef_dll_wrapper",
     ]
 
@@ -2708,7 +3103,7 @@ if (is_mac) {
               gypi_paths2.cefsimple_capi_sources_common
 
     deps = [
-      ":libcef",
+      ":libarkweb_engine",
     ]
 
     configs += [ ":libcef_includes_config" ]
@@ -2834,7 +3229,7 @@ if (is_mac) {
               gypi_paths2.ceftests_sources_common
 
     deps = [
-      ":libcef",
+      ":libarkweb_engine",
       ":libcef_dll_wrapper",
       ":gtest_teamcity",
       "//testing/gtest",

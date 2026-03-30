@@ -5,6 +5,7 @@
 #include "cef/libcef/common/cef_crash_report_upload_thread.h"
 
 #include "base/notreached.h"
+#include "build/build_config.h"
 #include "cef/libcef/common/cef_crash_report_utils.h"
 #include "third_party/crashpad/crashpad/client/settings.h"
 
@@ -136,6 +137,11 @@ CefCrashReportUploadThread::FilterParameters(const ParameterMap& parameters) {
 
 bool CefCrashReportUploadThread::UploadsEnabled() const {
   Settings* const settings = database_->GetSettings();
+#if BUILDFLAG(IS_OHOS)
+  if (settings == nullptr) {
+	  return false;
+  }
+#endif // IS_OHOS
   bool uploads_enabled;
   return !url_.empty() && settings->GetUploadsEnabled(&uploads_enabled) &&
          uploads_enabled;
@@ -155,7 +161,11 @@ bool CefCrashReportUploadThread::BackoffPending() const {
   }
 
   Settings* const settings = database_->GetSettings();
-
+#if BUILDFLAG(IS_OHOS)
+  if (settings == nullptr) {
+	  return false;
+  }
+#endif // IS_OHOS
   time_t next_upload_time;
   if (settings->GetNextUploadAttemptTime(&next_upload_time) &&
       next_upload_time > 0) {
@@ -186,7 +196,11 @@ void CefCrashReportUploadThread::IncreaseBackoff() {
       sizeof(kBackoffSchedule) / sizeof(kBackoffSchedule[0]);
 
   Settings* settings = database_->GetSettings();
-
+#if BUILDFLAG(IS_OHOS)
+  if (settings == nullptr) {
+	  return;
+  }
+#endif // IS_OHOS
   int backoff_step = 0;
   if (settings->GetBackoffStep(&backoff_step) && backoff_step < 0) {
     backoff_step = 0;
@@ -215,6 +229,11 @@ void CefCrashReportUploadThread::ResetBackoff() {
   }
 
   Settings* settings = database_->GetSettings();
+#if BUILDFLAG(IS_OHOS)
+  if (settings == nullptr) {
+	  return;
+  }
+#endif // IS_OHOS
   settings->SetBackoffStep(0);
   settings->SetNextUploadAttemptTime(0);
 }

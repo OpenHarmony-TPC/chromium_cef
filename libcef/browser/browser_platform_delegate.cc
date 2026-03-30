@@ -4,6 +4,7 @@
 
 #include "cef/libcef/browser/browser_platform_delegate.h"
 
+#include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/notimplemented.h"
@@ -23,6 +24,9 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/browser_platform_delegate_for_include.cc"
+#endif
 
 namespace {
 

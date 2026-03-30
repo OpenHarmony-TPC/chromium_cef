@@ -10,6 +10,10 @@
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/thread_util.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
+#endif
+
 namespace {
 
 class CreateBrowserHelper {
@@ -78,12 +82,20 @@ bool CefBrowserHost::CreateBrowser(
   }
 
   if (!request_context) {
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+    request_context = settings.incognito_mode
+                          ? CefRequestContext::GetGlobalOTRContext()
+                          : CefRequestContext::GetGlobalContext();
+#else
     request_context = CefRequestContext::GetGlobalContext();
+#endif
   }
 
   auto helper = std::make_unique<CreateBrowserHelper>(
       windowInfo, client, url, settings, extra_info, request_context);
-
+#if BUILDFLAG(IS_OHOS)
+  helper->Run();
+#else
   auto request_context_impl =
       static_cast<CefRequestContextImpl*>(request_context.get());
 
@@ -96,6 +108,7 @@ bool CefBrowserHost::CreateBrowser(
                                               std::move(helper)));
       },
       std::move(helper)));
+#endif
 
   return true;
 }
@@ -121,12 +134,24 @@ CefRefPtr<CefBrowser> CefBrowserHost::CreateBrowserSync(
   }
 
   if (!request_context) {
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+    request_context = settings.incognito_mode
+                          ? CefRequestContext::GetGlobalOTRContext()
+                          : CefRequestContext::GetGlobalContext();
+#else
     request_context = CefRequestContext::GetGlobalContext();
+#endif
   }
 
   // Verify that the browser context is valid.
   auto request_context_impl =
       static_cast<CefRequestContextImpl*>(request_context.get());
+#if BUILDFLAG(IS_ARKWEB)
+  if (!request_context_impl) {
+    LOG(ERROR) << "request_context_impl is nullptr";
+    return nullptr;
+  }
+#endif
   if (!request_context_impl->VerifyBrowserContext()) {
     return nullptr;
   }

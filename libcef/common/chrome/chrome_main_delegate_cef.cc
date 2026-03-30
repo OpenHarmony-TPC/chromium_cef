@@ -44,9 +44,22 @@
 #include "cef/libcef/common/util_linux.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/common/chrome/chrome_main_delegate_cef_for_include.cc"
+#endif
+
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+#include "arkweb/chromium_ext/base/ohos/logger.h"
+#include "base/logging.h"
+#endif
+
 namespace {
 
+#if BUILDFLAG(IS_ARKWEB)
+base::LazyInstance<ArkWebContentRendererClientCefExt>::DestructorAtExit
+#else
 base::LazyInstance<ChromeContentRendererClientCef>::DestructorAtExit
+#endif
     g_chrome_content_renderer_client = LAZY_INSTANCE_INITIALIZER;
 
 template <typename FeatureType>
@@ -352,6 +365,17 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
                             disable_features);
 #endif  // BUILDFLAG(IS_WIN)
 
+#if BUILDFLAG(ARKWEB_BFCACHE)
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEnableBFCache)) {
+      disable_features.push_back(features::kBackForwardCache.name);
+    }
+#endif
+
+#if !BUILDFLAG(ARKWEB_BFCACHE)
+    ManageBackForwardCacheExt(disable_features);
+#endif
+
     // Disable features that crash during Chrome browser initialization.
     // -- Split Screen support. See issue #3980.
     DisableFeatureByDefault(features::kSideBySide, disable_features);
@@ -502,6 +526,9 @@ ChromeMainDelegateCef::RunProcess(
     const std::string& process_type,
     content::MainFunctionParams main_function_params) {
   if (process_type.empty()) {
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    ohos::logger::SetMainProcessMode(true);
+#endif
     return runner_->RunMainProcess(std::move(main_function_params));
   }
 
@@ -545,6 +572,9 @@ CefRefPtr<CefRequestContext> ChromeMainDelegateCef::GetGlobalRequestContext() {
   if (browser_client) {
     return browser_client->request_context();
   }
+#if BUILDFLAG(IS_ARKWEB)
+  LOG(ERROR) << "browser_client is nullptr";
+#endif
   return nullptr;
 }
 

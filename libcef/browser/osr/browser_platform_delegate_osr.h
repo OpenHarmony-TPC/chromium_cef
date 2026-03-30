@@ -5,12 +5,15 @@
 #ifndef CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_
 
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/alloy/browser_platform_delegate_alloy.h"
 #include "cef/libcef/browser/native/browser_platform_delegate_native.h"
 
 class CefRenderWidgetHostViewOSR;
 class CefWebContentsViewOSR;
+class CefBrowserPlatformDelegateOsrExt;
+class CefBrowserPlatformDelegateOsrUtils;
 
 namespace content {
 class RenderWidgetHostImpl;
@@ -21,6 +24,14 @@ class CefBrowserPlatformDelegateOsr
     : public CefBrowserPlatformDelegateAlloy,
       public CefBrowserPlatformDelegateNative::WindowlessHandler {
  public:
+  friend class CefBrowserPlatformDelegateOsrExt;
+  friend class CefBrowserPlatformDelegateOsrUtils;
+  std::unique_ptr<CefBrowserPlatformDelegateOsrUtils> cef_browser_platform_delegate_osr_utils_;
+  virtual CefBrowserPlatformDelegateOsrExt* AsCefBrowserPlatformDelegateOsrExt() {
+    NOTREACHED() << "AsCefBrowserPlatformDelegateOsrExt() in browser_platform_delegate_osr.h shouldn't be run.";
+    return nullptr;
+  }
+  ~CefBrowserPlatformDelegateOsr() override;
   // CefBrowserPlatformDelegate methods:
   void CreateViewForWebContents(
       raw_ptr<content::WebContentsView>* view,
@@ -56,6 +67,10 @@ class CefBrowserPlatformDelegateOsr
   bool IsWindowless() const override;
   void WasHidden(bool hidden) override;
   bool IsHidden() const override;
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  void EvictFrameBackBuffersWhenNWebWasHidden() override;
+  void SetIsOfflineWebComponent() override;
+#endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;
   void SendExternalBeginFrame() override;
@@ -137,6 +152,13 @@ class CefBrowserPlatformDelegateOsr
   // document has registered an interest in the dropped data and the renderer
   // process should pass the data to the document on drop.
   bool document_is_handling_drag_ = false;
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  CefRefPtr<CefDragData> last_drag_data_;
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  int32_t condition_ = 0;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_

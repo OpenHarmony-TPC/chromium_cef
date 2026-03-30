@@ -8,6 +8,7 @@
 #include "cef/libcef/common/cef_switches.h"
 #include "content/public/common/content_switches.h"
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
+#include "cef/ohos_cef_ext/libcef/browser/prefs/renderer_prefs_for_include1.cc"
 
 namespace renderer_prefs {
 
@@ -27,6 +28,10 @@ void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {
       command_line->HasSwitch(switches::kImageShrinkStandaloneToFit);
   web.text_areas_are_resizable =
       !command_line->HasSwitch(switches::kDisableTextAreaResize);
+
+#if BUILDFLAG(IS_ARKWEB)
+  SetDefaultPrefsExt(web);
+#endif
 }
 
 // Helper macro for setting a WebPreferences variable based on the value of a
@@ -36,6 +41,10 @@ void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {
     web_var = true;                   \
   else if (cef_var == STATE_DISABLED) \
     web_var = false;
+
+}  // namespace renderer_prefs
+#include "cef/ohos_cef_ext/libcef/browser/prefs/renderer_prefs_for_include2.cc"
+namespace renderer_prefs {
 
 void SetCefPrefs(const CefBrowserSettings& cef,
                  blink::web_pref::WebPreferences& web) {
@@ -63,6 +72,9 @@ void SetCefPrefs(const CefBrowserSettings& cef,
     web.fantasy_font_family_map[blink::web_pref::kCommonScript] =
         CefString(&cef.fantasy_font_family);
   }
+#if BUILDFLAG(IS_ARKWEB)
+  SetCefPrefsExt(cef, web);
+#endif
 
   if (cef.default_font_size > 0) {
     web.default_font_size = cef.default_font_size;
@@ -87,7 +99,9 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   SET_STATE(cef.javascript_access_clipboard,
             web.javascript_can_access_clipboard);
   SET_STATE(cef.javascript_dom_paste, web.dom_paste_enabled);
+#if !BUILDFLAG(IS_ARKWEB)
   SET_STATE(cef.image_loading, web.loads_images_automatically);
+#endif
   SET_STATE(cef.image_shrink_standalone_to_fit,
             web.shrinks_standalone_images_to_fit);
   SET_STATE(cef.text_area_resize, web.text_areas_are_resizable);
@@ -100,6 +114,28 @@ void SetCefPrefs(const CefBrowserSettings& cef,
     web.webgl1_enabled = false;
     web.webgl2_enabled = false;
   }
+
+#if BUILDFLAG(IS_ARKWEB)
+  SetCefPrefsSetStateExt(cef, web);
+#if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
+  web.border_radius_top_left = cef.border_radius_top_left;
+  web.border_radius_top_right = cef.border_radius_top_right;
+  web.border_radius_bottom_left = cef.border_radius_bottom_left;
+  web.border_radius_bottom_right = cef.border_radius_bottom_right;
+#endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+
+#if BUILDFLAG(ARKWEB_MENU)
+  web.touch_handle_exist = cef.touch_handle_exist;
+  web.viewport_scale = cef.viewport_scale;
+#endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  web.scrollbar_layout_policy =
+      static_cast<blink::mojom::ScrollbarLayoutPolicy>(
+          cef.scrollbar_layout_policy);
+  web.is_system_rtl_enabled = cef.is_system_rtl_enabled;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#endif
 }
 
 }  // namespace renderer_prefs

@@ -17,6 +17,16 @@
 #include "chrome/browser/profiles/off_the_record_profile_impl.h"
 #include "chrome/common/pref_names.h"
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_context_for_include.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "base/command_line.h"
+#include "base/ohos/sys_info_utils_ext.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace {
 
 // Match the default logic from ProfileManager::GetPrimaryUserProfile which was
@@ -193,8 +203,15 @@ void ChromeBrowserContext::ProfileCreated(CreateStatus status,
       if (otr_profile) {
         otr_profile->Init();
         parent_profile->NotifyOffTheRecordProfileCreated(otr_profile);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+        if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+                switches::kEnableNwebEx) &&
+            base::ohos::IsPcDevice()) {
+          ProfileManager* profile_manager = g_browser_process->profile_manager();
+          profile_manager->OnOtrProfileAdded(otr_profile);
+        }
+#endif
       }
-
       if (!profile_->IsOffTheRecord()) {
         // Configure the desired profile restore behavior for the next
         // application restart (checked via
@@ -217,6 +234,10 @@ void ChromeBrowserContext::ProfileCreated(CreateStatus status,
       }
       init_callbacks_.clear();
     }
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
+    OnContextInitialized();
+#endif
   }
 }
 

@@ -110,6 +110,9 @@ class ChromeBrowserDelegate : public cef::BrowserDelegate {
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+                              blink::mojom::ConsoleMessageSource log_source,
+#endif
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
