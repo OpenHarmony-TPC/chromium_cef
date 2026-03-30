@@ -47,17 +47,20 @@ class OhGinJavascriptBridgeDispatcher : public content::RenderFrameObserver {
 
   std::unique_ptr<base::Value> InvokeJavascriptMethod(
       ObjectID object_id,
+      const std::string& url,
       const std::string& method_name,
       const base::Value::List& arguments,
       OhGinJavascriptBridgeError* error);
 
   std::unique_ptr<base::Value> InvokeJavascriptMethodAsync(
       ObjectID object_id,
+      const std::string& url,
       const std::string& method_name,
       const base::Value::List& arguments);
 
   std::unique_ptr<base::Value> InvokeJavascriptMethodFlowbuf(
       ObjectID object_id,
+      const std::string& url,
       const std::string& method_name,
       const base::Value::List& arguments,
       int fd,

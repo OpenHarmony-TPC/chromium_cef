@@ -162,12 +162,10 @@ bool OhGinJavascriptBridgeDispatcher::HasJavascriptMethod(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments,
     OhGinJavascriptBridgeError* error) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
   base::Value::List result_wrapper;
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
@@ -183,11 +181,9 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodAsync(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
       routing_id(), object_id, url, method_name, arguments));
@@ -198,13 +194,11 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodAsync(
 std::unique_ptr<base::Value>
 OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
     ObjectID object_id,
+    const std::string& url,
     const std::string& method_name,
     const base::Value::List& arguments,
     int fd,
     OhGinJavascriptBridgeError* error) {
-  std::string url;
-  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-  url = frame->GetDocument().Url().GetString().Utf8();
   base::Value::List result_wrapper;
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
