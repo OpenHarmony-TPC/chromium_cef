@@ -56,6 +56,10 @@
 #include "extensions/common/constants.h"
 #endif
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
 #include "base/command_line.h"
@@ -880,9 +884,21 @@ void InterceptedRequest::OnHeadersReceived(
   std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
+#if BUILDFLAG(IS_ARKWEB_EXT)
+    int status_code = 0;
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
+        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->IsTrialTestEnabled()) {
+      status_code = current_headers_->response_code();
+    }
+#endif
+
     const GURL new_url = request_.url.Resolve(location);
     redirect_info =
+#if BUILDFLAG(IS_ARKWEB_EXT)
+        MakeRedirectInfo(request_, current_headers_.get(), new_url, status_code);
+#else
         MakeRedirectInfo(request_, current_headers_.get(), new_url, 0);
+#endif
   }
 
   HandleResponseOrRedirectHeaders(

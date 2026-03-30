@@ -51,6 +51,7 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
                                     bool for_loading_cookies
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                                     , const std::optional<GURL> new_url
+                                    , const std::optional<std::string>& new_method
 #endif
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
                                     , bool is_off_the_record
@@ -103,7 +104,11 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
     // Match the logic from URLRequestHttpJob::AddCookieHeaderAndStart.
     options.set_same_site_cookie_context(
         net::cookie_util::ComputeSameSiteContextForRequest(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+            new_method.value_or(request.method), url_chain, request.site_for_cookies,
+#else
             request.method, url_chain, request.site_for_cookies,
+#endif
             request.request_initiator, is_main_frame_navigation,
             should_treat_as_first_party));
   } else {
@@ -127,6 +132,7 @@ void ContinueWithLoadedCookies(const AllowCookieCallback& allow_cookie_callback,
                                const net::CookieAccessResultList& cookies) {
   CEF_REQUIRE_IOT();
   net::CookieList allowed_cookies;
+  LOG(DEBUG) << "ContinueWithLoadedCookies, cookie size is " << cookies.size();
   for (const auto& status : cookies) {
     bool allow = false;
     allow_cookie_callback.Run(status.cookie, &allow);
@@ -280,6 +286,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
+                 const std::optional<std::string>& new_method,
                  bool is_off_the_record,
                  const net::IsolationInfo& isolation_info,
 #endif
@@ -333,9 +340,9 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
         new_url.value_or(request.url),
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
         GetCookieOptions(request, /*for_loading_cookies=*/true, new_url,
-                         is_off_the_record),
+                         new_method, is_off_the_record),
 #else
-        GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+        GetCookieOptions(request, /*for_loading_cookies=*/true, new_url, new_method),
 #endif
         std::move(partition_key_collection),
         base::BindOnce(GetCookieListCallback, allow_cookie_callback,
@@ -351,9 +358,9 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
           new_url.value_or(request.url),
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
           GetCookieOptions(request, /*for_loading_cookies=*/true, new_url,
-                           is_off_the_record),
+                           new_method, is_off_the_record),
 #else
-          GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+          GetCookieOptions(request, /*for_loading_cookies=*/true, new_url, new_method),
 #endif
 #else
           request.url, GetCookieOptions(request, /*for_loading_cookies=*/true),
@@ -451,10 +458,10 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
         request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-        GetCookieOptions(request, /*for_loading_cookies=*/false, {},
+        GetCookieOptions(request, /*for_loading_cookies=*/false, {}, {},
                          is_off_the_record),
 #else
-        GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+        GetCookieOptions(request, /*for_loading_cookies=*/false, {}, {}),
 #endif
 #else
         GetCookieOptions(request, /*for_loading_cookies=*/false),
@@ -469,10 +476,10 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
             SaveCookiesOnUIThread, browser_context_getter, request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-            GetCookieOptions(request, /*for_loading_cookies=*/false, {},
+            GetCookieOptions(request, /*for_loading_cookies=*/false, {}, {},
                              is_off_the_record),
 #else
-            GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+            GetCookieOptions(request, /*for_loading_cookies=*/false, {}, {}),
 #endif
 #else
             GetCookieOptions(request, /*for_loading_cookies=*/false),
