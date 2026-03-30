@@ -19,7 +19,7 @@ void CefSetDataDirectoryForTests(const CefString& dir) {
 bool CefIsFeatureEnabledForTests(const CefString& feature_name) {
   // Only includes values that are queried by unit tests.
   const base::Feature* features[] = {
-      &net::features::kIgnoreHSTSForLocalhost,
+      //&net::features::kIgnoreHSTSForLocalhost,
       &network::features::kReduceAcceptLanguage,
   };
 
@@ -31,4 +31,5 @@ bool CefIsFeatureEnabledForTests(const CefString& feature_name) {
   }
 
   LOG(FATAL) << "Feature " << name << " is not supported";
+  __builtin_unreachable();
 }

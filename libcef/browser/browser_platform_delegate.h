@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 
+#include "arkweb/build/features/features.h"
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 #include "base/functional/callback_forward.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/include/cef_client.h"
@@ -16,6 +20,8 @@
 #include "cef/include/internal/cef_types.h"
 #include "cef/include/views/cef_browser_view.h"
 #include "cef/libcef/renderer/browser_config.h"
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
+#include "content/common/native_embed_first_paint_event.h"
 #include "third_party/blink/public/common/page/drag_operation.h"
 #include "third_party/blink/public/mojom/drag/drag.mojom-forward.h"
 #include "third_party/skia/include/core/SkColor.h"
@@ -75,12 +81,21 @@ struct CefBrowserCreateParams;
 class CefBrowserHostBase;
 class CefJavaScriptDialogRunner;
 class CefMenuRunner;
+#if BUILDFLAG(IS_ARKWEB)
+class ArkWebCefBrowserPlatformDelegateExt;
+#endif
 
 // Provides platform-specific implementations of browser functionality. All
 // methods are called on the browser process UI thread unless otherwise
 // indicated.
 class CefBrowserPlatformDelegate {
  public:
+#if BUILDFLAG(IS_ARKWEB)
+  virtual ArkWebCefBrowserPlatformDelegateExt* AsArkWebCefBrowserPlatformDelegateExt() {
+    return nullptr;
+  }
+  friend class ArkWebCefBrowserPlatformDelegateExt;
+#endif  // BUILDFLAG(IS_ARKWEB)
   CefBrowserPlatformDelegate(const CefBrowserPlatformDelegate&) = delete;
   CefBrowserPlatformDelegate& operator=(const CefBrowserPlatformDelegate&) =
       delete;
@@ -305,6 +320,13 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual bool IsHidden() const;
 
+#if BUILDFLAG(ARKWEB_OFFLINE_WEB_EVICT_BACK_BUFFERS)
+  // Evict frame back buffers when nweb was hidden
+  virtual void EvictFrameBackBuffersWhenNWebWasHidden() {}
+  // Set is offline web Component.
+  virtual void SetIsOfflineWebComponent() {}
+#endif
+
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering and external (client-provided) root window.
   virtual void NotifyScreenInfoChanged();
@@ -363,13 +385,41 @@ class CefBrowserPlatformDelegate {
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
   virtual bool IsPrintPreviewSupported() const;
 
+#if BUILDFLAG(ARKWEB_PIP)
+  virtual void OnPip(int status,
+                     int delegate_id,
+                     int child_id,
+                     int frame_routing_id,
+                     int width,
+                     int height) {}
+  virtual void SetPipNativeWindow(int delegate_id,
+                                  int child_id,
+                                  int frame_routing_id,
+                                  cef_native_window_t window);
+  virtual void SendPipEvent(int delegate_id,
+                            int child_id,
+                            int frame_routing_id,
+                            int event);
+  virtual void OnPipEvent(int event);
+#endif
+#if BUILDFLAG(ARKWEB_PDF)
+  virtual void OnPdfScrollAtBottom(const std::string& url) {}
+  virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_MEDIA_CAST)
+ virtual void OnMediaCastEnter() {}
+#endif // BUILDFLAG(ARKWEB_MEDIA_CAST)
+
   virtual bool IsMovePictureInPictureEnabled() const;
   virtual bool AllowPictureInPictureWithoutUserActivation() const;
 
   // CefBrowser configuration determined prior to CefBrowserHost creation and
   // passed to the renderer process via the GetNewBrowserInfo Mojo request.
   cef::BrowserConfig GetBrowserConfig() const;
-
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+  virtual void OnSafeBrowsingCheckDetail(int code, int policy, int threat) {}
+#endif
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
@@ -384,4 +434,7 @@ class CefBrowserPlatformDelegate {
   raw_ptr<CefBrowserHostBase> browser_ = nullptr;
 };
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#endif
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_H_

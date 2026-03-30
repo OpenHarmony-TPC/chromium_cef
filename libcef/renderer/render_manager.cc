@@ -36,6 +36,7 @@
 #include "content/public/renderer/render_thread.h"
 #include "extensions/common/switches.h"
 #include "mojo/public/cpp/bindings/binder_map.h"
+#include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
 #include "services/network/public/mojom/cors_origin_pattern.mojom.h"
 #include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/platform/web_url.h"
@@ -44,6 +45,11 @@
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
 #include "third_party/blink/public/web/web_view_observer.h"
+
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
+#include "base/logging.h"
+#include "arkweb/chromium_ext/third_party/blink/renderer/platform/weborigin/scheme_registry_utils.h"
+#endif
 
 namespace {
 
@@ -239,6 +245,15 @@ void CefRenderManager::WebKitInitialized() {
       if (info.is_fetch_enabled) {
         blink_glue::RegisterURLSchemeAsSupportingFetchAPI(scheme);
       }
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
+      if (info.is_code_cache_enabled) {
+        LOG(DEBUG) << "Render manager register the scheme:"
+                   << info.scheme_name.c_str() << " supported code cache.";
+        blink::SchemeRegistryUtils::
+            RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(
+                blink::String(info.scheme_name));
+      }
+#endif
     }
   }
 
@@ -299,12 +314,19 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
 
   // Retrieve browser information synchronously.
   auto params = cef::mojom::NewBrowserInfo::New();
+#if BUILDFLAG(ARKWEB_PDF)
+  const bool is_pdf = base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kPdfRenderer);
+  if (!is_pdf) {
+#endif
   GetBrowserManager()->GetNewBrowserInfo(
       render_frame->GetWebFrame()->GetLocalFrameToken(), &params);
   if (params->browser_id == 0) {
     // The popup may have been canceled during creation.
     return nullptr;
   }
+#if BUILDFLAG(ARKWEB_PDF)
+  }
+#endif
 
   if (params->config) {
     config = cef::BrowserConfig{
@@ -313,7 +335,11 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
         params->config->allow_pip_without_user_activation};
   }
 
+#if BUILDFLAG(ARKWEB_PDF)
+  if (is_pdf || params->is_excluded || params->browser_id < 0) {
+#else
   if (params->is_excluded || params->browser_id < 0) {
+#endif
     // Don't create a CefBrowser for excluded content (PDF renderer, PDF
     // extension or print preview dialog), or if the new browser info response
     // has timed out.
@@ -323,7 +349,11 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
   }
 
   CHECK(params->config);
+#if BUILDFLAG(IS_ARKWEB)
+  CefRefPtr<CefBrowserImpl> browser = new ArkWebBrowserExtImpl(
+#else
   CefRefPtr<CefBrowserImpl> browser = new CefBrowserImpl(
+#endif
       web_view, params->browser_id, params->config->is_popup, *config);
   browsers_.insert(std::make_pair(web_view, browser));
 
