@@ -471,6 +471,9 @@ test("libcef_static_unittests") {
     if (enable_arkweb) {
       deps += [ "//arkweb/build/features" ]
     }
+    if (defined(arkweb_reader_mode) && arkweb_reader_mode) {
+      sources += [ "ohos_cef_ext/libcef/browser/dom_distiller/oh_distiller_utils_unittest.cc", ]
+    }
   }
 }
 
