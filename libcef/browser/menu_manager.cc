@@ -338,7 +338,9 @@ void CefMenuManager::CreateDefaultModel() {
     // plugin placeholder menu items.
     for (auto& item : params_.custom_items) {
       auto new_item = item->Clone();
+#if !BUILDFLAG(ARKWEB_DEVTOOLS)
       new_item->action += MENU_ID_CUSTOM_FIRST;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
       DCHECK_LE(static_cast<int>(new_item->action), MENU_ID_CUSTOM_LAST);
       model_->AddMenuItem(*new_item);
     }
@@ -414,6 +416,12 @@ void CefMenuManager::CreateDefaultModel() {
     // Something is selected.
     model_->AddItem(MENU_ID_COPY, GetLabel(IDS_CONTENT_CONTEXT_COPY));
   } else if (!params_.page_url.is_empty() || !params_.frame_url.is_empty()) {
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+    if (params_.page_url.is_empty() ? params_.frame_url.spec().find("devtools://") != std::string::npos
+                                    : params_.page_url.spec().find("devtools://") != std::string::npos) {
+      return;
+    }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
     // Page or frame.
     model_->AddItem(MENU_ID_BACK, GetLabel(IDS_CONTENT_CONTEXT_BACK));
     model_->AddItem(MENU_ID_FORWARD, GetLabel(IDS_CONTENT_CONTEXT_FORWARD));
@@ -542,6 +550,15 @@ bool CefMenuManager::IsCustomContextMenuCommand(int command_id) {
       if (static_cast<int>(custom_item->action) == command_id) {
         return true;
       }
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+      if (custom_item->submenu.size()) {
+        for (const auto& sub_item : custom_item->submenu) {
+          if (static_cast<int>(sub_item->action) == command_id) {
+            return true;
+          }
+        }
+      }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
     }
   }
   return false;
