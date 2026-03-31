@@ -95,7 +95,8 @@ CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid) {
 #endif
 
 void CefResumeDownload(const CefString& guid,
-                       const CefString& url,
+                       const std::vector<CefString>& url_chain,
+                       const CefString& referrer_url,
                        const CefString& full_path,
                        int64_t received_bytes,
                        int64_t total_bytes,
@@ -115,11 +116,14 @@ void CefResumeDownload(const CefString& guid,
       LOG(ERROR) << "download manager not exists, resume download failed";
       return;
     }
-    GURL gurl = GURL(url.ToString());
-    if (gurl.is_empty() || !gurl.is_valid()) {
-      LOG(ERROR) << "download url is not valid, resume download failed, url:"
-                 << url.ToString();
-      return;
+    std::vector<GURL> gurl_url_chain;
+    for (auto& url : url_chain) {
+      GURL gurl = GURL(url.ToString());
+      if (gurl.is_empty() || !gurl.is_valid()) {
+        LOG(ERROR) << "download url is not valid, resume download failed";
+        return;
+      }
+      gurl_url_chain.push_back(gurl);
     }
     base::FilePath file_full_path =
         base::FilePath::FromUTF8Unsafe(full_path.ToString());
@@ -128,8 +132,8 @@ void CefResumeDownload(const CefString& guid,
         arkweb_received_slice_helper_ext::FromString(
             received_slices_string.ToString());
     manager->GetNextId(base::BindOnce(
-        &download_resume_util::ResumeDownloadWithId, manager, guid.ToString(),
-        std::move(gurl), std::move(file_full_path), received_bytes, total_bytes,
+        &download_resume_util::ResumeDownloadWithId, manager, guid.ToString(), std::move(gurl_url_chain),
+        GURL(referrer_url.ToString()), std::move(file_full_path), received_bytes, total_bytes,
         etag.ToString(), mime_type.ToString(), last_modified.ToString(),
         received_slices));
   } else {

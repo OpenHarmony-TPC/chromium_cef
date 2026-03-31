@@ -202,4 +202,13 @@ int CefDownloadItemImplExt::GetConflictAction() {
   int action = static_cast<int>(item_impl.GetConflictAction());
   return action;
 }
+
+std::vector<CefString> CefDownloadItemImplExt::GetUrlChain() {
+  CEF_VALUE_VERIFY_RETURN(false, {});
+  std::vector<CefString> urlChain;
+  for (const GURL& gurl : const_value().GetUrlChain()) {
+    urlChain.push_back(gurl.spec());
+  }
+  return urlChain;
+}
 #endif

@@ -44,7 +44,8 @@ void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler);
 ///
 /*--cef()--*/
 void CefResumeDownload(const CefString& guid,
-                       const CefString& url,
+                       const std::vector<CefString>& url_chain,
+                       const CefString& referrer_url,
                        const CefString& full_path,
                        int64_t received_bytes,
                        int64_t total_bytes,

@@ -13,7 +13,8 @@ const char kNWebId[] = "nweb_id";
 void ResumeDownloadWithId(
     content::DownloadManager* manager,
     const std::string& guid,
-    const GURL& gurl,
+    const std::vector<GURL>& url_chain,
+    const GURL& referrer_url,
     const base::FilePath& full_path,
     int64_t received_bytes,
     int64_t total_bytes,
@@ -22,15 +23,13 @@ void ResumeDownloadWithId(
     const std::string& last_modified,
     std::vector<download::DownloadItem::ReceivedSlice> received_slices,
     uint32_t next_id) {
-  std::vector<GURL> url_chain;
-  url_chain.push_back(gurl);
   auto download_item = manager->CreateDownloadItem(
       guid,                                         /*guid*/
       next_id,                                      /*id*/
       full_path,                                    /*current_path*/
       full_path,                                    /*target_path*/
       url_chain,                                    /*url_chain*/
-      GURL(),                                       /*referrer_url*/
+      referrer_url,                                 /*referrer_url*/
       content::StoragePartitionConfig(),            /*storage_partition_config*/
       GURL(),                                       /*tab_url*/
       GURL(),                                       /*tab_referrer_url*/
