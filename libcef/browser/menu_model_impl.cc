@@ -1006,7 +1006,11 @@ bool CefMenuModelImpl::VerifyRefCount() {
 
 void CefMenuModelImpl::AddMenuItem(
     const blink::mojom::CustomContextMenuItem& menu_item) {
+#if !BUILDFLAG(ARKWEB_DEVTOOLS)
   const int command_id = static_cast<int>(menu_item.action);
+#else
+  const int command_id = static_cast<int>(menu_item.action) + MENU_ID_CUSTOM_FIRST;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   switch (menu_item.type) {
     case blink::mojom::CustomContextMenuItemType::kOption:
