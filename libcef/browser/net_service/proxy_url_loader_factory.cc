@@ -56,10 +56,6 @@
 #include "extensions/common/constants.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_ark_web_global_config.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
 #include "base/command_line.h"
@@ -76,6 +72,10 @@
 #endif
 
 namespace net_service {
+
+BASE_FEATURE(kEnableSyncMethodOnRedirect,
+             "EnableSyncMethodOnRedirect",
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 namespace {
 
@@ -884,13 +884,10 @@ void InterceptedRequest::OnHeadersReceived(
   std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
-#if BUILDFLAG(IS_ARKWEB_EXT)
     int status_code = 0;
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
-        nweb_ex::AlloyArkWebGlobalConfig::GetInstance()->SyncMethodOnRedirectEnable()) {
+    if (base::FeatureList::IsEnabled(kEnableSyncMethodOnRedirect)) {
       status_code = current_headers_->response_code();
     }
-#endif
 
     const GURL new_url = request_.url.Resolve(location);
     redirect_info =
