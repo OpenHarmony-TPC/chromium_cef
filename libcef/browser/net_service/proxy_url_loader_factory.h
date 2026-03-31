@@ -39,7 +39,7 @@ namespace net_service {
 class InterceptedRequest;
 class ResourceContextData;
 
-GPU_EXPORT BASE_DECLARE_FEATURE(kEnableSyncMethodOnRedirect);
+NET_EXPORT BASE_DECLARE_FEATURE(kEnableSyncMethodOnRedirect);
 
 // Implement this interface to to evaluate requests. All methods are called on
 // the IO thread, and all callbacks must be executed on the IO thread.
