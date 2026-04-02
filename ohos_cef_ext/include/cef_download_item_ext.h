@@ -99,6 +99,12 @@ class CefDownloadItemExt : public virtual CefBaseRefCounted {
   virtual CefString GetRequestInitiator() = 0;
 
   ///
+  /// Returns context type.
+  ///
+  /*--cef()--*/
+  virtual CefString GetContextType() = 0;
+
+  ///
   /// Returns referrer url.
   ///
   /*--cef()--*/

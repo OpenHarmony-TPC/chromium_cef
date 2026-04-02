@@ -986,6 +986,9 @@ void DownloadsDownloadFunction::OnStarted(
     arkWebItem->SetByExtensionName(
         weak_pointer->extension()->name());
     arkWebItem->SetConflictAction(static_cast<int>(creator_conflict_action));
+    auto context = weak_pointer->browser_context();
+    auto context_type = GetExtensionContextType(context).value_or("");
+    arkWebItem->SetContextType(context_type);
   }
 #endif
   call_downloads_download_ = true;
