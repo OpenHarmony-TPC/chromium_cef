@@ -39,7 +39,9 @@ namespace net_service {
 class InterceptedRequest;
 class ResourceContextData;
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 NET_EXPORT BASE_DECLARE_FEATURE(kEnableSyncMethodOnRedirect);
+#endif
 
 // Implement this interface to to evaluate requests. All methods are called on
 // the IO thread, and all callbacks must be executed on the IO thread.

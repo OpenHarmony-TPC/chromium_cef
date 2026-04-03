@@ -73,9 +73,11 @@
 
 namespace net_service {
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 BASE_FEATURE(kEnableSyncMethodOnRedirect,
              "EnableSyncMethodOnRedirect",
              base::FEATURE_ENABLED_BY_DEFAULT);
+#endif
 
 namespace {
 
