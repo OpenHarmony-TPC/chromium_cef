@@ -13,20 +13,54 @@
  * limitations under the License.
  */
  
-#include "cef/libcef/browser/menu_manager.h"
+#include "menu_manager_ext.h"
+
+#include "base/logging.h"
+#include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
  
  
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-CefRefPtr<CefMenuModelImpl> CefMenuManager::GetContextMenuModel() {
-  LOG(INFO) << "CefMenuManager::GetContextMenuModel model size: " << model_->GetCount();
+CefMenuManagerEX& CefMenuManagerEX::GetInstance() {
+  static CefMenuManagerEX instance;
+  return instance;
+}
+
+void CefMenuManagerEX::SetMenuItems(CefMenuManager* menu_manager,
+                                    content::WebContents* contents,
+                                    const content::ContextMenuParams& params) {
+  LOG(INFO) << "CefMenuManagerEX::SetMenuItems";
+  menu_manager_ = menu_manager;
+  contents_ = contents;
+  link_followed_ = params.link_followed;
+  if (model_ == nullptr) {
+    model_ = new CefMenuModelImpl(menu_manager, nullptr, false);
+  }
+
+  for (auto& item : params.custom_items) {
+    auto new_item = item->Clone();
+    model_->AddMenuItem(*new_item);
+  }
+}
+
+CefRefPtr<CefMenuModelImpl> CefMenuManagerEX::GetContextMenuModel() {
+  LOG(INFO) << "CefMenuManagerEX::GetContextMenuModel model size: " << model_->GetCount();
   return model_;
 }
  
-void CefMenuManager::onContextMenuSelected(int command_id) {
-  ExecuteDefaultCommand(command_id);
+void CefMenuManagerEX::onContextMenuSelected(int command_id) {
+  LOG(INFO) << "CefMenuManagerEX::onContextMenuSelected command_id: " << command_id;
+  if (contents_) {
+    contents_->ExecuteCustomContextMenuCommand(command_id, link_followed_);
+  }
+  onContextMenuClosed();
 }
  
-void CefMenuManager::onContextMenuClosed() {
-  MenuClosed(model_);
+void CefMenuManagerEX::onContextMenuClosed() {
+  LOG(INFO) << "CefMenuManagerEX::onContextMenuClosed";
+  model_->Clear();
+  model_->set_delegate(nullptr);
+  menu_manager_ = nullptr;
+  contents_ = nullptr;
+  link_followed_ = GURL();
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
