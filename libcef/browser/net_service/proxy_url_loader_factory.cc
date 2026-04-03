@@ -886,14 +886,16 @@ void InterceptedRequest::OnHeadersReceived(
   std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     int status_code = 0;
     if (base::FeatureList::IsEnabled(kEnableSyncMethodOnRedirect)) {
       status_code = current_headers_->response_code();
     }
+#endif
 
     const GURL new_url = request_.url.Resolve(location);
     redirect_info =
-#if BUILDFLAG(IS_ARKWEB_EXT)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         MakeRedirectInfo(request_, current_headers_.get(), new_url, status_code);
 #else
         MakeRedirectInfo(request_, current_headers_.get(), new_url, 0);
