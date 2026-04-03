@@ -19,6 +19,7 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_utils.h",
   "//cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_utils.cc",
   "//cef/ohos_cef_ext/libcef/browser/menu_manager_ext.cc",
+  "//cef/ohos_cef_ext/libcef/browser/menu_manager_ext.h",
   "//cef/ohos_cef_ext/libcef/browser/net_service/cookie_manager_impl_ext.cc",
   "//cef/ohos_cef_ext/libcef/browser/net_service/cookie_manager_impl_ext.h",
   "//cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.cc",
