@@ -9,6 +9,8 @@
 #include "base/threading/thread_local_storage.h"
 #endif
 #include "arkweb/chromium_ext/url/ohos/log_utils.h"
+#include "base/functional/bind.h"
+#include "base/memory/scoped_refptr.h"
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/web_contents/web_contents_impl.h"
@@ -16,6 +18,7 @@
 #include "content/public/browser/web_contents.h"
 #include "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.h"
 #include "libcef/browser/javascript/oh_javascript_injector.h"
+#include "libcef/browser/thread_util.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_messages.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_value.h"
 #include "libcef/common/values_impl.h"
@@ -1232,13 +1235,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   }
 #endif
 
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) &&
-      web_contents()) {
-    OhJavascriptInjector* javascriptInjector =
-        OhJavascriptInjector::FromWebContents(web_contents());
-    if (javascriptInjector) {
-      javascriptInjector->SetLastCallingFrameUrl(document_url);
-    }
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    SetLastCallingFrameInfosOnUIThread(routing_id, document_url);
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(&OhGinJavascriptBridgeDispatcherHost::
+                       SetLastCallingFrameInfosOnUIThread,
+            base::WrapRefCounted(this), routing_id, document_url));
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -1303,13 +1306,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
   }
 #endif
 
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) &&
-      web_contents()) {
-    OhJavascriptInjector* javascriptInjector =
-        OhJavascriptInjector::FromWebContents(web_contents());
-    if (javascriptInjector) {
-      javascriptInjector->SetLastCallingFrameUrl(document_url);
-    }
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    SetLastCallingFrameInfosOnUIThread(routing_id, document_url);
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(&OhGinJavascriptBridgeDispatcherHost::
+                       SetLastCallingFrameInfosOnUIThread,
+            base::WrapRefCounted(this), routing_id, document_url));
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -1368,13 +1371,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   }
 #endif
 
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) &&
-      web_contents()) {
-    OhJavascriptInjector* javascriptInjector =
-        OhJavascriptInjector::FromWebContents(web_contents());
-    if (javascriptInjector) {
-      javascriptInjector->SetLastCallingFrameUrl(document_url);
-    }
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    SetLastCallingFrameInfosOnUIThread(routing_id, document_url);
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(&OhGinJavascriptBridgeDispatcherHost::
+                       SetLastCallingFrameInfosOnUIThread,
+            base::WrapRefCounted(this), routing_id, document_url));
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -1431,13 +1434,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
                   "OnInvokeMethodFlowbufAsync: jsb permission denied";
     return;
   }
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) &&
-      web_contents()) {
-    OhJavascriptInjector* javascriptInjector =
-        OhJavascriptInjector::FromWebContents(web_contents());
-    if (javascriptInjector) {
-      javascriptInjector->SetLastCallingFrameUrl(document_url);
-    }
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    SetLastCallingFrameInfosOnUIThread(routing_id, document_url);
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(&OhGinJavascriptBridgeDispatcherHost::
+                       SetLastCallingFrameInfosOnUIThread,
+            base::WrapRefCounted(this), routing_id, document_url));
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -1517,4 +1520,58 @@ void OhGinJavascriptBridgeDispatcherHost::DoCallH5Function(
         base_args));
   }
 }
+
+FrameInfos OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameInfos(int32_t routing_id) {
+  FrameInfos frame_info;
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents());
+  if (!web_contents_impl) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameInfos "
+                  "web_contents_impl null";
+    return frame_info;
+  }
+
+  content::RenderFrameHost* target_frame =
+      web_contents_impl->AsWebContentsImplExt()
+          ->GetTargetFramesIncludingPending(routing_id);
+  if (!target_frame) {
+    LOG(ERROR) << "GetLastCallingFrameInfos failed, get RenderFrameHost failed";
+    return frame_info;
+  }
+
+  content::RenderFrameHostImpl* rfh = static_cast<content::RenderFrameHostImpl*>(target_frame);
+  if (!rfh) {
+    LOG(ERROR) << "GetLastCallingFrameInfos failed, dynamic_cast to content::RenderFrameHostImpl failed";
+    return frame_info;
+  }
+  auto global_id = rfh->GetGlobalId();
+  frame_info.id = std::to_string(global_id.child_id) + "_" + std::to_string(global_id.frame_routing_id);
+  if (content::RenderFrameHostImpl* parent = rfh->GetParent()) {
+    auto parent_global_id = parent->GetGlobalId();
+    frame_info.parentId = std::to_string(parent_global_id.child_id) + "_" +
+                          std::to_string(parent_global_id.frame_routing_id);
+  } else {
+    frame_info.parentId.clear();
+  }
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameInfos: "
+                "id: " << frame_info.id  << ", parentId: " << frame_info.parentId;
+  return frame_info;
+}
+
+void OhGinJavascriptBridgeDispatcherHost::SetLastCallingFrameInfosOnUIThread(
+  int32_t routing_id,
+  const std::string& document_url) {
+  if (!web_contents()) {
+    return;
+  }
+
+  FrameInfos frame_info = GetLastCallingFrameInfos(routing_id);
+  OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+  if (javascriptInjector) {
+    javascriptInjector->SetLastCallingFrameUrl(document_url);
+    javascriptInjector->SetLastCallingFrameInfo(frame_info);
+  }
+}
+
 }  // namespace NWEB
