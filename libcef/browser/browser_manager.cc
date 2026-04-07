@@ -13,6 +13,9 @@
 #include "services/service_manager/public/cpp/binder_registry.h"
 #if BUILDFLAG(ARKWEB_PDF)
 #include "arkweb/chromium_ext/content/browser/web_contents/web_contents_impl_utils.h"
+#include "content/browser/web_contents/web_contents_impl.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
+#include "content/public/browser/global_routing_id.h"
 #endif
 
 CefBrowserManager::CefBrowserManager(int render_process_id)
@@ -55,13 +58,20 @@ void CefBrowserManager::GetNewBrowserInfo(
     const blink::LocalFrameToken& render_frame_token,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
 #if BUILDFLAG(ARKWEB_PDF)
-  if (content::WebContentsImplUtils::is_pdf_static) {
-    LOG(INFO) << "pdf load not use OnGetNewBrowserInfo due to long time consumption";
-    return;
+  const content::GlobalRenderFrameHostToken global_token(render_process_id_, render_frame_token);
+  if (auto *rfh = content::RenderFrameHostImpl::FromFrameToken(global_token)) {
+    if (auto *web_contents_impl = content::WebContentsImpl::FromRenderFrameHostImpl(rfh)) {
+      if (IsPdfExtensionOrigin(url::Origin::Create(web_contents_impl->GetVisibleURL()))) {
+        LOG(INFO) << "pdf load not use OnGetNewBrowserInfo due to long time consumption";
+        return;
+      }
+    }
   }
-#endif
+  CefBrowserInfoManager::GetInstance()->OnGetNewBrowserInfo(global_token, std::move(callback));
+#else
   CefBrowserInfoManager::GetInstance()->OnGetNewBrowserInfo(
       content::GlobalRenderFrameHostToken(render_process_id_,
                                           render_frame_token),
       std::move(callback));
+#endif
 }
