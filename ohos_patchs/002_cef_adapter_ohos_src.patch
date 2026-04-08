@@ -1,10 +1,10 @@
-From 818c2bbc97d4da2d3171e090204af8f725ea80d3 Mon Sep 17 00:00:00 2001
+From 6af9c9d30a74ff7bd78ec9eea8aac253376218c2 Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Wed, 3 Dec 2025 10:46:23 +0800
-Subject: [PATCH] add cef_adapter_ohos_src.patch
+Date: Tue, 31 Mar 2026 17:34:17 +0800
+Subject: [PATCH] add cef_adapter_ohos_src
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: Idb73a779021a48b99a211fcb132a6ed5214867ba
+Change-Id: I01df644499d4e28919acf35f7d75f27f974d0c13
 ---
  .../src/partition_alloc/BUILD.gn              |   2 +-
  .../constrained_window_views.cc               |   9 +-
@@ -262,7 +262,7 @@ index 0000000000..6a7cfa2044
 +
 +}  // namespace ohos::adapter::web_entry
 diff --git a/src/ohos/adapter/web_entry/web_entry.cc b/src/ohos/adapter/web_entry/web_entry.cc
-index e1f8d07d08..27b3b0af10 100644
+index cf6a2b7b16..7c28909f2c 100644
 --- a/src/ohos/adapter/web_entry/web_entry.cc
 +++ b/src/ohos/adapter/web_entry/web_entry.cc
 @@ -7,6 +7,7 @@
@@ -467,7 +467,7 @@ index f131d9efab..f75e44ac53 100644
    "main": "",
    "version": "1.0.0",
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
-index 800313ad8d..f5e96907dc 100644
+index 4f1fd1591a..5fa49502e9 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
 @@ -24,7 +24,8 @@ export class WebBaseAbility extends UIAbility implements WebProxy {
@@ -481,10 +481,10 @@ index 800313ad8d..f5e96907dc 100644
    protected useDarkMode: boolean = false;
    protected isStateless: boolean = false;
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
-index 0c823e4197..bb0c5d0a30 100644
+index 68d09d4867..0f8da97066 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
-@@ -25,7 +25,7 @@ const TAG: string = 'AppWindow';
+@@ -28,7 +28,7 @@ const TAG: string = 'AppWindow';
  @injectable()
  export class AppWindowAdapter extends BaseAdapter {
    private abilityManager: AbilityManager;
@@ -533,14 +533,14 @@ index 676d36168d..b11a5c24d6 100644
        default_uri = this.startUri;
      }
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/utils/KVStore.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/utils/KVStore.ets
-index e99e7b65b3..83bc01b87f 100644
+index 5a2fbb1921..83bc01b87f 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/utils/KVStore.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/utils/KVStore.ets
 @@ -124,7 +124,7 @@ class KVManager {
      try {
        const kvManagerConfig: distributedKVStore.KVManagerConfig = {
          context: ctx,
--        bundleName: "com.haitai.htrlbrowser"
+-        bundleName: "com.huawei.ohos_chromium"
 +        bundleName: "com.huawei.ohos_cef"
        };
        this.kvManager = distributedKVStore.createKVManager(kvManagerConfig);

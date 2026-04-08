@@ -1,10 +1,10 @@
-From ba81ef6454646e1ae533ce3d43c6922eab7b6e10 Mon Sep 17 00:00:00 2001
+From ddb58cc8563559ec0b9e55a5db346ee22cab159e Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Wed, 3 Dec 2025 09:52:00 +0800
-Subject: [PATCH] add cef_patch_third_party.patch
+Date: Tue, 31 Mar 2026 17:28:34 +0800
+Subject: [PATCH] add cef_patch_third_party
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: I6c25277d364ed43cd5420c32325243db0f4f8d2c
+Change-Id: I88c9290037c227c601f63a4d4874b598341238d5
 ---
  blink/public/platform/platform.h              |  5 ++
  blink/public/web/web_element.h                |  3 +
@@ -36,7 +36,6 @@ Change-Id: I6c25277d364ed43cd5420c32325243db0f4f8d2c
  rust-toolchain/bin/clippy-driver              |  0
  rust-toolchain/bin/rust-analyzer              |  0
  sentencepiece/src/src/util.cc                 | 15 ++++-
- siso/cipd/siso                                |  0
  31 files changed, 248 insertions(+), 20 deletions(-)
  mode change 100755 => 100644 instrumented_libs/binaries/msan-chained-origins-noble-lib/lib/libgtk-3.so.0.2409.32
  mode change 100755 => 100644 instrumented_libs/binaries/msan-chained-origins-noble-lib/lib/libharfbuzz-subset.so.0.60830.0
@@ -46,7 +45,6 @@ Change-Id: I6c25277d364ed43cd5420c32325243db0f4f8d2c
  mode change 100755 => 100644 rust-toolchain/bin/cargo-vet
  mode change 100755 => 100644 rust-toolchain/bin/clippy-driver
  mode change 100755 => 100644 rust-toolchain/bin/rust-analyzer
- mode change 100755 => 100644 siso/cipd/siso
 
 diff --git a/src/third_party/blink/public/platform/platform.h b/src/third_party/blink/public/platform/platform.h
 index 54e25fb12f..d3bcea5b34 100644
@@ -103,7 +101,7 @@ index 7c1eb9baab..30761c0906 100644
    ~WebView() = default;
  };
 diff --git a/src/third_party/blink/renderer/controller/BUILD.gn b/src/third_party/blink/renderer/controller/BUILD.gn
-index 1cec8375b6..e3aa20e8ae 100644
+index 3d33ab80ca..c0d6a73c53 100644
 --- a/src/third_party/blink/renderer/controller/BUILD.gn
 +++ b/src/third_party/blink/renderer/controller/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -127,7 +125,7 @@ index 1cec8375b6..e3aa20e8ae 100644
 +    deps += [ "//cef/libcef/features:deps" ]
 +  }
 +
-   if (is_linux || is_chromeos) {
+   if (is_linux || is_chromeos || is_ohos) {
      sources += [
        "memory_usage_monitor_posix.cc",
 diff --git a/src/third_party/blink/renderer/core/exported/web_element.cc b/src/third_party/blink/renderer/core/exported/web_element.cc
@@ -635,7 +633,7 @@ index 22bb26e318..87c80604e5 100644
    //! \brief Calls ProcessPendingReports() in response to ReportPending() having
    //!     been called on any thread, as well as periodically on a timer.
 diff --git a/src/third_party/crashpad/crashpad/handler/handler_main.cc b/src/third_party/crashpad/crashpad/handler/handler_main.cc
-index e1cd9b91da..a102b94759 100644
+index faa96aa256..83dd19503c 100644
 --- a/src/third_party/crashpad/crashpad/handler/handler_main.cc
 +++ b/src/third_party/crashpad/crashpad/handler/handler_main.cc
 @@ -38,6 +38,7 @@
@@ -657,7 +655,7 @@ index e1cd9b91da..a102b94759 100644
  namespace crashpad {
  
  namespace {
-@@ -250,6 +255,9 @@ struct Options {
+@@ -253,6 +258,9 @@ struct Options {
    bool periodic_tasks;
    bool rate_limit;
    bool upload_gzip;
@@ -667,7 +665,7 @@ index e1cd9b91da..a102b94759 100644
  #if BUILDFLAG(IS_CHROMEOS)
    bool use_cros_crash_reporter = false;
    base::FilePath minidump_dir_for_tests;
-@@ -628,6 +636,9 @@ int HandlerMain(int argc,
+@@ -634,6 +642,9 @@ int HandlerMain(int argc,
      kOptionTraceParentWithException,
  #endif
      kOptionURL,
@@ -677,8 +675,8 @@ index e1cd9b91da..a102b94759 100644
  #if BUILDFLAG(IS_CHROMEOS)
      kOptionUseCrosCrashReporter,
      kOptionMinidumpDirForTests,
-@@ -730,6 +741,9 @@ int HandlerMain(int argc,
- #endif  // BUILDFLAG(IS_ANDROID)
+@@ -742,6 +753,9 @@ int HandlerMain(int argc,
+ #endif
      {"help", no_argument, nullptr, kOptionHelp},
      {"version", no_argument, nullptr, kOptionVersion},
 +    {"max-uploads", required_argument, nullptr, kOptionMaxUploads},
@@ -687,7 +685,7 @@ index e1cd9b91da..a102b94759 100644
      {nullptr, 0, nullptr, 0},
    };
  
-@@ -890,6 +904,27 @@ int HandlerMain(int argc,
+@@ -905,6 +919,27 @@ int HandlerMain(int argc,
          options.url = optarg;
          break;
        }
@@ -715,7 +713,7 @@ index e1cd9b91da..a102b94759 100644
  #if BUILDFLAG(IS_CHROMEOS)
        case kOptionUseCrosCrashReporter: {
          options.use_cros_crash_reporter = true;
-@@ -1040,11 +1075,20 @@ int HandlerMain(int argc,
+@@ -1064,11 +1099,20 @@ int HandlerMain(int argc,
      upload_thread_options.upload_gzip = options.upload_gzip;
      upload_thread_options.watch_pending_reports = options.periodic_tasks;
  
@@ -736,7 +734,7 @@ index e1cd9b91da..a102b94759 100644
      upload_thread.Get()->Start();
    }
  
-@@ -1117,7 +1161,8 @@ int HandlerMain(int argc,
+@@ -1151,7 +1195,8 @@ int HandlerMain(int argc,
    ScopedStoppable prune_thread;
    if (options.periodic_tasks) {
      prune_thread.Reset(new PruneCrashReportThread(
@@ -815,9 +813,6 @@ index c5e5289807..e10880abc1 100644
  }
  #endif
  }  // namespace random
-diff --git a/src/third_party/siso/cipd/siso b/src/third_party/siso/cipd/siso
-old mode 100755
-new mode 100644
 -- 
 2.34.1
 
