@@ -451,6 +451,10 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool enable_nweb_ex_ = false;
 #endif
 
+#if (BUILDFLAG(ARKWEB_CLEAN_BUFFERS_WHEN_INVISIBLE) && BUILDFLAG(ARKWEB_SAME_LAYER))
+  bool is_inner_web_ = false;
+#endif
+
   base::WeakPtrFactory<ArkWebRenderWidgetHostViewOSRExt> weak_ptr_factory_;
 };
 

@@ -522,6 +522,12 @@ void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
 #if BUILDFLAG(ARKWEB_CLEAN_BUFFERS_WHEN_INVISIBLE)
 void ArkWebRenderWidgetHostViewOSRExt::SetIfNeedCleanBuffers(bool need_clean_buffers)
 {
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  if (is_inner_web_) {
+    LOG(INFO) << "No need to clean buffers for inner web";
+    return;
+  }
+#endif
   TRACE_EVENT1("base", "ArkWebRenderWidgetHostViewOSRExt::SetIfNeedCleanBuffers ",
                "need_clean_buffers:", need_clean_buffers);
   if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
@@ -2201,6 +2207,10 @@ void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedVisibilityChange(
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::SetNativeInnerWeb(bool isInnerWeb) {
+#if BUILDFLAG(ARKWEB_CLEAN_BUFFERS_WHEN_INVISIBLE)
+  is_inner_web_ = isInnerWeb;
+#endif
+
   if (auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
             browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->Utils()->SetNativeInnerWeb(isInnerWeb);
