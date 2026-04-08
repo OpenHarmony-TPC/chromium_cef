@@ -13,6 +13,10 @@
 #include "content/public/browser/context_menu_params.h"
 #include "content/public/browser/web_contents_observer.h"
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "cef/ohos_cef_ext/libcef/browser/menu_manager_ext.h"
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
 namespace content {
 class RenderFrameHost;
 class WebContents;
@@ -43,9 +47,8 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   void CancelContextMenu();
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  CefRefPtr<CefMenuModelImpl> GetContextMenuModel();
-  void onContextMenuSelected(int command_id);
-  void onContextMenuClosed();
+  friend class CefMenuManagerExt;
+  CefMenuManagerExt menu_manager_ext_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:

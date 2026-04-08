@@ -95,9 +95,11 @@ class CefRunContextMenuCallbackImpl : public CefRunContextMenuCallback {
 CefMenuManager::CefMenuManager(AlloyBrowserHostImpl* browser,
                                std::unique_ptr<CefMenuRunner> runner)
     : content::WebContentsObserver(browser->web_contents()),
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+      menu_manager_ext_(this),
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
       browser_(browser),
       runner_(std::move(runner)),
-
       weak_ptr_factory_(this) {
   DCHECK(web_contents());
   model_ = new CefMenuModelImpl(this, nullptr, false);
@@ -148,7 +150,7 @@ bool CefMenuManager::CreateContextMenu(
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   if (params_.page_url.is_empty() ? params_.frame_url.spec().find("devtools://") != std::string::npos
                                   : params_.page_url.spec().find("devtools://") != std::string::npos) {
-    CefMenuManagerEx::GetInstance().SetMenuItems(this, web_contents(), params);
+    menu_manager_ext_.SetMenuItems(web_contents(), params);
   }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 

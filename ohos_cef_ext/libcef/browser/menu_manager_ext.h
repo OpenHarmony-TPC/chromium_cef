@@ -16,14 +16,23 @@
 #ifndef CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_MENU_MANAGER_EXT_H_
 #define CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_MENU_MANAGER_EXT_H_
 #pragma once
-#include "cef/libcef/browser/menu_manager.h"
+
+#include "base/memory/ref_counted.h"
+#include "cef/libcef/browser/menu_model_impl.h"
+#include "content/public/browser/context_menu_params.h"
+#include "content/public/browser/web_contents.h"
+#include "url/gurl.h"
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-class CefMenuManagerEx {
+class CefMenuManagerExt {
   public:
-    static CefCefMenuManagerEx& GetInstance();
-    void SetMenuItems(CefMenuManager* menu_manager,
-                      content::WebContents* contents,
+    CefMenuManagerExt(CefMenuManager* menu_manager);
+    CefMenuManagerExt(const CefMenuManagerExt&) = delete;
+    CefMenuManagerExt& operator = (const CefMenuManagerExt&) = delete;
+
+    ~CefMenuManagerExt() = default;
+
+    void SetMenuItems(content::WebContents* contents,
                       const content::ContextMenuParams& params);
     CefRefPtr<CefMenuModelImpl> GetContextMenuModel();
     void onContextMenuSelected(int command_id);

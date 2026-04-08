@@ -16,24 +16,21 @@
 #include "menu_manager_ext.h"
 
 #include "base/logging.h"
+#include "cef/libcef/browser/menu_manager.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
  
  
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-CefMenuManagerEX& CefMenuManagerEX::GetInstance() {
-  static CefMenuManagerEX instance;
-  return instance;
-}
+CefMenuManagerExt::CefMenuManagerExt(CefMenuManager* menu_manager)
+    : menu_manager_(menu_manager) {}
 
-void CefMenuManagerEX::SetMenuItems(CefMenuManager* menu_manager,
-                                    content::WebContents* contents,
-                                    const content::ContextMenuParams& params) {
-  LOG(INFO) << "CefMenuManagerEX::SetMenuItems";
-  menu_manager_ = menu_manager;
+void CefMenuManagerExt::SetMenuItems(content::WebContents* contents,
+                                     const content::ContextMenuParams& params) {
+  LOG(INFO) << "CefMenuManagerExt::SetMenuItems";
   contents_ = contents;
   link_followed_ = params.link_followed;
   if (model_ == nullptr) {
-    model_ = new CefMenuModelImpl(menu_manager, nullptr, false);
+    model_ = new CefMenuModelImpl(menu_manager_, nullptr, false);
   }
 
   for (auto& item : params.custom_items) {
@@ -42,21 +39,21 @@ void CefMenuManagerEX::SetMenuItems(CefMenuManager* menu_manager,
   }
 }
 
-CefRefPtr<CefMenuModelImpl> CefMenuManagerEX::GetContextMenuModel() {
-  LOG(INFO) << "CefMenuManagerEX::GetContextMenuModel model size: " << model_->GetCount();
+CefRefPtr<CefMenuModelImpl> CefMenuManagerExt::GetContextMenuModel() {
+  LOG(INFO) << "CefMenuManagerExt::GetContextMenuModel model size: " << model_->GetCount();
   return model_;
 }
  
-void CefMenuManagerEX::onContextMenuSelected(int command_id) {
-  LOG(INFO) << "CefMenuManagerEX::onContextMenuSelected command_id: " << command_id;
+void CefMenuManagerExt::onContextMenuSelected(int command_id) {
+  LOG(INFO) << "CefMenuManagerExt::onContextMenuSelected command_id: " << command_id;
   if (contents_) {
     contents_->ExecuteCustomContextMenuCommand(command_id, link_followed_);
   }
   onContextMenuClosed();
 }
  
-void CefMenuManagerEX::onContextMenuClosed() {
-  LOG(INFO) << "CefMenuManagerEX::onContextMenuClosed";
+void CefMenuManagerExt::onContextMenuClosed() {
+  LOG(INFO) << "CefMenuManagerExt::onContextMenuClosed";
   model_->Clear();
   model_->set_delegate(nullptr);
   menu_manager_ = nullptr;
