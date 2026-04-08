@@ -24,6 +24,7 @@
 #include "url/gurl.h"
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+class CefMenuManager;
 class CefMenuManagerExt {
   public:
     CefMenuManagerExt(CefMenuManager* menu_manager);
