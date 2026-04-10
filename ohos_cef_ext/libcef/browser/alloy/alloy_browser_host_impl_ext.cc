@@ -308,6 +308,7 @@ std::string BuildMediaInfo(
   base::Value::Dict policy;
   policy.Set("downloadButton", static_cast<int>(config->download_button));
   policy.Set("playbackRateButton", config->playback_rate);
+  policy.Set("screenProjectionFlag", config->avcast_button);
   root.Set("policy", std::move(policy));
 
   root.Set("fullscreenoverlay", media_info->fullscreen_overlay);
