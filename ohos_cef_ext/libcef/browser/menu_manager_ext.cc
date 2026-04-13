@@ -21,7 +21,7 @@
  
  
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-CefMenuManagerExt::CefMenuManagerExt(CefMenuManager* menu_manager)
+CefMenuManagerExt::CefMenuManagerExt(raw_ptr<CefMenuManager> menu_manager)
     : menu_manager_(menu_manager) {}
 
 void CefMenuManagerExt::SetMenuItems(content::WebContents* contents,
