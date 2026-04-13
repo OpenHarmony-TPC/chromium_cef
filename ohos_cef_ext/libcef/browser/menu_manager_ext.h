@@ -27,7 +27,7 @@
 class CefMenuManager;
 class CefMenuManagerExt {
   public:
-    CefMenuManagerExt(CefMenuManager* menu_manager);
+    explicit CefMenuManagerExt(raw_ptr<CefMenuManager> menu_manager);
     CefMenuManagerExt(const CefMenuManagerExt&) = delete;
     CefMenuManagerExt& operator = (const CefMenuManagerExt&) = delete;
 
@@ -40,7 +40,7 @@ class CefMenuManagerExt {
     void onContextMenuClosed();
 
   private:
-    CefMenuManager* menu_manager_;
+    raw_ptr<CefMenuManager> menu_manager_;
     CefRefPtr<CefMenuModelImpl> model_;
     content::WebContents* contents_;
     GURL link_followed_;

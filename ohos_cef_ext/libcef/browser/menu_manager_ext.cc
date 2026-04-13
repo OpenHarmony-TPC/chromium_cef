@@ -54,8 +54,10 @@ void CefMenuManagerExt::onContextMenuSelected(int command_id) {
  
 void CefMenuManagerExt::onContextMenuClosed() {
   LOG(INFO) << "CefMenuManagerExt::onContextMenuClosed";
-  model_->Clear();
-  model_->set_delegate(nullptr);
+  if (model_) {
+    model_->Clear();
+    model_->set_delegate(nullptr);
+  }
   menu_manager_ = nullptr;
   contents_ = nullptr;
   link_followed_ = GURL();

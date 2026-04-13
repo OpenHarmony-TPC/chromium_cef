@@ -46,11 +46,6 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   bool CreateContextMenu(const content::ContextMenuParams& params);
   void CancelContextMenu();
 
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  friend class CefMenuManagerExt;
-  CefMenuManagerExt menu_manager_ext_;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
  private:
   // CefMenuModelImpl::Delegate methods.
   void ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
@@ -95,6 +90,11 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
 
   // Must be the last member.
   base::WeakPtrFactory<CefMenuManager> weak_ptr_factory_;
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  friend class CefMenuManagerExt;
+  CefMenuManagerExt menu_manager_ext_;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_MENU_MANAGER_H_
