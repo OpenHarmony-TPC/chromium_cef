@@ -1137,7 +1137,10 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
   if (loadUrlParams.load_type == content::NavigationController::LOAD_TYPE_HTTP_POST) {
       ArkWebDealWithPostData(post_data, &loadUrlParams);
   }
-  loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
+
+  loadUrlParams.https_upgrades_policy = allow_https_upgrade ?
+      content::HttpsUpgradesPolicy::TRY_UPGRADES :
+      content::HttpsUpgradesPolicy::DONT_UPGRADES_DUE_URL_TYPED_WITH_HTTP_SCHEME;
 
   loadUrlParams.transition_type = static_cast<ui::PageTransition>(
       ui::PAGE_TRANSITION_TYPED | ui::PAGE_TRANSITION_FROM_ADDRESS_BAR);
@@ -1145,8 +1148,6 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
     loadUrlParams.transition_type =
         static_cast<ui::PageTransition>(transition_type);
   }
-  // if url_typed_with_http_scheme == true, it means user dont want to upgrade.
-  loadUrlParams.url_typed_with_http_scheme = !allow_https_upgrade;
 
   if (auto web_contents = GetWebContents()) {
     LOG(DEBUG) << "load Url With Params";
