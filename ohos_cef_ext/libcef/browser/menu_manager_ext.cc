@@ -62,4 +62,8 @@ void CefMenuManagerExt::onContextMenuClosed() {
   contents_ = nullptr;
   link_followed_ = GURL();
 }
+
+raw_ptr<CefMenuManagerExt> CefMenuManager::GetMenuManagerExt() {
+  return &menu_manager_ext_;
+}
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
