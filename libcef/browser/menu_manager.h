@@ -46,7 +46,7 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   bool CreateContextMenu(const content::ContextMenuParams& params);
   void CancelContextMenu();
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  raw_ptr<CefMenuManagerExt> GetMenuManagerExt();
+  CefMenuManagerExt& GetMenuManagerExt();
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:
