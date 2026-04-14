@@ -91,13 +91,13 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   // Not owned by this class.
   raw_ptr<CefRunContextMenuCallback> custom_menu_callback_ = nullptr;
 
-  // Must be the last member.
-  base::WeakPtrFactory<CefMenuManager> weak_ptr_factory_;
-
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   friend class CefMenuManagerExt;
   CefMenuManagerExt menu_manager_ext_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+  // Must be the last member.
+  base::WeakPtrFactory<CefMenuManager> weak_ptr_factory_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_MENU_MANAGER_H_
