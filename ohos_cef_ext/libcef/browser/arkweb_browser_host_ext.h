@@ -213,6 +213,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool CanStoreWebArchive() override;
 #endif
   void ReloadOriginalUrl() override;
+  void ReloadOriginalUrlIgnoreCache() override;
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void StoreWebArchive(
       const CefString& base_name,

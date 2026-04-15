@@ -432,6 +432,11 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Set Focus webId
   ///
   virtual void SetFocusWebId(int32_t nweb_id) {}
+
+  ///
+  /// Reload the current page with original url.
+  ///
+  virtual void ReloadOriginalUrlIgnoreCache() {}
 };
 
 ///

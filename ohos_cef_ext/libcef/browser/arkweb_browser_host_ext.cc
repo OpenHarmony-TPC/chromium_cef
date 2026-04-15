@@ -3714,6 +3714,24 @@ void ArkWebBrowserHostExtImpl::ReloadOriginalUrl() {
   }
 }
 
+void ArkWebBrowserHostExtImpl::ReloadOriginalUrlIgnoreCache() {
+  auto callback =
+      base::BindOnce(&ArkWebBrowserHostExtImpl::ReloadOriginalUrlIgnoreCache, weak_ptr_factory_.GetWeakPtr());
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, std::move(callback));
+    return;
+  }
+
+  if (browser_info_->IsNavigationLocked(std::move(callback))) {
+    return;
+  }
+
+  auto wc = GetWebContents();
+  if (wc) {
+    wc->GetController().LoadOriginalRequestURL(true);
+  }
+}
+
 #if BUILDFLAG(ARKWEB_BFCACHE)
 void ArkWebBrowserHostExtImpl::SetBackForwardCacheOptions(int32_t size,
                                                           int32_t timeToLive) {
