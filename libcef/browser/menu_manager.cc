@@ -98,11 +98,9 @@ CefMenuManager::CefMenuManager(AlloyBrowserHostImpl* browser,
       browser_(browser),
       runner_(std::move(runner)),
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-      weak_ptr_factory_(this),
-      menu_manager_ext_(this) {
-#else
-      weak_ptr_factory_(this) {
+      menu_manager_ext_(this),
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+      weak_ptr_factory_(this) {
   DCHECK(web_contents());
   model_ = new CefMenuModelImpl(this, nullptr, false);
 }
