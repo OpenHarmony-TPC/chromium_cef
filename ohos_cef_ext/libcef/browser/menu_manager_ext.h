@@ -33,7 +33,7 @@ class CefMenuManagerExt {
 
     ~CefMenuManagerExt() = default;
 
-    void SetMenuItems(content::WebContents* contents,
+    void SetMenuItems(raw_ptr<content::WebContents> contents,
                       const content::ContextMenuParams& params);
     CefRefPtr<CefMenuModelImpl> GetContextMenuModel();
     void onContextMenuSelected(int command_id);
@@ -42,7 +42,7 @@ class CefMenuManagerExt {
   private:
     raw_ptr<CefMenuManager> menu_manager_;
     CefRefPtr<CefMenuModelImpl> model_;
-    content::WebContents* contents_;
+    raw_ptr<content::WebContents> contents_;
     GURL link_followed_;
 };
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)

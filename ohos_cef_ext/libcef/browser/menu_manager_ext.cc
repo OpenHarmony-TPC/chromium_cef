@@ -24,7 +24,7 @@
 CefMenuManagerExt::CefMenuManagerExt(raw_ptr<CefMenuManager> menu_manager)
     : menu_manager_(menu_manager) {}
 
-void CefMenuManagerExt::SetMenuItems(content::WebContents* contents,
+void CefMenuManagerExt::SetMenuItems(raw_ptr<content::WebContents> contents,
                                      const content::ContextMenuParams& params) {
   LOG(INFO) << "CefMenuManagerExt::SetMenuItems";
   contents_ = contents;
