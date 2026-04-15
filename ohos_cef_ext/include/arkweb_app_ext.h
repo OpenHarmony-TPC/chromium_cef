@@ -89,6 +89,14 @@ class CefReadDownloadDataCallback : public virtual CefBaseRefCounted {
 void CefReadDownloaData(const std::string& guid,
                         const int32_t read_size,
                         CefRefPtr<CefReadDownloadDataCallback> callback);
+
+///
+/// Download the file with user's input_params at |url| using
+/// CefDownloadHandler.
+///
+/*--cef()--*/
+void CefStartDownload(const CefString& url,
+                      const DownloadUrlParameters& input_params);
 #endif
 #endif  // BUILDFLAG(IS_ARKWEB)
 

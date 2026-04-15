@@ -177,6 +177,7 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 #include "ohos_cef_ext/libcef/browser/permission/alloy_access_request.h"
 #include "ohos_cef_ext/libcef/browser/permission/alloy_geolocation_access.h"
+#include "ohos_cef_ext/libcef/browser/useragent/arkweb_useragent_utils.h"
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "cef/ohos_cef_ext/libcef/browser/devtools/devtools_manager_delegate.h"
 #endif
@@ -4471,16 +4472,8 @@ void ArkWebBrowserHostExtImpl::StartDownloadWithParams(
 
   ParseDownloadUrlParamsIntoClass(input_params, params);
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  CefString custom_user_agent;
-  if (this->AsAlloyBrowserHostImpl()) {
-    custom_user_agent = this->AsAlloyBrowserHostImpl()->GetCustomUserAgent();
-  }
-  if (!custom_user_agent.empty()) {
-    params->add_request_header(net::HttpRequestHeaders::kUserAgent,
-                               custom_user_agent);
-  }
-#endif
+  params->add_request_header(net::HttpRequestHeaders::kUserAgent,
+                             arkweb_useragent_utils::GetUAStringForHost(gurl.host()));
 
   manager->DownloadUrl(std::move(params));
 }

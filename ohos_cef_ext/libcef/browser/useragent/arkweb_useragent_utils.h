@@ -11,6 +11,7 @@
 namespace arkweb_useragent_utils {
   void MaybeOverrideUserAgentOnStartNavigation(content::NavigationHandle* navigation);
   void MaybeOverrideUserAgentOnRedirectNavigation(content::NavigationHandle* navigation);
+  std::string GetUAStringForHost(const std::string& host);
 } // namespace arkweb_useragent_utils
 
 #endif // CEF_LIBCEF_BROWSER_ARKWEB_USERAGENT_UTILS_H_
