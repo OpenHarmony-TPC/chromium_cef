@@ -344,7 +344,7 @@ void CefStartDownload(const CefString& url,
  
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   params->add_request_header(net::HttpRequestHeaders::kUserAgent,
-                            arkweb_useragent_utils::GetUAStringForHost(gurl.host()));
+                             arkweb_useragent_utils::GetUAStringForHost(nullptr, gurl.host()));
 #endif
  
   manager->DownloadUrl(std::move(params));

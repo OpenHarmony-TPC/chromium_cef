@@ -219,9 +219,9 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 
-std::string GetUAStringForHost(const std::string& host) {
+std::string GetUAStringForHost(content::WebContents* web_contents, const std::string& host) {
   std::string user_agent;
-  MatchUserAgentFromWebContents(nullptr, host, user_agent);
+  MatchUserAgentFromWebContents(web_contents, host, user_agent);
   return user_agent;
 }
 

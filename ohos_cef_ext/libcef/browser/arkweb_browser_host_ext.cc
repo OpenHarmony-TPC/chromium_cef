@@ -4473,7 +4473,7 @@ void ArkWebBrowserHostExtImpl::StartDownloadWithParams(
   ParseDownloadUrlParamsIntoClass(input_params, params);
 
   params->add_request_header(net::HttpRequestHeaders::kUserAgent,
-                             arkweb_useragent_utils::GetUAStringForHost(gurl.host()));
+                             arkweb_useragent_utils::GetUAStringForHost(web_contents, gurl.host()));
 
   manager->DownloadUrl(std::move(params));
 }
