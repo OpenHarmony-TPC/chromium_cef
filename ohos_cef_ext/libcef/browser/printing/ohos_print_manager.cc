@@ -129,21 +129,21 @@ bool CheckPrintParams(const mojom::PrintParams* params) {
     return false;
   }
 
-  bool isValid = !params.content_size.IsEmpty() &&
-      !params.page_size.IsEmpty() &&
-      !params.printable_area.IsEmpty() && params.document_cookie &&
-      params.dpi.width() > kMinDpi && params.dpi.height() > kMinDpi &&
-      params.margin_top >= 0 && params.margin_left >= 0;
+  bool isValid = !params->content_size.IsEmpty() &&
+      !params->page_size.IsEmpty() &&
+      !params->printable_area.IsEmpty() && params->document_cookie &&
+      params->dpi.width() > kMinDpi && params->dpi.height() > kMinDpi &&
+      params->margin_top >= 0 && params->margin_left >= 0;
   if (!isValid) {
     LOG(ERROR) << "OhosPrintManager invalid params:" <<
-        " content_size.IsEmpty=" << params.content_size.IsEmpty() <<
-        " page_size.IsEmpty=" << params.page_size.IsEmpty() <<
-        " printable_area.IsEmpty=" << params.printable_area.IsEmpty() <<
-        " document_cookie=" << !!params.document_cookie <<
-        " dpi.width=" << params.dpi.width() <<
-        " dpi.height=" << params.dpi.height() <<
-        " margin_top=" << params.margin_top <<
-        " margin_left=" << params.margin_left;
+        " content_size.IsEmpty=" << params->content_size.IsEmpty() <<
+        " page_size.IsEmpty=" << params->page_size.IsEmpty() <<
+        " printable_area.IsEmpty=" << params->printable_area.IsEmpty() <<
+        " document_cookie=" << !!params->document_cookie <<
+        " dpi.width=" << params->dpi.width() <<
+        " dpi.height=" << params->dpi.height() <<
+        " margin_top=" << params->margin_top <<
+        " margin_left=" << params->margin_left;
   }
   return isValid;
 }
