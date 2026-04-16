@@ -97,7 +97,9 @@ CefMenuManager::CefMenuManager(AlloyBrowserHostImpl* browser,
     : content::WebContentsObserver(browser->web_contents()),
       browser_(browser),
       runner_(std::move(runner)),
-
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+      menu_manager_ext_(this),
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
       weak_ptr_factory_(this) {
   DCHECK(web_contents());
   model_ = new CefMenuModelImpl(this, nullptr, false);
@@ -136,10 +138,6 @@ bool CefMenuManager::CreateContextMenu(
     return true;
   }
 
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  params_.custom_items.clear();
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
   params_ = params;
   model_->Clear();
 
@@ -149,6 +147,12 @@ bool CefMenuManager::CreateContextMenu(
 
   // Create the default menu model.
   CreateDefaultModel();
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (params_.page_url.is_empty() ? params_.frame_url.spec().find("devtools://") != std::string::npos
+                                  : params_.page_url.spec().find("devtools://") != std::string::npos) {
+    menu_manager_ext_.SetMenuItems(web_contents(), params);
+  }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   bool custom_menu = false;
   DCHECK(!custom_menu_callback_);
