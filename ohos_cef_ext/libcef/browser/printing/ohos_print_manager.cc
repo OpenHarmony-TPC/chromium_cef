@@ -36,6 +36,7 @@
 #include "components/pdf/browser/pdf_frame_util.h"
 #include "components/printing/browser/print_manager_utils.h"
 #include "components/printing/common/print.mojom.h"
+#include "components/printing/common/print_params.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
@@ -120,6 +121,31 @@ int32_t ConvertUint32ToInt32(uint32_t value)
     return static_cast<int32_t>(value);
   }
   return -1;
+}
+
+bool CheckPrintParams(const mojom::PrintParams* params) {
+  if (!params) {
+    LOG(ERROR) << "OhosPrintManager invalid params: nullptr";
+    return false;
+  }
+
+  bool isValid = !params.content_size.IsEmpty() &&
+      !params.page_size.IsEmpty() &&
+      !params.printable_area.IsEmpty() && params.document_cookie &&
+      params.dpi.width() > kMinDpi && params.dpi.height() > kMinDpi &&
+      params.margin_top >= 0 && params.margin_left >= 0;
+  if (!isValid) {
+    LOG(ERROR) << "OhosPrintManager invalid params:" <<
+        " content_size.IsEmpty=" << params.content_size.IsEmpty() <<
+        " page_size.IsEmpty=" << params.page_size.IsEmpty() <<
+        " printable_area.IsEmpty=" << params.printable_area.IsEmpty() <<
+        " document_cookie=" << !!params.document_cookie <<
+        " dpi.width=" << params.dpi.width() <<
+        " dpi.height=" << params.dpi.height() <<
+        " margin_top=" << params.margin_top <<
+        " margin_left=" << params.margin_left;
+  }
+  return isValid;
 }
 
 }  // namespace
@@ -469,6 +495,12 @@ void OhosPrintManager::GetDefaultPrintSettings(
   }
   printing::RenderParamsFromPrintSettings(*settings_, params.get());
   params->document_cookie = cookie();
+
+  if (!CheckPrintParams(params.get())) {
+    LOG(ERROR) << "OhosPrintManager param check failed in default settings";
+    std::move(callback).Run(nullptr);
+    return;
+  }
   std::move(callback).Run(std::move(params));
 }
 
@@ -507,6 +539,12 @@ void OhosPrintManager::ScriptedPrint(
   printing::RenderParamsFromPrintSettings(*settings_, params->params.get());
   params->params->document_cookie = scripted_params->cookie;
   params->pages = settings_->ranges();
+
+  if (!CheckPrintParams(params->params.get())) {
+    LOG(ERROR) << "OhosPrintManager param check failed in scripted print";
+    std::move(callback).Run(nullptr);
+    return;
+  }
   std::move(callback).Run(std::move(params));
 }
 
