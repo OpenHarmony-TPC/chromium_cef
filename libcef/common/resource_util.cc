@@ -145,7 +145,7 @@ void OverrideUserDataDir(CefSettings* settings,
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
-  base::FilePath& user_data_dir =
+  const base::FilePath& user_data_dir =
       command_line->GetSwitchValuePath(switches::kUserDataDir);
   base::PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
 #else
