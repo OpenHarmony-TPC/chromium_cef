@@ -65,10 +65,10 @@ void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
   }
 }
 
-UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
-                                       const std::string& host,
-                                       std::string& user_agent) {
-  if (auto* web_contents = navigation->GetWebContents()) {
+UserAgentOverridePolicy MatchUserAgentFromWebContents(content::WebContents* web_contents,
+                                                      const std::string& host,
+                                                      std::string& user_agent) {
+  if (web_contents) {
     std::string custom_ua = web_contents->GetCustomUA();
     if (!custom_ua.empty()) {
       user_agent = custom_ua;
@@ -82,6 +82,12 @@ UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
           host, user_agent_no_nweb_ex);
   user_agent = user_agent_no_nweb_ex;
   return match_type_no_nweb_ex;
+}
+
+UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
+                                       const std::string& host,
+                                       std::string& user_agent) {
+  return MatchUserAgentFromWebContents(navigation->GetWebContents(), host, user_agent);
 }
 
 // Return the host of referrer_url only when the main frame
@@ -211,6 +217,12 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
       << " fromBFCache:" << navigation->IsServedFromBackForwardCache()
       << " url:" << url::LogUtils::ConvertUrlWithMask(current_url.spec());
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
+}
+
+std::string GetUAStringForHost(content::WebContents* web_contents, const std::string& host) {
+  std::string user_agent;
+  MatchUserAgentFromWebContents(web_contents, host, user_agent);
+  return user_agent;
 }
 
 }  // namespace arkweb_useragent_utils

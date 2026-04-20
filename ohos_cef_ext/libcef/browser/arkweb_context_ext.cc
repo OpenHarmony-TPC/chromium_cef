@@ -37,7 +37,10 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_download_resume_util.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_received_slice_helper_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/useragent/arkweb_useragent_utils.h"
 #include "components/download/public/common/download_utils.h"
+#include "components/embedder_support/user_agent_utils.h"
+#include "content/public/browser/download_request_utils.h"
 #endif
 
 void CefApplyHttpDns() {
@@ -191,4 +194,158 @@ void CefReadDownloaData(const std::string& guid,
     }
   }
   callback->OnReadDownloadDataDone(guid, nullptr);
+}
+
+void ParseDownloadUrlParamsIntoClass(
+    const DownloadUrlParameters& input_params,
+    std::unique_ptr<download::DownloadUrlParameters>& params) {
+  if (params != nullptr) {
+    // method
+    params->set_method(input_params.method);
+ 
+    // postBody
+    auto postBody = network::ResourceRequestBody::CreateFromBytes(
+        input_params.postBody.c_str(),
+        static_cast<size_t>(input_params.postBody.length()));
+    params->set_post_body(postBody);
+ 
+    // headers
+    std::string header_str = input_params.headers;
+    size_t current_pos = 0;
+    while (current_pos < header_str.size()) {
+      size_t line_end = header_str.find("\r\n", current_pos);
+      if (line_end == std::string::npos) {
+        line_end = header_str.size();
+      }
+      std::string line = header_str.substr(current_pos, line_end - current_pos);
+ 
+      if (line.empty()) {
+        current_pos = line_end + 2;
+        continue;
+      }
+ 
+      size_t colon_pos = line.find(':');
+      if (colon_pos == std::string::npos || colon_pos == 0 ||
+          colon_pos == line.size() - 1) {
+        current_pos = line_end + 2;
+        continue;
+      }
+ 
+      std::string header_name = line.substr(0, colon_pos);
+      std::string header_value = line.substr(colon_pos + 1);
+ 
+      base::TrimWhitespaceASCII(header_name, base::TRIM_ALL, &header_name);
+      base::TrimWhitespaceASCII(header_value, base::TRIM_ALL, &header_value);
+ 
+      if (!header_name.empty() && !header_value.empty() &&
+          net::HttpUtil::IsValidHeaderName(header_name)) {
+        params->add_request_header(header_name, header_value);
+        LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set valid header: " << header_name
+                   << " = " << header_value;
+      } else {
+        LOG(WARNING) << "[ARKWEB_DOWNLOADER] skip invalid header - name: '"
+                     << header_name << "', value: '" << header_value << "'";
+      }
+ 
+      current_pos = line_end + 2;
+    }
+ 
+    // referrer
+    params->set_referrer(GURL(input_params.referrer));
+ 
+    // referrerPolicy
+    params->set_referrer_policy(
+        static_cast<net::ReferrerPolicy>(input_params.referrerPolicy));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set referrerPolicy = "
+               << static_cast<int>(params->referrer_policy());
+ 
+    // referrerEncoding
+    params->set_referrer_encoding(input_params.referrerEncoding);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set referrerEncoding = "
+               << params->referrer_encoding();
+ 
+    // initiator
+    GURL initiator_gurl(input_params.initiator);
+    auto initiator_org = url::Origin::Create(initiator_gurl);
+    params->set_initiator(std::make_optional(initiator_org));
+ 
+    // preferCache
+    params->set_prefer_cache(input_params.preferCache);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set preferCache = "
+               << params->prefer_cache();
+ 
+    // filePath
+    params->set_file_path(base::FilePath(input_params.filePath));
+    auto file_path_str = params->file_path().value();
+    if (file_path_str.length() <= 2) {
+      file_path_str = "**";
+    } else {
+      file_path_str = file_path_str.substr(0, 2) + "**";
+    }
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set filePath = "
+               << file_path_str;
+ 
+    // suggestedName
+    std::string utf8_name = std::string(input_params.suggestedName);
+    std::u16string utf16_name = base::UTF8ToUTF16(utf8_name);
+    params->set_suggested_name(utf16_name);
+ 
+    // offset
+    params->set_offset(static_cast<int64_t>(input_params.offset));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set offset = " << params->offset();
+ 
+    // crossOriginRedirects
+    params->set_cross_origin_redirects(
+        static_cast<network::mojom::RedirectMode>(
+            input_params.crossOriginRedirects));
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] crossOriginRedirects = "
+               << params->cross_origin_redirects();
+ 
+    // transient
+    params->set_transient(input_params.transient);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set transient = "
+               << params->is_transient();
+ 
+    // guid
+    params->set_guid(input_params.guid);
+ 
+    // hasUserGesture
+    params->set_has_user_gesture(input_params.hasUserGesture);
+    LOG(DEBUG) << "[ARKWEB_DOWNLOADER] set hasUserGesture = "
+               << params->has_user_gesture();
+  }
+}
+ 
+void CefStartDownload(const CefString& url,
+                      const DownloadUrlParameters& input_params) {
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid()) {
+    return;
+  }
+ 
+  std::vector<CefBrowserContext*> browser_context_all =
+      CefBrowserContext::GetAll();
+  if (browser_context_all.size() <= 0) {
+    LOG(ERROR) << "browser contexts is empty, resume download failed";
+    return;
+  }
+  CefBrowserContext* context = browser_context_all[0];
+  content::BrowserContext* browser_context = context->AsBrowserContext();
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager) {
+    LOG(ERROR) << "download manager not exists, resume download failed";
+    return;
+  }
+ 
+  std::unique_ptr<download::DownloadUrlParameters> params =
+      std::make_unique<download::DownloadUrlParameters>(gurl, MISSING_TRAFFIC_ANNOTATION);
+ 
+  ParseDownloadUrlParamsIntoClass(input_params, params);
+ 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  params->add_request_header(net::HttpRequestHeaders::kUserAgent,
+                             arkweb_useragent_utils::GetUAStringForHost(nullptr, gurl.host()));
+#endif
+ 
+  manager->DownloadUrl(std::move(params));
 }
