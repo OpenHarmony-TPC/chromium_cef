@@ -123,8 +123,8 @@ int RunMain(int argc, char* argv[]) {
 
 // Program entry point function.
 // Entry point function for all processes.
-NO_STACK_PROTECTOR
 extern "C" {
+NO_STACK_PROTECTOR
 int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
   return client::RunMain(argc, argv);
 }

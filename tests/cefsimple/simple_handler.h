@@ -14,6 +14,7 @@ class SimpleHandler : public CefClient,
                       public CefLifeSpanHandler,
                       public CefLoadHandler,
                       public CefDownloadHandler,
+                      public CefKeyboardHandler,
                       public CefPermissionHandler {
  public:
   explicit SimpleHandler(bool is_alloy_style);
@@ -27,6 +28,9 @@ class SimpleHandler : public CefClient,
   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
   CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
+  virtual CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override {
+    return this;
+  }
   CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
     return this;
   }
@@ -58,6 +62,16 @@ class SimpleHandler : public CefClient,
   void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
                          CefRefPtr<CefDownloadItem> download_item,
                          CefRefPtr<CefDownloadItemCallback> callback) override;
+  // CefKeyboardHandler methods
+  virtual bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                             const CefKeyEvent& event,
+                             CefEventHandle os_event,
+                             bool* is_keyboard_shortcut) override;
+  virtual bool OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                          const CefKeyEvent& event,
+                          CefEventHandle os_event) override {
+    return false;
+  }
 
   // CefPermissionHandler methods
   bool OnRequestMediaAccessPermission(
