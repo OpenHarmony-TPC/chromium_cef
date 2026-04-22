@@ -86,6 +86,7 @@
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "chrome/browser/profiles/profile.h"
 #include "ohos_nweb/src/capi/nweb_devtools_message_handler.h"
+#include "chrome/browser/devtools/devtools_window.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace {
@@ -371,6 +372,7 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
 CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
       const CefString& source_id,
       const CefString& target_id,
+      const CefString& type,
       AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
@@ -393,10 +395,28 @@ CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
       std::move(frontend_destroyed_callback));
 
   if (devtools_frontend) {
+    devtools_frontend->show_toolbox_ = ext_opt.showToolbox;
     devtools_frontend->SetSourceTargetId(source_id, target_id);
+#if BUILDFLAG(ARKWEB_CRASHPAD)
+    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+#endif
 
     // Need to load the URL after creating the DevTools objects.
-    frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL(false, devtools_frontend->isTabTarget_, false));
+    GURL devtoolsUrl("");
+    if (type.ToString() == "Service workers" ||
+        type.ToString() == "Shared workers") {
+      devtoolsUrl = DevToolsWindow::GetDevToolsURL(nullptr,
+                                                   DevToolsWindow::kFrontendWorker,
+                                                   "",
+                                                   ext_opt.canDock,
+                                                   "",
+                                                   false,
+                                                   false);
+    } else {
+      devtoolsUrl = GURL(GetFrontendURL(
+          ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_));
+    }
+    frontend_browser->GetMainFrame()->LoadURL(devtoolsUrl.spec());
   }
   return devtools_frontend;
 }

@@ -69,6 +69,9 @@ class OffscreenContentsDelegate : public content::WebContentsDelegate {
       const std::u16string& message,
       int32_t line_no,
       const std::u16string& source_id) override;
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void OnRequestOpenDevTools(RequestOpenDevToolsParams* params) override;
+#endif // ARKWEB_DEVTOOLS
 
  private:
   base::WeakPtr<ExtensionHost> extension_host_;

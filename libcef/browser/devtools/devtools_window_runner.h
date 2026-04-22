@@ -50,6 +50,7 @@ class CefDevToolsWindowRunner final {
   static void StaticShowDevToolsWith(
       const CefString& source_id,
       const CefString& target_id,
+      const CefString& type,
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       const CefPoint& inspect_element_at,

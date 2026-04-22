@@ -73,6 +73,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
   static CefDevToolsFrontend* StaticShowWith(
     const CefString& source_id,
     const CefString& target_id,
+    const CefString& type,
     AlloyBrowserHostImpl* frontend_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
     content::WebContents* inspected_contents,
