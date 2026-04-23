@@ -295,11 +295,12 @@ CEF_BOOTSTRAP_EXPORT int RunConsoleMain(int argc,
 #else  // !(defined(OS_WIN) && defined(CEF_USE_BOOTSTRAP))
 
 // Program entry point function.
-NO_STACK_PROTECTOR
-#if defined(OSOHOS)
+#if defined(OS_OHOS)
 extern "C" {
+NO_STACK_PROTECTOR
 int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
 #else
+NO_STACK_PROTECTOR
 int main(int argc, char* argv[]) {
 #endif
 #if defined(OS_WIN) && defined(ARCH_CPU_32_BITS)
@@ -327,7 +328,7 @@ int main(int argc, char* argv[]) {
 
   return ::RunMain(argc, argv, sandbox_info);
 }
-#if defined(OSOHOS)
+#if defined(OS_OHOS)
 }
 #endif
 

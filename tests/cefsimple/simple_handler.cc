@@ -143,6 +143,14 @@ bool SimpleHandler::OnBeforeDownload(
     CefRefPtr<CefDownloadItem> download_item,
     const CefString& suggested_name,
     CefRefPtr<CefBeforeDownloadCallback> callback) {
+  CefString download_dir;
+  if (CefGetPath(PK_DIR_TEMP, download_dir) && !download_dir.empty()) {
+    std::string download_path =
+        download_dir.ToString() + "/" + suggested_name.ToString();
+    CefString file_path = CefString(download_path);
+    callback->Continue(file_path, true);
+    return true;
+  }
   return false;
 }
 
@@ -197,3 +205,59 @@ void SimpleHandler::PlatformShowWindow(CefRefPtr<CefBrowser> browser) {
   NOTIMPLEMENTED();
 }
 #endif
+
+bool SimpleHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                  const CefKeyEvent& event,
+                                  CefEventHandle os_event,
+                                  bool* is_keyboard_shortcut) {
+  CEF_REQUIRE_UI_THREAD();
+  // Ctrl+1 to Ctrl+5 only for test
+  if (browser && event.type == KEYEVENT_RAWKEYDOWN) {
+    switch (event.windows_key_code) {
+      case 0x7B:
+        if (browser->GetHost()) {
+          if (is_alloy_style_) {
+            LOG(WARNING) << "Only support with Chrome runtime";
+            break;
+          }
+          CefWindowInfo windowInfo;
+          CefBrowserSettings settings;
+          browser->GetHost()->ShowDevTools(windowInfo, this, settings,
+                                           CefPoint());
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  if (browser && event.modifiers & EVENTFLAG_CONTROL_DOWN) {
+    if (event.type == KEYEVENT_KEYUP) {
+      switch (event.windows_key_code) {
+        case '1': {
+          bool cangoback = browser->CanGoBack();
+          if (cangoback) {
+            browser->GoBack();
+          }
+        } break;
+        case '2': {
+          bool cangoforward = browser->CanGoForward();
+          if (cangoforward) {
+            browser->GoForward();
+          }
+        } break;
+        case '3':
+          browser->Reload();
+          break;
+        case '4':
+          browser->ReloadIgnoreCache();
+          break;
+        case '5':
+          browser->StopLoad();
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return false;
+}
