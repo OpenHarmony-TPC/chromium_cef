@@ -252,11 +252,12 @@ class CorsPreflightRequest : public network::mojom::TrustedHeaderClient {
                                                                   headers));
     } else {
       std::move(callback).Run(net::OK, headers, /*redirect_url=*/GURL());
+      OnDestroy();
     }
 #else
     std::move(callback).Run(net::OK, headers, /*redirect_url=*/GURL());
-#endif // ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT
     OnDestroy();
+#endif // ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT
   }
 
 #if BUILDFLAG(ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT)
@@ -281,6 +282,7 @@ class CorsPreflightRequest : public network::mojom::TrustedHeaderClient {
     } else {
       std::move(callback).Run(net::OK, cef_headers, /*redirect_url=*/GURL());
     }
+    OnDestroy();
   }
 #endif // ARKWEB_EXT_EXTENSIONS_HEADER_CLIENT
 
