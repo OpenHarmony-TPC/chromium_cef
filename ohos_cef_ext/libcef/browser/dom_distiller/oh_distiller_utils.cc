@@ -528,6 +528,9 @@ base::Value::Dict BuildPageContent(
     dict.Set(kCurrentPageUrl, page.url());
     AddBECEContent(g_statistics_content, {{kBECEHost, GURL(page.url()).host()}});
     AddBECEContent(g_statistics_content, {}, {true, GURL(page.url())});
+    AddBECEContent(g_statistics_content,
+                  {{kBECEDomDistillerJsVersion, base::NumberToString(
+                        nweb_ex::AlloyBrowserReaderModeConfig::GetInstance()->GetDomDistillerJsVersion())}});
   }
   LogDistillResult(dict);
   return dict;
