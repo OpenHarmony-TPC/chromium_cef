@@ -35,6 +35,7 @@ void CefDevToolsWindowRunner::OnStaticFrontEndDestroyed() {
 void CefDevToolsWindowRunner::StaticShowDevToolsWith(
     const CefString& source_id,
     const CefString& target_id,
+    const CefString& type,
     CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
     CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
     const CefPoint& inspect_element_at,
@@ -60,6 +61,7 @@ void CefDevToolsWindowRunner::StaticShowDevToolsWith(
     static_devtools_frontend_ = CefDevToolsFrontend::StaticShowWith(
         source_id,
         target_id,
+        type,
         alloy_frontend_browser.get(), std::move(devtools_message_handler),
         nullptr, inspect_element_at,
         base::BindOnce(&CefDevToolsWindowRunner::OnStaticFrontEndDestroyed),

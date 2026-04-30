@@ -19,6 +19,9 @@
 #include "cef/ohos_cef_ext/libcef/browser/permission/offscreen_permission_request_handler.h"
 #include "extensions/browser/extension_host.h"
 #include "ohos_nweb/src/nweb_impl.h"
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "cef/ohos_cef_ext/libcef/browser/devtools/arkweb/request_open_devtools_handler.h"
+#endif // ARKWEB_DEVTOOLS
 
 namespace extensions {
 
@@ -133,5 +136,11 @@ bool OffscreenContentsDelegate::DidAddMessageToConsole(
   // 扩展默认关闭consolelog
   return true;
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void OffscreenContentsDelegate::OnRequestOpenDevTools(RequestOpenDevToolsParams* params) {
+  RequestOpenDevToolsHandler::GetInstance()->OnRequestOpenDevTools(*params);
+}
+#endif // ARKWEB_DEVTOOLS
 
 }
