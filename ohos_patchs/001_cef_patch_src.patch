@@ -1,10 +1,10 @@
-From 643bc648761fbde522f116886127f82d52a5edc0 Mon Sep 17 00:00:00 2001
+From bdc5c50f333dcf0534c8f04b02b30d740eed52cb Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 5 Dec 2025 16:19:25 +0800
+Date: Fri, 24 Apr 2026 09:53:53 +0800
 Subject: [PATCH] 001_cef_patch_src.patch
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: I15dfab22cef70e80aa6cec24e3f3a94d5bf095e1
+Change-Id: I7296cd50ec0d72fc75ab72edd492f1776e4b104c
 ---
  .gn                                           |   2 +
  BUILD.gn                                      |   5 +
@@ -177,8 +177,10 @@ Change-Id: I15dfab22cef70e80aa6cec24e3f3a94d5bf095e1
  .../src/main/ets/ability/WebBaseAbility.ets   |   3 +-
  .../src/main/ets/adapter/AppWindowAdapter.ets |   2 +-
  .../src/main/ets/adapter/WebAppAdapter.ets    |   2 +-
+ .../main/ets/components/WebEmbeddedWindow.ets |   2 +-
+ .../ets/components/WebNodeHandleWindow.ets    |   2 +-
  .../src/main/ets/components/WebWindow.ets     |   2 +-
- ohos/build/build.sh                           |  13 +-
+ ohos/build/build.sh                           |  11 +-
  printing/printing_context.h                   |  11 ++
  printing/printing_context_linux.cc            |  12 +-
  .../linux/suid/client/setuid_sandbox_host.cc  |   2 +-
@@ -284,9 +286,16 @@ Change-Id: I15dfab22cef70e80aa6cec24e3f3a94d5bf095e1
  ui/views/win/hwnd_message_handler.cc          |  17 ++-
  ui/views/window/dialog_delegate.cc            |  22 +--
  ui/views/window/dialog_delegate.h             |  15 +-
- 278 files changed, 2255 insertions(+), 434 deletions(-)
+ 280 files changed, 2255 insertions(+), 436 deletions(-)
+ mode change 100755 => 100644 build/vs_toolchain.py
+ mode change 100755 => 100644 components/policy/tools/generate_policy_source.py
  create mode 100644 ohos/adapter/web_entry/cef/cef_loader.cc
  create mode 100644 ohos/adapter/web_entry/cef/cef_loader.h
+ mode change 100755 => 100644 ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
+ mode change 100755 => 100644 ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
+ mode change 100755 => 100644 ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
+ mode change 100755 => 100644 ui/ozone/platform/ohos/BUILD.gn
+ mode change 100755 => 100644 ui/ozone/platform/ohos/host/ohos_window.cc
 
 diff --git a/src/.gn b/src/.gn
 index 44a11ec90e..4c35b35a97 100644
@@ -325,7 +334,7 @@ index a6f506142f..ab60f9231e 100644
        deps += [ "//printing:printing_unittests" ]
      }
 diff --git a/src/base/BUILD.gn b/src/base/BUILD.gn
-index 8cfc6716dc..eee6ea733e 100644
+index 07698c9239..e5b4312d1b 100644
 --- a/src/base/BUILD.gn
 +++ b/src/base/BUILD.gn
 @@ -44,6 +44,7 @@ import("//build/rust/rust_static_library.gni")
@@ -336,7 +345,7 @@ index 8cfc6716dc..eee6ea733e 100644
  import("//testing/libfuzzer/fuzzer_test.gni")
  import("//testing/test.gni")
  
-@@ -1534,7 +1535,11 @@ component("base") {
+@@ -1537,7 +1538,11 @@ component("base") {
      "hash/md5_constexpr_internal.h",
      "hash/sha1.h",
    ]
@@ -349,7 +358,7 @@ index 8cfc6716dc..eee6ea733e 100644
      sources += [
        "hash/md5_nacl.cc",
        "hash/md5_nacl.h",
-@@ -1976,6 +1981,12 @@ component("base") {
+@@ -1979,6 +1984,12 @@ component("base") {
        defines += [ "COM_INIT_CHECK_HOOK_DISABLED" ]
      }
  
@@ -1204,7 +1213,9 @@ index 927fce24fc..834c84eae8 100644
      if (cpu != 'x64'):
        # x64 is default target CPU thus any other CPU requires a target set
 diff --git a/src/build/vs_toolchain.py b/src/build/vs_toolchain.py
-index f0b8bacf57..585e64876f 100755
+old mode 100755
+new mode 100644
+index f0b8bacf57..585e64876f
 --- a/src/build/vs_toolchain.py
 +++ b/src/build/vs_toolchain.py
 @@ -136,9 +136,16 @@ def SetEnvironmentAndGetRuntimeDllDirs():
@@ -1435,7 +1446,7 @@ index ba73101c05..f30ed2f3e9 100644
  }
  }  // namespace
 diff --git a/src/components/crash/core/app/crash_reporter_client.cc b/src/components/crash/core/app/crash_reporter_client.cc
-index c4535e6ad8..119d5c159b 100644
+index a2262a753d..ecccc64141 100644
 --- a/src/components/crash/core/app/crash_reporter_client.cc
 +++ b/src/components/crash/core/app/crash_reporter_client.cc
 @@ -70,7 +70,7 @@ bool CrashReporterClient::GetShouldDumpLargerDumps() {
@@ -1492,7 +1503,7 @@ index c4535e6ad8..119d5c159b 100644
  #if BUILDFLAG(IS_ANDROID)
  unsigned int CrashReporterClient::GetCrashDumpPercentage() {
    return 100;
-@@ -160,9 +184,4 @@ bool CrashReporterClient::ShouldMonitorCrashHandlerExpensively() {
+@@ -175,9 +199,4 @@ bool CrashReporterClient::ShouldMonitorCrashHandlerExpensively() {
    return false;
  }
  
@@ -1503,7 +1514,7 @@ index c4535e6ad8..119d5c159b 100644
 -
  }  // namespace crash_reporter
 diff --git a/src/components/crash/core/app/crash_reporter_client.h b/src/components/crash/core/app/crash_reporter_client.h
-index 4029756b90..7115468961 100644
+index 338c9f27af..1991f66051 100644
 --- a/src/components/crash/core/app/crash_reporter_client.h
 +++ b/src/components/crash/core/app/crash_reporter_client.h
 @@ -7,7 +7,9 @@
@@ -1541,7 +1552,7 @@ index 4029756b90..7115468961 100644
  #endif
  
    // The location where minidump files should be written. Returns true if
-@@ -178,6 +182,20 @@ class CrashReporterClient {
+@@ -185,6 +189,20 @@ class CrashReporterClient {
  
    // Returns true if breakpad should run in the given process type.
    virtual bool EnableBreakpadForProcess(const std::string& process_type);
@@ -1563,7 +1574,7 @@ index 4029756b90..7115468961 100644
  
  }  // namespace crash_reporter
 diff --git a/src/components/crash/core/app/crashpad.cc b/src/components/crash/core/app/crashpad.cc
-index a1061e2069..303864e809 100644
+index efda1ef201..04b1a0c908 100644
 --- a/src/components/crash/core/app/crashpad.cc
 +++ b/src/components/crash/core/app/crashpad.cc
 @@ -129,7 +129,8 @@ bool InitializeCrashpadImpl(bool initial_client,
@@ -1997,7 +2008,9 @@ index 426ed30d15..088fffc40f 100644
    friend class PersistentSystemProfileTest;
  
 diff --git a/src/components/policy/tools/generate_policy_source.py b/src/components/policy/tools/generate_policy_source.py
-index a8b01ff6fa..e9df3955b6 100755
+old mode 100755
+new mode 100644
+index a8b01ff6fa..e9df3955b6
 --- a/src/components/policy/tools/generate_policy_source.py
 +++ b/src/components/policy/tools/generate_policy_source.py
 @@ -466,6 +466,7 @@ def _WritePolicyConstantHeader(all_policies, policy_atomic_groups,
@@ -3007,10 +3020,10 @@ index 5695fd36ce..b109cefdee 100644
      // Guard against wrong tokens being passed accidentally.
      return nullptr;
 diff --git a/src/content/browser/renderer_host/navigation_request.cc b/src/content/browser/renderer_host/navigation_request.cc
-index da5dbafb11..6465ccd0b6 100644
+index 2b0f4a8127..46d5af613b 100644
 --- a/src/content/browser/renderer_host/navigation_request.cc
 +++ b/src/content/browser/renderer_host/navigation_request.cc
-@@ -8273,10 +8273,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
+@@ -8291,10 +8291,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
    bool use_opaque_origin =
        (sandbox_flags & network::mojom::WebSandboxFlags::kOrigin) ==
        network::mojom::WebSandboxFlags::kOrigin;
@@ -3034,7 +3047,7 @@ index da5dbafb11..6465ccd0b6 100644
    }
  
    return origin_and_debug_info;
-@@ -8384,11 +8396,20 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
+@@ -8402,11 +8414,20 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
        DetermineInitiatorRelationship(initiator_rfh,
                                       frame_tree_node_->current_frame_host()));
  
@@ -3058,10 +3071,10 @@ index da5dbafb11..6465ccd0b6 100644
    // If the target of this navigation will be rendered in a RenderFrameHost,
    // then verify that the chosen origin is allowed to be accessed from that
 diff --git a/src/content/browser/renderer_host/render_frame_host_impl.cc b/src/content/browser/renderer_host/render_frame_host_impl.cc
-index 45e7670876..8481aeac23 100644
+index 661c7f2feb..6395ca1840 100644
 --- a/src/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/src/content/browser/renderer_host/render_frame_host_impl.cc
-@@ -9202,6 +9202,16 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -9203,6 +9203,16 @@ void RenderFrameHostImpl::CreateNewWindow(
      return;
    }
  
@@ -3078,7 +3091,7 @@ index 45e7670876..8481aeac23 100644
    // Otherwise, consume user activation before we proceed. In particular, it is
    // important to do this before we return from the |opener_suppressed| case
    // below.
-@@ -11577,6 +11587,7 @@ void RenderFrameHostImpl::CommitNavigation(
+@@ -11578,6 +11588,7 @@ void RenderFrameHostImpl::CommitNavigation(
    auto browser_calc_origin_to_commit =
        navigation_request->GetOriginToCommitWithDebugInfo();
    if (!process_lock.is_error_page() && !is_mhtml_subframe &&
@@ -3380,7 +3393,7 @@ index 089ce71bc0..ff73cc0b41 100644
    DCHECK(context_params->cors_origin_access_list.empty())
        << "NetworkContextParams::cors_origin_access_list should be populated "
 diff --git a/src/content/browser/web_contents/web_contents_impl.cc b/src/content/browser/web_contents/web_contents_impl.cc
-index 2fb196d900..9737c92a3c 100644
+index eada0649e6..a1fdde4fa1 100644
 --- a/src/content/browser/web_contents/web_contents_impl.cc
 +++ b/src/content/browser/web_contents/web_contents_impl.cc
 @@ -3774,6 +3774,12 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
@@ -4799,7 +4812,7 @@ index 0000000000..90c0c8a635
 +
 +}  // namespace ohos::adapter::web_entry
 diff --git a/src/ohos/adapter/web_entry/web_entry.cc b/src/ohos/adapter/web_entry/web_entry.cc
-index 1ec2e71950..3ddb97a198 100644
+index 9a6ae11ed4..59f2b94928 100644
 --- a/src/ohos/adapter/web_entry/web_entry.cc
 +++ b/src/ohos/adapter/web_entry/web_entry.cc
 @@ -32,6 +32,7 @@
@@ -4952,7 +4965,9 @@ index ed6d17651a..1d48845df4 100644
    ]
  }
 diff --git a/src/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json b/src/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
-index 94086103bb..1981a21235 100755
+old mode 100755
+new mode 100644
+index 94086103bb..1981a21235
 --- a/src/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
 +++ b/src/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
 @@ -10,7 +10,7 @@
@@ -4978,7 +4993,9 @@ index 63b0293bd5..80c784a7ed 100644
            "abilityName": "EntryAbility",
            "parameters": {
 diff --git a/src/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json b/src/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
-index e81ac1b1e9..6b37ab8d8a 100755
+old mode 100755
+new mode 100644
+index e81ac1b1e9..6b37ab8d8a
 --- a/src/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
 +++ b/src/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
 @@ -10,7 +10,7 @@
@@ -4991,7 +5008,9 @@ index e81ac1b1e9..6b37ab8d8a 100755
      {
        "name": "OpenNewWindow_label",
 diff --git a/src/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json b/src/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
-index 4deca86845..c14a66f21e 100755
+old mode 100755
+new mode 100644
+index 4deca86845..c14a66f21e
 --- a/src/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
 +++ b/src/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
 @@ -10,7 +10,7 @@
@@ -5017,7 +5036,7 @@ index f131d9efab..f75e44ac53 100644
    "main": "",
    "version": "1.0.0",
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
-index 50a4e690d2..902f77e148 100644
+index d498ae12e1..b28637de3f 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
 @@ -49,7 +49,8 @@ export class WebBaseAbility extends UIAbility implements WebProxy {
@@ -5031,10 +5050,10 @@ index 50a4e690d2..902f77e148 100644
    protected useDarkMode: boolean = false;
    protected isStateless: boolean = false;
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
-index 92b1dc6150..dcb809a16b 100644
+index f9de0220f6..dd522c7ae0 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
-@@ -49,7 +49,7 @@ const TAG: string = 'AppWindow';
+@@ -53,7 +53,7 @@ const TAG: string = 'AppWindow';
  @injectable()
  export class AppWindowAdapter extends BaseAdapter {
    private abilityManager: AbilityManager;
@@ -5056,11 +5075,37 @@ index ac3b56264d..7edd226b15 100644
        moduleName: this.moduleName,
        abilityName: "EntryAbility",
        parameters: {
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebEmbeddedWindow.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebEmbeddedWindow.ets
+index 2f9db038f9..132a42e44e 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebEmbeddedWindow.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebEmbeddedWindow.ets
+@@ -177,7 +177,7 @@ export struct WebEmbeddedWindow {
+   }
+ 
+   private buildArgs(): string[] {
+-    let default_uri = '';
++    let default_uri = '--url=https://ams.haitaibrowser.com:8000/ohcef/ohindex.html';
+     if (this.startUri.length !== 0) {
+       default_uri = this.startUri;
+     }
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
+index 0471ba8d8f..8420bfc4d2 100755
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
+@@ -99,7 +99,7 @@ export struct WebNodeHandleWindow {
+   }
+  
+   private buildArgs(): string[] {
+-    let default_uri = '';
++    let default_uri = '--url=https://ams.haitaibrowser.com:8000/ohcef/ohindex.html';
+     if (this.startUri.length !== 0) {
+       default_uri = this.startUri;
+     }
 diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
-index 88b9c74d28..676aa2c4b8 100644
+index 33e2f5190e..e014afe9b9 100644
 --- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
 +++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
-@@ -182,7 +182,7 @@ export struct WebWindow {
+@@ -186,7 +186,7 @@ export struct WebWindow {
    }
  
    private buildArgs(): string[] {
@@ -5070,7 +5115,7 @@ index 88b9c74d28..676aa2c4b8 100644
        default_uri = this.startUri;
      }
 diff --git a/src/ohos/build/build.sh b/src/ohos/build/build.sh
-index fec93c9082..1cb287120e 100755
+index 2dd5f939e6..d08a2a7350 100755
 --- a/src/ohos/build/build.sh
 +++ b/src/ohos/build/build.sh
 @@ -20,6 +20,7 @@ ROOT_DIR="${CUR_DIR%/src*}""/src"
@@ -5081,18 +5126,16 @@ index fec93c9082..1cb287120e 100755
  TEXT_BOLD="\033[1m"
  TEXT_NORMAL="\033[0m"
  
-@@ -58,6 +59,10 @@ buildargs="
-   llvm_ohos_mainline=true
+@@ -59,6 +60,8 @@ buildargs="
    rustc_version=\"bca5fdebe0e539d123f33df5f2149d5976392e76-1-llvmorg-20-init-9764-gb81d8e90\"
    rust_sysroot_absolute=\"//ohos_sdk/rust-toolchain\"
-+  
-+# cef args
+   enable_crashpad=true
 +  use_partition_alloc_as_malloc=false
 +  enable_backup_ref_ptr_support=false
    "
  #Add build args end
  
-@@ -75,7 +80,7 @@ buildarg_cpu="target_cpu=\"arm64\""
+@@ -76,7 +79,7 @@ buildarg_cpu="target_cpu=\"arm64\""
  buildarg_musl="use_musl=true"
  build_dir="out/musl_64/"
  build_product_name="product_name=\"all\""
@@ -5101,7 +5144,7 @@ index fec93c9082..1cb287120e 100755
  build_output=""
  build_asan=0
  build_isolated_level=0
-@@ -165,6 +170,12 @@ case "${build_target}" in
+@@ -171,6 +174,12 @@ case "${build_target}" in
      ohos_build_target=\"chromium\"
      "
      ;;
@@ -6302,10 +6345,12 @@ index 5414f048a4..1a289015e7 100644
  #endif
  
 diff --git a/src/ui/ozone/platform/ohos/BUILD.gn b/src/ui/ozone/platform/ohos/BUILD.gn
-index 9ea07a1458..44c310f0c7 100755
+old mode 100755
+new mode 100644
+index 6b5c62fe47..f5563e949b
 --- a/src/ui/ozone/platform/ohos/BUILD.gn
 +++ b/src/ui/ozone/platform/ohos/BUILD.gn
-@@ -105,6 +105,7 @@ source_set("test_support") {
+@@ -109,6 +109,7 @@ source_set("test_support") {
    ]
  
    deps = [
@@ -6314,10 +6359,12 @@ index 9ea07a1458..44c310f0c7 100755
    ]
  }
 diff --git a/src/ui/ozone/platform/ohos/host/ohos_window.cc b/src/ui/ozone/platform/ohos/host/ohos_window.cc
-index 71d2b1e400..ca89357494 100755
+old mode 100755
+new mode 100644
+index a0e1dc7b06..ed18f7c54c
 --- a/src/ui/ozone/platform/ohos/host/ohos_window.cc
 +++ b/src/ui/ozone/platform/ohos/host/ohos_window.cc
-@@ -221,7 +221,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
+@@ -235,7 +235,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
  }
  
  void OhosWindow::SetTitle(const std::u16string& title) {
@@ -7401,7 +7448,7 @@ index 590f97eee1..3980e814e8 100644
    base::WeakPtrFactory<DesktopWindowTreeHostLinux> weak_factory_{this};
  };
 diff --git a/src/ui/views/widget/desktop_aura/desktop_window_tree_host_platform.cc b/src/ui/views/widget/desktop_aura/desktop_window_tree_host_platform.cc
-index eb57537b73..e7c4137f56 100644
+index 3ebcdb46dc..2d5ef7fbea 100644
 --- a/src/ui/views/widget/desktop_aura/desktop_window_tree_host_platform.cc
 +++ b/src/ui/views/widget/desktop_aura/desktop_window_tree_host_platform.cc
 @@ -277,8 +277,8 @@ void DesktopWindowTreeHostPlatform::Init(const Widget::InitParams& params) {

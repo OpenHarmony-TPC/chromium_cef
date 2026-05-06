@@ -1,9 +1,9 @@
-From c376abff2cbc51a4719b3ace0448665e4d21613e Mon Sep 17 00:00:00 2001
+From 76c06f1fe13584552d0d145cd839a870a6a1a0df Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 5 Dec 2025 15:39:27 +0800
+Date: Fri, 24 Apr 2026 10:04:05 +0800
 Subject: [PATCH] 001_cef_patch_third_party.patch
 
-Change-Id: Ifaf3fbda16f7f853b8e05511ba4a433cb8c69d70
+Change-Id: I3138e842e3bbd4e264de807be1b60cb0d02a60ea
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
 ---
  blink/public/platform/platform.h              |  5 ++
@@ -72,7 +72,7 @@ index 083af135d..799ef161a 100644
    // Cancels and hides the current popup (datetime, select...) if any.
    virtual void CancelPagePopup() = 0;
 diff --git a/src/third_party/blink/renderer/controller/BUILD.gn b/src/third_party/blink/renderer/controller/BUILD.gn
-index 624070f85..2f0a5e650 100644
+index fa6ae7f96..992123f14 100644
 --- a/src/third_party/blink/renderer/controller/BUILD.gn
 +++ b/src/third_party/blink/renderer/controller/BUILD.gn
 @@ -38,6 +38,7 @@ component("controller") {
@@ -91,7 +91,7 @@ index 624070f85..2f0a5e650 100644
 +    "//cef/libcef/renderer/blink_glue.h",
    ]
  
-   if (is_linux || is_chromeos) {
+   if (is_linux || is_chromeos || is_ohos) {
 diff --git a/src/third_party/blink/renderer/core/exported/web_element.cc b/src/third_party/blink/renderer/core/exported/web_element.cc
 index def4b446f..d48998241 100644
 --- a/src/third_party/blink/renderer/core/exported/web_element.cc
@@ -214,15 +214,15 @@ index 53fad78fa..bd2833747 100644
    }
  
 diff --git a/src/third_party/blink/renderer/platform/heap/thread_local.h b/src/third_party/blink/renderer/platform/heap/thread_local.h
-index a672ba785..13d794dc1 100644
+index 7fce2b4a5..8ecb17da7 100644
 --- a/src/third_party/blink/renderer/platform/heap/thread_local.h
 +++ b/src/third_party/blink/renderer/platform/heap/thread_local.h
-@@ -37,7 +37,7 @@
- #if BLINK_HEAP_HIDE_THREAD_LOCAL_IN_LIBRARY
- #define BLINK_HEAP_THREAD_LOCAL_MODEL "local-dynamic"
+@@ -39,7 +39,7 @@
  #else
--#if BUILDFLAG(IS_WIN)
-+#if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
+ #if defined(HWADDRESS_SANITIZER)
+ #define BLINK_HEAP_THREAD_LOCAL_MODEL "local-dynamic"
+-#elif BUILDFLAG(IS_WIN)
++#elif BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
  #define BLINK_HEAP_THREAD_LOCAL_MODEL "initial-exec"
  #elif BUILDFLAG(IS_ANDROID)
  #define BLINK_HEAP_THREAD_LOCAL_MODEL "local-dynamic"
@@ -476,7 +476,7 @@ index 22bb26e31..87c80604e 100644
    //! \brief Calls ProcessPendingReports() in response to ReportPending() having
    //!     been called on any thread, as well as periodically on a timer.
 diff --git a/src/third_party/crashpad/crashpad/handler/handler_main.cc b/src/third_party/crashpad/crashpad/handler/handler_main.cc
-index 7e23274e2..24e1c93be 100644
+index d280e8ae9..9e9af6172 100644
 --- a/src/third_party/crashpad/crashpad/handler/handler_main.cc
 +++ b/src/third_party/crashpad/crashpad/handler/handler_main.cc
 @@ -39,6 +39,7 @@
@@ -498,7 +498,7 @@ index 7e23274e2..24e1c93be 100644
  namespace crashpad {
  
  namespace {
-@@ -251,6 +256,9 @@ struct Options {
+@@ -254,6 +259,9 @@ struct Options {
    bool periodic_tasks;
    bool rate_limit;
    bool upload_gzip;
@@ -508,7 +508,7 @@ index 7e23274e2..24e1c93be 100644
  #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
    bool use_cros_crash_reporter = false;
    base::FilePath minidump_dir_for_tests;
-@@ -629,6 +637,9 @@ int HandlerMain(int argc,
+@@ -635,6 +643,9 @@ int HandlerMain(int argc,
      kOptionTraceParentWithException,
  #endif
      kOptionURL,
@@ -518,8 +518,8 @@ index 7e23274e2..24e1c93be 100644
  #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
      kOptionUseCrosCrashReporter,
      kOptionMinidumpDirForTests,
-@@ -731,6 +742,9 @@ int HandlerMain(int argc,
- #endif  // BUILDFLAG(IS_ANDROID)
+@@ -743,6 +754,9 @@ int HandlerMain(int argc,
+ #endif
      {"help", no_argument, nullptr, kOptionHelp},
      {"version", no_argument, nullptr, kOptionVersion},
 +    {"max-uploads", required_argument, nullptr, kOptionMaxUploads},
@@ -528,7 +528,7 @@ index 7e23274e2..24e1c93be 100644
      {nullptr, 0, nullptr, 0},
    };
  
-@@ -891,6 +905,27 @@ int HandlerMain(int argc,
+@@ -906,6 +920,27 @@ int HandlerMain(int argc,
          options.url = optarg;
          break;
        }
@@ -556,7 +556,7 @@ index 7e23274e2..24e1c93be 100644
  #if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_CHROMEOS_LACROS)
        case kOptionUseCrosCrashReporter: {
          options.use_cros_crash_reporter = true;
-@@ -1041,11 +1076,20 @@ int HandlerMain(int argc,
+@@ -1065,11 +1100,20 @@ int HandlerMain(int argc,
      upload_thread_options.upload_gzip = options.upload_gzip;
      upload_thread_options.watch_pending_reports = options.periodic_tasks;
  
@@ -577,7 +577,7 @@ index 7e23274e2..24e1c93be 100644
      upload_thread.Get()->Start();
    }
  
-@@ -1118,7 +1162,8 @@ int HandlerMain(int argc,
+@@ -1152,7 +1196,8 @@ int HandlerMain(int argc,
    ScopedStoppable prune_thread;
    if (options.periodic_tasks) {
      prune_thread.Reset(new PruneCrashReportThread(
