@@ -185,7 +185,7 @@ std::string SbBlockPage::GetUrlTrustListErrorHTMLContents() {
 }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-bool SbBlockPage::IsUrlTrustListBlocked() {
+bool SbBlockPage::IsUrlTrustListBlocked() const {
   return block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST;
 }
 #endif
