@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "cef",
+        "License": "BSD-3-Clause",
+        "License File": "LICENSE.txt",
+        "Version Number": "144.0.7559.59",
+        "Owner": "huamengzheng@huawei.com",
+        "Upstream URL": "https://github.com/chromiumembedded/cef",
+        "Description": "Chromium Embedded Framework，基于Chromium的开源框架，用于嵌入浏览器控件"
+    }
+]
