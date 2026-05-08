@@ -99,17 +99,19 @@ constexpr int kMaxLogLineLength = 1024;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 static const char kTitleFormat[] = "DevTools - %s";
-static std::string GetFrontendURL(bool can_dock, bool is_tab_target, bool show_toolbox) {
+static std::string GetFrontendURL(bool can_dock, bool is_tab_target,
+                                  bool show_toolbox, const std::string& panel = "") {
   LOG(DEBUG) << "GetFrontendURL can_dock: " << can_dock
              << ", is_tab_target: " << is_tab_target
              << ", show_toolbox: " << show_toolbox;
   return base::StringPrintf(
-      "%s://%s/devtools_app.html?can_dock=%s%s%s",
+      "%s://%s/devtools_app.html?can_dock=%s%s%s%s",
       content::kChromeDevToolsScheme,
       scheme::kChromeDevToolsHost,
       can_dock ? "true" : "false",
       is_tab_target ? "&targetType=tab" : "",
-      show_toolbox ? "&showToolbox=true" : "");
+      show_toolbox ? "&showToolbox=true" : "",
+      !panel.empty() ? "&panel=" + panel : "");
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
@@ -403,18 +405,23 @@ CefDevToolsFrontend* CefDevToolsFrontend::StaticShowWith(
 
     // Need to load the URL after creating the DevTools objects.
     GURL devtoolsUrl("");
+    std::string panel = "";
+    if (ext_opt.event.has_value()) {
+        panel = ext_opt.event->panel;
+    }
     if (type.ToString() == "Service workers" ||
         type.ToString() == "Shared workers") {
       devtoolsUrl = DevToolsWindow::GetDevToolsURL(nullptr,
                                                    DevToolsWindow::kFrontendWorker,
                                                    "",
                                                    ext_opt.canDock,
-                                                   "",
+                                                   panel,
                                                    false,
                                                    false);
     } else {
       devtoolsUrl = GURL(GetFrontendURL(
-          ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_));
+          ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_, panel));
+
     }
     frontend_browser->GetMainFrame()->LoadURL(devtoolsUrl.spec());
   }
@@ -475,9 +482,13 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWithByPb(
       std::move(frontend_destroyed_callback));
   devtools_frontend->show_toolbox_ = ext_opt.showToolbox;
 
+  std::string panel = "";
+  if (ext_opt.event.has_value()) {
+    panel = ext_opt.event->panel;
+  }
   // Need to load the URL after creating the DevTools objects.
   frontend_browser->GetMainFrame()->LoadURL(
-    GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_));
+    GetFrontendURL(ext_opt.canDock, devtools_frontend->isTabTarget_, devtools_frontend->show_toolbox_, panel));
 
   return devtools_frontend;
 }
