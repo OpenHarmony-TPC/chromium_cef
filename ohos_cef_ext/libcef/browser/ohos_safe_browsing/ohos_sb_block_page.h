@@ -49,6 +49,10 @@ class SbBlockPage : public SecurityInterstitialPage {
 
   std::string GetUrlTrustListErrorHTMLContents();
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  bool IsUrlTrustListBlocked() const override;
+#endif
+
  private:
   static std::unique_ptr<MetricsHelper> GetMetricsHelper(const GURL& url);
 

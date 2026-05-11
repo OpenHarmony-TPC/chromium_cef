@@ -184,4 +184,10 @@ std::string SbBlockPage::GetUrlTrustListErrorHTMLContents() {
   return webui::GetI18nTemplateHtml(html, load_time_data);
 }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+bool SbBlockPage::IsUrlTrustListBlocked() const {
+  return block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST;
+}
+#endif
+
 }  // namespace ohos_safe_browsing
