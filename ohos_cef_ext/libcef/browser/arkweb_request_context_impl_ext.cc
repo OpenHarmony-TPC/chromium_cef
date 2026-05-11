@@ -152,6 +152,16 @@ void ArkWebRequestContextImplExt::ClearClientAuthenticationCache(
           &ArkWebRequestContextImplExt::ClearClientAuthenticationCacheInternal, this,
           callback));
 }
+
+void ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCache(
+    CefRefPtr<CefCompletionCallback> callback) {
+  LOG(INFO) << "ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCache";
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(
+          &ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCacheInternal, this,
+          callback));
+}
 #endif  // ARKWEB_CERT_AUTHENTICATION
 
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
@@ -173,6 +183,27 @@ void ArkWebRequestContextImplExt::ClearClientAuthenticationCacheInternal(
         FROM_HERE, base::BindOnce(&NotifyClientCertificatesChanged));
   }
 
+  if (callback) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefCompletionCallback::OnComplete, callback));
+  }
+}
+
+void ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCacheInternal(
+    CefRefPtr<CefCompletionCallback> callback,
+    CefBrowserContext::Getter browser_context_getter) {
+  LOG(INFO) << "ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCacheInternal";
+  auto cef_browser_context = browser_context_getter.Run();
+  if (!cef_browser_context) {
+    LOG(ERROR) << "cef_browser_context is nullptr";
+    return;
+  }
+ 
+  network::mojom::NetworkContext* network_context = cef_browser_context->GetNetworkContext();
+  if (network_context) {
+    network_context->ClearClientAuthCache();
+  }
+ 
   if (callback) {
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefCompletionCallback::OnComplete, callback));
