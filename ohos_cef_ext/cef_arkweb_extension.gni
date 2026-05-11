@@ -50,6 +50,8 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/arkweb_download_manager_delegate_ext.h",
   "//cef/ohos_cef_ext/libcef/browser/arkweb_download_resume_util.cc",
   "//cef/ohos_cef_ext/libcef/browser/arkweb_download_resume_util.h",
+  "//cef/ohos_cef_ext/libcef/browser/arkweb_download_url_parameters_util.cc",
+  "//cef/ohos_cef_ext/libcef/browser/arkweb_download_url_parameters_util.h",
   "//cef/ohos_cef_ext/libcef/browser/arkweb_received_slice_helper_ext.cc",
   "//cef/ohos_cef_ext/libcef/browser/arkweb_received_slice_helper_ext.h",
   "//cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.cc",
