@@ -15,10 +15,13 @@
  
 #ifndef OHOS_CEF_EXT_LIBCEF_COMMON_CEF_OPEN_DEVTOOLS_EXT_OPT_H_
 #define OHOS_CEF_EXT_LIBCEF_COMMON_CEF_OPEN_DEVTOOLS_EXT_OPT_H_
- 
+
+#include "arkweb/ohos_nweb/src/capi/nweb_devtools_message_handler.h"
+
 struct CefOpenDevToolsExtOpt {
   bool canDock = false;
   bool showToolbox = false;
+  std::optional<RequestOpenDevToolsParams> event;
 };
- 
+
 #endif // OHOS_CEF_EXT_LIBCEF_COMMON_CEF_OPEN_DEVTOOLS_EXT_OPT_H_
