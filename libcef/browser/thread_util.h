@@ -110,10 +110,14 @@ auto CEF_TASK_RUNNER() {
  private:                                               \
   CefRefCount ref_count_
 
+#ifndef IMPLEMENT_REFCOUNTING_DELETE_ON_UIT
 #define IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(ClassName) \
   IMPLEMENT_REFCOUNTING_EX(ClassName, content::BrowserThread::DeleteOnUIThread)
+#endif
 
+#ifndef IMPLEMENT_REFCOUNTING_DELETE_ON_IOT
 #define IMPLEMENT_REFCOUNTING_DELETE_ON_IOT(ClassName) \
   IMPLEMENT_REFCOUNTING_EX(ClassName, content::BrowserThread::DeleteOnIOThread)
+#endif
 
 #endif  // CEF_LIBCEF_BROWSER_THREAD_UTIL_H_
