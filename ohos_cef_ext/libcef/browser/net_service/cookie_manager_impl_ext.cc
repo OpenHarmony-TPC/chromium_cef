@@ -49,6 +49,7 @@
 #if BUILDFLAG(ARKWEB_COOKIE)
 #include "arkweb/ohos_nweb/src/nweb_impl.h"
 #include "cef/ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
+#include "chrome/common/chrome_switches.h"
 #endif // BUILDFLAG(ARKWEB_COOKIE)
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
@@ -599,15 +600,19 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
   cookie_store_backend_thread_.Start();
   cookie_store_task_runner_ = cookie_store_task_thread_.task_runner();
 
+  base::CommandLine *command_line = base::CommandLine::ForCurrentProcess();
   if (base::PathService::Get(chrome::DIR_USER_DATA, &cookie_store_path_)) {
     cookie_store_path_ = cookie_store_path_.Append("Cookies");
+  } else if (command_line) {
+    cookie_store_path_ =
+        command_line->GetSwitchValuePath(switches::kUserDataDir)
+            .Append("Cookies");
   } else {
     base::PathService::Get(base::DIR_CACHE, &cookie_store_path_);
     cookie_store_path_ = cookie_store_path_.Append("Cookies");
   }
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
-  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
   cmd_value_ = false;
   if (command_line) {
     cmd_value_ = command_line->HasSwitch(switches::kEnableReportCookieMonsterClient);
