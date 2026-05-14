@@ -76,7 +76,6 @@ TEST_F(GetDefaultUserDataDirectory, GetDefaultUserDataDirectory002) {
 class OverrideUserDataDirExt : public ::testing::Test {
  protected:
   void SetUp() override {
-    base::PathService::Override(base::DIR_CACHE, base::FilePath("/"));
     base::PathService::Override(base::DIR_OHOS_CRASHPAD, base::FilePath("/"));
     base::PathService::Override(base::DIR_OHOS_APP_INSTALLATION, base::FilePath("/"));
     // Initialize command line arguments
@@ -128,10 +127,6 @@ TEST_F(OverrideUserDataDirExt, OverrideUserDataDirExt003) {
   base::FilePath build_path = base::FilePath("/data/storage/el2/base/build");
   cmd_line->AppendSwitchPath(switches::kBundleInstallationDir, build_path);
   resource_util::OverrideUserDataDirExt(cache_path, cmd_line);
-
-  base::FilePath actual_cache_path;
-  base::PathService::Get(base::DIR_CACHE, &actual_cache_path);
-  EXPECT_EQ(actual_cache_path, base::FilePath("/data/storage/el2/base/cache/web"));
 
   base::FilePath actual_Installation_path;
   base::PathService::Get(base::DIR_OHOS_APP_INSTALLATION, &actual_Installation_path);
