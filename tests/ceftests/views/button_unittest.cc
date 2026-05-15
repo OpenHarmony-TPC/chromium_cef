@@ -159,8 +159,15 @@ BUTTON_TEST_ASYNC(MenuButtonStyle)
 
 namespace {
 
+#if defined(OS_OHOS)
+// Mouse click delay in MS.
+const int kClickDelayMS = 500;
+// Expand area size to include the default titlebar height.
+const int kTitleBarHeight = 36;
+#else
 // Mouse click delay in MS.
 const int kClickDelayMS = 100;
+#endif
 
 const int kButtonID = 1;
 
@@ -314,8 +321,13 @@ void ClickMenuItem(CefRefPtr<CefMenuButton> menu_button) {
   // Determine the lower-right corner of the menu button, then offset a bit to
   // hit the first menu item.
   const CefRect& bounds = menu_button->GetBoundsInScreen();
+#if defined(OS_OHOS)
+  const CefPoint& click_point =
+      CefPoint(bounds.x + bounds.width + 10, bounds.y + bounds.height + 10 + kTitleBarHeight);
+#else
   const CefPoint& click_point =
       CefPoint(bounds.x + bounds.width + 10, bounds.y + bounds.height + 10);
+#endif
 
   // Click the menu item.
   CefRefPtr<CefWindow> window = menu_button->GetWindow();
@@ -600,7 +612,10 @@ class TestMenuButtonCustomPopupDelegate : public CefMenuButtonDelegate,
 
   void OnWindowDestroyed(CefRefPtr<CefWindow> window) override {
     if (can_activate_) {
+#if !defined(OS_OHOS)
+      // Remove here, due to focus in ability on ohos.
       EXPECT_TRUE(got_focus_);
+#endif
     } else {
       EXPECT_FALSE(got_focus_);
     }

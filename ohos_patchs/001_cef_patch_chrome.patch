@@ -1,10 +1,10 @@
-From 746d0c77db4ae7d5d13499f87a27ecdbf6a08bf9 Mon Sep 17 00:00:00 2001
+From de8e5c94f4156ec0299c3176fa0ab614c87200da Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 5 Dec 2025 15:42:40 +0800
+Date: Thu, 14 May 2026 11:38:11 +0800
 Subject: [PATCH] 001_cef_patch_chrome.patch
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: I66515aba38923907f407c9e578007705d0804f9d
+Change-Id: I9d62a48de15d3a0a47bd50de2996587b9cb077cd
 ---
  app/chrome_main_delegate.cc                   |  31 +++-
  app/chrome_main_delegate.h                    |   9 +-
@@ -362,7 +362,7 @@ index 8f5c477ac..ff2f90a8b 100644
  
      base::PathService::OverrideAndCreateIfNeeded(
 diff --git a/src/chrome/browser/BUILD.gn b/src/chrome/browser/BUILD.gn
-index ecdcd3699..797f411b0 100644
+index 69f665ba6..869554894 100644
 --- a/src/chrome/browser/BUILD.gn
 +++ b/src/chrome/browser/BUILD.gn
 @@ -12,6 +12,7 @@ import("//build/config/compiler/pgo/pgo.gni")
@@ -373,7 +373,7 @@ index ecdcd3699..797f411b0 100644
  import("//chrome/browser/buildflags.gni")
  import("//chrome/browser/downgrade/buildflags.gni")
  import("//chrome/browser/request_header_integrity/buildflags.gni")
-@@ -1851,6 +1852,7 @@ static_library("browser") {
+@@ -1853,6 +1854,7 @@ static_library("browser") {
      "//build/config/chromebox_for_meetings:buildflags",
      "//build/config/compiler:compiler_buildflags",
      "//cc",
@@ -381,7 +381,7 @@ index ecdcd3699..797f411b0 100644
      "//chrome:extra_resources",
      "//chrome:resources",
      "//chrome:strings",
-@@ -2524,6 +2526,10 @@ static_library("browser") {
+@@ -2526,6 +2528,10 @@ static_library("browser") {
      sources += [ "net/net_error_diagnostics_dialog_stub.cc" ]
    }
  
@@ -640,7 +640,7 @@ index e26e3625c..c0d4a9560 100644
 +#endif
  }
 diff --git a/src/chrome/browser/chrome_content_browser_client.cc b/src/chrome/browser/chrome_content_browser_client.cc
-index ff5b36469..0fbd7d386 100644
+index 0e0aa88b8..210950ef1 100644
 --- a/src/chrome/browser/chrome_content_browser_client.cc
 +++ b/src/chrome/browser/chrome_content_browser_client.cc
 @@ -48,6 +48,7 @@
@@ -651,7 +651,7 @@ index ff5b36469..0fbd7d386 100644
  #include "chrome/browser/after_startup_task_utils.h"
  #include "chrome/browser/ai/ai_manager_keyed_service_factory.h"
  #include "chrome/browser/app_mode/app_mode_utils.h"
-@@ -1530,6 +1531,8 @@ ChromeContentBrowserClient::GetPopupNavigationDelegateFactoryForTesting() {
+@@ -1540,6 +1541,8 @@ ChromeContentBrowserClient::GetPopupNavigationDelegateFactoryForTesting() {
  }
  
  ChromeContentBrowserClient::ChromeContentBrowserClient() {
@@ -660,7 +660,7 @@ index ff5b36469..0fbd7d386 100644
  #if BUILDFLAG(ENABLE_PLUGINS)
    extra_parts_.push_back(
        std::make_unique<ChromeContentBrowserClientPluginsPart>());
-@@ -1567,6 +1570,11 @@ ChromeContentBrowserClient::~ChromeContentBrowserClient() {
+@@ -1577,6 +1580,11 @@ ChromeContentBrowserClient::~ChromeContentBrowserClient() {
    }
  }
  
@@ -672,7 +672,7 @@ index ff5b36469..0fbd7d386 100644
  // static
  void ChromeContentBrowserClient::RegisterLocalStatePrefs(
      PrefRegistrySimple* registry) {
-@@ -4034,28 +4042,25 @@ bool UpdatePreferredColorScheme(WebPreferences* web_prefs,
+@@ -4050,28 +4058,25 @@ bool UpdatePreferredColorScheme(WebPreferences* web_prefs,
          web_prefs->preferred_color_scheme;
    }
  #else
@@ -718,7 +718,7 @@ index ff5b36469..0fbd7d386 100644
  #endif  // BUILDFLAG(IS_ANDROID)
  
    // Reauth WebUI doesn't support dark mode yet because it shares the dialog
-@@ -4811,9 +4816,11 @@ void ChromeContentBrowserClient::BrowserURLHandlerCreated(
+@@ -4835,9 +4840,11 @@ void ChromeContentBrowserClient::BrowserURLHandlerCreated(
                            &search::HandleNewTabURLReverseRewrite);
  #endif  // BUILDFLAG(IS_ANDROID)
  
@@ -730,7 +730,7 @@ index ff5b36469..0fbd7d386 100644
  }
  
  base::FilePath ChromeContentBrowserClient::GetDefaultDownloadDirectory() {
-@@ -6921,7 +6928,7 @@ void ChromeContentBrowserClient::OnNetworkServiceCreated(
+@@ -6945,7 +6952,7 @@ void ChromeContentBrowserClient::OnNetworkServiceCreated(
  #endif
  }
  
@@ -739,7 +739,7 @@ index ff5b36469..0fbd7d386 100644
      content::BrowserContext* context,
      bool in_memory,
      const base::FilePath& relative_partition_path,
-@@ -6939,6 +6946,8 @@ void ChromeContentBrowserClient::ConfigureNetworkContextParams(
+@@ -6963,6 +6970,8 @@ void ChromeContentBrowserClient::ConfigureNetworkContextParams(
      network_context_params->user_agent = GetUserAgentBasedOnPolicy(context);
      network_context_params->accept_language = GetApplicationLocale();
    }
@@ -748,7 +748,7 @@ index ff5b36469..0fbd7d386 100644
  }
  
  std::vector<base::FilePath>
-@@ -8105,11 +8114,11 @@ void ChromeContentBrowserClient::OnKeepaliveRequestStarted(
+@@ -8129,11 +8138,11 @@ void ChromeContentBrowserClient::OnKeepaliveRequestStarted(
    const auto now = base::TimeTicks::Now();
    const auto timeout = GetKeepaliveTimerTimeout(context);
    keepalive_deadline_ = std::max(keepalive_deadline_, now + timeout);
@@ -762,7 +762,7 @@ index ff5b36469..0fbd7d386 100644
            FROM_HERE, keepalive_deadline_ - now,
            base::BindOnce(
                &ChromeContentBrowserClient::OnKeepaliveTimerFired,
-@@ -8131,7 +8140,8 @@ void ChromeContentBrowserClient::OnKeepaliveRequestFinished() {
+@@ -8155,7 +8164,8 @@ void ChromeContentBrowserClient::OnKeepaliveRequestFinished() {
    --num_keepalive_requests_;
    if (num_keepalive_requests_ == 0) {
      DVLOG(1) << "Stopping the keepalive timer";
@@ -772,7 +772,7 @@ index ff5b36469..0fbd7d386 100644
      // This deletes the keep alive handle attached to the timer function and
      // unblock the shutdown sequence.
    }
-@@ -8306,7 +8316,7 @@ void ChromeContentBrowserClient::OnKeepaliveTimerFired(
+@@ -8330,7 +8340,7 @@ void ChromeContentBrowserClient::OnKeepaliveTimerFired(
    const auto now = base::TimeTicks::Now();
    const auto then = keepalive_deadline_;
    if (now < then) {
@@ -1005,7 +1005,7 @@ index faead4388..ce1cc050c 100644
  }
  
 diff --git a/src/chrome/browser/download/chrome_download_manager_delegate.cc b/src/chrome/browser/download/chrome_download_manager_delegate.cc
-index eee561e2d..8e3608d02 100644
+index 49449dbb6..a677b334e 100644
 --- a/src/chrome/browser/download/chrome_download_manager_delegate.cc
 +++ b/src/chrome/browser/download/chrome_download_manager_delegate.cc
 @@ -31,6 +31,7 @@
@@ -1062,7 +1062,7 @@ index eee561e2d..8e3608d02 100644
    DownloadTargetDeterminer::CompletionCallback target_determined_callback =
        base::BindOnce(&ChromeDownloadManagerDelegate::OnDownloadTargetDetermined,
                       weak_ptr_factory_.GetWeakPtr(), download->GetId(),
-@@ -1155,8 +1174,11 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
+@@ -1153,8 +1172,11 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
    Browser* browser =
        web_contents ? chrome::FindBrowserWithTab(web_contents) : nullptr;
    std::unique_ptr<chrome::ScopedTabbedBrowserDisplayer> browser_displayer;
@@ -1219,7 +1219,7 @@ index 29eef7768..f1e354c30 100644
                               current_url, updated_url, js_callstack());
    }
 diff --git a/src/chrome/browser/extensions/extension_tab_util.cc b/src/chrome/browser/extensions/extension_tab_util.cc
-index d5de30544..b7a825534 100644
+index 0590ef554..d525587c8 100644
 --- a/src/chrome/browser/extensions/extension_tab_util.cc
 +++ b/src/chrome/browser/extensions/extension_tab_util.cc
 @@ -20,6 +20,7 @@
@@ -1728,7 +1728,7 @@ index 8dbf958c1..6eaccc668 100644
      *dir = base::FilePath(policy::path_parser::ExpandPathVariables(value));
      return true;
 diff --git a/src/chrome/browser/prefs/browser_prefs.cc b/src/chrome/browser/prefs/browser_prefs.cc
-index 94397d941..a3a7f80a5 100644
+index 760b76db4..ebed1942c 100644
 --- a/src/chrome/browser/prefs/browser_prefs.cc
 +++ b/src/chrome/browser/prefs/browser_prefs.cc
 @@ -16,6 +16,7 @@
@@ -1772,7 +1772,7 @@ index 94397d941..a3a7f80a5 100644
  }
  
  // Register prefs applicable to all profiles.
-@@ -2364,6 +2375,10 @@ void RegisterUserProfilePrefs(user_prefs::PrefRegistrySyncable* registry,
+@@ -2362,6 +2373,10 @@ void RegisterUserProfilePrefs(user_prefs::PrefRegistrySyncable* registry,
                                const std::string& locale) {
    RegisterProfilePrefs(registry, locale);
  
@@ -2096,7 +2096,7 @@ index 2612e0be4..0e9f3105d 100644
    // window's relaunch details, we draw over it because the user may have
    // pinned the badge-less Chrome shortcut which will cause Windows to ignore
 diff --git a/src/chrome/browser/ui/BUILD.gn b/src/chrome/browser/ui/BUILD.gn
-index e129b6c8b..bd63ffeef 100644
+index 80935f177..a5d4a7a04 100644
 --- a/src/chrome/browser/ui/BUILD.gn
 +++ b/src/chrome/browser/ui/BUILD.gn
 @@ -8,6 +8,7 @@ import("//build/config/compiler/compiler.gni")
@@ -2137,7 +2137,7 @@ index e129b6c8b..bd63ffeef 100644
    # TODO(crbug.com/41437292): Remove this circular dependency.
    # Any circular includes must depend on the target "//chrome/browser:browser_public_dependencies".
    # These are all-platform circular includes.
-@@ -5602,6 +5612,7 @@ static_library("ui") {
+@@ -5606,6 +5616,7 @@ static_library("ui") {
    if (enable_printing) {
      deps += [
        "//components/printing/browser",
@@ -4305,10 +4305,10 @@ index 3cfed2fdd..720b41845 100644
  }
  
 diff --git a/src/chrome/browser/ui/views/toolbar/app_menu.cc b/src/chrome/browser/ui/views/toolbar/app_menu.cc
-index e96fca758..5cb08115c 100644
+index 4745db2c0..b780b1d5d 100644
 --- a/src/chrome/browser/ui/views/toolbar/app_menu.cc
 +++ b/src/chrome/browser/ui/views/toolbar/app_menu.cc
-@@ -1014,7 +1014,9 @@ void AppMenu::RunMenu(views::MenuButtonController* host) {
+@@ -1045,7 +1045,9 @@ void AppMenu::RunMenu(views::MenuButtonController* host) {
        host->button()->GetWidget(), host,
        host->button()->GetAnchorBoundsInScreen(),
        views::MenuAnchorPosition::kTopRight, ui::mojom::MenuSourceType::kNone,
@@ -5073,7 +5073,7 @@ index a274b3e36..3d995cf64 100644
  // on the given `command_line`. For non-browser processes, allocates crash keys
  // from the switch value set by AppendStringAnnotationsCommandLineSwitch().
 diff --git a/src/chrome/common/features.gni b/src/chrome/common/features.gni
-index 91dce26ed..ba2e38eb6 100644
+index dc594ca62..a06090ee5 100644
 --- a/src/chrome/common/features.gni
 +++ b/src/chrome/common/features.gni
 @@ -7,6 +7,7 @@ import("//build/config/chromeos/ui_mode.gni")

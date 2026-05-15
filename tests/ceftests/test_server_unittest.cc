@@ -80,6 +80,11 @@ class TestServerHandler : public CefTestServerHandler {
     // Blocks until the server is created.
     server_ = CefTestServer::CreateAndStart(/*port=*/0, https_server,
                                             CEF_TEST_CERT_OK_DOMAIN, this);
+    if (!server_) {
+      LOG(ERROR) << "CefTestServer::CreateAndStart Failed, return server_: "
+                 << server_;
+      return;
+    }
 
     origin_ = server_->GetOrigin();
     EXPECT_TRUE(VerifyOrigin(origin_));

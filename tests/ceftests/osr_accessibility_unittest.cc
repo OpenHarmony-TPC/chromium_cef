@@ -231,11 +231,19 @@ class AccessibilityTestHandler : public TestHandler,
   }
 
   void HideEditBox(CefRefPtr<CefBrowser> browser) {
+#if defined(OS_OHOS)
+    // Hide the button on ohos, due to the style no-effect for editbox.
+    // This should trigger Location update if enabled
+    browser->GetMainFrame()->ExecuteJavaScript(
+        "document.getElementById('button').style.display = 'none';", kTestUrl,
+        0);
+#else
     // Hide the edit box.
     // This should trigger Location update if enabled
     browser->GetMainFrame()->ExecuteJavaScript(
         "document.getElementById('editbox').style.display = 'none';", kTestUrl,
         0);
+#endif
 
     got_hide_edit_box_.yes();
   }

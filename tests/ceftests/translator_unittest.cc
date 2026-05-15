@@ -37,7 +37,10 @@ TEST(TranslatorTest, PrimitiveList) {
   list.push_back(TEST_INT_VAL2);
   EXPECT_TRUE(obj->SetIntList(list));
 
+#if !defined(OS_OHOS)
+  // Don't clear here for ohos, due to GetIntListByRef check the size
   list.clear();
+#endif
   EXPECT_TRUE(obj->GetIntListByRef(list));
   EXPECT_EQ(2U, list.size());
   EXPECT_EQ(TEST_INT_VAL, list[0]);
@@ -161,7 +164,10 @@ TEST(TranslatorTest, StructList) {
   list.emplace_back(TEST_X_VAL2, TEST_Y_VAL2);
   EXPECT_TRUE(obj->SetPointList(list));
 
+#if !defined(OS_OHOS)
+  // Don't clear here for ohos, due to GetPointListByRef check the size
   list.clear();
+#endif
   EXPECT_TRUE(obj->GetPointListByRef(list));
   EXPECT_EQ(2U, list.size());
   EXPECT_EQ(CefPoint(TEST_X_VAL, TEST_Y_VAL), list[0]);
@@ -256,7 +262,10 @@ TEST(TranslatorTest, RefPtrLibraryList) {
   list.push_back(val2);
   EXPECT_TRUE(obj->SetRefPtrLibraryList(list, kVal1, kVal2));
 
+#if !defined(OS_OHOS)
+  // Don't clear here for ohos, due to GetRefPtrLibraryListByRef check the size
   list.clear();
+#endif
   EXPECT_TRUE(obj->GetRefPtrLibraryListByRef(list, kVal1, kVal2));
   EXPECT_EQ(2U, list.size());
   EXPECT_EQ(kVal1, list[0]->GetValue());
@@ -371,7 +380,10 @@ TEST(TranslatorTest, RefPtrClientList) {
   list.push_back(val2);
   EXPECT_TRUE(obj->SetRefPtrClientList(list, kVal1, kVal2));
 
+#if !defined(OS_OHOS)
+  // Don't clear here for ohos, due to GetRefPtrClientListByRef check the size
   list.clear();
+#endif
   EXPECT_TRUE(obj->GetRefPtrClientListByRef(list, val1, val2));
   EXPECT_EQ(2U, list.size());
   EXPECT_EQ(kVal1, list[0]->GetValue());

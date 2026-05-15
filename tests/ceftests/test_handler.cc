@@ -18,10 +18,46 @@
 #include "tests/ceftests/test_request.h"
 #include "tests/ceftests/test_util.h"
 
+#if defined(OS_OHOS)
+#include "ohos/adapter/window/app_window_adapter.h"
+#endif
+
 // Set to 1 to enable verbose debugging info logging.
 #define VERBOSE_DEBUGGING 0
 
 namespace {
+
+#if defined(OS_OHOS)
+// Due to the fact that UIAbility requires active exit, while cefsts require
+// passive exit, close needs to be executed.
+void CloseUIAbilityWindow(CefRefPtr<CefBrowser> browser) {
+  if (!browser) {
+    return;
+  }
+
+  CefRefPtr<CefBrowserView> browser_view =
+      CefBrowserView::GetForBrowser(browser);
+  if (!browser_view) {
+    return;
+  }
+
+  if (auto window = browser_view->GetWindow()) {
+    CefWindowHandle handle = window->GetWindowHandle();
+    if (handle == kNullWindowHandle) {
+      return;
+    }
+    CefPostDelayedTask(
+        TID_UI,
+        base::BindOnce(
+            [](CefWindowHandle handle) {
+              ohos::adapter::window::AppWindowAdapter::GetInstance().Close(
+                  handle);
+            },
+            handle),
+        100);
+  }
+}
+#endif
 
 cef_runtime_style_t GetExpectedRuntimeStyle(TestHandler* handler,
                                             bool is_devtools_popup,
@@ -537,6 +573,9 @@ void TestHandler::DestroyTest() {
     BrowserMap::const_iterator it = browser_map.begin();
     for (; it != browser_map.end(); ++it) {
       CloseBrowser(it->second, false);
+#if defined(OS_OHOS)
+      CloseUIAbilityWindow(it->second);
+#endif
     }
   }
 }
