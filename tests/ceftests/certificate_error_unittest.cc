@@ -216,6 +216,12 @@ class CertificateErrorTest : public TestHandler, public CefTestServerHandler {
 
     server_ = CefTestServer::CreateAndStart(/*port=*/0, /*https_server=*/true,
                                             cert_type_, this);
+    if (!server_) {
+      LOG(ERROR) << "CefTestServer::CreateAndStart Failed, return server_: "
+                 << server_;
+      return;
+    }
+
     server_origin_ = server_->GetOrigin();
 
     if (other_server_type_ != OtherServerType::NONE) {

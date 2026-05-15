@@ -1,9 +1,9 @@
-From ddfe765c586b77ec150be3d3a2532b5a2a656c29 Mon Sep 17 00:00:00 2001
+From 360d10770df505cf4aec271370fb662c88450c50 Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 5 Dec 2025 15:38:19 +0800
+Date: Thu, 14 May 2026 12:52:07 +0800
 Subject: [PATCH] 001_cef_patch_v8.patch
 
-Change-Id: I65393637c94fc61aff7ed7b1b6840137b658844b
+Change-Id: I1a481d274c96035edd67c95cb70d09852015d36f
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
 ---
  BUILD.gn | 8 ++++++++

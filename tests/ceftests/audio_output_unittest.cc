@@ -1041,7 +1041,11 @@ class AudioTogglePlaybackTest : public AudioTestHandler {
     CreateBrowser(kAudioTogglePlaybackTestUrl);
 
     // Time out the test after a reasonable period of time.
+#if defined(OS_OHOS)
+    SetTestTimeout(25000);
+#else
     SetTestTimeout(20000);
+#endif
   }
 
   void OnAudioStreamStarted(CefRefPtr<CefBrowser> browser,

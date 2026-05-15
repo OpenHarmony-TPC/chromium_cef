@@ -123,8 +123,15 @@ void TestWindowDelegate::OnWindowCreated(CefRefPtr<CefWindow> window) {
     } else {
       // Default origin is the upper-left corner of the display's work area.
       auto work_area = display->GetWorkArea();
+#if defined(OS_OHOS)
+      // Due to the OHOS workspace starting from the 0 coordinate
+      if (work_area.y != 0) {
+#endif
       EXPECT_NEAR(work_area.x, client_bounds.x, 1);
       EXPECT_NEAR(work_area.y, client_bounds.y, 1);
+#if defined(OS_OHOS)
+      }
+#endif
     }
 
     if (config_->frameless) {

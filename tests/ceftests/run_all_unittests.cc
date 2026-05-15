@@ -49,6 +49,10 @@
 #pragma comment(lib, "cef_sandbox.lib")
 #endif
 
+#if defined(OS_OHOS)
+#include "ohos/adapter/window/app_window_adapter.h"
+#endif
+
 #if defined(OS_MAC)
 // Platform-specific initialization and cleanup.
 extern void PlatformInit();
@@ -133,7 +137,7 @@ class ScopedPlatformSetup final {
 
 }  // namespace
 
-#if defined(OSOHOS)
+#if defined(OS_OHOS)
 extern "C" {
 int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
 #else
@@ -293,6 +297,12 @@ int main(int argc, char* argv[]) {
     thread = nullptr;
   }
 
+#if defined(OS_OHOS)
+  // The HarmonyOS platform does not require the creation of a browser for
+  // processing, but opens the UIAbility window to close it
+  ohos::adapter::window::AppWindowAdapter::GetInstance().CloseUIAbilityWindow();
+#endif
+
   // Shut down CEF.
   CefShutdown();
 
@@ -303,6 +313,6 @@ int main(int argc, char* argv[]) {
 
   return retval;
 }
-#if defined(OSOHOS)
+#if defined(OS_OHOS)
 }
 #endif

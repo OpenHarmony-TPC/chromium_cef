@@ -37,7 +37,7 @@ namespace client {
 namespace {
 
 // Default window size.
-#ifdef OS_OHOS
+#if defined(OS_OHOS)
 constexpr int kDefaultWidth = 1700;
 constexpr int kDefaultHeight = 1007;
 #else

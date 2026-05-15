@@ -1,9 +1,9 @@
-From 76c06f1fe13584552d0d145cd839a870a6a1a0df Mon Sep 17 00:00:00 2001
+From 83870a333318e8ab30b6acc814b681ca686b3852 Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 24 Apr 2026 10:04:05 +0800
+Date: Thu, 14 May 2026 12:51:45 +0800
 Subject: [PATCH] 001_cef_patch_third_party.patch
 
-Change-Id: I3138e842e3bbd4e264de807be1b60cb0d02a60ea
+Change-Id: I42f7a44b9480a8ad44a563e126ad000cfafbb430
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
 ---
  blink/public/platform/platform.h              |  5 ++

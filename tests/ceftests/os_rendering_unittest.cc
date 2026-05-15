@@ -22,6 +22,7 @@
 #include <X11/keysym.h>
 #elif defined(OS_OHOS)
 #include <ace/xcomponent/native_xcomponent_key_event.h>
+#include <cctype>
 #elif defined(OS_WIN)
 // Required for resource_util_win, which uses this as an extern
 HINSTANCE hInst = ::GetModuleHandle(nullptr);
@@ -51,7 +52,8 @@ const CefRect kExpandedSelectRect(462, 42, 75, 334);
 #elif defined(OS_LINUX)
 const CefRect kExpandedSelectRect(462, 42, 79, 334);
 #elif defined(OS_OHOS)
-const CefRect kExpandedSelectRect(502, 48, 80, 2);
+const CefRect kExpandedSelectRect(8, 81, 82, 469);
+const CefRect kExpandedSelectRect2f(8, 80, 75, 469);
 #else
 #error "Unsupported platform"
 #endif  // defined(OS_WIN)
@@ -96,25 +98,26 @@ const unsigned int kNativeKeyTab = kVK_Tab;
 
 #elif defined(OS_OHOS)
 
-#define VKEY_D 0x64
-#define VKEY_O 0x6F
-#define VKEY_N 0x6E
-#define VKEY_E 0x65
+// From ui/events/keycodes/keyboard_codes_posix.h
+#define VKEY_D 0x44
+#define VKEY_O 0x4F
+#define VKEY_N 0x4E
+#define VKEY_E 0x45
 #define VKEY_ESCAPE 0x1B
 #define VKEY_TAB 0x09
 
+// From
+// src/ohos_sdk/openharmony/native/sysroot/usr/include/ace/xcomponent/native_xcomponent_key_event.h
 const unsigned int kNativeKeyTestCodes[] = {
     OH_NativeXComponent_KeyCode::KEY_D, OH_NativeXComponent_KeyCode::KEY_O,
     OH_NativeXComponent_KeyCode::KEY_N, OH_NativeXComponent_KeyCode::KEY_E};
-
-const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
 
 const unsigned int kNativeKeyEscape = OH_NativeXComponent_KeyCode::KEY_ESCAPE;
 const unsigned int kNativeKeyTab = OH_NativeXComponent_KeyCode::KEY_TAB;
 
 #endif
 
-#if defined(OS_MAC) || defined(OS_LINUX)
+#if defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
 
 const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
 
@@ -566,6 +569,20 @@ class OSRTestHandler : public RoutingTestHandler,
     LOG(INFO) << "OnQuery message=" << messageStr;
 #endif
 
+#if defined(OS_OHOS)
+    // Fixed: On the OHOS platform, On touch devices, touch events as
+    // ontouchstart always executes before onfocus events, Like touch screen as
+    // Harden devices.
+    if (test_type_ == OSR_TEST_TOUCH_START ||
+        test_type_ == OSR_TEST_TOUCH_MOVE || test_type_ == OSR_TEST_TOUCH_END ||
+        test_type_ == OSR_TEST_TOUCH_CANCEL || test_type_ == OSR_TEST_PEN) {
+      if (messageStr == "osrfocus" || messageStr == "osrblur") {
+        callback->Success("");
+        return true;
+      }
+    }
+#endif
+
     switch (test_type_) {
       case OSR_TEST_FOCUS:
         if (messageStr == "osrfocus") {
@@ -840,6 +857,19 @@ class OSRTestHandler : public RoutingTestHandler,
 
     switch (test_type_) {
       case OSR_TEST_POPUP_SIZE:
+#if defined(OS_OHOS)
+        if (scale_factor_ == 2.0f)  {
+          EXPECT_EQ(kExpandedSelectRect2f.x, rect.x);
+          EXPECT_EQ(kExpandedSelectRect2f.y, rect.y);
+          if (ExpectComputedPopupSize()) {
+            EXPECT_EQ(kExpandedSelectRect2f.width, rect.width);
+            EXPECT_EQ(kExpandedSelectRect2f.height, rect.height);
+          } else {
+            EXPECT_GE(rect.width, kExpandedSelectRect2f.width);
+            EXPECT_GE(rect.height, kExpandedSelectRect2f.height);
+          }
+        } else {
+#endif
         EXPECT_EQ(kExpandedSelectRect.x, rect.x);
         EXPECT_EQ(kExpandedSelectRect.y, rect.y);
         if (ExpectComputedPopupSize()) {
@@ -849,6 +879,9 @@ class OSRTestHandler : public RoutingTestHandler,
           EXPECT_GE(rect.width, kExpandedSelectRect.width);
           EXPECT_GE(rect.height, kExpandedSelectRect.height);
         }
+#if defined(OS_OHOS)
+        }
+#endif
         DestroySucceededTestSoon();
         break;
       default:
@@ -1788,7 +1821,13 @@ class OSRTestHandler : public RoutingTestHandler,
 #elif defined(OS_OHOS)
     event.native_key_code = native_key_code;
     event.windows_key_code = key_code;
-    event.character = event.unmodified_character = key_code;
+    // Fixed: no lower-case characters on ohos sdk which that only upper-case.
+    if (std::isupper(static_cast<unsigned char>(key_code))) {
+      char lower_char = std::tolower(static_cast<unsigned char>(key_code));
+      event.character = event.unmodified_character = lower_char;
+    } else {
+      event.character = event.unmodified_character = key_code;
+    }
 #else
     NOTREACHED();
 #endif

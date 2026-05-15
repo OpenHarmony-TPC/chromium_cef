@@ -1,10 +1,10 @@
-From bdc5c50f333dcf0534c8f04b02b30d740eed52cb Mon Sep 17 00:00:00 2001
+From 05966ff395d7ebb39cd6634d33cc2aeccfd1e0d3 Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Fri, 24 Apr 2026 09:53:53 +0800
+Date: Thu, 14 May 2026 11:36:28 +0800
 Subject: [PATCH] 001_cef_patch_src.patch
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: I7296cd50ec0d72fc75ab72edd492f1776e4b104c
+Change-Id: I5132309224d945ac3b472ee075960cd00d9baf40
 ---
  .gn                                           |   2 +
  BUILD.gn                                      |   5 +
@@ -334,7 +334,7 @@ index a6f506142f..ab60f9231e 100644
        deps += [ "//printing:printing_unittests" ]
      }
 diff --git a/src/base/BUILD.gn b/src/base/BUILD.gn
-index 07698c9239..e5b4312d1b 100644
+index b361b3ccf1..8093fbd75c 100644
 --- a/src/base/BUILD.gn
 +++ b/src/base/BUILD.gn
 @@ -44,6 +44,7 @@ import("//build/rust/rust_static_library.gni")
@@ -345,7 +345,7 @@ index 07698c9239..e5b4312d1b 100644
  import("//testing/libfuzzer/fuzzer_test.gni")
  import("//testing/test.gni")
  
-@@ -1537,7 +1538,11 @@ component("base") {
+@@ -1539,7 +1540,11 @@ component("base") {
      "hash/md5_constexpr_internal.h",
      "hash/sha1.h",
    ]
@@ -358,7 +358,7 @@ index 07698c9239..e5b4312d1b 100644
      sources += [
        "hash/md5_nacl.cc",
        "hash/md5_nacl.h",
-@@ -1979,6 +1984,12 @@ component("base") {
+@@ -1981,6 +1986,12 @@ component("base") {
        defines += [ "COM_INIT_CHECK_HOOK_DISABLED" ]
      }
  
@@ -3020,10 +3020,10 @@ index 5695fd36ce..b109cefdee 100644
      // Guard against wrong tokens being passed accidentally.
      return nullptr;
 diff --git a/src/content/browser/renderer_host/navigation_request.cc b/src/content/browser/renderer_host/navigation_request.cc
-index 2b0f4a8127..46d5af613b 100644
+index 0ea91ae988..06face24c9 100644
 --- a/src/content/browser/renderer_host/navigation_request.cc
 +++ b/src/content/browser/renderer_host/navigation_request.cc
-@@ -8291,10 +8291,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
+@@ -8308,10 +8308,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
    bool use_opaque_origin =
        (sandbox_flags & network::mojom::WebSandboxFlags::kOrigin) ==
        network::mojom::WebSandboxFlags::kOrigin;
@@ -3047,7 +3047,7 @@ index 2b0f4a8127..46d5af613b 100644
    }
  
    return origin_and_debug_info;
-@@ -8402,11 +8414,20 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
+@@ -8419,11 +8431,20 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
        DetermineInitiatorRelationship(initiator_rfh,
                                       frame_tree_node_->current_frame_host()));
  
@@ -3071,10 +3071,10 @@ index 2b0f4a8127..46d5af613b 100644
    // If the target of this navigation will be rendered in a RenderFrameHost,
    // then verify that the chosen origin is allowed to be accessed from that
 diff --git a/src/content/browser/renderer_host/render_frame_host_impl.cc b/src/content/browser/renderer_host/render_frame_host_impl.cc
-index 661c7f2feb..6395ca1840 100644
+index 38ef3b1f81..f9d6e9177c 100644
 --- a/src/content/browser/renderer_host/render_frame_host_impl.cc
 +++ b/src/content/browser/renderer_host/render_frame_host_impl.cc
-@@ -9203,6 +9203,16 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -9210,6 +9210,16 @@ void RenderFrameHostImpl::CreateNewWindow(
      return;
    }
  
@@ -3091,7 +3091,7 @@ index 661c7f2feb..6395ca1840 100644
    // Otherwise, consume user activation before we proceed. In particular, it is
    // important to do this before we return from the |opener_suppressed| case
    // below.
-@@ -11578,6 +11588,7 @@ void RenderFrameHostImpl::CommitNavigation(
+@@ -11585,6 +11595,7 @@ void RenderFrameHostImpl::CommitNavigation(
    auto browser_calc_origin_to_commit =
        navigation_request->GetOriginToCommitWithDebugInfo();
    if (!process_lock.is_error_page() && !is_mhtml_subframe &&
@@ -3374,10 +3374,10 @@ index d7f32cb53e..2bab5de596 100644
        static_cast<id<NativeEventProcessor>>(NSApp);
    [processor removeNativeEventProcessorObserver:this];
 diff --git a/src/content/browser/storage_partition_impl.cc b/src/content/browser/storage_partition_impl.cc
-index 089ce71bc0..ff73cc0b41 100644
+index 89d3f527f5..0a7f81400a 100644
 --- a/src/content/browser/storage_partition_impl.cc
 +++ b/src/content/browser/storage_partition_impl.cc
-@@ -3346,9 +3346,12 @@ void StoragePartitionImpl::InitNetworkContext() {
+@@ -3353,9 +3353,12 @@ void StoragePartitionImpl::InitNetworkContext() {
      network_context->InitPRParallelPreloadMgr(cachePath);
    }
  #endif
@@ -3393,10 +3393,10 @@ index 089ce71bc0..ff73cc0b41 100644
    DCHECK(context_params->cors_origin_access_list.empty())
        << "NetworkContextParams::cors_origin_access_list should be populated "
 diff --git a/src/content/browser/web_contents/web_contents_impl.cc b/src/content/browser/web_contents/web_contents_impl.cc
-index eada0649e6..a1fdde4fa1 100644
+index 7f0f7df88c..5771484151 100644
 --- a/src/content/browser/web_contents/web_contents_impl.cc
 +++ b/src/content/browser/web_contents/web_contents_impl.cc
-@@ -3774,6 +3774,12 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
+@@ -3769,6 +3769,12 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
        params.main_frame_name, GetOpener(), primary_main_frame_policy,
        base::UnguessableToken::Create());
  
@@ -3409,7 +3409,7 @@ index eada0649e6..a1fdde4fa1 100644
    std::unique_ptr<WebContentsViewDelegate> delegate =
        GetContentClient()->browser()->GetWebContentsViewDelegate(this);
  
-@@ -3784,6 +3790,7 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
+@@ -3779,6 +3785,7 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
      view_ = CreateWebContentsView(this, std::move(delegate),
                                    &render_view_host_delegate_view_);
    }
@@ -3417,7 +3417,7 @@ index eada0649e6..a1fdde4fa1 100644
    CHECK(render_view_host_delegate_view_);
    CHECK(view_.get());
  
-@@ -3982,6 +3989,9 @@ void WebContentsImpl::RenderWidgetCreated(
+@@ -3977,6 +3984,9 @@ void WebContentsImpl::RenderWidgetCreated(
                          "render_widget_host", render_widget_host);
    CHECK(!created_widgets_.contains(render_widget_host->GetFrameSinkId()));
    created_widgets_[render_widget_host->GetFrameSinkId()] = render_widget_host;
@@ -3427,7 +3427,7 @@ index eada0649e6..a1fdde4fa1 100644
  }
  
  void WebContentsImpl::RenderWidgetDeleted(
-@@ -4869,6 +4879,15 @@ FrameTree* WebContentsImpl::CreateNewWindow(
+@@ -4864,6 +4874,15 @@ FrameTree* WebContentsImpl::CreateNewWindow(
      create_params.picture_in_picture_options = *(params.pip_options);
    }
  
@@ -3443,7 +3443,7 @@ index eada0649e6..a1fdde4fa1 100644
    // Check whether there is an available prerendered page for this navigation if
    // this is not for guest. If it exists, take WebContents pre-created for
    // hosting the prerendered page instead of creating new WebContents.
-@@ -9356,6 +9375,9 @@ void WebContentsImpl::SetFocusedFrame(FrameTreeNode* node,
+@@ -9338,6 +9357,9 @@ void WebContentsImpl::SetFocusedFrame(FrameTreeNode* node,
    }
  
    CloseListenerManager::DidChangeFocusedFrame(this);
@@ -4940,13 +4940,13 @@ index aaf4beda84..e1e387c435 100644
    return current_default_loader.get();
  }
 diff --git a/src/ohos/app/ohos_hap/AppScope/app.json5 b/src/ohos/app/ohos_hap/AppScope/app.json5
-index 704c810bbc..93426339f0 100644
+index 3928cb4f3e..93426339f0 100644
 --- a/src/ohos/app/ohos_hap/AppScope/app.json5
 +++ b/src/ohos/app/ohos_hap/AppScope/app.json5
 @@ -1,6 +1,6 @@
  {
    "app": {
--    "bundleName": "com.huawei.ohos_chromium",
+-    "bundleName": "com.haitai.htbrowser",
 +    "bundleName": "com.huawei.ohos_cef",
      "vendor": "example",
      "versionCode": 1000000,
@@ -6361,10 +6361,10 @@ index 6b5c62fe47..f5563e949b
 diff --git a/src/ui/ozone/platform/ohos/host/ohos_window.cc b/src/ui/ozone/platform/ohos/host/ohos_window.cc
 old mode 100755
 new mode 100644
-index a0e1dc7b06..ed18f7c54c
+index d4bd51ffaa..587f26d3ef
 --- a/src/ui/ozone/platform/ohos/host/ohos_window.cc
 +++ b/src/ui/ozone/platform/ohos/host/ohos_window.cc
-@@ -235,7 +235,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
+@@ -228,7 +228,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
  }
  
  void OhosWindow::SetTitle(const std::u16string& title) {
@@ -6647,7 +6647,7 @@ index 7586a6f089..4e3a40b33f 100644
    LabelButtonImageContainer* image_container() {
      return image_container_.get();
 diff --git a/src/ui/views/controls/label.cc b/src/ui/views/controls/label.cc
-index d3267b9532..9fa167d45b 100644
+index bde1582a6f..1a2b5e6138 100644
 --- a/src/ui/views/controls/label.cc
 +++ b/src/ui/views/controls/label.cc
 @@ -52,12 +52,29 @@ enum LabelPropertyKey {
