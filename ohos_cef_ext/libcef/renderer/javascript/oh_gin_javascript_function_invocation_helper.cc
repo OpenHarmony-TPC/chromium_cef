@@ -16,6 +16,7 @@
 #include "libcef/common/javascript/oh_gin_javascript_bridge_value.h"
 #include "libcef/renderer/javascript/oh_gin_javascript_bridge_object.h"
 #include "libcef/renderer/javascript/oh_gin_javascript_bridge_value_converter.h"
+#include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/bounds_checking_function/include/securec.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "v8/include/v8-exception.h"
@@ -202,16 +203,22 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethod(
     }
   }
 
+  std::string url = "";
+  blink::WebLocalFrame* frame = blink::WebLocalFrame::FrameForContext(
+      args->isolate()->GetCurrentContext());
+  if (frame) {
+    url = frame->GetDocument().Url().GetString().Utf8();
+  }
   std::unique_ptr<base::Value> result;
   if (dispatcher_->IsAsyncMethod(object->object_id(), method_name_)) {
-    result = dispatcher_->InvokeJavascriptMethodAsync(object->object_id(),
+    result = dispatcher_->InvokeJavascriptMethodAsync(object->object_id(), url,
                                                       method_name_, arguments);
     LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
                   "InvokeJavascriptMethodAsync end";
     return result;
   } else {
     result = dispatcher_->InvokeJavascriptMethod(
-        object->object_id(), method_name_, arguments, &error);
+        object->object_id(), url, method_name_, arguments, &error);
     LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
                   "InvokeJavascriptMethod end";
     return result;
@@ -282,15 +289,21 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
     }
   }
 
+  std::string url = "";
+  blink::WebLocalFrame* frame = blink::WebLocalFrame::FrameForContext(
+      args->isolate()->GetCurrentContext());
+  if (frame) {
+    url = frame->GetDocument().Url().GetString().Utf8();
+  }
   std::unique_ptr<base::Value> result;
   if (useFlowbuf) {
     result = dispatcher_->InvokeJavascriptMethodFlowbuf(
-        object->object_id(), method_name_, arguments, fd, &error);
+        object->object_id(), url, method_name_, arguments, fd, &error);
     LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
                   "InvokeJavascriptMethodFlowbuf end";
   } else {
     result = dispatcher_->InvokeJavascriptMethod(
-        object->object_id(), method_name_, arguments, &error);
+        object->object_id(), url, method_name_, arguments, &error);
     LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
                   "InvokeJavascriptMethod end";
   }
