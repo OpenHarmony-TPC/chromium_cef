@@ -600,8 +600,12 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
   cookie_store_backend_thread_.Start();
   cookie_store_task_runner_ = cookie_store_task_thread_.task_runner();
 
+<<<<<<< HEAD
   const base::CommandLine *command_line =
       base::CommandLine::ForCurrentProcess();
+=======
+  base::CommandLine *command_line = base::CommandLine::ForCurrentProcess();
+>>>>>>> 417caedac533930ad02b5830a363d193e4d3b7f0
   if (base::PathService::Get(chrome::DIR_USER_DATA, &cookie_store_path_)) {
     cookie_store_path_ = cookie_store_path_.Append("Cookies");
   } else if (command_line) {
