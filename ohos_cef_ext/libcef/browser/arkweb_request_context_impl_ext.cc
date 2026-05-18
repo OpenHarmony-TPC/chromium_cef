@@ -199,10 +199,12 @@ void ArkWebRequestContextImplExt::ClearCurrentClientAuthenticationCacheInternal(
     return;
   }
  
+#if !defined(COMPONENT_BUILD)
   network::mojom::NetworkContext* network_context = cef_browser_context->GetNetworkContext();
   if (network_context) {
     network_context->ClearClientAuthCache();
   }
+#endif
  
   if (callback) {
     CEF_POST_TASK(CEF_UIT,
