@@ -2701,7 +2701,7 @@ void ArkWebRenderWidgetHostViewOSRExt::PullToRefreshUpdate(float x_delta,
     return;
   }
 
-  if (pull_to_refreshing_ == false) {
+  if (!pull_to_refreshing_) {
     LOG(DEBUG) << __func__
              << " [pulltorefresh] refresh end, no need to refresh update.";
     return;
