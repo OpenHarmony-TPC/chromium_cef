@@ -2706,7 +2706,6 @@ void ArkWebRenderWidgetHostViewOSRExt::PullToRefreshUpdate(float x_delta,
                        weak_ptr_factory_.GetWeakPtr(), x_delta, y_delta));
     return;
   }
-
   if (!enable_nweb_ex_ || !browser_impl_.get() ||
       !browser_impl_->GetClient().get()) {
     return;
