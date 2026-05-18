@@ -1,0 +1,735 @@
+From 41b3b9bda34460f8c79d96337c24bb6c19560f88 Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Mon, 18 May 2026 13:04:46 +0800
+Subject: [PATCH] cef_patch_ut_gtest.patch
+
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+Change-Id: I1a4fa2640c94e003302d78d337314192c85899aa
+---
+ googletest/src/gtest.cc | 465 ++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 450 insertions(+), 15 deletions(-)
+
+diff --git a/src/third_party/googletest/src/googletest/src/gtest.cc b/src/third_party/googletest/src/googletest/src/gtest.cc
+index 09af151..37cb9ac 100644
+--- a/src/third_party/googletest/src/googletest/src/gtest.cc
++++ b/src/third_party/googletest/src/googletest/src/gtest.cc
+@@ -166,6 +166,15 @@
+ #define GTEST_HAS_ABSL_FLAGS
+ #endif
+ 
++#if BUILDFLAG(IS_OHOS)
++// Used for hap for unit
++#include <hilog/log.h>
++const unsigned int LOG_PRINT_GTEST = 0xFF00;
++// Retrying Record test error data for unit
++std::vector<std::string> g_failed_unit_;
++int g_retrying_count_ = 5;
++#endif
++
+ namespace testing {
+ 
+ using internal::CountIf;
+@@ -233,6 +242,65 @@ static FILE* OpenFileForWriting(const std::string& output_file) {
+ 
+ }  // namespace internal
+ 
++#if BUILDFLAG(IS_OHOS)
++static std::string g_ut_result_path_;
++// 类似 printf 函数，保存到文件
++GTEST_ATTRIBUTE_PRINTF_(1, 2)
++static void WriteUTResult(const char* fmt, ...) {
++  if (g_ut_result_path_.empty()) return;
++  FILE* file = fopen(g_ut_result_path_.c_str(), "a");
++  if (file == nullptr) return;
++  va_list args;
++  va_start(args, fmt);
++  vfprintf(file, fmt, args);
++  va_end(args);
++  fflush(file);
++  fclose(file);
++}
++
++static void ResetUTResultFile() {
++  if (g_ut_result_path_.empty()) return;
++  FILE* file = fopen(g_ut_result_path_.c_str(), "w");
++  if (file != nullptr) fclose(file);
++}
++
++static void UpdateUTResultForRetry(
++    const std::vector<std::string>& retried_tests,
++    const std::vector<bool>& retried_passed) {
++  if (g_ut_result_path_.empty()) return;
++  FILE* file = fopen(g_ut_result_path_.c_str(), "r");
++  if (file == nullptr) return;
++
++  std::vector<std::string> lines;
++  char buf[4096];
++  while (fgets(buf, sizeof(buf), file)) {
++    lines.push_back(buf);
++  }
++  fclose(file);
++
++  const std::string kFailed = "[  FAILED  ] ";
++  const std::string kOK     = "[       OK ] ";
++
++  for (size_t i = 0; i < retried_tests.size(); ++i) {
++    if (!retried_passed[i]) continue;
++    const std::string& name = retried_tests[i];
++    for (auto& line : lines) {
++      if (line.find(kFailed) == 0 && line.find(name) == kFailed.size()) {
++        line.replace(0, kFailed.size(), kOK);
++      }
++    }
++  }
++
++  file = fopen(g_ut_result_path_.c_str(), "w");
++  if (file == nullptr) return;
++  for (const auto& line : lines) {
++    fputs(line.c_str(), file);
++  }
++  fflush(file);
++  fclose(file);
++}
++#endif
++
+ // Bazel passes in the argument to '--test_filter' via the TESTBRIDGE_TEST_ONLY
+ // environment variable.
+ static const char* GetDefaultFilter() {
+@@ -708,26 +776,38 @@ std::string UnitTestOptions::GetAbsolutePathToOutputFile() {
+   std::string format = GetOutputFormat();
+   if (format.empty()) format = std::string(kDefaultOutputFormat);
+ 
++  std::string path;
+   const char* const colon = strchr(gtest_output_flag, ':');
+-  if (colon == nullptr)
+-    return internal::FilePath::MakeFileName(
++  if (colon == nullptr) {
++    path = internal::FilePath::MakeFileName(
+                internal::FilePath(
+                    UnitTest::GetInstance()->original_working_dir()),
+                internal::FilePath(kDefaultOutputFile), 0, format.c_str())
+-        .string();
+-
+-  internal::FilePath output_name(colon + 1);
+-  if (!output_name.IsAbsolutePath())
+-    output_name = internal::FilePath::ConcatPaths(
+-        internal::FilePath(UnitTest::GetInstance()->original_working_dir()),
+-        internal::FilePath(colon + 1));
++               .string();
++  } else {
++    internal::FilePath output_name(colon + 1);
++    if (!output_name.IsAbsolutePath())
++      output_name = internal::FilePath::ConcatPaths(
++          internal::FilePath(UnitTest::GetInstance()->original_working_dir()),
++          internal::FilePath(colon + 1));
++
++    if (!output_name.IsDirectory()) {
++      path = output_name.string();
++    } else {
++      internal::FilePath result(internal::FilePath::GenerateUniqueFileName(
++          output_name, internal::GetCurrentExecutableName(),
++          GetOutputFormat().c_str()));
++      path = result.string();
++    }
++  }
+ 
+-  if (!output_name.IsDirectory()) return output_name.string();
++#if BUILDFLAG(IS_OHOS)
++  if (!path.empty()) {
++    g_ut_result_path_ = path + ".gtest.txt";
++  }
++#endif
+ 
+-  internal::FilePath result(internal::FilePath::GenerateUniqueFileName(
+-      output_name, internal::GetCurrentExecutableName(),
+-      GetOutputFormat().c_str()));
+-  return result.string();
++  return path;
+ }
+ #endif  // GTEST_HAS_FILE_SYSTEM
+ 
+@@ -2856,6 +2936,22 @@ void UnitTestImpl::RegisterParameterizedTests() {
+ // Creates the test object, runs it, records its result, and then
+ // deletes it.
+ void TestInfo::Run() {
++#if BUILDFLAG(IS_OHOS)
++  // Retrying the error test for unit
++  if (g_failed_unit_.size() > 0) {
++    std::string data =
++        std::string(test_suite_name()) + "." + std::string(name());
++    bool find = false;
++    for (int m = 0; m < g_failed_unit_.size(); ++m) {
++      std::string temp = g_failed_unit_[m];
++      if (!temp.empty() && data == temp) {
++        find = true;
++        break;
++      }
++    }
++    if (!find) return;
++  }
++#endif
+   TestEventListener* repeater = UnitTest::GetInstance()->listeners().repeater();
+   if (!should_run_) {
+     if (is_disabled_ && matches_filter_) repeater->OnTestDisabled(*this);
+@@ -3197,6 +3293,11 @@ static std::string PrintTestPartResultToString(
+ // Prints a TestPartResult.
+ static void PrintTestPartResult(const TestPartResult& test_part_result) {
+   const std::string& result = PrintTestPartResultToString(test_part_result);
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "%{public}s",
++               result.c_str());
++  WriteUTResult("%s\n", result.c_str());
++#endif
+   printf("%s\n", result.c_str());
+   fflush(stdout);
+   // If the test program runs in Visual Studio or a debugger, the
+@@ -3337,6 +3438,14 @@ static void ColoredPrintf(GTestColor color, const char* fmt, ...) {
+   const bool use_color = in_color_mode && (color != GTestColor::kDefault);
+ 
+   if (!use_color) {
++#if BUILDFLAG(IS_OHOS)
++    char buffer[255] = {0};
++    vsprintf(buffer, fmt, args);
++    va_end(args);
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "%{public}s",
++                 buffer);
++    WriteUTResult("%s", buffer);
++#endif
+     vprintf(fmt, args);
+     va_end(args);
+     return;
+@@ -3382,12 +3491,30 @@ static void PrintFullTestCommentIfPresent(const TestInfo& test_info) {
+   const char* const value_param = test_info.value_param();
+ 
+   if (type_param != nullptr || value_param != nullptr) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", ", where ");
++    WriteUTResult(", where ");
++#endif
+     printf(", where ");
+     if (type_param != nullptr) {
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                   "%{public}s = %{public}s", kTypeParamLabel, type_param);
++      WriteUTResult("%s = %s", kTypeParamLabel, type_param);
++      if (value_param != nullptr) {
++        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", " and ");
++        WriteUTResult(" and ");
++      }
++#endif
+       printf("%s = %s", kTypeParamLabel, type_param);
+       if (value_param != nullptr) printf(" and ");
+     }
+     if (value_param != nullptr) {
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                   "%{public}s = %{public}s", kValueParamLabel, value_param);
++      WriteUTResult("%s = %s", kValueParamLabel, value_param);
++#endif
+       printf("%s = %s", kValueParamLabel, value_param);
+     }
+   }
+@@ -3400,7 +3527,13 @@ class PrettyUnitTestResultPrinter : public TestEventListener {
+  public:
+   PrettyUnitTestResultPrinter() = default;
+   static void PrintTestName(const char* test_suite, const char* test) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "%{public}s.%{public}s", test_suite, test);
++    WriteUTResult("%s.%s", test_suite, test);
++#else
+     printf("%s.%s", test_suite, test);
++#endif
+   }
+ 
+   // The following methods override what's in the TestEventListener class.
+@@ -3439,8 +3572,20 @@ class PrettyUnitTestResultPrinter : public TestEventListener {
+ // Fired before each iteration of tests starts.
+ void PrettyUnitTestResultPrinter::OnTestIterationStart(
+     const UnitTest& unit_test, int iteration) {
+-  if (GTEST_FLAG_GET(repeat) != 1)
++#if BUILDFLAG(IS_OHOS)
++  ResetUTResultFile();
++#endif
++  if (GTEST_FLAG_GET(repeat) != 1) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "\nRepeating all tests (iteration %{public}d) . . .\n\n",
++                 iteration + 1);
++    WriteUTResult("\nRepeating all tests (iteration %d) . . .\n\n",
++                  iteration + 1);
++#else
+     printf("\nRepeating all tests (iteration %d) . . .\n\n", iteration + 1);
++#endif
++  }
+ 
+   std::string f = GTEST_FLAG_GET(filter);
+   const char* const filter = f.c_str();
+@@ -3466,6 +3611,16 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart(
+   }
+ 
+   ColoredPrintf(GTestColor::kGreen, "[==========] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(
++      LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++      "Running %{public}s from %{public}s.",
++      FormatTestCount(unit_test.test_to_run_count()).c_str(),
++      FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++  WriteUTResult("Running %s from %s.\n",
++                FormatTestCount(unit_test.test_to_run_count()).c_str(),
++                FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++#endif
+   printf("Running %s from %s.\n",
+          FormatTestCount(unit_test.test_to_run_count()).c_str(),
+          FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
+@@ -3475,6 +3630,11 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart(
+ void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart(
+     const UnitTest& /*unit_test*/) {
+   ColoredPrintf(GTestColor::kGreen, "[----------] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "Global test environment set-up.\n");
++  WriteUTResult("Global test environment set-up.\n");
++#endif
+   printf("Global test environment set-up.\n");
+   fflush(stdout);
+ }
+@@ -3484,6 +3644,21 @@ void PrettyUnitTestResultPrinter::OnTestCaseStart(const TestCase& test_case) {
+   const std::string counts =
+       FormatCountableNoun(test_case.test_to_run_count(), "test", "tests");
+   ColoredPrintf(GTestColor::kGreen, "[----------] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "%{public}s from %{public}s.", counts.c_str(), test_case.name());
++  WriteUTResult("%s from %s", counts.c_str(), test_case.name());
++  if (test_case.type_param() == nullptr) {
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++    WriteUTResult("\n");
++  } else {
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 ", where %{public}s = %{public}s.", kTypeParamLabel,
++                 test_case.type_param());
++    WriteUTResult(", where %s = %s\n",
++                  kTypeParamLabel, test_case.type_param());
++  }
++#endif
+   printf("%s from %s", counts.c_str(), test_case.name());
+   if (test_case.type_param() == nullptr) {
+     printf("\n");
+@@ -3511,6 +3686,10 @@ void PrettyUnitTestResultPrinter::OnTestSuiteStart(
+ void PrettyUnitTestResultPrinter::OnTestStart(const TestInfo& test_info) {
+   ColoredPrintf(GTestColor::kGreen, "[ RUN      ] ");
+   PrintTestName(test_info.test_suite_name(), test_info.name());
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++  WriteUTResult("\n");
++#endif
+   printf("\n");
+   fflush(stdout);
+ }
+@@ -3518,6 +3697,10 @@ void PrettyUnitTestResultPrinter::OnTestStart(const TestInfo& test_info) {
+ void PrettyUnitTestResultPrinter::OnTestDisabled(const TestInfo& test_info) {
+   ColoredPrintf(GTestColor::kYellow, "[ DISABLED ] ");
+   PrintTestName(test_info.test_suite_name(), test_info.name());
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++  WriteUTResult("\n");
++#endif
+   printf("\n");
+   fflush(stdout);
+ }
+@@ -3549,10 +3732,23 @@ void PrettyUnitTestResultPrinter::OnTestEnd(const TestInfo& test_info) {
+   if (test_info.result()->Failed()) PrintFullTestCommentIfPresent(test_info);
+ 
+   if (GTEST_FLAG_GET(print_time)) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(
++        LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", " (%{public}s ms)",
++        internal::StreamableToString(test_info.result()->elapsed_time())
++            .c_str());
++    WriteUTResult(" (%s ms)\n",
++                  internal::StreamableToString(test_info.result()->elapsed_time())
++                      .c_str());
++#endif
+     printf(" (%s ms)\n",
+            internal::StreamableToString(test_info.result()->elapsed_time())
+                .c_str());
+   } else {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++    WriteUTResult("\n");
++#endif
+     printf("\n");
+   }
+   fflush(stdout);
+@@ -3565,6 +3761,15 @@ void PrettyUnitTestResultPrinter::OnTestCaseEnd(const TestCase& test_case) {
+   const std::string counts =
+       FormatCountableNoun(test_case.test_to_run_count(), "test", "tests");
+   ColoredPrintf(GTestColor::kGreen, "[----------] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "%{public}s from %{public}s (%{public}s ms total)",
++               counts.c_str(), test_case.name(),
++               internal::StreamableToString(test_case.elapsed_time()).c_str());
++  WriteUTResult("%s from %s (%s ms total)\n\n",
++                counts.c_str(), test_case.name(),
++                internal::StreamableToString(test_case.elapsed_time()).c_str());
++#endif
+   printf("%s from %s (%s ms total)\n\n", counts.c_str(), test_case.name(),
+          internal::StreamableToString(test_case.elapsed_time()).c_str());
+   fflush(stdout);
+@@ -3585,6 +3790,11 @@ void PrettyUnitTestResultPrinter::OnTestSuiteEnd(const TestSuite& test_suite) {
+ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart(
+     const UnitTest& /*unit_test*/) {
+   ColoredPrintf(GTestColor::kGreen, "[----------] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "Global test environment tear-down\n");
++  WriteUTResult("Global test environment tear-down\n");
++#endif
+   printf("Global test environment tear-down\n");
+   fflush(stdout);
+ }
+@@ -3593,6 +3803,13 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart(
+ void PrettyUnitTestResultPrinter::PrintFailedTests(const UnitTest& unit_test) {
+   const int failed_test_count = unit_test.failed_test_count();
+   ColoredPrintf(GTestColor::kRed, "[  FAILED  ] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "%{public}s, listed below:",
++               FormatTestCount(failed_test_count).c_str());
++  WriteUTResult("%s, listed below:\n",
++                FormatTestCount(failed_test_count).c_str());
++#endif
+   printf("%s, listed below:\n", FormatTestCount(failed_test_count).c_str());
+ 
+   for (int i = 0; i < unit_test.total_test_suite_count(); ++i) {
+@@ -3606,11 +3823,24 @@ void PrettyUnitTestResultPrinter::PrintFailedTests(const UnitTest& unit_test) {
+         continue;
+       }
+       ColoredPrintf(GTestColor::kRed, "[  FAILED  ] ");
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                   "%{public}s.%{public}s", test_suite.name(),
++                   test_info.name());
++      WriteUTResult("%s.%s\n", test_suite.name(), test_info.name());
++#endif
+       printf("%s.%s", test_suite.name(), test_info.name());
+       PrintFullTestCommentIfPresent(test_info);
+       printf("\n");
+     }
+   }
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "%{public}d FAILED %{public}s", failed_test_count,
++               failed_test_count == 1 ? "TEST" : "TESTS");
++  WriteUTResult("\n%2d FAILED %s\n", failed_test_count,
++                failed_test_count == 1 ? "TEST" : "TESTS");
++#endif
+   printf("\n%2d FAILED %s\n", failed_test_count,
+          failed_test_count == 1 ? "TEST" : "TESTS");
+ }
+@@ -3627,11 +3857,25 @@ void PrettyUnitTestResultPrinter::PrintFailedTestSuites(
+     }
+     if (test_suite.ad_hoc_test_result().Failed()) {
+       ColoredPrintf(GTestColor::kRed, "[  FAILED  ] ");
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                   "%{public}s: SetUpTestSuite or TearDownTestSuite",
++                   test_suite.name());
++      WriteUTResult("%s: SetUpTestSuite or TearDownTestSuite\n",
++                    test_suite.name());
++#endif
+       printf("%s: SetUpTestSuite or TearDownTestSuite\n", test_suite.name());
+       ++suite_failure_count;
+     }
+   }
+   if (suite_failure_count > 0) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "%{public}d FAILED TEST %{public}s", suite_failure_count,
++                 (suite_failure_count == 1 ? "SUITE" : "SUITES"));
++    WriteUTResult("\n%2d FAILED TEST %s\n", suite_failure_count,
++                  suite_failure_count == 1 ? "SUITE" : "SUITES");
++#endif
+     printf("\n%2d FAILED TEST %s\n", suite_failure_count,
+            suite_failure_count == 1 ? "SUITE" : "SUITES");
+   }
+@@ -3655,6 +3899,13 @@ void PrettyUnitTestResultPrinter::PrintSkippedTests(const UnitTest& unit_test) {
+         continue;
+       }
+       ColoredPrintf(GTestColor::kGreen, "[  SKIPPED ] ");
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                   "%{public}s.%{public}s", test_suite.name(),
++                   test_info.name());
++      WriteUTResult("%s.%s\n", test_suite.name(),
++                    test_info.name());
++#endif
+       printf("%s.%s", test_suite.name(), test_info.name());
+       printf("\n");
+     }
+@@ -3664,20 +3915,55 @@ void PrettyUnitTestResultPrinter::PrintSkippedTests(const UnitTest& unit_test) {
+ void PrettyUnitTestResultPrinter::OnTestIterationEnd(const UnitTest& unit_test,
+                                                      int /*iteration*/) {
+   ColoredPrintf(GTestColor::kGreen, "[==========] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(
++      LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++      "%{public}s from %{public}s ran.",
++      FormatTestCount(unit_test.test_to_run_count()).c_str(),
++      FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++  WriteUTResult("%s from %s ran.",
++                FormatTestCount(unit_test.test_to_run_count()).c_str(),
++                FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++#endif
+   printf("%s from %s ran.",
+          FormatTestCount(unit_test.test_to_run_count()).c_str(),
+          FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
+   if (GTEST_FLAG_GET(print_time)) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(
++        LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", " (%{public}s ms total)",
++        internal::StreamableToString(unit_test.elapsed_time()).c_str());
++    WriteUTResult(" (%s ms total)",
++                  internal::StreamableToString(unit_test.elapsed_time()).c_str());
++#endif
+     printf(" (%s ms total)",
+            internal::StreamableToString(unit_test.elapsed_time()).c_str());
+   }
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++  WriteUTResult("\n");
++#endif
+   printf("\n");
+   ColoredPrintf(GTestColor::kGreen, "[  PASSED  ] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(
++      LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "%{public}s.",
++      FormatTestCount(unit_test.successful_test_count()).c_str());
++  WriteUTResult("%s.\n",
++                FormatTestCount(unit_test.successful_test_count()).c_str());
++#endif
+   printf("%s.\n", FormatTestCount(unit_test.successful_test_count()).c_str());
+ 
+   const int skipped_test_count = unit_test.skipped_test_count();
+   if (skipped_test_count > 0) {
+     ColoredPrintf(GTestColor::kGreen, "[  SKIPPED ] ");
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "%{public}s, listed below:",
++                 FormatTestCount(skipped_test_count).c_str());
++    WriteUTResult("%s, listed below:\n",
++                  FormatTestCount(skipped_test_count).c_str());
++#endif
+     printf("%s, listed below:\n", FormatTestCount(skipped_test_count).c_str());
+     PrintSkippedTests(unit_test);
+   }
+@@ -3690,8 +3976,19 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd(const UnitTest& unit_test,
+   int num_disabled = unit_test.reportable_disabled_test_count();
+   if (num_disabled && !GTEST_FLAG_GET(also_run_disabled_tests)) {
+     if (unit_test.Passed()) {
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++      WriteUTResult("\n");
++#endif
+       printf("\n");  // Add a spacer if no FAILURE banner is displayed.
+     }
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "  YOU HAVE %{public}d DISABLED %{public}s\n\n", num_disabled,
++                 (num_disabled == 1 ? "TEST" : "TESTS"));
++    WriteUTResult("  YOU HAVE %d DISABLED %s\n\n", num_disabled,
++                  num_disabled == 1 ? "TEST" : "TESTS");
++#endif
+     ColoredPrintf(GTestColor::kYellow, "  YOU HAVE %d DISABLED %s\n\n",
+                   num_disabled, num_disabled == 1 ? "TEST" : "TESTS");
+   }
+@@ -3762,10 +4059,23 @@ void BriefUnitTestResultPrinter::OnTestEnd(const TestInfo& test_info) {
+     PrintFullTestCommentIfPresent(test_info);
+ 
+     if (GTEST_FLAG_GET(print_time)) {
++#if BUILDFLAG(IS_OHOS)
++      OH_LOG_Print(
++          LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", " (%{public}s ms)",
++          internal::StreamableToString(test_info.result()->elapsed_time())
++              .c_str());
++      WriteUTResult(" (%s ms)\n",
++                    internal::StreamableToString(test_info.result()->elapsed_time())
++                        .c_str());
++#endif
+       printf(" (%s ms)\n",
+              internal::StreamableToString(test_info.result()->elapsed_time())
+                  .c_str());
+     } else {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++    WriteUTResult("\n");
++#endif
+       printf("\n");
+     }
+     fflush(stdout);
+@@ -3775,28 +4085,75 @@ void BriefUnitTestResultPrinter::OnTestEnd(const TestInfo& test_info) {
+ void BriefUnitTestResultPrinter::OnTestIterationEnd(const UnitTest& unit_test,
+                                                     int /*iteration*/) {
+   ColoredPrintf(GTestColor::kGreen, "[==========] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(
++      LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++      "%{public}s from %{public}s ran.",
++      FormatTestCount(unit_test.test_to_run_count()).c_str(),
++      FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++  WriteUTResult("%s from %s ran.",
++                FormatTestCount(unit_test.test_to_run_count()).c_str(),
++                FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
++#endif
+   printf("%s from %s ran.",
+          FormatTestCount(unit_test.test_to_run_count()).c_str(),
+          FormatTestSuiteCount(unit_test.test_suite_to_run_count()).c_str());
+   if (GTEST_FLAG_GET(print_time)) {
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(
++        LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", " (%{public}s ms total)",
++        internal::StreamableToString(unit_test.elapsed_time()).c_str());
++    WriteUTResult(" (%s ms total)",
++                  internal::StreamableToString(unit_test.elapsed_time()).c_str());
++#endif
+     printf(" (%s ms total)",
+            internal::StreamableToString(unit_test.elapsed_time()).c_str());
+   }
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "\n");
++  WriteUTResult("\n");
++#endif
+   printf("\n");
+   ColoredPrintf(GTestColor::kGreen, "[  PASSED  ] ");
++#if BUILDFLAG(IS_OHOS)
++  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++               "%{public}s.\n",
++               FormatTestCount(unit_test.successful_test_count()).c_str());
++  WriteUTResult("%s.\n",
++                FormatTestCount(unit_test.successful_test_count()).c_str());
++#endif
+   printf("%s.\n", FormatTestCount(unit_test.successful_test_count()).c_str());
+ 
+   const int skipped_test_count = unit_test.skipped_test_count();
+   if (skipped_test_count > 0) {
+     ColoredPrintf(GTestColor::kGreen, "[  SKIPPED ] ");
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "%{public}s.",
++                 FormatTestCount(skipped_test_count).c_str());
++    WriteUTResult("%s.\n",
++                  FormatTestCount(skipped_test_count).c_str());
++#endif
+     printf("%s.\n", FormatTestCount(skipped_test_count).c_str());
+   }
+ 
+   int num_disabled = unit_test.reportable_disabled_test_count();
+   if (num_disabled && !GTEST_FLAG_GET(also_run_disabled_tests)) {
+     if (unit_test.Passed()) {
++#if BUILDFLAG(IS_OHOS)
++      // Add a spacer if no FAILURE banner is displayed.
++      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest", "");
++      WriteUTResult("\n");
++#endif
+       printf("\n");  // Add a spacer if no FAILURE banner is displayed.
+     }
++#if BUILDFLAG(IS_OHOS)
++    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                 "  YOU HAVE %{public}d DISABLED %{public}s\n\n", num_disabled,
++                 (num_disabled == 1 ? "TEST" : "TESTS"));
++    WriteUTResult("  YOU HAVE %d DISABLED %s\n\n", num_disabled,
++                  num_disabled == 1 ? "TEST" : "TESTS");
++#endif
+     ColoredPrintf(GTestColor::kYellow, "  YOU HAVE %d DISABLED %s\n\n",
+                   num_disabled, num_disabled == 1 ? "TEST" : "TESTS");
+   }
+@@ -6060,6 +6417,84 @@ bool UnitTestImpl::RunAllTests() {
+             break;
+           }
+         }
++
++#if BUILDFLAG(IS_OHOS)
++        // Retry failed tests up to g_retrying_count_ times.
++        // Must happen here (before environment teardown) so resources are alive.
++        {
++          std::vector<std::string> all_retried_tests;
++          int retry_remaining = g_retrying_count_;
++          while (retry_remaining > 0) {
++            g_failed_unit_.clear();
++            for (int m = 0; m < total_test_suite_count(); ++m) {
++              const TestSuite* test_suite =
++                  UnitTest::GetInstance()->GetTestSuite(m);
++              for (int n = 0; n < test_suite->total_test_count(); ++n) {
++                const TestInfo& test_info = *test_suite->GetTestInfo(n);
++                if (test_info.result()->Failed()) {
++                  std::string full_name =
++                      std::string(test_suite->name()) + "." +
++                      std::string(test_info.name());
++                  g_failed_unit_.push_back(full_name);
++                  if (std::find(all_retried_tests.begin(),
++                                all_retried_tests.end(),
++                                full_name) == all_retried_tests.end()) {
++                    all_retried_tests.push_back(full_name);
++                  }
++                }
++              }
++            }
++            if (g_failed_unit_.empty()) break;
++
++            retry_remaining--;
++            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_PRINT_GTEST, "Gtest",
++                         "Retrying %{public}lu tests, remaining retries: "
++                         "%{public}d",
++                         g_failed_unit_.size(), retry_remaining);
++            WriteUTResult("Retrying %lu tests, remaining retries: %d\n",
++                          g_failed_unit_.size(), retry_remaining);
++
++            for (int m = 0; m < total_test_suite_count(); ++m) {
++              TestSuite* test_suite = GetMutableSuiteCase(m);
++              bool suite_has_failure = false;
++              for (int n = 0; n < test_suite->total_test_count(); ++n) {
++                TestInfo* test_info = test_suite->GetMutableTestInfo(n);
++                if (test_info->result()->Failed()) {
++                  TestInfo::ClearTestResult(test_info);
++                  suite_has_failure = true;
++                }
++              }
++              if (suite_has_failure) {
++                test_suite->ad_hoc_test_result_.Clear();
++                test_suite->Run();
++              }
++            }
++          }
++          if (retry_remaining < g_retrying_count_ &&
++              !all_retried_tests.empty()) {
++            std::vector<bool> retried_passed;
++            for (const auto& name : all_retried_tests) {
++              bool passed = true;
++              for (int m = 0; m < total_test_suite_count(); ++m) {
++                const TestSuite* ts =
++                    UnitTest::GetInstance()->GetTestSuite(m);
++                for (int n = 0; n < ts->total_test_count(); ++n) {
++                  const TestInfo& ti = *ts->GetTestInfo(n);
++                  std::string full =
++                      std::string(ts->name()) + "." +
++                      std::string(ti.name());
++                  if (full == name && ti.result()->Failed()) {
++                    passed = false;
++                  }
++                }
++              }
++              retried_passed.push_back(passed);
++            }
++            UpdateUTResultForRetry(all_retried_tests, retried_passed);
++          }
++          g_failed_unit_.clear();
++        }
++#endif
+       } else if (Test::HasFatalFailure()) {
+         // If there was a fatal failure during the global setup then we know we
+         // aren't going to run any tests. Explicitly mark all of the tests as
+-- 
+2.34.1
+

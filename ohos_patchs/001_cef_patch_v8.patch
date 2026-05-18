@@ -1,10 +1,10 @@
-From 4a1959aa3169952d0ed76961a28acf10efe65d8e Mon Sep 17 00:00:00 2001
+From 479573d73ce07b7d538781598ab0d23f167b3e9e Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Wed, 3 Dec 2025 09:46:45 +0800
+Date: Mon, 18 May 2026 11:15:46 +0800
 Subject: [PATCH] add cef_patch_v8.patch
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: Iecf865c04920d1a97e99aa6d7566d0f9d0456156
+Change-Id: I538bb6a70e5f27c4f864128e5ea7f87720286510
 ---
  BUILD.gn | 8 ++++++++
  1 file changed, 8 insertions(+)

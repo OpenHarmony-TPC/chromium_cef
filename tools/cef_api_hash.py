@@ -24,6 +24,7 @@ PLATFORM_DEFINES = {
     'windows': ['OS_WIN', 'ARCH_CPU_X86_64'],
     'mac': ['OS_MAC', 'OS_POSIX', 'ARCH_CPU_ARM64'],
     'linux': ['OS_LINUX', 'OS_POSIX', 'CEF_X11', 'ARCH_CPU_X86_64'],
+    'ohos': ['OS_OHOS', 'OS_POSIX', 'ARCH_CPU_ARM64'],
 }
 
 SYSTEM_INCLUDES_PATTERN = re.compile(r'(#include <[^>]+>)')

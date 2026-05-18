@@ -1,10 +1,10 @@
-From ddb58cc8563559ec0b9e55a5db346ee22cab159e Mon Sep 17 00:00:00 2001
+From 328d2871980b403d36a064441896de77374d2255 Mon Sep 17 00:00:00 2001
 From: laixiaohai <xiaohai.lai@haitaichina.com>
-Date: Tue, 31 Mar 2026 17:28:34 +0800
+Date: Mon, 18 May 2026 11:16:28 +0800
 Subject: [PATCH] add cef_patch_third_party
 
 Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
-Change-Id: I88c9290037c227c601f63a4d4874b598341238d5
+Change-Id: I9693c7842386f9265a519947c6b02d1fa63d1544
 ---
  blink/public/platform/platform.h              |  5 ++
  blink/public/web/web_element.h                |  3 +
@@ -36,7 +36,8 @@ Change-Id: I88c9290037c227c601f63a4d4874b598341238d5
  rust-toolchain/bin/clippy-driver              |  0
  rust-toolchain/bin/rust-analyzer              |  0
  sentencepiece/src/src/util.cc                 | 15 ++++-
- 31 files changed, 248 insertions(+), 20 deletions(-)
+ widevine/cdm/widevine.gni                     |  3 +-
+ 31 files changed, 250 insertions(+), 21 deletions(-)
  mode change 100755 => 100644 instrumented_libs/binaries/msan-chained-origins-noble-lib/lib/libgtk-3.so.0.2409.32
  mode change 100755 => 100644 instrumented_libs/binaries/msan-chained-origins-noble-lib/lib/libharfbuzz-subset.so.0.60830.0
  mode change 100755 => 100644 instrumented_libs/binaries/msan-chained-origins-noble-lib/lib/systemd/libsystemd-shared-255.so
@@ -813,6 +814,27 @@ index c5e5289807..e10880abc1 100644
  }
  #endif
  }  // namespace random
+diff --git a/src/third_party/widevine/cdm/widevine.gni b/src/third_party/widevine/cdm/widevine.gni
+index e31de0a552..0de5688bbf 100644
+--- a/src/third_party/widevine/cdm/widevine.gni
++++ b/src/third_party/widevine/cdm/widevine.gni
+@@ -5,6 +5,7 @@
+ import("//build/config/chrome_build.gni")
+ import("//build/config/chromeos/ui_mode.gni")
+ import("//build/config/chromeos/ui_mode.gni")
++import("//cef/libcef/features/features.gni")
+ import("//media/media_options.gni")
+ 
+ declare_args() {
+@@ -13,7 +14,7 @@ declare_args() {
+   # Can be optionally enabled in Chromium on non-Android platforms. Please see
+   # //src/third_party/widevine/LICENSE file for details.
+   enable_widevine = ((is_chrome_branded || is_chrome_for_testing_branded) &&
+-                     !is_fuchsia) || is_android
++                     !is_fuchsia) || is_android || enable_cef
+ }
+ 
+ # Disable Widevine when running linux-chromeos.
 -- 
 2.34.1
 

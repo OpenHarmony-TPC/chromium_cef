@@ -192,7 +192,11 @@ namespace {
 const int kTextfieldID = 1;
 
 // Contents need to be supported by the TranslateKey function.
+#if defined(OS_OHOS)
+const char kTestInputMessage[] = "TEST MESSAGE";
+#else
 const char kTestInputMessage[] = "Test Message";
+#endif
 
 void TranslateKey(int c, int* keycode, uint32_t* modifiers) {
   *keycode = VKEY_UNKNOWN;
@@ -260,6 +264,51 @@ class TestTextfieldDelegate : public CefTextfieldDelegate {
   DISALLOW_COPY_AND_ASSIGN(TestTextfieldDelegate);
 };
 
+#if defined(OS_OHOS)
+void RunTextfieldKeyEventOH(CefRefPtr<CefWindow> window) {
+  CefRefPtr<CefTextfield> textfield =
+      CefTextfield::CreateTextfield(new TestTextfieldDelegate());
+  textfield->SetID(kTextfieldID);
+
+  EXPECT_TRUE(textfield->AsTextfield());
+  EXPECT_EQ(kTextfieldID, textfield->GetID());
+  EXPECT_TRUE(textfield->IsVisible());
+  EXPECT_FALSE(textfield->IsDrawn());
+
+  window->AddChildView(textfield);
+  window->Layout();
+
+  EXPECT_TRUE(window->IsSame(textfield->GetWindow()));
+  EXPECT_TRUE(window->IsSame(textfield->GetParentView()));
+  EXPECT_TRUE(textfield->IsSame(window->GetViewForID(kTextfieldID)));
+  EXPECT_TRUE(textfield->IsVisible());
+  EXPECT_TRUE(textfield->IsDrawn());
+
+  textfield->SetFocusable(true);
+  // Give input focus to the textfield.
+  textfield->RequestFocus();
+
+  // Send the contents of |kTestInputMessage| to the textfield.
+  for (size_t i = 0; i < sizeof(kTestInputMessage) - 1; ++i) {
+    usleep(200000);
+    int keycode;
+    uint32_t modifiers;
+    TranslateKey(kTestInputMessage[i], &keycode, &modifiers);
+    window->SendKeyPress(keycode, modifiers);
+  }
+
+  // Send return to end the text input.
+  window->SendKeyPress(VKEY_RETURN, 0);
+}
+
+void RunTextfieldKeyEvent(CefRefPtr<CefWindow> window) {
+  window->Show();
+  // Due to Akiui, the focus of the textfiled was lost, and
+  // simulation information could not be received in a timely manner
+  CefPostDelayedTask(TID_UI, base::BindOnce(&RunTextfieldKeyEventOH, window),
+                     2000);
+}
+#else
 void RunTextfieldKeyEvent(CefRefPtr<CefWindow> window) {
   CefRefPtr<CefTextfield> textfield =
       CefTextfield::CreateTextfield(new TestTextfieldDelegate());
@@ -295,6 +344,7 @@ void RunTextfieldKeyEvent(CefRefPtr<CefWindow> window) {
   // Send return to end the text input.
   window->SendKeyPress(VKEY_RETURN, 0);
 }
+#endif
 
 void TextfieldKeyEventImpl(CefRefPtr<CefWaitableEvent> event) {
   auto config = std::make_unique<TestWindowDelegate::Config>();

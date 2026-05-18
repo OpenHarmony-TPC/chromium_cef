@@ -10,10 +10,10 @@
 #include "include/internal/cef_types.h"
 #include "tests/gtest/include/gtest/gtest.h"
 
-#ifdef OS_OHOS
+#if defined(OS_OHOS)
 bool GetResourceDir(std::string& dir) {
   CefString files;
-  if (CefGetPath(PK_DIR_RESOURCES, files) && !files.empty()) {
+  if (CefGetPath(PK_DIR_TEMP, files) && !files.empty()) {
     dir = std::string(files.ToString());
     return true;
   } else {
@@ -84,7 +84,7 @@ static void VerifyStreamWriteBehavior(CefRefPtr<CefStreamWriter> stream,
 }
 
 TEST(StreamTest, ReadFile) {
-#ifdef OS_OHOS
+#if defined(OS_OHOS)
   std::string resource_dir;
   if (GetResourceDir(resource_dir)) {
     resource_dir.append("/");
@@ -144,7 +144,7 @@ TEST(StreamTest, ReadData) {
 }
 
 TEST(StreamTest, WriteFile) {
-#ifdef OS_OHOS
+#if defined(OS_OHOS)
   std::string resource_dir;
   if (GetResourceDir(resource_dir)) {
     resource_dir.append("/");

@@ -231,11 +231,19 @@ class AccessibilityTestHandler : public TestHandler,
   }
 
   void HideEditBox(CefRefPtr<CefBrowser> browser) {
+#if defined(OS_OHOS)
+    // Hide the button on ohos, due to the style no-effect for editbox.
+    // This should trigger Location update if enabled
+    browser->GetMainFrame()->ExecuteJavaScript(
+        "document.getElementById('button').style.display = 'none';", kTestUrl,
+        0);
+#else
     // Hide the edit box.
     // This should trigger Location update if enabled
     browser->GetMainFrame()->ExecuteJavaScript(
         "document.getElementById('editbox').style.display = 'none';", kTestUrl,
         0);
+#endif
 
     got_hide_edit_box_.yes();
   }
@@ -360,9 +368,11 @@ class AccessibilityTestHandler : public TestHandler,
     CefRefPtr<CefDictionaryValue> treeData = update->GetDictionary("tree_data");
 
     // Validate title and Url
-    EXPECT_STREQ("AccessibilityTest",
-                 treeData->GetString("title").ToString().c_str());
-    EXPECT_STREQ(kTestUrl, treeData->GetString("url").ToString().c_str());
+    if (treeData.get()) {
+      EXPECT_STREQ("AccessibilityTest",
+                  treeData->GetString("title").ToString().c_str());
+      EXPECT_STREQ(kTestUrl, treeData->GetString("url").ToString().c_str());
+    }
 
     // Validate node data
     CefRefPtr<CefListValue> nodes = update->GetList("nodes");

@@ -69,7 +69,7 @@ def compute_api_hashes(api_version: str,
 
 def same_api_hashes(hashes1, hashes2):
   return all(hashes1[key] == hashes2[key]
-             for key in ['linux', 'mac', 'windows'])
+             for key in ['linux', 'mac', 'ohos', 'windows'])
 
 
 def compute_next_api_version(api_versions_file):

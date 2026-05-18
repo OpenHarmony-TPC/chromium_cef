@@ -45,6 +45,10 @@
 #include "tests/shared/browser/util_win.h"
 #endif
 
+#if defined(OS_OHOS)
+#include "ohos/adapter/window/app_window_adapter.h"
+#endif
+
 #if defined(OS_MAC)
 // Platform-specific initialization and cleanup.
 extern void PlatformInit();
@@ -268,6 +272,12 @@ int RunMain(int argc,
     thread->Stop();
     thread = nullptr;
   }
+
+#if defined(OS_OHOS)
+  // The HarmonyOS platform does not require the creation of a browser for
+  // processing, but opens the UIAbility window to close it
+  ohos::adapter::window::AppWindowAdapter::GetInstance().CloseUIAbilityWindow();
+#endif
 
   // Shut down CEF.
   CefShutdown();

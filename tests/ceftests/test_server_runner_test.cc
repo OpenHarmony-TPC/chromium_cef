@@ -39,6 +39,11 @@ class ServerHandler : public CefTestServerHandler {
 
     server_ =
         CefTestServer::CreateAndStart(port, https_server_, cert_type, this);
+    if (!server_) {
+      LOG(ERROR) << "CefTestServer::CreateAndStart Failed, return server_: "
+                 << server_;
+      return;
+    }
 
     // Always execute asynchronously.
     CefPostTask(TID_UI, base::BindOnce(&ServerHandler::NotifyServerCreated,

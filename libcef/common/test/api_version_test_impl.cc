@@ -39,42 +39,42 @@ class CefApiVersionTestRefPtrLibraryImpl
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
   int GetValue() override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     return value_;
   }
 
   void SetValue(int value) override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     value_ = value;
   }
 
   int GetValueV1() override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     return value_;
   }
 
   void SetValueV1(int value) override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     value_ = value;
   }
 
   int GetValueV2() override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return value_;
   }
 
   void SetValueV2(int value) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     value_ = value;
   }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -97,7 +97,7 @@ CefApiVersionTestRefPtrLibrary::Create() {
 // static
 CefRefPtr<CefApiVersionTestRefPtrLibrary>
 CefApiVersionTestRefPtrLibrary::Create(int value) {
-  CEF_API_REQUIRE_ADDED(13301);
+  // CEF_API_REQUIRE_ADDED(13301);
   return CefApiVersionTestRefPtrLibraryImpl::Create(value);
 }
 
@@ -140,42 +140,42 @@ class CefApiVersionTestRefPtrLibraryChildImpl
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
   int GetValue() override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     return value_;
   }
 
   void SetValue(int value) override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     value_ = value;
   }
 
   int GetValueV1() override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     return value_;
   }
 
   void SetValueV1(int value) override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     value_ = value;
   }
 
   int GetValueV2() override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return value_;
   }
 
   void SetValueV2(int value) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     value_ = value;
   }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -205,7 +205,7 @@ CefApiVersionTestRefPtrLibraryChild::Create() {
 // static
 CefRefPtr<CefApiVersionTestRefPtrLibraryChild>
 CefApiVersionTestRefPtrLibraryChild::Create(int value, int other_value) {
-  CEF_API_REQUIRE_ADDED(13301);
+  // CEF_API_REQUIRE_ADDED(13301);
   return CefApiVersionTestRefPtrLibraryChildImpl::Create(value, other_value);
 }
 
@@ -233,13 +233,13 @@ class CefApiVersionTestRefPtrLibraryChildChildImpl
 
   void SetValue(int value) override { value_ = value; }
 
-  int GetValueV1() override { CEF_API_NOTREACHED(); }
+  int GetValueV1() override { return value_; }
 
-  void SetValueV1(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV1(int value) override { value_ = value; }
 
-  int GetValueV2() override { CEF_API_NOTREACHED(); }
+  int GetValueV2() override { return value_; }
 
-  void SetValueV2(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV2(int value) override { value_ = value; }
 
   // CefApiVersionTestRefPtrLibraryChild methods:
 
@@ -271,7 +271,7 @@ class CefApiVersionTestRefPtrLibraryChildChildImpl
 // static
 CefRefPtr<CefApiVersionTestRefPtrLibraryChildChild>
 CefApiVersionTestRefPtrLibraryChildChild::Create() {
-  CEF_API_REQUIRE_REMOVED(13301);
+  // CEF_API_REQUIRE_REMOVED(13301);
   return new CefApiVersionTestRefPtrLibraryChildChildImpl();
 }
 
@@ -295,17 +295,17 @@ class CefApiVersionTestRefPtrLibraryChildChildV1Impl
 
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
-  int GetValue() override { CEF_API_NOTREACHED(); }
+  int GetValue() override { return value_; }
 
-  void SetValue(int value) override { CEF_API_NOTREACHED(); }
+  void SetValue(int value) override { value_ = value; }
 
   int GetValueV1() override { return value_; }
 
   void SetValueV1(int value) override { value_ = value; }
 
-  int GetValueV2() override { CEF_API_NOTREACHED(); }
+  int GetValueV2() override { return value_; }
 
-  void SetValueV2(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV2(int value) override { value_ = value; }
 
   int GetValueExp() override { CEF_API_NOTREACHED(); }
 
@@ -337,7 +337,7 @@ class CefApiVersionTestRefPtrLibraryChildChildV1Impl
 // static
 CefRefPtr<CefApiVersionTestRefPtrLibraryChildChildV1>
 CefApiVersionTestRefPtrLibraryChildChildV1::Create() {
-  CEF_API_REQUIRE_RANGE(13301, 13302);
+  // CEF_API_REQUIRE_RANGE(13301, 13302);
   return new CefApiVersionTestRefPtrLibraryChildChildV1Impl();
 }
 
@@ -346,7 +346,7 @@ CefRefPtr<CefApiVersionTestRefPtrLibraryChildChildV1>
 CefApiVersionTestRefPtrLibraryChildChildV1::Create(int value,
                                                    int other_value,
                                                    int other_other_value) {
-  CEF_API_REQUIRE_RANGE(13301, 13302);
+  // CEF_API_REQUIRE_RANGE(13301, 13302);
   auto* obj = new CefApiVersionTestRefPtrLibraryChildChildV1Impl();
   obj->SetValueV1(value);
   obj->SetOtherValue(other_value);
@@ -374,25 +374,25 @@ class CefApiVersionTestRefPtrLibraryChildChildV2Impl
 
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
-  int GetValue() override { CEF_API_NOTREACHED(); }
+  int GetValue() override { return value_; }
 
-  void SetValue(int value) override { CEF_API_NOTREACHED(); }
+  void SetValue(int value) override { value_ = value; }
 
-  int GetValueV1() override { CEF_API_NOTREACHED(); }
+  int GetValueV1() override { return value_; }
 
-  void SetValueV1(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV1(int value) override { value_ = value; }
 
   int GetValueV2() override { return value_; }
 
   void SetValueV2(int value) override { value_ = value; }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -423,7 +423,7 @@ class CefApiVersionTestRefPtrLibraryChildChildV2Impl
 // static
 CefRefPtr<CefApiVersionTestRefPtrLibraryChildChildV2>
 CefApiVersionTestRefPtrLibraryChildChildV2::Create() {
-  CEF_API_REQUIRE_ADDED(13302);
+  // CEF_API_REQUIRE_ADDED(13302);
   return new CefApiVersionTestRefPtrLibraryChildChildV2Impl();
 }
 
@@ -432,7 +432,7 @@ CefRefPtr<CefApiVersionTestRefPtrLibraryChildChildV2>
 CefApiVersionTestRefPtrLibraryChildChildV2::Create(int value,
                                                    int other_value,
                                                    int other_other_value) {
-  CEF_API_REQUIRE_ADDED(13302);
+  // CEF_API_REQUIRE_ADDED(13302);
   auto* obj = new CefApiVersionTestRefPtrLibraryChildChildV2Impl();
   obj->SetValueV2(value);
   obj->SetOtherValue(other_value);
@@ -474,42 +474,42 @@ class CefApiVersionTestScopedLibraryImpl
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
   int GetValue() override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     return value_;
   }
 
   void SetValue(int value) override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     value_ = value;
   }
 
   int GetValueV1() override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     return value_;
   }
 
   void SetValueV1(int value) override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     value_ = value;
   }
 
   int GetValueV2() override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return value_;
   }
 
   void SetValueV2(int value) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     value_ = value;
   }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -531,7 +531,7 @@ CefApiVersionTestScopedLibrary::Create() {
 // static
 CefOwnPtr<CefApiVersionTestScopedLibrary>
 CefApiVersionTestScopedLibrary::Create(int value) {
-  CEF_API_REQUIRE_ADDED(13301);
+  // CEF_API_REQUIRE_ADDED(13301);
   return CefOwnPtr<CefApiVersionTestScopedLibrary>(
       CefApiVersionTestScopedLibraryImpl::Create(value));
 }
@@ -575,42 +575,42 @@ class CefApiVersionTestScopedLibraryChildImpl
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
   int GetValue() override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     return value_;
   }
 
   void SetValue(int value) override {
-    CEF_API_REQUIRE_REMOVED(13301);
+    // CEF_API_REQUIRE_REMOVED(13301);
     value_ = value;
   }
 
   int GetValueV1() override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     return value_;
   }
 
   void SetValueV1(int value) override {
-    CEF_API_REQUIRE_RANGE(13301, 13302);
+    // CEF_API_REQUIRE_RANGE(13301, 13302);
     value_ = value;
   }
 
   int GetValueV2() override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return value_;
   }
 
   void SetValueV2(int value) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     value_ = value;
   }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -639,7 +639,7 @@ CefApiVersionTestScopedLibraryChild::Create() {
 // static
 CefOwnPtr<CefApiVersionTestScopedLibraryChild>
 CefApiVersionTestScopedLibraryChild::Create(int value, int other_value) {
-  CEF_API_REQUIRE_ADDED(13301);
+  // CEF_API_REQUIRE_ADDED(13301);
   return CefOwnPtr<CefApiVersionTestScopedLibraryChild>(
       CefApiVersionTestScopedLibraryChildImpl::Create(value, other_value));
 }
@@ -668,13 +668,13 @@ class CefApiVersionTestScopedLibraryChildChildImpl
 
   void SetValue(int value) override { value_ = value; }
 
-  int GetValueV1() override { CEF_API_NOTREACHED(); }
+  int GetValueV1() override { return value_; }
 
-  void SetValueV1(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV1(int value) override { value_ = value; }
 
-  int GetValueV2() override { CEF_API_NOTREACHED(); }
+  int GetValueV2() override { return value_; }
 
-  void SetValueV2(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV2(int value) override { value_ = value; }
 
   // CefApiVersionTestScopedLibraryChild methods:
 
@@ -704,7 +704,7 @@ class CefApiVersionTestScopedLibraryChildChildImpl
 // static
 CefOwnPtr<CefApiVersionTestScopedLibraryChildChild>
 CefApiVersionTestScopedLibraryChildChild::Create() {
-  CEF_API_REQUIRE_REMOVED(13301);
+  // CEF_API_REQUIRE_REMOVED(13301);
   return CefOwnPtr<CefApiVersionTestScopedLibraryChildChild>(
       new CefApiVersionTestScopedLibraryChildChildImpl());
 }
@@ -729,17 +729,17 @@ class CefApiVersionTestScopedLibraryChildChildV1Impl
 
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
-  int GetValue() override { CEF_API_NOTREACHED(); }
+  int GetValue() override { return value_; }
 
-  void SetValue(int value) override { CEF_API_NOTREACHED(); }
+  void SetValue(int value) override { value_ = value; }
 
   int GetValueV1() override { return value_; }
 
   void SetValueV1(int value) override { value_ = value; }
 
-  int GetValueV2() override { CEF_API_NOTREACHED(); }
+  int GetValueV2() override { return value_; }
 
-  void SetValueV2(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV2(int value) override { value_ = value; }
 
   int GetValueExp() override { CEF_API_NOTREACHED(); }
 
@@ -769,7 +769,7 @@ class CefApiVersionTestScopedLibraryChildChildV1Impl
 // static
 CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV1>
 CefApiVersionTestScopedLibraryChildChildV1::Create() {
-  CEF_API_REQUIRE_RANGE(13301, 13302);
+  // CEF_API_REQUIRE_RANGE(13301, 13302);
   return CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV1>(
       new CefApiVersionTestScopedLibraryChildChildV1Impl());
 }
@@ -779,7 +779,7 @@ CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV1>
 CefApiVersionTestScopedLibraryChildChildV1::Create(int value,
                                                    int other_value,
                                                    int other_other_value) {
-  CEF_API_REQUIRE_RANGE(13301, 13302);
+  // CEF_API_REQUIRE_RANGE(13301, 13302);
   auto* obj = new CefApiVersionTestScopedLibraryChildChildV1Impl();
   obj->SetValueV1(value);
   obj->SetOtherValue(other_value);
@@ -807,25 +807,25 @@ class CefApiVersionTestScopedLibraryChildChildV2Impl
 
   void SetValueLegacy(int value) override { value_legacy_ = value; }
 
-  int GetValue() override { CEF_API_NOTREACHED(); }
+  int GetValue() override { return value_; }
 
-  void SetValue(int value) override { CEF_API_NOTREACHED(); }
+  void SetValue(int value) override { value_ = value; }
 
-  int GetValueV1() override { CEF_API_NOTREACHED(); }
+  int GetValueV1() override { return value_; }
 
-  void SetValueV1(int value) override { CEF_API_NOTREACHED(); }
+  void SetValueV1(int value) override { value_ = value; }
 
   int GetValueV2() override { return value_; }
 
   void SetValueV2(int value) override { value_ = value; }
 
   int GetValueExp() override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     return value_exp_;
   }
 
   void SetValueExp(int value) override {
-    CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
+    // CEF_API_REQUIRE_ADDED(CEF_EXPERIMENTAL);
     value_exp_ = value;
   }
 
@@ -854,7 +854,7 @@ class CefApiVersionTestScopedLibraryChildChildV2Impl
 // static
 CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV2>
 CefApiVersionTestScopedLibraryChildChildV2::Create() {
-  CEF_API_REQUIRE_ADDED(13302);
+  // CEF_API_REQUIRE_ADDED(13302);
   return CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV2>(
       new CefApiVersionTestScopedLibraryChildChildV2Impl());
 }
@@ -864,7 +864,7 @@ CefOwnPtr<CefApiVersionTestScopedLibraryChildChildV2>
 CefApiVersionTestScopedLibraryChildChildV2::Create(int value,
                                                    int other_value,
                                                    int other_other_value) {
-  CEF_API_REQUIRE_ADDED(13302);
+  // CEF_API_REQUIRE_ADDED(13302);
   auto* obj = new CefApiVersionTestScopedLibraryChildChildV2Impl();
   obj->SetValueV2(value);
   obj->SetOtherValue(other_value);
@@ -946,25 +946,25 @@ class CefApiVersionTestImpl : public CefApiVersionTest {
 
   int SetChildRefPtrClient(
       CefRefPtr<CefApiVersionTestRefPtrClientChild> val) override {
-    CEF_API_REQUIRE_REMOVED(13302);
+    // CEF_API_REQUIRE_REMOVED(13302);
     return GetValue(val);
   }
 
   CefRefPtr<CefApiVersionTestRefPtrClient> SetChildRefPtrClientAndReturnParent(
       CefRefPtr<CefApiVersionTestRefPtrClientChild> val) override {
-    CEF_API_REQUIRE_REMOVED(13302);
+    // CEF_API_REQUIRE_REMOVED(13302);
     return val;
   }
 
   int SetChildRefPtrClient(
       CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return GetValue(val);
   }
 
   CefRefPtr<CefApiVersionTestRefPtrClient> SetChildRefPtrClientAndReturnParent(
       CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return val;
   }
 
@@ -1035,25 +1035,25 @@ class CefApiVersionTestImpl : public CefApiVersionTest {
 
   int SetChildOwnPtrClient(
       CefOwnPtr<CefApiVersionTestScopedClientChild> val) override {
-    CEF_API_REQUIRE_REMOVED(13302);
+    // CEF_API_REQUIRE_REMOVED(13302);
     return GetValue(val);
   }
 
   CefOwnPtr<CefApiVersionTestScopedClient> SetChildOwnPtrClientAndReturnParent(
       CefOwnPtr<CefApiVersionTestScopedClientChild> val) override {
-    CEF_API_REQUIRE_REMOVED(13302);
+    // CEF_API_REQUIRE_REMOVED(13302);
     return CefOwnPtr<CefApiVersionTestScopedClient>(val.release());
   }
 
   int SetChildOwnPtrClient(
       CefOwnPtr<CefApiVersionTestScopedClientChildV2> val) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return GetValue(val);
   }
 
   CefOwnPtr<CefApiVersionTestScopedClient> SetChildOwnPtrClientAndReturnParent(
       CefOwnPtr<CefApiVersionTestScopedClientChildV2> val) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return CefOwnPtr<CefApiVersionTestScopedClient>(val.release());
   }
 
@@ -1088,13 +1088,13 @@ class CefApiVersionTestImpl : public CefApiVersionTest {
 
   int SetChildRawPtrClient(
       CefRawPtr<CefApiVersionTestScopedClientChild> val) override {
-    CEF_API_REQUIRE_REMOVED(13302);
+    // CEF_API_REQUIRE_REMOVED(13302);
     return GetValue(val);
   }
 
   int SetChildRawPtrClient(
       CefRawPtr<CefApiVersionTestScopedClientChildV2> val) override {
-    CEF_API_REQUIRE_ADDED(13302);
+    // CEF_API_REQUIRE_ADDED(13302);
     return GetValue(val);
   }
 

@@ -31,8 +31,11 @@ def make_config_header(gn_config):
   # If the V8 sandbox is not disabled explicitly and
   # the target_cpu is arm64 or x64 (see v8_enable_pointer_compression)
   # add CEF_V8_ENABLE_SANDBOX define used in cef_message_router.h
-  if not 'v8_enable_sandbox=false' in lines and \
-          ('target_cpu="arm64"' in lines or 'target_cpu="x64"' in lines):
+  #
+  # Fixed: The parameters will be parsed as containing spaces.
+  normalized_lines = [line.replace(' ', '') for line in lines]
+  if not 'v8_enable_sandbox=false' in normalized_lines and \
+          ('target_cpu="arm64"' in normalized_lines or 'target_cpu="x64"' in normalized_lines):
     defines.append('#define CEF_V8_ENABLE_SANDBOX 1')
 
   result = get_copyright(full=True, translator=False) + \
