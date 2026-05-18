@@ -4,12 +4,14 @@
       "comment": "Next version last updated August 28, 2025.",
       "linux": "72c83a1455706c0f964505a6edcbf00c4a00575d",
       "mac": "09110c1f3bbe0e8a8c26ddf6df3388d73a6593d1",
+      "ohos": "895e2bebe994a037aa3d7c640967f77c69d604c6",
       "windows": "1cde3ec27f93747ba42c0f2aa00467a5a16adfd4"
     },
     "999999": {
       "comment": "Experimental version last updated August 28, 2025.",
       "linux": "0d802671510af87cad77e9995123eaf8dff58f4b",
       "mac": "71b073c235324e94f05a50b15a95d6898e9489bf",
+      "ohos": "e5bf1aeae46987cb1c8f95b84ac604ad44f83dfe",
       "windows": "f79df3cebe75a7fae24afbde983e6a96abb67caf"
     }
   }

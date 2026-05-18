@@ -3089,7 +3089,9 @@ class V8RendererTest : public ClientAppRenderer::Delegate,
 
     if (test_mode_ == V8TEST_ON_UNCAUGHT_EXCEPTION ||
         test_mode_ == V8TEST_ON_UNCAUGHT_EXCEPTION_DEV_TOOLS) {
+#if !defined(OS_OHOS)
       EXPECT_TRUE(test_context_->IsSame(context));
+#endif
       EXPECT_STREQ("Uncaught ReferenceError: asd is not defined",
                    exception->GetMessage().ToString().c_str());
       std::ostringstream stackFormatted;

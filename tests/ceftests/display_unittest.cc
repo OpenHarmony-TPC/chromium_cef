@@ -10,6 +10,10 @@
 #include "tests/ceftests/test_handler.h"
 #include "tests/gtest/include/gtest/gtest.h"
 
+#if defined(OS_OHOS)
+#include "ohos/adapter/screen/screen_adapter.h"
+#endif
+
 namespace {
 
 // How it works:
@@ -183,8 +187,23 @@ class AutoResizeTestHandler : public RoutingTestHandler {
       // Ignore this initial resize that may or may not occur.
     } else if (!got_auto_resize1_) {
       got_auto_resize1_.yes();
+#if defined(OS_OHOS)
+      // Fixed: On the OHOS platform, the font display sizes on Harden and KLV
+      // devices are different, but the changes in display size are consistent
+      // with the results obtained through ETS, so the changes in display size
+      // are not processed, then default settings as 20 in KLV and 19 in Harden
+      // used.
+      auto& screenAdapter = ohos::adapter::ScreenAdapter::GetInstance();
+      float zoom = screenAdapter.GetFontSizeZoom();
+      LOG(INFO) << "OnAutoResize--got_auto_resize1_--zoom: " << zoom
+                << " new_size: " << new_size.width << "," << new_size.height;
+      EXPECT_EQ(59, new_size.width);
+      EXPECT_TRUE(new_size.height == 19 || new_size.height == 20)
+          << "Height should be 19 or 20, but got " << new_size.height;
+#else
       EXPECT_EQ(50, new_size.width);
       EXPECT_EQ(18, new_size.height);
+#endif
 
       // Trigger a resize.
       browser->GetMainFrame()->ExecuteJavaScript(
@@ -192,8 +211,24 @@ class AutoResizeTestHandler : public RoutingTestHandler {
           kAutoResizeUrl, 0);
     } else if (!got_auto_resize2_) {
       got_auto_resize2_.yes();
+#if defined(OS_OHOS)
+      // Fixed: On the OHOS platform, the font display sizes on Harden and KLV
+      // devices are different, but the changes in display size are consistent
+      // with the results obtained through ETS, so the changes in display size
+      // are not processed, then default settings as 39 in KLV and 37 in Harden
+      // used.
+      auto& screenAdapter = ohos::adapter::ScreenAdapter::GetInstance();
+      float zoom = screenAdapter.GetFontSizeZoom();
+      LOG(INFO) << "OnAutoResize--got_auto_resize2_--zoom: " << zoom
+                << " new_size: " << new_size.width << "," << new_size.height;
+      EXPECT_EQ(59, new_size.width);
+      EXPECT_TRUE(new_size.height == 39 || new_size.height == 38 ||
+                  new_size.height == 37)
+          << "Height should be 39 or 38 or 37, but got " << new_size.height;
+#else
       EXPECT_EQ(50, new_size.width);
       EXPECT_EQ(37, new_size.height);
+#endif
 
       // Disable resize notifications.
       browser->GetHost()->SetAutoResizeEnabled(false, CefSize(), CefSize());

@@ -1076,13 +1076,12 @@ source_set("libcef_static") {
     ]
 
     deps += [
-      "//build/config/freetype",
       "//ohos/adapter:adapter",
       "//third_party/aki:aki_jsbind",
     ]
 
     if (enable_wiseplay) {
-      deps += [ 
+      deps += [
         "//chrome/browser/media:mojo_bindings",
         "//chrome/common:mojo_bindings",
         "//components/crash/ohos:crash_features",
@@ -1090,7 +1089,7 @@ source_set("libcef_static") {
         "//media/mojo:buildflags",
         "//media/mojo/common",
         "//media/mojo/services",
-        "//third_party/wiseplay/cdm:buildflags", 
+        "//third_party/wiseplay/cdm:buildflags",
         "//third_party/wiseplay/cdm:headers",
       ]
     }
@@ -1663,6 +1662,14 @@ libcef_deps_common = [
   ":make_api_versions_header",
 ]
 
+if (is_ohos) {
+  libcef_deps_common += ["//ohos/adapter:adapter"]
+  libcef_sources_common += [
+    "//ohos/adapter/common/shared_library.cc",
+    "//ohos/adapter/common/shared_library.h",
+  ]
+}
+
 if (is_mac) {
   cef_framework_name = "Chromium Embedded Framework"
 
@@ -1832,14 +1839,6 @@ if (is_mac) {
 
     deps = libcef_deps_common
 
-    if (is_ohos) {
-      deps += ["//ohos/adapter:adapter"]
-      sources += [
-        "//ohos/adapter/common/shared_library.cc",
-        "//ohos/adapter/common/shared_library.h",
-      ]
-    }
-
     configs += [
       ":libcef_autogen_config",
       ":libcef_includes_config",
@@ -1873,6 +1872,43 @@ if (is_mac) {
     if (is_linux) {
       # Disable 'duplicate symbol' linker errors.
       ldflags = [ "-Wl,--allow-multiple-definition" ]
+
+      if (!is_debug && !use_partition_alloc_as_malloc) {
+        # Only export necessary symbols from libcef.so.
+        # Don't do this in Debug builds because it causes the resulting
+        # application to crash.
+        # Also need to do this for ASAN builds to work around
+        # https://crbug.com/832808.
+        ldflags += [ "-Wl,--version-script=" +
+                     rebase_path("//cef/libcef_dll/libcef.lst") ]
+      }
+    }
+  }
+
+  if (is_ohos) {
+    static_library("libcef_for_ohos_ceftests") {
+      # Necessary because the libcef_test_support target is testonly.
+      testonly = true
+
+      sources = libcef_sources_common
+
+      deps = libcef_deps_common
+
+      configs += [
+        ":libcef_autogen_config",
+        ":libcef_includes_config",
+        ":pdb_larger_than_4gb",
+      ]
+
+      ldflags = [
+        "-l:libc++_static.a",
+        "-static-libstdc++",
+      ]
+
+      libs = [ "c++_static" ]
+
+      # Disable 'duplicate symbol' linker errors.
+      ldflags += [ "-Wl,--allow-multiple-definition" ]
 
       if (!is_debug && !use_partition_alloc_as_malloc) {
         # Only export necessary symbols from libcef.so.
@@ -2389,7 +2425,7 @@ if (is_mac) {
   }
 
   #
-  # libcefsimple.so targets.
+  # libceftests.so targets.
   #
   copy("copy_ceftests_files") {
     sources = gypi_paths2.shared_sources_resources
@@ -2411,7 +2447,7 @@ if (is_mac) {
 
     deps = [
       ":copy_ceftests_files",
-      ":libcef",
+      ":libcef_for_ohos_ceftests",
       ":libcef_dll_wrapper",
       ":gtest_teamcity",
       "//ohos/adapter:adapter",
@@ -2427,6 +2463,14 @@ if (is_mac) {
       "native_window",
       "native_drawing"
     ]
+
+    ldflags = [
+      "-Wl,--allow-multiple-definition",
+      "-l:libc++_static.a",
+      "-static-libstdc++",
+    ]
+
+    libs += [ "c++_static" ]
 
     if (!is_component_build) {
       # Set rpath to find our own libfreetype even in a non-component build.

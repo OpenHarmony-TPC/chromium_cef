@@ -1,0 +1,556 @@
+From 9423a3f9baf0469379b1981cb2cdd42763a2d891 Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Mon, 18 May 2026 13:08:04 +0800
+Subject: [PATCH] cef_patch_ut_src.patch
+
+Signed-off-by: laixiaohai <xiaohai.lai@haitaichina.com>
+Change-Id: I3bd724cefb1d4cf62294674b111276da00d53c70
+---
+ base/base_paths_ohos.cc                       |   4 +
+ net/cert/cert_verify_proc_ohos.cc             |  17 ++-
+ ohos/adapter/screen/screen_adapter.cc         |   4 +
+ ohos/adapter/screen/screen_adapter.h          |   1 +
+ ohos/adapter/web_entry/cef/cef_loader.cc      |   3 -
+ ohos/adapter/web_entry/web_loader.cc          |   3 +
+ ohos/adapter/window/app_window_adapter.cc     |   7 +
+ ohos/adapter/window/app_window_adapter.h      |   1 +
+ .../event/node_handle_gesture_event_common.h  |   4 +-
+ .../base/profile/shortcuts_config.json        |   2 +-
+ ohos/app/ohos_hap/web_engine/.gitignore       |   3 +-
+ .../src/main/ets/adapter/AppWindowAdapter.ets |  10 ++
+ .../src/main/ets/adapter/WebAppAdapter.ets    |   2 +-
+ .../ets/components/WebNodeHandleWindow.ets    |  19 +++
+ .../src/main/ets/components/WebWindow.ets     |  19 +++
+ .../ets/jsbindings/AppWindowAdapterBind.ets   |   5 +
+ ohos/build/build.sh                           |   1 +
+ .../ohos_ozone_ui_controls_test_helper.cc     | 140 ++++++++++++++++--
+ 18 files changed, 223 insertions(+), 22 deletions(-)
+ mode change 100755 => 100644 net/cert/cert_verify_proc_ohos.cc
+
+diff --git a/src/base/base_paths_ohos.cc b/src/base/base_paths_ohos.cc
+index c8d58d17be..c0312e73cf 100644
+--- a/src/base/base_paths_ohos.cc
++++ b/src/base/base_paths_ohos.cc
+@@ -67,6 +67,10 @@ bool PathProviderOHOS(int key, FilePath* result) {
+     case base::DIR_OHOS_APP_DATA:
+       *result = FilePath(::ohos::adapter::ContextPathAdapter::GetFilesDir());
+       return !result->empty();
++    case base::DIR_SRC_TEST_DATA_ROOT:
++    case base::DIR_TEST_DATA:
++    case base::DIR_GEN_TEST_DATA_ROOT:
++      return ParseAssetsOHOS(result);
+     default:
+       return false;
+   }
+diff --git a/src/net/cert/cert_verify_proc_ohos.cc b/src/net/cert/cert_verify_proc_ohos.cc
+old mode 100755
+new mode 100644
+index 69155e3ec2..49be7b92b9
+--- a/src/net/cert/cert_verify_proc_ohos.cc
++++ b/src/net/cert/cert_verify_proc_ohos.cc
+@@ -13,6 +13,8 @@
+ #include "base/files/file_util.h"
+ #include "base/logging.h"
+ #include "base/notreached.h"
++#include "base/path_service.h"
++#include "base/threading/thread_restrictions.h"
+ #include "crypto/hash.h"
+ #include "crypto/sha2.h"
+ #include "net/cert/asn1_util.h"
+@@ -36,6 +38,9 @@
+ #include "third_party/boringssl/src/pki/parsed_certificate.h"
+ #include "url/gurl.h"
+ 
++#include <filesystem>
++namespace fs = std::filesystem;
++
+ using ohos::adapter::CertManagerAdapter;
+ #define ROOT_CERT "/etc/ssl/certs/cacert.pem"
+ #define USER_CACERT_PREFIX "/data/certificates/user_cacerts/"
+@@ -318,7 +323,17 @@ class VerifyProcOHOSInner {
+     }
+ 
+     // Parse the root certificate file
+-    if (X509_load_cert_crl_file(look_up, ROOT_CERT, X509_FILETYPE_PEM) == 0) {
++    base::FilePath src_root;
++    {
++      base::ScopedAllowBlockingForTesting allow_blocking;
++      base::PathService::Get(base::DIR_SRC_TEST_DATA_ROOT, &src_root);
++    }
++    src_root = src_root.Append(FILE_PATH_LITERAL("root_certs/cacert.pem"));
++    std::string cert_path = ROOT_CERT;
++    if (fs::exists(src_root.AsUTF8Unsafe())) {
++      cert_path = src_root.AsUTF8Unsafe();
++    }
++    if (X509_load_cert_crl_file(look_up, cert_path.c_str(), X509_FILETYPE_PEM) == 0) {
+       LOG(ERROR) << "CertVerify() failed, Root certificate number is 0";
+       return X509_V_ERR_UNSPECIFIED;
+     }
+diff --git a/src/ohos/adapter/screen/screen_adapter.cc b/src/ohos/adapter/screen/screen_adapter.cc
+index 1ae0bbe48d..8adc592fbe 100644
+--- a/src/ohos/adapter/screen/screen_adapter.cc
++++ b/src/ohos/adapter/screen/screen_adapter.cc
+@@ -170,6 +170,10 @@ void ScreenAdapter::SetFontSizeZoom(float zoom) {
+   font_size_zoom_ = zoom;
+ }
+ 
++float ScreenAdapter::GetFontSizeZoom() {
++  return font_size_zoom_;
++}
++
+ void ScreenAdapter::OnAvoidAreaChangeCallback(int32_t status_bar_height) {
+   if (status_bar_height_ == status_bar_height) {
+     return;
+diff --git a/src/ohos/adapter/screen/screen_adapter.h b/src/ohos/adapter/screen/screen_adapter.h
+index 0ea30e3eea..73bde98b42 100644
+--- a/src/ohos/adapter/screen/screen_adapter.h
++++ b/src/ohos/adapter/screen/screen_adapter.h
+@@ -88,6 +88,7 @@ class ADAPTER_EXPORT_API ScreenAdapter {
+   void RegisterAvailableAreaCallback(AvailableAreaChangeCallback callback);
+   void RegisterAvoidAreaCallback(AvoidAreaChangeCallback callback);
+   void SetFontSizeZoom(float zoom);
++  float GetFontSizeZoom();
+   void OnAvoidAreaChangeCallback(int32_t status_bar_height);
+   DisplayChangeCallback GetCallback();
+   AvailableAreaChangeCallback GetAvailableAreaCallback();
+diff --git a/src/ohos/adapter/web_entry/cef/cef_loader.cc b/src/ohos/adapter/web_entry/cef/cef_loader.cc
+index 79c017dc06..30b4b813dd 100644
+--- a/src/ohos/adapter/web_entry/cef/cef_loader.cc
++++ b/src/ohos/adapter/web_entry/cef/cef_loader.cc
+@@ -77,9 +77,6 @@ const std::vector<std::string> CefLoader::GetEntryArgs() {
+       "--no-zygote",
+       "--user-data-dir=/data/storage/el2/base/files/",
+       "--disable-gpu-watchdog",
+-      "--force-renderer-accessibility=basic",
+-      "--enable-media-stream=true",
+-      "--enable-speech-input=true",
+       "--enable-print-preview",
+       "--lang=zh-CN",
+   };
+diff --git a/src/ohos/adapter/web_entry/web_loader.cc b/src/ohos/adapter/web_entry/web_loader.cc
+index 2c44023260..8429af6c53 100644
+--- a/src/ohos/adapter/web_entry/web_loader.cc
++++ b/src/ohos/adapter/web_entry/web_loader.cc
+@@ -35,6 +35,9 @@ int BasicLoader::StartMainProcess(const std::vector<std::string>& args) {
+       argv_cstr.push_back(const_cast<char*>(arg.c_str()));
+     }
+     for (const auto& arg : args) {
++      if (arg.empty()) {
++        continue;
++      }
+       argv_cstr.push_back(const_cast<char*>(arg.c_str()));
+     }
+     return fn(argv_cstr.size(), argv_cstr.data());
+diff --git a/src/ohos/adapter/window/app_window_adapter.cc b/src/ohos/adapter/window/app_window_adapter.cc
+index ce875c8c42..e8437fab71 100644
+--- a/src/ohos/adapter/window/app_window_adapter.cc
++++ b/src/ohos/adapter/window/app_window_adapter.cc
+@@ -32,6 +32,13 @@ void AppWindowAdapter::Close(int32_t id) {
+   }
+ }
+ 
++void AppWindowAdapter::CloseUIAbilityWindow() {
++  auto jsFunc = ohos::adapter::GetJSFunction("AppWindow.CloseUIAbilityWindow");
++  if (jsFunc) {
++    jsFunc->Invoke<void>();
++  }
++}
++
+ void AppWindowAdapter::Show(int32_t id) {
+   LOGI("[ohoswindow] AppWindowAdapter::Show, id:%{public}d.",
+        id);
+diff --git a/src/ohos/adapter/window/app_window_adapter.h b/src/ohos/adapter/window/app_window_adapter.h
+index 3ff64d555c..ff92be05aa 100644
+--- a/src/ohos/adapter/window/app_window_adapter.h
++++ b/src/ohos/adapter/window/app_window_adapter.h
+@@ -21,6 +21,7 @@ class ADAPTER_EXPORT_API AppWindowAdapter {
+ 
+   void Create(const NewWindowParam& param);
+   void Close(int32_t id);
++  void CloseUIAbilityWindow();
+   void Show(int32_t id);
+   void Hide(int32_t id);
+   void Activate(int32_t id);
+diff --git a/src/ohos/adapter/xcomponent/event/node_handle_gesture_event_common.h b/src/ohos/adapter/xcomponent/event/node_handle_gesture_event_common.h
+index 95d3bb7ba3..ec4d7cedce 100644
+--- a/src/ohos/adapter/xcomponent/event/node_handle_gesture_event_common.h
++++ b/src/ohos/adapter/xcomponent/event/node_handle_gesture_event_common.h
+@@ -47,7 +47,7 @@ class NodeHandleBaseGestureEvent {
+       : gesture_type_(gesture_type),
+         tool_type_(tool_type),
+         offset_x_(offset_x),
+-        offset_y_(offset_y) {};
++        offset_y_(offset_y) {}
+   virtual ~NodeHandleBaseGestureEvent() = default;
+ 
+   ArkUI_GestureRecognizerType gesture_type() const { return gesture_type_; }
+@@ -103,7 +103,7 @@ class NodeHandlePinchEvent : public NodeHandleBaseGestureEvent {
+                        float offset_y,
+                        float scale)
+       : NodeHandleBaseGestureEvent(gesture_type, tool_type, offset_x, offset_y),
+-        scale_(scale) {};
++        scale_(scale) {}
+ 
+   float scale() const { return scale_; }
+ 
+diff --git a/src/ohos/app/ohos_hap/chromium/src/main/resources/base/profile/shortcuts_config.json b/src/ohos/app/ohos_hap/chromium/src/main/resources/base/profile/shortcuts_config.json
+index 63b0293bd5..80c784a7ed 100644
+--- a/src/ohos/app/ohos_hap/chromium/src/main/resources/base/profile/shortcuts_config.json
++++ b/src/ohos/app/ohos_hap/chromium/src/main/resources/base/profile/shortcuts_config.json
+@@ -5,7 +5,7 @@
+       "label": "$string:OpenNewWindow_label",
+       "wants": [
+         {
+-          "bundleName": "com.huawei.ohos_chromium",
++          "bundleName": "com.huawei.ohos_cef",
+           "moduleName": "chromium",
+           "abilityName": "EntryAbility",
+           "parameters": {
+diff --git a/src/ohos/app/ohos_hap/web_engine/.gitignore b/src/ohos/app/ohos_hap/web_engine/.gitignore
+index e2713a2779..8008dc9058 100644
+--- a/src/ohos/app/ohos_hap/web_engine/.gitignore
++++ b/src/ohos/app/ohos_hap/web_engine/.gitignore
+@@ -3,4 +3,5 @@
+ /.preview
+ /build
+ /.cxx
+-/.test
+\ No newline at end of file
++/.test
++/src/main/resources/resfile
+\ No newline at end of file
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+index 0f8da97066..daee82a47b 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+@@ -133,6 +133,16 @@ export class AppWindowAdapter extends BaseAdapter {
+     proxy?.closeWindow();
+   }
+ 
++  @LogMethod
++  closeUIAbilityWindow() {
++    if (this.abilityManager.getProxyCount() > 0) {
++      let proxy_list = this.abilityManager.getProxyList();
++      for (let i = 0; i < proxy_list?.length; i++) {
++        proxy_list[i]?.closeWindow();
++      }
++    }
++  }
++
+   @LogMethod
+   showWindow(id: number) {
+     LogUtil.info(TAG, `[ohoswindow] in AppWindowAdapter showWindow, id is ${id}`);
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/WebAppAdapter.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/WebAppAdapter.ets
+index 4c01dc1b22..590e39fbf6 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/WebAppAdapter.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/WebAppAdapter.ets
+@@ -62,7 +62,7 @@ export class WebAppAdapter extends BaseAdapter {
+       LogUtil.error(TAG, 'getBundleInfoForSelfSync failed. Cause: ' + JSON.stringify(exception));
+     }
+     const want: Want = {
+-      bundleName: "com.huawei.ohos_chromium",
++      bundleName: "com.huawei.ohos_cef",
+       moduleName: this.moduleName,
+       abilityName: "EntryAbility",
+       parameters: {
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
+index 1e2dac28f9..9a097d9f8a 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebNodeHandleWindow.ets
+@@ -105,6 +105,25 @@ export struct WebNodeHandleWindow {
+     }
+     let resDir = '--bundle-installation-dir=' + getContext().resourceDir;
+     let vec_args = [resDir, default_uri, this.appId];
++
++    let ut = true;
++    ut = false;
++    if (ut) {
++      // Add for ceftests used.
++      vec_args.push("--use-views");
++      vec_args.push("--use-alloy-style");
++      // vec_args.push("--gtest_filter=AudioOutputTest.*");
++      // 保存结果
++      let out_file = "--gtest_output=json:/data/storage/el2/base/temp/result.json";
++      vec_args.push(out_file);
++    } else {
++      // Add for cefsimple used.
++      // vec_args.push("--use-alloy-style");
++      vec_args.push("--force-renderer-accessibility=complete");
++      vec_args.push("--enable-media-stream=true");
++      vec_args.push("--enable-speech-input=true");
++    }
++
+     return vec_args;
+   }
+ }
+\ No newline at end of file
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+index b11a5c24d6..1d2df49872 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+@@ -167,6 +167,25 @@ export struct WebWindow {
+     }
+     let resDir = '--bundle-installation-dir=' + getContext().resourceDir;
+     let vec_args = [resDir, default_uri, this.appId];
++
++    let ut = true;
++    ut = false;
++    if (ut) {
++      // Add for ceftests used.
++      vec_args.push("--use-views");
++      vec_args.push("--use-alloy-style");
++      // vec_args.push("--gtest_filter=AudioOutputTest.*");
++      // 保存结果
++      let out_file = "--gtest_output=json:/data/storage/el2/base/temp/result.json";
++      vec_args.push(out_file);
++    } else {
++      // Add for cefsimple used.
++      // vec_args.push("--use-alloy-style");
++      vec_args.push("--force-renderer-accessibility=complete");
++      vec_args.push("--enable-media-stream=true");
++      vec_args.push("--enable-speech-input=true");
++    }
++
+     return vec_args;
+   }
+ }
+diff --git a/src/ohos/app/ohos_hap/web_engine/src/main/ets/jsbindings/AppWindowAdapterBind.ets b/src/ohos/app/ohos_hap/web_engine/src/main/ets/jsbindings/AppWindowAdapterBind.ets
+index 171f4aaa55..f971acbed1 100644
+--- a/src/ohos/app/ohos_hap/web_engine/src/main/ets/jsbindings/AppWindowAdapterBind.ets
++++ b/src/ohos/app/ohos_hap/web_engine/src/main/ets/jsbindings/AppWindowAdapterBind.ets
+@@ -20,6 +20,10 @@ function closeWindow(id: number) {
+   implAppWindowAdapter().closeWindow(id);
+ }
+ 
++function closeUIAbilityWindow() {
++  implAppWindowAdapter().closeUIAbilityWindow();
++}
++
+ function showWindow(id: number) {
+   implAppWindowAdapter().showWindow(id);
+ }
+@@ -111,6 +115,7 @@ export class AppWindowAdapterBind {
+   static bind() {
+     JsBindingUtils.bindFunction("AppWindow.CreateWindow", createWindow);
+     JsBindingUtils.bindFunction("AppWindow.CloseWindow", closeWindow);
++    JsBindingUtils.bindFunction("AppWindow.CloseUIAbilityWindow", closeUIAbilityWindow);
+     JsBindingUtils.bindFunction("AppWindow.SetFullscreen", setFullscreen);
+     JsBindingUtils.bindFunction("AppWindow.SetBounds", setBounds);
+     JsBindingUtils.bindFunction("AppWindow.SetEnabled", setEnabled);
+diff --git a/src/ohos/build/build.sh b/src/ohos/build/build.sh
+index b9dc2dd86f..0036a119c8 100755
+--- a/src/ohos/build/build.sh
++++ b/src/ohos/build/build.sh
+@@ -64,6 +64,7 @@ buildargs="
+ # cef args
+   use_partition_alloc_as_malloc=false
+   enable_backup_ref_ptr_support=false
++  v8_enable_sandbox=false
+   "
+ #Add build args end
+ 
+diff --git a/src/ui/ozone/platform/ohos/test/ohos_ozone_ui_controls_test_helper.cc b/src/ui/ozone/platform/ohos/test/ohos_ozone_ui_controls_test_helper.cc
+index 08c97a36ac..7230aad7e8 100644
+--- a/src/ui/ozone/platform/ohos/test/ohos_ozone_ui_controls_test_helper.cc
++++ b/src/ui/ozone/platform/ohos/test/ohos_ozone_ui_controls_test_helper.cc
+@@ -4,23 +4,27 @@
+ 
+ #include "ui/ozone/platform/ohos/test/ohos_ozone_ui_controls_test_helper.h"
+ 
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#include "ohos/adapter/xcomponent/xcomponent_manager.h"
+ #include "ui/aura/window_tree_host.h"
++#include "ui/display/screen.h"
+ #include "ui/events/base_event_utils.h"
+ #include "ui/events/event.h"
+ #include "ui/events/event_constants.h"
+ #include "ui/events/keycodes/dom/keycode_converter.h"
++#include "ui/events/keycodes/keyboard_code_conversion.h"
+ #include "ui/events/keycodes/keyboard_codes_posix.h"
+ #include "ui/events/ozone/layout/keyboard_layout_engine.h"
+ #include "ui/events/ozone/layout/keyboard_layout_engine_manager.h"
+ #include "ui/events/platform/platform_event_source.h"
+ #include "ui/events/pointer_details.h"
+ #include "ui/events/types/event_type.h"
+-#include "ui/ozone/platform/ohos/host/ohos_event_source_base.h"
++#include "ui/ozone/platform/ohos/host/ohos_event_source.h"
+ 
+ namespace ui {
+ // Mask of the buttons currently down.
+ // just set it to 1 for test on the ohos platform
+-constexpr unsigned kButtonDownMask = 1;
++unsigned button_down_mask = 0;
+ 
+ OhosOzoneUIControlsTestHelper::OhosOzoneUIControlsTestHelper() = default;
+ OhosOzoneUIControlsTestHelper::~OhosOzoneUIControlsTestHelper() = default;
+@@ -32,7 +36,7 @@ bool OhosOzoneUIControlsTestHelper::SupportsScreenCoordinates() const {
+ }
+ 
+ unsigned OhosOzoneUIControlsTestHelper::ButtonDownMask() const {
+-  return kButtonDownMask;
++  return button_down_mask;
+ }
+ 
+ void OhosOzoneUIControlsTestHelper::SendKeyEvents(gfx::AcceleratedWidget widget,
+@@ -40,8 +44,13 @@ void OhosOzoneUIControlsTestHelper::SendKeyEvents(gfx::AcceleratedWidget widget,
+                                                   int key_event_types,
+                                                   int accelerator_state,
+                                                   base::OnceClosure closure) {
+-  DomCode dom_code = KeycodeConverter::NativeKeycodeToDomCode(key);
+-  DomKey dom_key;
++  bool has_press = key_event_types & ui_controls::kKeyPress;
++  bool has_release = key_event_types & ui_controls::kKeyRelease;
++  bool has_control = accelerator_state & ui_controls::kControl;
++  bool has_shift = accelerator_state & ui_controls::kShift;
++  bool has_alt = accelerator_state & ui_controls::kAlt;
++  DomCode dom_code = ui::UsLayoutKeyboardCodeToDomCode(key);
++  DomKey dom_key = DomKey::NONE;
+   KeyboardCode key_code = VKEY_UNKNOWN;
+   auto* layout_engine = KeyboardLayoutEngineManager::GetKeyboardLayoutEngine();
+   if (layout_engine == nullptr ||
+@@ -50,15 +59,55 @@ void OhosOzoneUIControlsTestHelper::SendKeyEvents(gfx::AcceleratedWidget widget,
+     return;
+   }
+   auto* event_source =
+-      reinterpret_cast<OhosEventSourceBase*>(PlatformEventSource::GetInstance());
+-
+-  KeyEvent event(EventType::kKeyPressed, ui::VKEY_MENU, dom_code, key_event_types,
+-                 dom_key, ui::EventTimeForNow());
+-  event_source->OnKeyEvent(widget, event);
++      reinterpret_cast<OhosEventSource*>(PlatformEventSource::GetInstance());
++  int flags = button_down_mask;
++  if (has_press) {
++    if (has_shift) {
++      flags |= ui::EF_SHIFT_DOWN;
++      ui::KeyEvent event(EventType::kKeyPressed, ui::VKEY_SHIFT, ui::EF_SHIFT_DOWN,
++                         ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++    if (has_control) {
++      flags |= ui::EF_CONTROL_DOWN;
++      ui::KeyEvent event(EventType::kKeyPressed, ui::VKEY_CONTROL,
++                         ui::EF_CONTROL_DOWN, ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++    if (has_alt) {
++      flags |= ui::EF_ALT_DOWN;
++      ui::KeyEvent event(EventType::kKeyPressed, ui::VKEY_MENU, ui::EF_ALT_DOWN,
++                         ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++    ui::KeyEvent event_key(EventType::kKeyPressed, key_code, dom_code, flags,
++                           dom_key, ui::EventTimeForNow());
++    event_source->OnKeyEvent(widget, event_key);
++  }
+ 
+-  KeyEvent event_key(EventType::kKeyPressed, key_code, dom_code, key_event_types,
+-                     dom_key, ui::EventTimeForNow());
+-  event_source->OnKeyEvent(widget, event_key);
++  if (has_release) {
++    ui::KeyEvent event_key(EventType::kKeyReleased, key_code, dom_code, flags,
++                           dom_key, ui::EventTimeForNow());
++    event_source->OnKeyEvent(widget, event_key);
++    if (has_shift) {
++      flags &= ~ui::EF_SHIFT_DOWN;
++      ui::KeyEvent event(EventType::kKeyReleased, ui::VKEY_SHIFT, ui::EF_SHIFT_DOWN,
++                         ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++    if (has_control) {
++      flags &= ~ui::EF_CONTROL_DOWN;
++      ui::KeyEvent event(EventType::kKeyReleased, ui::VKEY_CONTROL,
++                         ui::EF_CONTROL_DOWN, ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++    if (has_alt) {
++      flags &= ~ui::EF_ALT_DOWN;
++      ui::KeyEvent event(EventType::kKeyReleased, ui::VKEY_MENU, ui::EF_ALT_DOWN,
++                         ui::EventTimeForNow());
++      event_source->OnKeyEvent(widget, event);
++    }
++  }
+ }
+ 
+ void OhosOzoneUIControlsTestHelper::SendMouseMotionNotifyEvent(
+@@ -70,6 +119,21 @@ void OhosOzoneUIControlsTestHelper::SendMouseMotionNotifyEvent(
+   gfx::Point mouse_loc_in_screen_px = mouse_loc_in_screen;
+   // TODO(crbug.com/1430805): fix this conversion.
+   host->ConvertDIPToPixels(&mouse_loc_in_screen_px);
++
++  OH_NativeXComponent_MouseEvent mouse_event;
++  mouse_event.x = mouse_loc.x();
++  mouse_event.y = mouse_loc.y();
++  mouse_event.screenX = mouse_loc_in_screen_px.x();
++  mouse_event.screenY = mouse_loc_in_screen_px.y();
++  mouse_event.action = button_down_mask ? OH_NATIVEXCOMPONENT_MOUSE_PRESS
++                                        : OH_NATIVEXCOMPONENT_MOUSE_RELEASE;
++  auto* event_source =
++      reinterpret_cast<OhosEventSource*>(PlatformEventSource::GetInstance());
++  int64_t default_display_id =
++      display::Screen::GetScreen()->GetPrimaryDisplay().id();
++  EventFlags key_flags = event_source->GetKeyFlags();
++  event_source->OnMouseEvent(widget, mouse_event, default_display_id,
++                             key_flags);
+ }
+ 
+ void OhosOzoneUIControlsTestHelper::SendMouseEvent(
+@@ -84,6 +148,56 @@ void OhosOzoneUIControlsTestHelper::SendMouseEvent(
+   gfx::Point mouse_loc_in_screen_px = mouse_loc_in_screen;
+   // TODO(crbug.com/1430805): fix this conversion.
+   host->ConvertDIPToPixels(&mouse_loc_in_screen_px);
++
++  OH_NativeXComponent_MouseEvent mouse_event;
++  mouse_event.x = mouse_loc.x();
++  mouse_event.y = mouse_loc.y();
++  mouse_event.screenX = mouse_loc_in_screen_px.x();
++  mouse_event.screenY = mouse_loc_in_screen_px.y();
++
++  int flags = 0;
++  if (accelerator_state & ui_controls::kShift) {
++    flags |= ui::EF_SHIFT_DOWN;
++  }
++  if (accelerator_state & ui_controls::kControl) {
++    flags |= ui::EF_CONTROL_DOWN;
++  }
++  if (accelerator_state & ui_controls::kAlt) {
++    flags |= ui::EF_ALT_DOWN;
++  }
++
++  switch (type) {
++    case ui_controls::MouseButton::LEFT:
++      mouse_event.button = OH_NATIVEXCOMPONENT_LEFT_BUTTON;
++      break;
++    case ui_controls::MouseButton::MIDDLE:
++      mouse_event.button = OH_NATIVEXCOMPONENT_MIDDLE_BUTTON;
++      break;
++    case ui_controls::MouseButton::RIGHT:
++      mouse_event.button = OH_NATIVEXCOMPONENT_RIGHT_BUTTON;
++      break;
++  }
++
++  int64_t default_display_id =
++      display::Screen::GetScreen()->GetPrimaryDisplay().id();
++  EventFlags key_flags = static_cast<EventFlags>(flags);
++  if (button_state & ui_controls::DOWN) {
++    mouse_event.action = OH_NATIVEXCOMPONENT_MOUSE_PRESS;
++    auto* event_source =
++        reinterpret_cast<OhosEventSource*>(PlatformEventSource::GetInstance());
++    event_source->OnMouseEvent(widget, mouse_event, default_display_id,
++                               key_flags);
++    button_down_mask |= flags;
++  }
++
++  if (button_state & ui_controls::UP) {
++    mouse_event.action = OH_NATIVEXCOMPONENT_MOUSE_RELEASE;
++    auto* event_source =
++        reinterpret_cast<OhosEventSource*>(PlatformEventSource::GetInstance());
++    event_source->OnMouseEvent(widget, mouse_event, default_display_id,
++                               key_flags);
++    button_down_mask &= ~flags;
++  }
+ }
+ 
+ void OhosOzoneUIControlsTestHelper::RunClosureAfterAllPendingUIEvents(
+-- 
+2.34.1
+
