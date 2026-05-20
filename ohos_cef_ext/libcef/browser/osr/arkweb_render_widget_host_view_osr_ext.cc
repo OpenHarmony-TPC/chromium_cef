@@ -2693,6 +2693,12 @@ bool ArkWebRenderWidgetHostViewOSRExt::PullToRefreshAction(
 
 void ArkWebRenderWidgetHostViewOSRExt::PullToRefreshUpdate(float x_delta,
                                                            float y_delta) {
+  if (!pull_to_refreshing_) {
+    LOG(DEBUG) << __func__
+             << " [pulltorefresh] refresh end, no need to refresh update.";
+    return;
+  }
+
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
