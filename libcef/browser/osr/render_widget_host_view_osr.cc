@@ -98,7 +98,7 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   bool DelegatedFrameHostIsVisible() const override {
     // Called indirectly from DelegatedFrameHost::WasShown.
 #if BUILDFLAG(ARKWEB_EVICT_UNLOCK_FRAMES)
-    if (view_->evictUnlockFrameEnabled_) {
+    if (view_->evictUnlockFrameEnabled_ && view_->host()) {
       return !view_->host()->is_hidden();
     }
 #endif
