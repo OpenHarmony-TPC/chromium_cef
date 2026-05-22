@@ -1079,7 +1079,7 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTouchSelectionChanged(
 
 void ArkWebRenderWidgetHostViewOSRExt::OnClippedSelectionBoundsChanged(
     const gfx::Rect& rect, bool need_report) {
-  if (!browser_impl_ && !browser_impl_->client()) {
+  if (!browser_impl_ || !browser_impl_->client()) {
     return;
   }
   CefRefPtr<CefRenderHandler> handler =
