@@ -8,6 +8,9 @@
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
   virtual void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) {}
+
+  virtual void ClearCurrentClientAuthenticationCache(
+      CefRefPtr<CefCompletionCallback> callback) {}
 #endif  // ARKWEB_CERT_AUTHENTICATION
 
   virtual CefRefPtr<CefWebStorage> GetWebStorage(

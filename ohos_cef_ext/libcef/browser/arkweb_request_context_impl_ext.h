@@ -52,6 +52,8 @@ class ArkWebRequestContextImplExt : public CefRequestContextImpl {
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
   void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) override;
+  void ClearCurrentClientAuthenticationCache(
+      CefRefPtr<CefCompletionCallback> callback) override;
 #endif  // ARKWEB_CERT_AUTHENTICATION
 #if BUILDFLAG(ARKWEB_WEBSTORAGE)
   CefRefPtr<CefWebStorage> GetWebStorage(
@@ -63,6 +65,9 @@ class ArkWebRequestContextImplExt : public CefRequestContextImpl {
 
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
   void ClearClientAuthenticationCacheInternal(
+      CefRefPtr<CefCompletionCallback> callback,
+      CefBrowserContext::Getter browser_context_getter);
+  void ClearCurrentClientAuthenticationCacheInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
 #endif  // ARKWEB_CERT_AUTHENTICATION
