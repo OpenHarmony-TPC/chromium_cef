@@ -144,3 +144,19 @@ CefRefPtr<CefValue> CefDownloadItemImplExt::GetOriginContentDisposition() {
 CefRefPtr<CefDownloadItemExt> CefDownloadItemImplExt::AsArkDownloadItem() {
   return this;
 }
+
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+CefString CefDownloadItemImplExt::GetReferrerUrl() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  return const_value().GetReferrerUrl().spec();
+}
+
+std::vector<CefString> CefDownloadItemImplExt::GetUrlChain() {
+  CEF_VALUE_VERIFY_RETURN(false, {});
+  std::vector<CefString> urlChain;
+  for (const GURL& gurl : const_value().GetUrlChain()) {
+    urlChain.push_back(gurl.spec());
+  }
+  return urlChain;
+}
+#endif
