@@ -23,8 +23,6 @@ void ResumeDownloadWithId(
     const std::string& last_modified,
     std::vector<download::DownloadItem::ReceivedSlice> received_slices,
     uint32_t next_id) {
-  std::vector<GURL> url_chain;
-  url_chain.push_back(gurl);
   auto download_item = manager->CreateDownloadItem(
       guid,                                         /*guid*/
       next_id,                                      /*id*/
