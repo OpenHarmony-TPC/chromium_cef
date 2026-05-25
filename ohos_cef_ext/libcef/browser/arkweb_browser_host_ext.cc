@@ -119,7 +119,6 @@
 
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
 #include "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
-#include "arkweb/ohos_nweb_ex/overrides/ohos_nweb/src/cef_delegate/nweb_anti_fraud_detection_handler.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_snapshot_info.h"
 #endif
 
