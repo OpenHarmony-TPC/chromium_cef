@@ -79,5 +79,17 @@ class CefDownloadItemExt : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefValue> GetOriginContentDisposition() = 0;
+
+  ///
+  /// Returns referrer url.
+  ///
+  /*--cef()--*/
+  virtual CefString GetReferrerUrl() = 0;
+
+  ///
+  /// Returns url chain.
+  ///
+  /*--cef()--*/
+  virtual std::vector<CefString> GetUrlChain() {return {};}
 };
 #endif

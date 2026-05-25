@@ -28,6 +28,8 @@ class CefDownloadItemImplExt : public CefDownloadItemExt,
   int GetNWebId() override;
   CefRefPtr<CefDownloadItemExt> AsArkDownloadItem() override;
   CefRefPtr<CefValue> GetOriginContentDisposition() override;
+  CefString GetReferrerUrl() override;
+  std::vector<CefString> GetUrlChain() override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_
