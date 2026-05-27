@@ -98,21 +98,13 @@ ArkWebCore.hap (Chromium + CEF 合编产物)
 
 ## 知识索引
 
-改动前按场景读取对应文件：
+改动前按场景定位，以下场景需要特别注意隐含约束：
 
-| 场景 | 先读 |
-|------|------|
-| 添加 OH 扩展源文件、注册到编译 | `docs/HOW_TO_ADD_OHOS_EXTENSION.md` |
-| CDP/DevTools 消息收发 | `include/cef_browser.h` → SendDevToolsMessage / ExecuteDevToolsMethod |
-| 添加 Handler 回调 | `include/cef_client.h` → GetXXXHandler 方法 |
-| 操作 DOM | `include/cef_dom.h`（仅渲染进程可用） |
-| 执行 JS | `include/cef_v8.h`（仅渲染进程 UI 线程） |
-| 操作 Frame | `include/cef_frame.h` |
-| C↔C++ 桥接生成 | `tools/translator.py` |
-| 编译条件开关 | `ohos_cef_ext/cef_arkweb_extension.gni` |
-| 安全浏览机制 | `ohos_cef_ext/libcef/browser/ohos_safe_browsing/` |
-| JS Bridge | `ohos_cef_ext/libcef/browser/javascript/` + `renderer/javascript/` |
-| Chromium 补丁 | `patch/patch.cfg` + `patch/README.txt` |
+| 场景 | 注意事项 |
+|------|----------|
+| 新增 OH 扩展源文件 | 必须在 `cef_arkweb_extension.gni` 中注册，否则不参与编译 |
+| Chromium 补丁 | 通过 `patch/patch.cfg` 管理，由 `cef_create_projects.sh` 应用，最小化修改 |
+| C↔C++ 桥接 | `libcef_dll/cpptoc|ctocpp/` 由 `tools/translator.py` 生成，禁止手改 |
 
 ## 专家经验与约束
 
