@@ -144,8 +144,14 @@ ArkWebCore.hap (Chromium + CEF 合编产物)
 
 ## 编译和测试
 
-本仓库不能独立编译。CEF 代码需要放置在 Chromium 源码树的 `src/cef/` 目录中，在完整 Chromium 构建环境下编译。OH 扩展通过 `is_arkweb_ext=true` GN 变量控制启用。
+本仓库不独立编译，跟随 `chromium_src` 的 OH 全量编译流程。
 
-OH 平台完整构建从 OH 源码根目录执行，产物为 ArkWebCore.hap。
+```sh
+# 全量编译（从源码根目录）
+./build.sh -t w -A rk3568
+
+# 如果仅修改了 CEF，可以增量编译
+./build.sh -A rk3568
+```
 
 提交使用 `git commit -s`，保留 DCO Signed-off-by 签名。
