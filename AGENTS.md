@@ -9,7 +9,7 @@
 ### 上游 CEF 核心（不应修改）
 
 ```
-include/          CEF 公共 API 定义（70+ 头文件）
+include/          CEF 公共 API 定义
   cef_browser.h   浏览器生命周期和操作接口（含 SendDevToolsMessage / ExecuteDevToolsMethod）
   cef_client.h    客户端回调注册入口（handler 集合）
   cef_frame.h     帧（frame）操作接口
