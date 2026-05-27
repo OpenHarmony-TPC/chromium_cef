@@ -152,44 +152,8 @@ ArkWebCore.hap (Chromium + CEF 合编产物)
 
 ## 编译和测试
 
-本仓库不能独立编译，必须在 Chromium 源码树中作为 `cef/` 子目录编译。
+本仓库不能独立编译。CEF 代码需要放置在 Chromium 源码树的 `src/cef/` 目录中，在完整 Chromium 构建环境下编译。OH 扩展通过 `is_arkweb_ext=true` GN 变量控制启用。
 
-### 编译前置
-
-1. 需要完整 Chromium 源码（含 `src/` 目录）
-2. CEF 代码放置在 `src/cef/`
-3. 运行 `cef_create_projects.sh` 生成 GN 构建文件
-
-### 编译命令
-
-```sh
-# 从 Chromium src/ 目录执行
-gn args out/Default
-# 添加: is_arkweb_ext=true 启用 OH 扩展
-
-# 编译 libcef
-ninja -C out/Default cef
-
-# 编译测试
-ninja -C out/Default ceftests
-
-# 编译示例
-ninja -C out/Default cefsimple
-ninja -C out/Default cefclient
-```
-
-### 最小验证
-
-```sh
-# 运行 cefsimple 验证基本渲染
-./out/Default/cefsimple https://example.com
-
-# 运行 gtest 自动化测试
-./out/Default/ceftests --gtest_filter=*
-```
-
-### OpenHarmony 平台
-
-OH 平台完整构建从 OH 源码根目录执行，不在本仓库内操作。产物为 ArkWebCore.hap。
+OH 平台完整构建从 OH 源码根目录执行，产物为 ArkWebCore.hap。
 
 提交使用 `git commit -s`，保留 DCO Signed-off-by 签名。
