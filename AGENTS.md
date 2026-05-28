@@ -129,7 +129,7 @@ ArkWebCore.hap (Chromium + CEF 合编产物)
 - 不要用 Runtime.evaluate 做 JS 注入操控页面，应走 CDP 协议
 - 不要忽略 `*_for_include.cc` 文件——它们通过 include 合并方式注入到主实现类中
 
-### 关键黑话
+### 领域术语表
 
 | 术语 | 含义 |
 |------|------|
