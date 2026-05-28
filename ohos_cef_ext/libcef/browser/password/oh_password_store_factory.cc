@@ -5,6 +5,8 @@
 #include "libcef/browser/password/oh_password_store_factory.h"
 
 #include "base/containers/contains.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -21,8 +23,6 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
-#include "base/files/file_path.h"
-#include "base/files/file_util.h"
 #include "base/logging.h"
 #endif
 
