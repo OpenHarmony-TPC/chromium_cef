@@ -32,6 +32,7 @@
 #include "base/timer/timer.h"
 #include "base/values.h"
 #include "base/ohos/nweb_engine_event_logger.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/password_manager/core/browser/form_parsing/form_data_parser.h"
 #include "components/password_manager/core/browser/password_form.h"
 #include "components/password_manager/core/browser/password_form_digest.h"
@@ -497,6 +498,19 @@ void SetMigrationPasswordPrefs(std::string_view path, bool value) {
   }
 }
 
+base::FilePath GetMigrateBasePath() {
+  base::FilePath path;
+  if (base::PathService::Get(chrome::DIR_USER_DATA, &path)) {
+    base::FilePath migratePath = path.Append(FILE_PATH_LITERAL("migrate"));
+    if (base::PathExists(migratePath)) {
+      return path;
+    }
+  }
+ 
+  base::PathService::Get(base::DIR_CACHE, &path);
+  return path;
+}
+
 bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter, bool migrateBackupFlag) {
   static bool has_tried = false;
   if (has_tried) {
@@ -512,7 +526,7 @@ bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter
     LOG(ERROR) << "[Autofill] can not get browser_context.";
     return false;
   }
-  base::FilePath cache_path = browser_context->cache_path();
+  base::FilePath cache_path = GetMigrateBasePath();
   if (cache_path.empty()) {
     LOG(ERROR) << "[Autofill] cache path is empty.";
     return false;
