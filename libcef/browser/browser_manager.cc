@@ -57,21 +57,8 @@ void CefBrowserManager::GetNewRenderThreadInfo(
 void CefBrowserManager::GetNewBrowserInfo(
     const blink::LocalFrameToken& render_frame_token,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
-#if BUILDFLAG(ARKWEB_PDF)
-  const content::GlobalRenderFrameHostToken global_token(render_process_id_, render_frame_token);
-  if (auto *rfh = content::RenderFrameHostImpl::FromFrameToken(global_token)) {
-    if (auto *web_contents_impl = content::WebContentsImpl::FromRenderFrameHostImpl(rfh)) {
-      if (IsPdfExtensionOrigin(url::Origin::Create(web_contents_impl->GetVisibleURL()))) {
-        LOG(INFO) << "pdf load not use OnGetNewBrowserInfo due to long time consumption";
-        return;
-      }
-    }
-  }
-  CefBrowserInfoManager::GetInstance()->OnGetNewBrowserInfo(global_token, std::move(callback));
-#else
   CefBrowserInfoManager::GetInstance()->OnGetNewBrowserInfo(
       content::GlobalRenderFrameHostToken(render_process_id_,
                                           render_frame_token),
       std::move(callback));
-#endif
 }
