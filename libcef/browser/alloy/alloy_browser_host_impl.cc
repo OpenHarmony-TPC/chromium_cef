@@ -118,6 +118,7 @@ const char* kAllowedWebUIHosts[] = {
 #endif
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
     chrome::kChromeUIInspectHost,
+    content::kChromeUIServiceWorkerInternalsHost,
 #endif // ARKWEB_DEVTOOLS
 };
 
