@@ -292,6 +292,8 @@ ui::KeyEvent CefBrowserPlatformDelegateNativeLinux::TranslateUiKeyEvent(
   ui::DomKey dom_key = ui::DomKey::NONE;
 #endif
 
+#include "cef/ohos_cef_ext/libcef/browser/native/browser_platform_delegate_native_linux_for_include.cc"
+
   return ui::KeyEvent(type, key_code, dom_code, flags, dom_key, time_stamp);
 }
 
