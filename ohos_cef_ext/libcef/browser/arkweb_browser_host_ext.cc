@@ -1151,6 +1151,9 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
         static_cast<ui::PageTransition>(transition_type);
   }
 
+  // Referenced from NavigationControllerImpl::LoadURL
+  loadUrlParams.override_user_agent = content::NavigationController::UA_OVERRIDE_TRUE;
+
   if (auto web_contents = GetWebContents()) {
     LOG(DEBUG) << "load Url With Params";
     web_contents->GetController().LoadURLWithParams(loadUrlParams);
