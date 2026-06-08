@@ -17,12 +17,14 @@
 #define CEF_LIBCEF_BROWSER_AUTOFILL_OH_AUTOFILL_CLIENT_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "base/compiler_specific.h"
 #include "base/dcheck_is_on.h"
 #include "base/memory/raw_ptr.h"
+#include "base/timer/timer.h"
 #include "chrome/browser/ui/autofill/autofill_popup_controller_impl.h"
 #include "components/autofill/content/browser/content_autofill_client.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
@@ -32,6 +34,7 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "include/cef_browser.h"
+#include "ui/gfx/geometry/rect.h"
 
 namespace autofill {
 class AutocompleteHistoryManager;
@@ -59,7 +62,8 @@ class PrefService;
 
 namespace autofill {
 
-class OhAutofillClient : public autofill::ContentAutofillClient {
+class OhAutofillClient : public autofill::ContentAutofillClient,
+                         public content::WebContentsObserver {
  public:
   static OhAutofillClient* FromWebContents(content::WebContents* web_contents) {
     return static_cast<OhAutofillClient*>(
@@ -132,6 +136,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   bool IsContextSecure() const override;
   autofill::FormInteractionsFlowId GetCurrentFormInteractionsFlowId() override;
   bool IsWalletStorageEnabled() const override;
+  void OnFocusChangedInPage(const content::FocusedNodeDetails& details) override;
+  void WebContentsDestroyed() override;
 
   std::unique_ptr<autofill::AutofillManager> CreateManager(
       base::PassKey<autofill::ContentAutofillDriver> pass_key,
@@ -155,9 +161,25 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   explicit OhAutofillClient(content::WebContents* web_contents);
 
  private:
+  struct PendingFillRequest {
+    std::string json_str;
+    int32_t trigger_type = 0;
+    FieldGlobalId field_id{};
+    std::optional<gfx::Rect> node_bounds_in_screen;
+  };
+
   friend class content::WebContentsUserData<OhAutofillClient>;
 
   content::WebContents& GetWebContents() const;
+  bool ShouldDeferFill(int32_t trigger_type) const;
+  void QueuePendingFill(std::string json_str,
+                        int32_t trigger_type,
+                        const FieldGlobalId& field_id);
+  void FlushPendingFill();
+  void ExecuteFill(const std::string& json_str,
+                   int32_t trigger_type,
+                   const FieldGlobalId& field_id);
+  void ClearPendingFill();
 
   bool save_form_data_ = false;
   std::vector<autofill::Suggestion> suggestions_;
@@ -167,7 +189,10 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
 #if BUILDFLAG(ARKWEB_DATALIST)
   SelectedCallback selected_callback_;
 #endif
-  FieldGlobalId focused_field_id_;
+  FieldGlobalId focused_field_id_{};
+  std::optional<gfx::Rect> focused_node_bounds_in_screen_;
+  std::optional<PendingFillRequest> pending_fill_;
+  base::OneShotTimer pending_fill_timer_;
 
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;

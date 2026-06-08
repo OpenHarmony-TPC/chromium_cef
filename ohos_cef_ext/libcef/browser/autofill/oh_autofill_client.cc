@@ -17,9 +17,11 @@
 
 #include <utility>
 
+#include "base/functional/bind.h"
 #include "base/check_op.h"
 #include "base/notimplemented.h"
 #include "base/notreached.h"
+#include "base/time/time.h"
 #include "components/autofill/core/browser/payments/legal_message_line.h"
 #include "components/autofill/core/browser/suggestions/suggestion.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
@@ -31,6 +33,7 @@
 #include "components/user_prefs/user_prefs.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/focused_node_details.h"
 #include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/ssl_status.h"
@@ -48,6 +51,10 @@ namespace autofill {
 namespace {
 constexpr int32_t MANUAL_REQUEST_TRIGGER_TYPE = 1;
 constexpr int32_t PASTER_REQUEST_TRIGGER_TYPE = 2;
+// Fallback delay for deferred autofill: long enough to wait for focus recovery,
+// short enough to avoid obvious fill latency. This value may need tuning with
+// further validation.
+constexpr base::TimeDelta kDeferredAutofillTimeout = base::Milliseconds(100);
 }
 
 void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
@@ -59,9 +66,12 @@ void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
 }
 
 OhAutofillClient::OhAutofillClient(content::WebContents* web_contents)
-    : autofill::ContentAutofillClient(web_contents) {}
+    : autofill::ContentAutofillClient(web_contents),
+      content::WebContentsObserver(web_contents) {}
 
 OhAutofillClient::~OhAutofillClient() {
+  pending_fill_timer_.Stop();
+  ClearPendingFill();
   // The call to HideAutofillSuggestions() has been removed here. If you need to
   // call it, please avoid using the SuggestionHidingReason::kTabGone flag.
 }
@@ -82,6 +92,52 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data, int32_t trigger_type) 
     return;
   }
   std::string json_str = data->GetString();
+  if (ShouldDeferFill(trigger_type)) {
+    QueuePendingFill(std::move(json_str), trigger_type, focused_field_id_);
+    return;
+  }
+  ExecuteFill(json_str, trigger_type, focused_field_id_);
+#endif
+}
+
+bool OhAutofillClient::ShouldDeferFill(int32_t trigger_type) const {
+  return trigger_type != PASTER_REQUEST_TRIGGER_TYPE;
+}
+
+void OhAutofillClient::QueuePendingFill(std::string json_str,
+                                        int32_t trigger_type,
+                                        const FieldGlobalId& field_id) {
+  PendingFillRequest request;
+  request.json_str = std::move(json_str);
+  request.trigger_type = trigger_type;
+  request.field_id = field_id;
+  request.node_bounds_in_screen = focused_node_bounds_in_screen_;
+  pending_fill_ = std::move(request);
+  pending_fill_timer_.Start(
+      FROM_HERE, kDeferredAutofillTimeout,
+      base::BindOnce(&OhAutofillClient::FlushPendingFill,
+                     weak_ptr_factory_.GetWeakPtr()));
+}
+
+void OhAutofillClient::FlushPendingFill() {
+  // Either the timeout or page focus recovery may trigger this flush. The
+  // first path clears pending_fill_, so any later trigger becomes a no-op.
+  if (!pending_fill_.has_value()) {
+    return;
+  }
+
+  PendingFillRequest request = std::move(*pending_fill_);
+  ClearPendingFill();
+  ExecuteFill(request.json_str, request.trigger_type, request.field_id);
+}
+
+void OhAutofillClient::ExecuteFill(const std::string& json_str,
+                                   int32_t trigger_type,
+                                   const FieldGlobalId& field_id) {
+  if (!field_id) {
+    LOG(ERROR) << "field_id is invalid";
+    return;
+  }
   content::RenderFrameHost* rfh = GetWebContents().GetPrimaryMainFrame();
   if (!rfh) {
     LOG(ERROR) << "rfh is nullptr";
@@ -96,14 +152,41 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data, int32_t trigger_type) 
   auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
   if (mgr) {
     if (trigger_type == PASTER_REQUEST_TRIGGER_TYPE) {
-      mgr->FillDataFromPaster(json_str, focused_field_id_);
+      mgr->FillDataFromPaster(json_str, field_id);
     } else if (trigger_type == MANUAL_REQUEST_TRIGGER_TYPE) {
-      mgr->FillDataFromAutofill(json_str, focused_field_id_);
+      mgr->FillDataFromAutofill(json_str, field_id);
     } else {
-    mgr->FillData(json_str);
+      mgr->FillData(json_str);
+    }
   }
+}
+
+void OhAutofillClient::ClearPendingFill() {
+  pending_fill_.reset();
+  pending_fill_timer_.Stop();
+}
+
+void OhAutofillClient::OnFocusChangedInPage(
+    const content::FocusedNodeDetails& details) {
+  if (details.is_editable_node) {
+    focused_node_bounds_in_screen_ = details.node_bounds_in_screen;
+  } else {
+    focused_node_bounds_in_screen_.reset();
   }
-#endif
+
+  if (!pending_fill_.has_value() || !details.is_editable_node) {
+    return;
+  }
+  if (!pending_fill_->node_bounds_in_screen.has_value() ||
+      pending_fill_->node_bounds_in_screen != details.node_bounds_in_screen) {
+    return;
+  }
+  FlushPendingFill();
+}
+
+void OhAutofillClient::WebContentsDestroyed() {
+  focused_node_bounds_in_screen_.reset();
+  ClearPendingFill();
 }
 
 bool OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
